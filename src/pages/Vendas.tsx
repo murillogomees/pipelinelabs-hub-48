@@ -4,8 +4,43 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Plus, Search, Filter } from 'lucide-react';
 import { Input } from '@/components/ui/input';
+import { useSales } from '@/hooks/useSales';
+import { Skeleton } from '@/components/ui/skeleton';
 
 export function Vendas() {
+  const { data: sales, isLoading, error } = useSales();
+
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case 'pending': return 'bg-yellow-100 text-yellow-800';
+      case 'approved': return 'bg-blue-100 text-blue-800';
+      case 'delivered': return 'bg-green-100 text-green-800';
+      case 'cancelled': return 'bg-red-100 text-red-800';
+      default: return 'bg-gray-100 text-gray-800';
+    }
+  };
+
+  const getStatusText = (status: string) => {
+    switch (status) {
+      case 'pending': return 'Pendente';
+      case 'approved': return 'Aprovado';
+      case 'delivered': return 'Entregue';
+      case 'cancelled': return 'Cancelado';
+      default: return status;
+    }
+  };
+
+  if (error) {
+    return (
+      <div className="p-6">
+        <div className="text-center">
+          <h2 className="text-xl font-semibold text-gray-900">Erro ao carregar vendas</h2>
+          <p className="text-gray-600 mt-2">Tente novamente mais tarde.</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
@@ -47,34 +82,50 @@ export function Vendas() {
                 </tr>
               </thead>
               <tbody>
-                {[
-                  { id: '#001', cliente: 'João Silva', data: '2024-01-15', status: 'Pendente', valor: 'R$ 1.250,00' },
-                  { id: '#002', cliente: 'Maria Santos', data: '2024-01-14', status: 'Aprovado', valor: 'R$ 890,00' },
-                  { id: '#003', cliente: 'Pedro Costa', data: '2024-01-14', status: 'Entregue', valor: 'R$ 2.100,00' },
-                  { id: '#004', cliente: 'Ana Lima', data: '2024-01-13', status: 'Cancelado', valor: 'R$ 450,00' }
-                ].map((pedido) => (
-                  <tr key={pedido.id} className="border-b hover:bg-gray-50">
-                    <td className="py-3 px-4 font-medium">{pedido.id}</td>
-                    <td className="py-3 px-4">{pedido.cliente}</td>
-                    <td className="py-3 px-4">{pedido.data}</td>
-                    <td className="py-3 px-4">
-                      <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                        pedido.status === 'Pendente' ? 'bg-yellow-100 text-yellow-800' :
-                        pedido.status === 'Aprovado' ? 'bg-blue-100 text-blue-800' :
-                        pedido.status === 'Entregue' ? 'bg-green-100 text-green-800' :
-                        'bg-red-100 text-red-800'
-                      }`}>
-                        {pedido.status}
-                      </span>
-                    </td>
-                    <td className="py-3 px-4 font-medium">{pedido.valor}</td>
-                    <td className="py-3 px-4">
-                      <Button variant="outline" size="sm">
-                        Ver Detalhes
-                      </Button>
+                {isLoading ? (
+                  Array.from({ length: 5 }).map((_, i) => (
+                    <tr key={i} className="border-b">
+                      <td className="py-3 px-4"><Skeleton className="h-4 w-16" /></td>
+                      <td className="py-3 px-4"><Skeleton className="h-4 w-24" /></td>
+                      <td className="py-3 px-4"><Skeleton className="h-4 w-20" /></td>
+                      <td className="py-3 px-4"><Skeleton className="h-4 w-16" /></td>
+                      <td className="py-3 px-4"><Skeleton className="h-4 w-20" /></td>
+                      <td className="py-3 px-4"><Skeleton className="h-8 w-20" /></td>
+                    </tr>
+                  ))
+                ) : sales?.length === 0 ? (
+                  <tr>
+                    <td colSpan={6} className="text-center py-8 text-gray-500">
+                      Nenhuma venda encontrada. Clique em "Nova Venda" para criar sua primeira venda.
                     </td>
                   </tr>
-                ))}
+                ) : (
+                  sales?.map((venda) => (
+                    <tr key={venda.id} className="border-b hover:bg-gray-50">
+                      <td className="py-3 px-4 font-medium">{venda.sale_number}</td>
+                      <td className="py-3 px-4">{venda.customers?.name || 'Cliente não informado'}</td>
+                      <td className="py-3 px-4">
+                        {new Date(venda.sale_date).toLocaleDateString('pt-BR')}
+                      </td>
+                      <td className="py-3 px-4">
+                        <span className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(venda.status)}`}>
+                          {getStatusText(venda.status)}
+                        </span>
+                      </td>
+                      <td className="py-3 px-4 font-medium">
+                        {new Intl.NumberFormat('pt-BR', {
+                          style: 'currency',
+                          currency: 'BRL',
+                        }).format(venda.total_amount)}
+                      </td>
+                      <td className="py-3 px-4">
+                        <Button variant="outline" size="sm">
+                          Ver Detalhes
+                        </Button>
+                      </td>
+                    </tr>
+                  ))
+                )}
               </tbody>
             </table>
           </div>
