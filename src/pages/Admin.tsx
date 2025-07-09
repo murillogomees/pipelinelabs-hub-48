@@ -59,24 +59,29 @@ function Usuarios() {
     try {
       setLoading(true);
       
-      // Buscar perfis de usuários com informações de empresa
-      const { data: profiles, error: profilesError } = await supabase
-        .from('profiles')
+      // Buscar associações usuário-empresa com perfis
+      const { data: userCompanies, error: userCompaniesError } = await supabase
+        .from('user_companies')
         .select(`
-          *,
-          user_companies!inner(
-            id,
-            role,
-            is_active,
-            permissions,
-            last_login,
-            company_id,
-            companies(name)
+          id,
+          user_id,
+          role,
+          is_active,
+          permissions,
+          last_login,
+          company_id,
+          companies(name),
+          profiles!inner(
+            user_id,
+            display_name,
+            email,
+            phone,
+            is_active
           )
         `);
 
-      if (profilesError) {
-        console.error('Erro ao carregar usuários:', profilesError);
+      if (userCompaniesError) {
+        console.error('Erro ao carregar usuários:', userCompaniesError);
         toast({
           title: "Erro",
           description: "Falha ao carregar usuários",
@@ -85,7 +90,21 @@ function Usuarios() {
         return;
       }
 
-      setUsers(profiles || []);
+      // Transformar dados para o formato esperado
+      const transformedUsers = userCompanies?.map(uc => {
+        const profile = uc.profiles;
+        return {
+          id: profile?.id,
+          user_id: profile?.user_id,
+          display_name: profile?.display_name,
+          email: profile?.email,
+          phone: profile?.phone,
+          is_active: profile?.is_active,
+          user_companies: [uc]
+        };
+      }) || [];
+
+      setUsers(transformedUsers);
     } catch (error) {
       console.error('Erro ao carregar usuários:', error);
       toast({
