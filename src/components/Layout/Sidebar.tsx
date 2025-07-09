@@ -119,17 +119,22 @@ export function Sidebar({ collapsed }: SidebarProps) {
   const [expandedItems, setExpandedItems] = useState<string[]>([]);
   const location = useLocation();
 
-  // Expande automaticamente o menu que contém a rota ativa
+  // Expande automaticamente apenas o menu ativo e fecha os demais
   useEffect(() => {
     const currentPath = location.pathname;
     const activeMenuItem = menuItems.find(item => 
-      item.submenu.some(sub => currentPath.startsWith(sub.path))
+      item.submenu.some(sub => currentPath.startsWith(sub.path)) ||
+      currentPath === item.path
     );
     
-    if (activeMenuItem && !expandedItems.includes(activeMenuItem.title)) {
-      setExpandedItems(prev => [...prev, activeMenuItem.title]);
+    if (activeMenuItem && activeMenuItem.submenu.length > 0) {
+      // Mantém apenas o item ativo expandido
+      setExpandedItems([activeMenuItem.title]);
+    } else {
+      // Se estamos em uma rota principal sem submenu, fecha todos
+      setExpandedItems([]);
     }
-  }, [location.pathname, expandedItems]);
+  }, [location.pathname]);
 
   const toggleExpanded = (title: string) => {
     if (collapsed) return;
