@@ -129,7 +129,7 @@ export function Sidebar({ collapsed }: SidebarProps) {
 
   return (
     <div className={cn(
-      "bg-slate-900 text-white transition-all duration-300 flex flex-col",
+      "bg-slate-900 text-white transition-all duration-300 flex flex-col min-h-screen sticky top-0",
       collapsed ? "w-16" : "w-64"
     )}>
       {/* Logo */}
@@ -166,7 +166,7 @@ export function Sidebar({ collapsed }: SidebarProps) {
                       collapsed && "justify-center"
                     )}
                   >
-                    <Icon className="w-5 h-5 text-slate-300" />
+                    <Icon className="w-5 h-5 text-slate-300 flex-shrink-0" />
                     {!collapsed && (
                       <>
                         <span className="flex-1 text-left text-sm font-medium">{item.title}</span>
@@ -187,7 +187,7 @@ export function Sidebar({ collapsed }: SidebarProps) {
                       collapsed && "justify-center"
                     )}
                   >
-                    <Icon className="w-5 h-5 text-slate-300" />
+                    <Icon className="w-5 h-5 text-slate-300 flex-shrink-0" />
                     {!collapsed && (
                       <span className="text-sm font-medium">{item.title}</span>
                     )}

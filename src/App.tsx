@@ -53,65 +53,65 @@ function AppContent() {
         } />
         <Route path="/clientes/*" element={
           <MainLayout>
-            <div className="p-6">
-              <h1 className="text-3xl font-bold">Clientes</h1>
-              <p className="text-gray-600 mt-2">Módulo em desenvolvimento</p>
+            <div className="space-y-6">
+              <h1 className="text-3xl font-bold text-foreground">Clientes</h1>
+              <p className="text-muted-foreground">Módulo em desenvolvimento</p>
             </div>
           </MainLayout>
         } />
         <Route path="/financeiro/*" element={
           <MainLayout>
-            <div className="p-6">
-              <h1 className="text-3xl font-bold">Financeiro</h1>
-              <p className="text-gray-600 mt-2">Módulo em desenvolvimento</p>
+            <div className="space-y-6">
+              <h1 className="text-3xl font-bold text-foreground">Financeiro</h1>
+              <p className="text-muted-foreground">Módulo em desenvolvimento</p>
             </div>
           </MainLayout>
         } />
         <Route path="/notas-fiscais/*" element={
           <MainLayout>
-            <div className="p-6">
-              <h1 className="text-3xl font-bold">Notas Fiscais</h1>
-              <p className="text-gray-600 mt-2">Módulo em desenvolvimento</p>
+            <div className="space-y-6">
+              <h1 className="text-3xl font-bold text-foreground">Notas Fiscais</h1>
+              <p className="text-muted-foreground">Módulo em desenvolvimento</p>
             </div>
           </MainLayout>
         } />
         <Route path="/producao/*" element={
           <MainLayout>
-            <div className="p-6">
-              <h1 className="text-3xl font-bold">Produção</h1>
-              <p className="text-gray-600 mt-2">Módulo em desenvolvimento</p>
+            <div className="space-y-6">
+              <h1 className="text-3xl font-bold text-foreground">Produção</h1>
+              <p className="text-muted-foreground">Módulo em desenvolvimento</p>
             </div>
           </MainLayout>
         } />
         <Route path="/relatorios/*" element={
           <MainLayout>
-            <div className="p-6">
-              <h1 className="text-3xl font-bold">Relatórios</h1>
-              <p className="text-gray-600 mt-2">Módulo em desenvolvimento</p>
+            <div className="space-y-6">
+              <h1 className="text-3xl font-bold text-foreground">Relatórios</h1>
+              <p className="text-muted-foreground">Módulo em desenvolvimento</p>
             </div>
           </MainLayout>
         } />
         <Route path="/integracoes/*" element={
           <MainLayout>
-            <div className="p-6">
-              <h1 className="text-3xl font-bold">Integrações</h1>
-              <p className="text-gray-600 mt-2">Módulo em desenvolvimento</p>
+            <div className="space-y-6">
+              <h1 className="text-3xl font-bold text-foreground">Integrações</h1>
+              <p className="text-muted-foreground">Módulo em desenvolvimento</p>
             </div>
           </MainLayout>
         } />
         <Route path="/admin/*" element={
           <MainLayout>
-            <div className="p-6">
-              <h1 className="text-3xl font-bold">Painel Administrativo</h1>
-              <p className="text-gray-600 mt-2">Módulo em desenvolvimento</p>
+            <div className="space-y-6">
+              <h1 className="text-3xl font-bold text-foreground">Painel Administrativo</h1>
+              <p className="text-muted-foreground">Módulo em desenvolvimento</p>
             </div>
           </MainLayout>
         } />
         <Route path="/configuracoes/*" element={
           <MainLayout>
-            <div className="p-6">
-              <h1 className="text-3xl font-bold">Configurações</h1>
-              <p className="text-gray-600 mt-2">Módulo em desenvolvimento</p>
+            <div className="space-y-6">
+              <h1 className="text-3xl font-bold text-foreground">Configurações</h1>
+              <p className="text-muted-foreground">Módulo em desenvolvimento</p>
             </div>
           </MainLayout>
         } />

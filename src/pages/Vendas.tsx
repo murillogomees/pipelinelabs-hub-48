@@ -45,10 +45,10 @@ export function Vendas() {
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">Vendas</h1>
-          <p className="text-gray-600">Gerencie todos os seus pedidos e vendas</p>
+          <h1 className="text-3xl font-bold text-foreground">Vendas</h1>
+          <p className="text-muted-foreground">Gerencie todos os seus pedidos e vendas</p>
         </div>
-        <Button className="bg-blue-600 hover:bg-blue-700">
+        <Button className="bg-primary hover:bg-primary/90 text-primary-foreground">
           <Plus className="w-4 h-4 mr-2" />
           Nova Venda
         </Button>
@@ -59,7 +59,7 @@ export function Vendas() {
           <CardTitle>Pedidos Recentes</CardTitle>
           <div className="flex space-x-2">
             <div className="relative flex-1">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
               <Input placeholder="Buscar pedidos..." className="pl-10" />
             </div>
             <Button variant="outline">
@@ -95,13 +95,13 @@ export function Vendas() {
                   ))
                 ) : sales?.length === 0 ? (
                   <tr>
-                    <td colSpan={6} className="text-center py-8 text-gray-500">
+                    <td colSpan={6} className="text-center py-8 text-muted-foreground">
                       Nenhuma venda encontrada. Clique em "Nova Venda" para criar sua primeira venda.
                     </td>
                   </tr>
                 ) : (
                   sales?.map((venda) => (
-                    <tr key={venda.id} className="border-b hover:bg-gray-50">
+                    <tr key={venda.id} className="border-b hover:bg-muted/50">
                       <td className="py-3 px-4 font-medium">{venda.sale_number}</td>
                       <td className="py-3 px-4">{venda.customers?.name || 'Cliente não informado'}</td>
                       <td className="py-3 px-4">

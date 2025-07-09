@@ -28,10 +28,10 @@ export function Produtos() {
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">Produtos</h1>
-          <p className="text-gray-600">Gerencie seu catálogo e controle de estoque</p>
+          <h1 className="text-3xl font-bold text-foreground">Produtos</h1>
+          <p className="text-muted-foreground">Gerencie seu catálogo e controle de estoque</p>
         </div>
-        <Button className="bg-blue-600 hover:bg-blue-700">
+        <Button className="bg-primary hover:bg-primary/90 text-primary-foreground">
           <Plus className="w-4 h-4 mr-2" />
           Novo Produto
         </Button>
@@ -42,9 +42,9 @@ export function Produtos() {
         <Card>
           <CardContent className="p-4">
             <div className="flex items-center">
-              <Package className="w-8 h-8 text-blue-600 mr-3" />
+              <Package className="w-8 h-8 text-primary mr-3" />
               <div>
-                <p className="text-sm text-gray-600">Total de Produtos</p>
+                <p className="text-sm text-muted-foreground">Total de Produtos</p>
                 {isLoading ? (
                   <Skeleton className="h-8 w-16" />
                 ) : (
@@ -57,9 +57,9 @@ export function Produtos() {
         <Card>
           <CardContent className="p-4">
             <div className="flex items-center">
-              <AlertTriangle className="w-8 h-8 text-red-600 mr-3" />
+              <AlertTriangle className="w-8 h-8 text-destructive mr-3" />
               <div>
-                <p className="text-sm text-gray-600">Estoque Baixo</p>
+                <p className="text-sm text-muted-foreground">Estoque Baixo</p>
                 {isLoading ? (
                   <Skeleton className="h-8 w-16" />
                 ) : (
@@ -72,7 +72,7 @@ export function Produtos() {
         <Card>
           <CardContent className="p-4">
             <div>
-              <p className="text-sm text-gray-600">Valor Total</p>
+              <p className="text-sm text-muted-foreground">Valor Total</p>
               {isLoading ? (
                 <Skeleton className="h-8 w-24" />
               ) : (
@@ -89,7 +89,7 @@ export function Produtos() {
         <Card>
           <CardContent className="p-4">
             <div>
-              <p className="text-sm text-gray-600">Categorias</p>
+              <p className="text-sm text-muted-foreground">Categorias</p>
               <p className="text-2xl font-bold">-</p>
             </div>
           </CardContent>
@@ -101,7 +101,7 @@ export function Produtos() {
           <CardTitle>Lista de Produtos</CardTitle>
           <div className="flex space-x-2">
             <div className="relative flex-1">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
               <Input placeholder="Buscar produtos..." className="pl-10" />
             </div>
             <Button variant="outline">
@@ -137,17 +137,17 @@ export function Produtos() {
                   ))
                 ) : products?.length === 0 ? (
                   <tr>
-                    <td colSpan={6} className="text-center py-8 text-gray-500">
+                    <td colSpan={6} className="text-center py-8 text-muted-foreground">
                       Nenhum produto encontrado. Clique em "Novo Produto" para adicionar seu primeiro produto.
                     </td>
                   </tr>
                 ) : (
                   products?.map((produto) => (
-                    <tr key={produto.id} className="border-b hover:bg-gray-50">
+                    <tr key={produto.id} className="border-b hover:bg-muted/50">
                       <td className="py-3 px-4 font-medium">{produto.code}</td>
                       <td className="py-3 px-4">{produto.name}</td>
                       <td className="py-3 px-4">
-                        <span className={produto.stock_quantity <= (produto.min_stock || 0) ? 'text-red-600 font-medium' : ''}>
+                        <span className={produto.stock_quantity <= (produto.min_stock || 0) ? 'text-destructive font-medium' : ''}>
                           {produto.stock_quantity} un.
                         </span>
                       </td>
