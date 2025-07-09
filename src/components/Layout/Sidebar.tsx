@@ -49,6 +49,7 @@ const menuItems = [
     icon: Users,
     path: '/clientes',
     submenu: [
+      { title: 'Clientes', path: '/clientes' },
       { title: 'Fornecedores', path: '/clientes/fornecedores' }
     ]
   },
