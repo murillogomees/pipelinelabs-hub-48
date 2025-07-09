@@ -1,7 +1,7 @@
 import React from 'react';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { SearchableSelect } from '@/components/ui/searchable-select';
 import { Switch } from '@/components/ui/switch';
 
 interface BasicInfoFieldsProps {
@@ -58,18 +58,17 @@ export function BasicInfoFields({ formData, onChange, isEditing = false }: Basic
 
         <div className="space-y-2">
           <Label htmlFor="role">Cargo</Label>
-          <Select 
-            value={formData.role} 
+          <SearchableSelect
+            value={formData.role}
             onValueChange={(value) => onChange('role', value)}
-          >
-            <SelectTrigger>
-              <SelectValue placeholder="Selecione o cargo" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="user">Usuário</SelectItem>
-              <SelectItem value="admin">Administrador</SelectItem>
-            </SelectContent>
-          </Select>
+            placeholder="Selecione o cargo..."
+            searchPlaceholder="Buscar cargo..."
+            staticOptions={[
+              { value: "user", label: "Usuário" },
+              { value: "admin", label: "Administrador" }
+            ]}
+            emptyMessage="Nenhum cargo encontrado"
+          />
         </div>
       </div>
 

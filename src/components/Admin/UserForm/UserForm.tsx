@@ -4,7 +4,6 @@ import { BasicInfoFields } from './components/BasicInfoFields';
 import { CompanySelector } from './components/CompanySelector';
 import { PasswordField } from './components/PasswordField';
 import { PermissionsSection } from './components/PermissionsSection';
-import { useCompanies } from './hooks/useCompanies';
 import { supabase } from '@/integrations/supabase/client';
 
 interface UserFormProps {
@@ -36,7 +35,6 @@ const defaultFormData: UserFormData = {
 export function UserForm({ user, onSubmit, loading }: UserFormProps) {
   const [formData, setFormData] = useState<UserFormData>(defaultFormData);
   const [defaultCompanyId, setDefaultCompanyId] = useState('');
-  const companies = useCompanies();
 
   // Carregar empresa padrão
   useEffect(() => {
@@ -109,7 +107,6 @@ export function UserForm({ user, onSubmit, loading }: UserFormProps) {
       <CompanySelector
         value={formData.company_id}
         onChange={(value) => handleFieldChange('company_id', value)}
-        companies={companies}
         disabled={!!user}
         isRequired={!user}
       />
