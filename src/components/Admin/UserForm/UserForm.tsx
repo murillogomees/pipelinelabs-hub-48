@@ -5,6 +5,7 @@ import { CompanySelector } from './components/CompanySelector';
 import { PasswordField } from './components/PasswordField';
 import { PermissionsSection } from './components/PermissionsSection';
 import { useCompanies } from './hooks/useCompanies';
+import { supabase } from '@/integrations/supabase/client';
 
 interface UserFormProps {
   user?: User;
@@ -34,7 +35,19 @@ const defaultFormData: UserFormData = {
 
 export function UserForm({ user, onSubmit, loading }: UserFormProps) {
   const [formData, setFormData] = useState<UserFormData>(defaultFormData);
+  const [defaultCompanyId, setDefaultCompanyId] = useState('');
   const companies = useCompanies();
+
+  // Carregar empresa padrão
+  useEffect(() => {
+    const loadDefaultCompany = async () => {
+      const { data } = await supabase.rpc('get_default_company_id');
+      if (data) {
+        setDefaultCompanyId(data);
+      }
+    };
+    loadDefaultCompany();
+  }, []);
 
   useEffect(() => {
     if (user) {
@@ -59,9 +72,12 @@ export function UserForm({ user, onSubmit, loading }: UserFormProps) {
         }
       });
     } else {
-      setFormData(defaultFormData);
+      setFormData({
+        ...defaultFormData,
+        company_id: defaultCompanyId // Definir Pipeline Labs como padrão
+      });
     }
-  }, [user]);
+  }, [user, defaultCompanyId]);
 
   const handleFieldChange = (field: string, value: string | boolean) => {
     setFormData(prev => ({ ...prev, [field]: value }));

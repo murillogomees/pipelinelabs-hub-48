@@ -962,6 +962,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      get_default_company_id: {
+        Args: Record<PropertyKey, never>
+        Returns: string
+      }
       get_user_company_id: {
         Args: Record<PropertyKey, never>
         Returns: string
