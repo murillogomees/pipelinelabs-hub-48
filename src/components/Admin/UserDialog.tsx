@@ -20,6 +20,7 @@ interface UserDialogProps {
 export function UserDialog({ open, onOpenChange, user, onSave }: UserDialogProps) {
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+  const [companies, setCompanies] = useState<any[]>([]);
   const [formData, setFormData] = useState({
     display_name: '',
     email: '',
@@ -27,6 +28,7 @@ export function UserDialog({ open, onOpenChange, user, onSave }: UserDialogProps
     is_active: true,
     role: 'user',
     password: '',
+    company_id: '',
     permissions: {
       dashboard: true,
       vendas: true,
@@ -41,6 +43,21 @@ export function UserDialog({ open, onOpenChange, user, onSave }: UserDialogProps
 
   const { toast } = useToast();
 
+  // Carregar empresas
+  useEffect(() => {
+    const loadCompanies = async () => {
+      const { data: companiesData } = await supabase
+        .from('companies')
+        .select('id, name');
+      
+      if (companiesData) {
+        setCompanies(companiesData);
+      }
+    };
+    
+    loadCompanies();
+  }, []);
+
   useEffect(() => {
     if (user) {
       setFormData({
@@ -50,6 +67,7 @@ export function UserDialog({ open, onOpenChange, user, onSave }: UserDialogProps
         is_active: user.is_active,
         role: user.user_companies[0]?.role || 'user',
         password: '',
+        company_id: user.user_companies[0]?.company_id || '',
         permissions: {
           dashboard: true,
           vendas: true,
@@ -70,6 +88,7 @@ export function UserDialog({ open, onOpenChange, user, onSave }: UserDialogProps
         is_active: true,
         role: 'user',
         password: '',
+        company_id: '',
         permissions: {
           dashboard: true,
           vendas: true,
@@ -168,12 +187,12 @@ export function UserDialog({ open, onOpenChange, user, onSave }: UserDialogProps
       .single();
 
     if (currentUserCompany) {
-      // Criar associação do novo usuário com a empresa
+    // Criar associação do novo usuário com a empresa selecionada
       const { error: companyError } = await supabase
         .from('user_companies')
         .insert({
           user_id: authData.user.id,
-          company_id: currentUserCompany.company_id,
+          company_id: formData.company_id || currentUserCompany.company_id,
           role: formData.role,
           permissions: formData.permissions,
           is_active: formData.is_active
@@ -308,7 +327,7 @@ export function UserDialog({ open, onOpenChange, user, onSave }: UserDialogProps
             </div>
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-3 gap-4">
             <div className="space-y-2">
               <Label htmlFor="phone">Telefone</Label>
               <Input
@@ -331,6 +350,26 @@ export function UserDialog({ open, onOpenChange, user, onSave }: UserDialogProps
                 <SelectContent>
                   <SelectItem value="user">Usuário</SelectItem>
                   <SelectItem value="admin">Administrador</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="company_id">Empresa</Label>
+              <Select 
+                value={formData.company_id} 
+                onValueChange={(value) => setFormData(prev => ({ ...prev, company_id: value }))}
+                disabled={!!user} // Não permitir alterar empresa de usuário existente
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Selecione a empresa" />
+                </SelectTrigger>
+                <SelectContent>
+                  {companies.map((company) => (
+                    <SelectItem key={company.id} value={company.id}>
+                      {company.name}
+                    </SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
             </div>

@@ -59,50 +59,47 @@ function Usuarios() {
     try {
       setLoading(true);
       
-      // Buscar associações usuário-empresa com perfis
-      const { data: userCompanies, error: userCompaniesError } = await supabase
-        .from('user_companies')
-        .select(`
-          id,
-          user_id,
-          role,
-          is_active,
-          permissions,
-          last_login,
-          company_id,
-          companies(name),
-          profiles!inner(
-            user_id,
-            display_name,
-            email,
-            phone,
-            is_active
-          )
-        `);
+      // Buscar perfis de usuários
+      const { data: profiles, error: profilesError } = await supabase
+        .from('profiles')
+        .select('*');
 
-      if (userCompaniesError) {
-        console.error('Erro ao carregar usuários:', userCompaniesError);
+      if (profilesError) {
+        console.error('Erro ao carregar perfis:', profilesError);
         toast({
           title: "Erro",
-          description: "Falha ao carregar usuários",
+          description: "Falha ao carregar perfis de usuários",
           variant: "destructive",
         });
         return;
       }
 
-      // Transformar dados para o formato esperado
-      const transformedUsers = userCompanies?.map(uc => {
-        const profile = uc.profiles;
+      // Buscar associações usuário-empresa
+      const { data: userCompanies, error: userCompaniesError } = await supabase
+        .from('user_companies')
+        .select(`
+          *,
+          companies(name)
+        `);
+
+      if (userCompaniesError) {
+        console.error('Erro ao carregar empresas dos usuários:', userCompaniesError);
+        toast({
+          title: "Erro",
+          description: "Falha ao carregar dados das empresas",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      // Combinar dados de perfis com user_companies
+      const transformedUsers = profiles?.map(profile => {
+        const userCompanyData = userCompanies?.filter(uc => uc.user_id === profile.user_id) || [];
         return {
-          id: profile?.id,
-          user_id: profile?.user_id,
-          display_name: profile?.display_name,
-          email: profile?.email,
-          phone: profile?.phone,
-          is_active: profile?.is_active,
-          user_companies: [uc]
+          ...profile,
+          user_companies: userCompanyData
         };
-      }) || [];
+      }).filter(user => user.user_companies.length > 0) || [];
 
       setUsers(transformedUsers);
     } catch (error) {
