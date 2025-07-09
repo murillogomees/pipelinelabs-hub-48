@@ -39,9 +39,24 @@ export function UserForm({ user, onSubmit, loading }: UserFormProps) {
   // Carregar empresa padrão
   useEffect(() => {
     const loadDefaultCompany = async () => {
-      const { data } = await supabase.rpc('get_default_company_id');
-      if (data) {
-        setDefaultCompanyId(data);
+      try {
+        const { data } = await supabase.rpc('get_default_company_id');
+        if (data) {
+          setDefaultCompanyId(data);
+        } else {
+          // Fallback: buscar Pipeline Labs diretamente
+          const { data: company } = await supabase
+            .from('companies')
+            .select('id')
+            .eq('name', 'Pipeline Labs')
+            .single();
+          
+          if (company) {
+            setDefaultCompanyId(company.id);
+          }
+        }
+      } catch (error) {
+        console.error('Erro ao carregar empresa padrão:', error);
       }
     };
     loadDefaultCompany();
@@ -69,7 +84,8 @@ export function UserForm({ user, onSubmit, loading }: UserFormProps) {
           ...user.user_companies[0]?.permissions
         }
       });
-    } else {
+    } else if (defaultCompanyId) {
+      // Só definir o formulário padrão quando temos o ID da empresa
       setFormData({
         ...defaultFormData,
         company_id: defaultCompanyId // Definir Pipeline Labs como padrão
