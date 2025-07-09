@@ -60,44 +60,46 @@ export function SearchableSelect({
   const [hasMore, setHasMore] = React.useState(false)
   const [total, setTotal] = React.useState(0)
   const [initialLoad, setInitialLoad] = React.useState(false)
+  
+  const timeoutRef = React.useRef<NodeJS.Timeout>()
 
-  const selectedOption = options.find(option => option.value === value)
+  const selectedOption = React.useMemo(() => 
+    options.find(option => option.value === value), 
+    [options, value]
+  )
 
-  // Debounce search
-  const debouncedSearch = React.useMemo(() => {
-    const timeoutRef = React.useRef<NodeJS.Timeout>()
-    return (searchTerm: string) => {
-      if (timeoutRef.current) {
-        clearTimeout(timeoutRef.current)
-      }
-      timeoutRef.current = setTimeout(() => {
-        if (loadOptions) {
-          loadOptionsData(searchTerm, 1, true)
-        }
-      }, 300)
-    }
-  }, [loadOptions])
-
-  const loadOptionsData = async (searchTerm: string = "", pageNum: number = 1, reset: boolean = false) => {
+  const loadOptionsData = React.useCallback(async (searchTerm: string = "", pageNum: number = 1, reset: boolean = false) => {
     if (!loadOptions) return
 
     setLoading(true)
     try {
       const result = await loadOptions(searchTerm, pageNum)
       if (reset) {
-        setOptions(result.options)
+        setOptions(result.options || [])
       } else {
-        setOptions(prev => [...prev, ...result.options])
+        setOptions(prev => [...(prev || []), ...(result.options || [])])
       }
-      setHasMore(result.hasMore)
-      setTotal(result.total)
+      setHasMore(result.hasMore || false)
+      setTotal(result.total || 0)
       setPage(pageNum)
     } catch (error) {
       console.error('Erro ao carregar opções:', error)
     } finally {
       setLoading(false)
     }
-  }
+  }, [loadOptions])
+
+  // Debounce search function
+  const debouncedSearch = React.useCallback((searchTerm: string) => {
+    if (timeoutRef.current) {
+      clearTimeout(timeoutRef.current)
+    }
+    timeoutRef.current = setTimeout(() => {
+      if (loadOptions) {
+        loadOptionsData(searchTerm, 1, true)
+      }
+    }, 300)
+  }, [loadOptions, loadOptionsData])
 
   // Load initial data when opening
   const handleOpenChange = (isOpen: boolean) => {
@@ -125,13 +127,13 @@ export function SearchableSelect({
 
   // Filter static options based on search
   const filteredStaticOptions = React.useMemo(() => {
-    if (!search || loadOptions) return staticOptions
-    return staticOptions.filter(option =>
+    if (!search || loadOptions) return staticOptions || []
+    return (staticOptions || []).filter(option =>
       option.label.toLowerCase().includes(search.toLowerCase())
     )
   }, [search, staticOptions, loadOptions])
 
-  const displayOptions = loadOptions ? options : filteredStaticOptions
+  const displayOptions = loadOptions ? (options || []) : filteredStaticOptions
 
   return (
     <Popover open={open} onOpenChange={handleOpenChange}>
@@ -171,11 +173,11 @@ export function SearchableSelect({
                 </div>
               ) : (
                 <>
-                  {displayOptions.length === 0 ? (
+                  {(displayOptions || []).length === 0 ? (
                     <CommandEmpty>{emptyMessage}</CommandEmpty>
                   ) : (
                     <CommandGroup>
-                      {displayOptions.map((option) => (
+                      {(displayOptions || []).map((option) => (
                         <CommandItem
                           key={option.value}
                           value={option.value}
@@ -210,7 +212,7 @@ export function SearchableSelect({
                                 Carregando mais...
                               </>
                             ) : (
-                              `Carregar mais (${total - options.length} restantes)`
+                              `Carregar mais (${total - (options || []).length} restantes)`
                             )}
                           </Button>
                         </div>
