@@ -374,6 +374,51 @@ export type Database = {
           },
         ]
       }
+      plans: {
+        Row: {
+          active: boolean | null
+          created_at: string
+          description: string | null
+          features: Json | null
+          id: string
+          is_custom: boolean | null
+          is_whitelabel: boolean | null
+          name: string
+          price: number
+          trial_days: number | null
+          updated_at: string
+          user_limit: number | null
+        }
+        Insert: {
+          active?: boolean | null
+          created_at?: string
+          description?: string | null
+          features?: Json | null
+          id?: string
+          is_custom?: boolean | null
+          is_whitelabel?: boolean | null
+          name: string
+          price: number
+          trial_days?: number | null
+          updated_at?: string
+          user_limit?: number | null
+        }
+        Update: {
+          active?: boolean | null
+          created_at?: string
+          description?: string | null
+          features?: Json | null
+          id?: string
+          is_custom?: boolean | null
+          is_whitelabel?: boolean | null
+          name?: string
+          price?: number
+          trial_days?: number | null
+          updated_at?: string
+          user_limit?: number | null
+        }
+        Relationships: []
+      }
       product_categories: {
         Row: {
           company_id: string
@@ -840,6 +885,69 @@ export type Database = {
             columns: ["product_id"]
             isOneToOne: false
             referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      subscriptions: {
+        Row: {
+          company_id: string
+          created_at: string
+          end_date: string | null
+          id: string
+          payment_method: string | null
+          plan_id: string
+          price_paid: number | null
+          start_date: string
+          status: string
+          stripe_subscription_id: string | null
+          trial_end_date: string | null
+          trial_start_date: string | null
+          updated_at: string
+        }
+        Insert: {
+          company_id: string
+          created_at?: string
+          end_date?: string | null
+          id?: string
+          payment_method?: string | null
+          plan_id: string
+          price_paid?: number | null
+          start_date?: string
+          status?: string
+          stripe_subscription_id?: string | null
+          trial_end_date?: string | null
+          trial_start_date?: string | null
+          updated_at?: string
+        }
+        Update: {
+          company_id?: string
+          created_at?: string
+          end_date?: string | null
+          id?: string
+          payment_method?: string | null
+          plan_id?: string
+          price_paid?: number | null
+          start_date?: string
+          status?: string
+          stripe_subscription_id?: string | null
+          trial_end_date?: string | null
+          trial_start_date?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "subscriptions_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "subscriptions_plan_id_fkey"
+            columns: ["plan_id"]
+            isOneToOne: false
+            referencedRelation: "plans"
             referencedColumns: ["id"]
           },
         ]

@@ -10,9 +10,74 @@ import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { UserDialog } from '@/components/Admin/UserDialog';
+import { PlanDialog } from '@/components/Plans/PlanDialog';
 
 // Componente para Planos
 function Planos() {
+  const [plans, setPlans] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [showDialog, setShowDialog] = useState(false);
+  const [selectedPlan, setSelectedPlan] = useState<any>(null);
+  const { toast } = useToast();
+
+  useEffect(() => {
+    loadPlans();
+  }, []);
+
+  const loadPlans = async () => {
+    try {
+      setLoading(true);
+      const { data, error } = await supabase
+        .from('plans')
+        .select('*')
+        .order('price');
+      
+      if (error) throw error;
+      setPlans(data || []);
+    } catch (error) {
+      console.error('Erro ao carregar planos:', error);
+      toast({
+        title: "Erro",
+        description: "Falha ao carregar planos",
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleStatusToggle = async (planId: string, currentStatus: boolean) => {
+    try {
+      const { error } = await supabase
+        .from('plans')
+        .update({ active: !currentStatus })
+        .eq('id', planId);
+
+      if (error) throw error;
+
+      await loadPlans();
+      toast({
+        title: "Sucesso",
+        description: "Status do plano atualizado com sucesso",
+      });
+    } catch (error) {
+      console.error('Erro ao atualizar status:', error);
+      toast({
+        title: "Erro",
+        description: "Falha ao atualizar status do plano",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const formatPrice = (price: number, isCustom: boolean) => {
+    if (isCustom) return "Sob orçamento";
+    return new Intl.NumberFormat("pt-BR", {
+      style: "currency",
+      currency: "BRL",
+    }).format(price);
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
@@ -20,23 +85,101 @@ function Planos() {
           <h2 className="text-2xl font-bold text-foreground">Planos</h2>
           <p className="text-muted-foreground">Gerencie planos e assinaturas</p>
         </div>
-        <Button className="bg-primary hover:bg-primary/90 text-primary-foreground">
+        <Button 
+          onClick={() => {
+            setSelectedPlan(null);
+            setShowDialog(true);
+          }}
+          className="bg-primary hover:bg-primary/90 text-primary-foreground"
+        >
           <Plus className="w-4 h-4 mr-2" />
           Novo Plano
         </Button>
       </div>
 
       <Card>
-        <CardContent className="p-6">
-          <div className="text-center py-12">
-            <CreditCard className="w-16 h-16 text-muted-foreground mx-auto mb-4" />
-            <h3 className="text-xl font-semibold mb-2">Planos em Desenvolvimento</h3>
-            <p className="text-muted-foreground">
-              O módulo de gestão de planos estará disponível em breve.
-            </p>
-          </div>
+        <CardContent className="p-0">
+          {loading ? (
+            <div className="flex items-center justify-center py-12">
+              <div className="text-center">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto"></div>
+                <p className="mt-2 text-muted-foreground">Carregando planos...</p>
+              </div>
+            </div>
+          ) : (
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Nome</TableHead>
+                  <TableHead>Preço</TableHead>
+                  <TableHead>Limite de Usuários</TableHead>
+                  <TableHead>Teste Grátis</TableHead>
+                  <TableHead>Status</TableHead>
+                  <TableHead className="text-right">Ações</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {plans.length === 0 ? (
+                  <TableRow>
+                    <TableCell colSpan={6} className="text-center py-12">
+                      <CreditCard className="w-16 h-16 text-muted-foreground mx-auto mb-4" />
+                      <h3 className="text-xl font-semibold mb-2">Nenhum plano encontrado</h3>
+                      <p className="text-muted-foreground">Comece criando um novo plano.</p>
+                    </TableCell>
+                  </TableRow>
+                ) : (
+                  plans.map((plan) => (
+                    <TableRow key={plan.id}>
+                      <TableCell className="font-medium">{plan.name}</TableCell>
+                      <TableCell>{formatPrice(plan.price, plan.is_custom)}</TableCell>
+                      <TableCell>
+                        {plan.user_limit === -1 ? "Ilimitado" : plan.user_limit}
+                      </TableCell>
+                      <TableCell>
+                        {plan.trial_days > 0 ? `${plan.trial_days} dias` : "-"}
+                      </TableCell>
+                      <TableCell>
+                        <Badge variant={plan.active ? 'default' : 'secondary'}>
+                          {plan.active ? 'Ativo' : 'Inativo'}
+                        </Badge>
+                      </TableCell>
+                      <TableCell className="text-right">
+                        <div className="flex items-center justify-end space-x-2">
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => {
+                              setSelectedPlan(plan);
+                              setShowDialog(true);
+                            }}
+                          >
+                            Editar
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => handleStatusToggle(plan.id, plan.active)}
+                          >
+                            {plan.active ? 'Desativar' : 'Ativar'}
+                          </Button>
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  ))
+                )}
+              </TableBody>
+            </Table>
+          )}
         </CardContent>
       </Card>
+
+      {/* Dialog para criar/editar plano */}
+      <PlanDialog
+        open={showDialog}
+        onOpenChange={setShowDialog}
+        plan={selectedPlan}
+        onSave={loadPlans}
+      />
     </div>
   );
 }

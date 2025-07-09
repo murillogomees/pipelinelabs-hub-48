@@ -16,6 +16,7 @@ import { Admin } from "@/pages/Admin";
 import { AuthProvider } from "@/components/Auth/AuthProvider";
 import { AuthForm } from "@/components/Auth/AuthForm";
 import { useAuth } from "@/components/Auth/AuthProvider";
+import { SignUpCompany } from "@/pages/SignUpCompany";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -34,78 +35,91 @@ function AppContent() {
     );
   }
 
-  if (!user) {
-    return <AuthForm />;
-  }
-
   return (
     <BrowserRouter>
       <Routes>
-        <Route path="/" element={
-          <MainLayout>
-            <Dashboard />
-          </MainLayout>
-        } />
-        <Route path="/vendas/*" element={
-          <MainLayout>
-            <Vendas />
-          </MainLayout>
-        } />
-        <Route path="/produtos/*" element={
-          <MainLayout>
-            <Produtos />
-          </MainLayout>
-        } />
-        <Route path="/clientes/*" element={
-          <MainLayout>
-            <Clientes />
-          </MainLayout>
-        } />
-        <Route path="/financeiro/*" element={
-          <MainLayout>
-            <Financeiro />
-          </MainLayout>
-        } />
-        <Route path="/notas-fiscais/*" element={
-          <MainLayout>
-            <NotasFiscais />
-          </MainLayout>
-        } />
-        <Route path="/producao/*" element={
-          <MainLayout>
-            <Producao />
-          </MainLayout>
-        } />
-        <Route path="/relatorios/*" element={
-          <MainLayout>
-            <div className="space-y-6">
-              <h1 className="text-3xl font-bold text-foreground">Relatórios</h1>
-              <p className="text-muted-foreground">Módulo em desenvolvimento</p>
-            </div>
-          </MainLayout>
-        } />
-        <Route path="/integracoes/*" element={
-          <MainLayout>
-            <div className="space-y-6">
-              <h1 className="text-3xl font-bold text-foreground">Integrações</h1>
-              <p className="text-muted-foreground">Módulo em desenvolvimento</p>
-            </div>
-          </MainLayout>
-        } />
-        <Route path="/admin/*" element={
-          <MainLayout>
-            <Admin />
-          </MainLayout>
-        } />
-        <Route path="/configuracoes/*" element={
-          <MainLayout>
-            <div className="space-y-6">
-              <h1 className="text-3xl font-bold text-foreground">Configurações</h1>
-              <p className="text-muted-foreground">Módulo em desenvolvimento</p>
-            </div>
-          </MainLayout>
-        } />
-        <Route path="*" element={<NotFound />} />
+        {/* Rota pública para cadastro de empresa */}
+        <Route path="/cadastro-empresa" element={<SignUpCompany />} />
+        
+        {!user ? (
+          <Route path="*" element={<AuthForm />} />
+        ) : (
+          <>
+            <Route path="/" element={
+              <MainLayout>
+                <Dashboard />
+              </MainLayout>
+            } />
+            <Route path="/vendas/*" element={
+              <MainLayout>
+                <Vendas />
+              </MainLayout>
+            } />
+            <Route path="/produtos/*" element={
+              <MainLayout>
+                <Produtos />
+              </MainLayout>
+            } />
+            <Route path="/clientes/*" element={
+              <MainLayout>
+                <Clientes />
+              </MainLayout>
+            } />
+            <Route path="/financeiro/*" element={
+              <MainLayout>
+                <Financeiro />
+              </MainLayout>
+            } />
+            <Route path="/notas-fiscais/*" element={
+              <MainLayout>
+                <NotasFiscais />
+              </MainLayout>
+            } />
+            <Route path="/producao/*" element={
+              <MainLayout>
+                <Producao />
+              </MainLayout>
+            } />
+            <Route path="/relatorios/*" element={
+              <MainLayout>
+                <div className="space-y-6">
+                  <h1 className="text-3xl font-bold text-foreground">Relatórios</h1>
+                  <p className="text-muted-foreground">Módulo em desenvolvimento</p>
+                </div>
+              </MainLayout>
+            } />
+            <Route path="/integracoes/*" element={
+              <MainLayout>
+                <div className="space-y-6">
+                  <h1 className="text-3xl font-bold text-foreground">Integrações</h1>
+                  <p className="text-muted-foreground">Módulo em desenvolvimento</p>
+                </div>
+              </MainLayout>
+            } />
+            <Route path="/admin/*" element={
+              <MainLayout>
+                <Admin />
+              </MainLayout>
+            } />
+            <Route path="/planos/*" element={
+              <MainLayout>
+                <div className="space-y-6">
+                  <h1 className="text-3xl font-bold text-foreground">Planos</h1>
+                  <p className="text-muted-foreground">Módulo em desenvolvimento</p>
+                </div>
+              </MainLayout>
+            } />
+            <Route path="/configuracoes/*" element={
+              <MainLayout>
+                <div className="space-y-6">
+                  <h1 className="text-3xl font-bold text-foreground">Configurações</h1>
+                  <p className="text-muted-foreground">Módulo em desenvolvimento</p>
+                </div>
+              </MainLayout>
+            } />
+            <Route path="*" element={<NotFound />} />
+          </>
+        )}
       </Routes>
     </BrowserRouter>
   );
