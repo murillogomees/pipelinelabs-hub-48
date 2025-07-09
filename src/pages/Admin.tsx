@@ -59,49 +59,33 @@ function Usuarios() {
     try {
       setLoading(true);
       
-      // Buscar perfis de usuários
+      // Buscar perfis de usuários com informações de empresa usando JOIN
       const { data: profiles, error: profilesError } = await supabase
         .from('profiles')
-        .select('*');
-
-      if (profilesError) {
-        console.error('Erro ao carregar perfis:', profilesError);
-        toast({
-          title: "Erro",
-          description: "Falha ao carregar perfis de usuários",
-          variant: "destructive",
-        });
-        return;
-      }
-
-      // Buscar associações usuário-empresa
-      const { data: userCompanies, error: userCompaniesError } = await supabase
-        .from('user_companies')
         .select(`
           *,
-          companies(name)
+          user_companies(
+            id,
+            role,
+            is_active,
+            permissions,
+            last_login,
+            company_id,
+            companies(name)
+          )
         `);
 
-      if (userCompaniesError) {
-        console.error('Erro ao carregar empresas dos usuários:', userCompaniesError);
+      if (profilesError) {
+        console.error('Erro ao carregar usuários:', profilesError);
         toast({
           title: "Erro",
-          description: "Falha ao carregar dados das empresas",
+          description: "Falha ao carregar usuários",
           variant: "destructive",
         });
         return;
       }
 
-      // Combinar dados de perfis com user_companies
-      const transformedUsers = profiles?.map(profile => {
-        const userCompanyData = userCompanies?.filter(uc => uc.user_id === profile.user_id) || [];
-        return {
-          ...profile,
-          user_companies: userCompanyData
-        };
-      }).filter(user => user.user_companies.length > 0) || [];
-
-      setUsers(transformedUsers);
+      setUsers(profiles || []);
     } catch (error) {
       console.error('Erro ao carregar usuários:', error);
       toast({
@@ -230,8 +214,8 @@ function Usuarios() {
                       <TableCell>{user.email}</TableCell>
                       <TableCell>{user.phone || '-'}</TableCell>
                       <TableCell>
-                        <Badge variant={user.user_companies[0]?.role === 'admin' ? 'default' : 'secondary'}>
-                          {user.user_companies[0]?.role === 'admin' ? 'Administrador' : 'Usuário'}
+                        <Badge variant={(user.user_companies?.[0]?.role === 'admin') ? 'default' : 'secondary'}>
+                          {(user.user_companies?.[0]?.role === 'admin') ? 'Administrador' : 'Usuário'}
                         </Badge>
                       </TableCell>
                       <TableCell>
@@ -240,7 +224,7 @@ function Usuarios() {
                         </Badge>
                       </TableCell>
                       <TableCell>
-                        {user.user_companies[0]?.last_login 
+                        {user.user_companies?.[0]?.last_login 
                           ? new Date(user.user_companies[0].last_login).toLocaleDateString('pt-BR')
                           : 'Nunca'
                         }

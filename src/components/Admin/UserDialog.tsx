@@ -105,6 +105,17 @@ export function UserDialog({ open, onOpenChange, user, onSave }: UserDialogProps
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    // Validar se empresa foi selecionada para novos usuários
+    if (!user && !formData.company_id) {
+      toast({
+        title: "Erro",
+        description: "Selecione uma empresa para o usuário",
+        variant: "destructive",
+      });
+      return;
+    }
+    
     setLoading(true);
 
     try {
@@ -355,7 +366,9 @@ export function UserDialog({ open, onOpenChange, user, onSave }: UserDialogProps
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="company_id">Empresa</Label>
+              <Label htmlFor="company_id">
+                Empresa {!user && <span className="text-red-500">*</span>}
+              </Label>
               <Select 
                 value={formData.company_id} 
                 onValueChange={(value) => setFormData(prev => ({ ...prev, company_id: value }))}
