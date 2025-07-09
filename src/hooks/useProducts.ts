@@ -31,7 +31,7 @@ export function useProducts() {
   return useQuery({
     queryKey: ['products'],
     queryFn: async () => {
-      const { data, error } = await supabase
+      const { data, error } = await (supabase as any)
         .from('products')
         .select('*')
         .eq('is_active', true)
@@ -50,7 +50,7 @@ export function useCreateProduct() {
   return useMutation({
     mutationFn: async (product: Partial<Product>) => {
       // Get user's company ID (this would need to be implemented)
-      const { data, error } = await supabase
+      const { data, error } = await (supabase as any)
         .from('products')
         .insert([product])
         .select()

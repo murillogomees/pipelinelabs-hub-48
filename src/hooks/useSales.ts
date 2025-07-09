@@ -29,7 +29,7 @@ export function useSales() {
   return useQuery({
     queryKey: ['sales'],
     queryFn: async () => {
-      const { data, error } = await supabase
+      const { data, error } = await (supabase as any)
         .from('sales')
         .select(`
           *,
@@ -51,7 +51,7 @@ export function useCreateSale() {
 
   return useMutation({
     mutationFn: async (sale: Partial<Sale>) => {
-      const { data, error } = await supabase
+      const { data, error } = await (supabase as any)
         .from('sales')
         .insert([sale])
         .select()
