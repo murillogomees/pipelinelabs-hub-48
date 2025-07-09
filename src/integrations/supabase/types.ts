@@ -189,6 +189,95 @@ export type Database = {
         }
         Relationships: []
       }
+      company_settings: {
+        Row: {
+          branding: Json | null
+          certificado_base64: string | null
+          certificado_nome: string | null
+          certificado_senha: string | null
+          certificado_status: string | null
+          certificado_validade: string | null
+          cfop_padrao: string | null
+          company_id: string
+          conta_padrao: string | null
+          created_at: string | null
+          crossdocking_padrao: number | null
+          estoque_tolerancia_minima: number | null
+          formas_pagamento_ativas: Json | null
+          funcionalidades_ativas: Json | null
+          id: string
+          idioma: string | null
+          impostos_padrao: Json | null
+          moeda: string | null
+          notificacoes: Json | null
+          regime_tributario: string | null
+          serie_nfe: string | null
+          timezone: string | null
+          updated_at: string | null
+          webhooks: Json | null
+        }
+        Insert: {
+          branding?: Json | null
+          certificado_base64?: string | null
+          certificado_nome?: string | null
+          certificado_senha?: string | null
+          certificado_status?: string | null
+          certificado_validade?: string | null
+          cfop_padrao?: string | null
+          company_id: string
+          conta_padrao?: string | null
+          created_at?: string | null
+          crossdocking_padrao?: number | null
+          estoque_tolerancia_minima?: number | null
+          formas_pagamento_ativas?: Json | null
+          funcionalidades_ativas?: Json | null
+          id?: string
+          idioma?: string | null
+          impostos_padrao?: Json | null
+          moeda?: string | null
+          notificacoes?: Json | null
+          regime_tributario?: string | null
+          serie_nfe?: string | null
+          timezone?: string | null
+          updated_at?: string | null
+          webhooks?: Json | null
+        }
+        Update: {
+          branding?: Json | null
+          certificado_base64?: string | null
+          certificado_nome?: string | null
+          certificado_senha?: string | null
+          certificado_status?: string | null
+          certificado_validade?: string | null
+          cfop_padrao?: string | null
+          company_id?: string
+          conta_padrao?: string | null
+          created_at?: string | null
+          crossdocking_padrao?: number | null
+          estoque_tolerancia_minima?: number | null
+          formas_pagamento_ativas?: Json | null
+          funcionalidades_ativas?: Json | null
+          id?: string
+          idioma?: string | null
+          impostos_padrao?: Json | null
+          moeda?: string | null
+          notificacoes?: Json | null
+          regime_tributario?: string | null
+          serie_nfe?: string | null
+          timezone?: string | null
+          updated_at?: string | null
+          webhooks?: Json | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "company_settings_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: true
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       customers: {
         Row: {
           address: string | null

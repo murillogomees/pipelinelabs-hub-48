@@ -1,4 +1,3 @@
-
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -17,7 +16,8 @@ import { AuthProvider } from "@/components/Auth/AuthProvider";
 import { AuthForm } from "@/components/Auth/AuthForm";
 import { useAuth } from "@/components/Auth/AuthProvider";
 import { SignUpCompany } from "@/pages/SignUpCompany";
-import NotFound from "./pages/NotFound";
+import Configuracoes from "@/pages/Configuracoes";
+import NotFound from "@/pages/NotFound";
 
 const queryClient = new QueryClient();
 
@@ -109,14 +109,7 @@ function AppContent() {
                 </div>
               </MainLayout>
             } />
-            <Route path="/configuracoes/*" element={
-              <MainLayout>
-                <div className="space-y-6">
-                  <h1 className="text-3xl font-bold text-foreground">Configurações</h1>
-                  <p className="text-muted-foreground">Módulo em desenvolvimento</p>
-                </div>
-              </MainLayout>
-            } />
+            <Route path="/configuracoes/*" element={<Configuracoes />} />
             <Route path="*" element={<NotFound />} />
           </>
         )}
