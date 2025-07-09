@@ -8,6 +8,11 @@ import { MainLayout } from "@/components/Layout/MainLayout";
 import { Dashboard } from "@/pages/Dashboard";
 import { Vendas } from "@/pages/Vendas";
 import { Produtos } from "@/pages/Produtos";
+import { Clientes } from "@/pages/Clientes";
+import { Financeiro } from "@/pages/Financeiro";
+import { NotasFiscais } from "@/pages/NotasFiscais";
+import { Producao } from "@/pages/Producao";
+import { Admin } from "@/pages/Admin";
 import { AuthProvider } from "@/components/Auth/AuthProvider";
 import { AuthForm } from "@/components/Auth/AuthForm";
 import { useAuth } from "@/components/Auth/AuthProvider";
@@ -53,34 +58,22 @@ function AppContent() {
         } />
         <Route path="/clientes/*" element={
           <MainLayout>
-            <div className="space-y-6">
-              <h1 className="text-3xl font-bold text-foreground">Clientes</h1>
-              <p className="text-muted-foreground">Módulo em desenvolvimento</p>
-            </div>
+            <Clientes />
           </MainLayout>
         } />
         <Route path="/financeiro/*" element={
           <MainLayout>
-            <div className="space-y-6">
-              <h1 className="text-3xl font-bold text-foreground">Financeiro</h1>
-              <p className="text-muted-foreground">Módulo em desenvolvimento</p>
-            </div>
+            <Financeiro />
           </MainLayout>
         } />
         <Route path="/notas-fiscais/*" element={
           <MainLayout>
-            <div className="space-y-6">
-              <h1 className="text-3xl font-bold text-foreground">Notas Fiscais</h1>
-              <p className="text-muted-foreground">Módulo em desenvolvimento</p>
-            </div>
+            <NotasFiscais />
           </MainLayout>
         } />
         <Route path="/producao/*" element={
           <MainLayout>
-            <div className="space-y-6">
-              <h1 className="text-3xl font-bold text-foreground">Produção</h1>
-              <p className="text-muted-foreground">Módulo em desenvolvimento</p>
-            </div>
+            <Producao />
           </MainLayout>
         } />
         <Route path="/relatorios/*" element={
@@ -101,10 +94,7 @@ function AppContent() {
         } />
         <Route path="/admin/*" element={
           <MainLayout>
-            <div className="space-y-6">
-              <h1 className="text-3xl font-bold text-foreground">Painel Administrativo</h1>
-              <p className="text-muted-foreground">Módulo em desenvolvimento</p>
-            </div>
+            <Admin />
           </MainLayout>
         } />
         <Route path="/configuracoes/*" element={

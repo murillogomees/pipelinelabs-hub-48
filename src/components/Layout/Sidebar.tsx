@@ -1,6 +1,6 @@
 
-import React, { useState } from 'react';
-import { NavLink } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { NavLink, useLocation } from 'react-router-dom';
 import { 
   Home, 
   ShoppingCart, 
@@ -117,6 +117,19 @@ interface SidebarProps {
 
 export function Sidebar({ collapsed }: SidebarProps) {
   const [expandedItems, setExpandedItems] = useState<string[]>([]);
+  const location = useLocation();
+
+  // Expande automaticamente o menu que contém a rota ativa
+  useEffect(() => {
+    const currentPath = location.pathname;
+    const activeMenuItem = menuItems.find(item => 
+      item.submenu.some(sub => currentPath.startsWith(sub.path))
+    );
+    
+    if (activeMenuItem && !expandedItems.includes(activeMenuItem.title)) {
+      setExpandedItems(prev => [...prev, activeMenuItem.title]);
+    }
+  }, [location.pathname, expandedItems]);
 
   const toggleExpanded = (title: string) => {
     if (collapsed) return;
@@ -204,7 +217,7 @@ export function Sidebar({ collapsed }: SidebarProps) {
                       to={subItem.path}
                       className={({ isActive }) => cn(
                         "block px-3 py-2 text-sm text-slate-300 hover:text-white hover:bg-slate-800 rounded-lg transition-colors",
-                        isActive && "text-blue-400 bg-slate-800"
+                        (isActive || location.pathname.startsWith(subItem.path)) && "text-blue-400 bg-slate-800"
                       )}
                     >
                       {subItem.title}

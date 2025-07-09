@@ -1,13 +1,16 @@
 
 import React from 'react';
+import { Routes, Route, NavLink, useLocation } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Plus, Search, Filter, Package, AlertTriangle } from 'lucide-react';
+import { Plus, Search, Filter, Package, AlertTriangle, Archive, Tag } from 'lucide-react';
 import { Input } from '@/components/ui/input';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useProducts } from '@/hooks/useProducts';
 import { Skeleton } from '@/components/ui/skeleton';
 
-export function Produtos() {
+// Componente para Estoque (lista principal)
+function Estoque() {
   const { data: products, isLoading, error } = useProducts();
 
   const lowStockProducts = products?.filter(p => p.stock_quantity <= (p.min_stock || 0)) || [];
@@ -28,7 +31,7 @@ export function Produtos() {
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <div>
-          <h1 className="text-3xl font-bold text-foreground">Produtos</h1>
+          <h2 className="text-2xl font-bold text-foreground">Estoque</h2>
           <p className="text-muted-foreground">Gerencie seu catálogo e controle de estoque</p>
         </div>
         <Button className="bg-primary hover:bg-primary/90 text-primary-foreground">
@@ -180,6 +183,81 @@ export function Produtos() {
           </div>
         </CardContent>
       </Card>
+    </div>
+  );
+}
+
+// Componente para Categorias
+function Categorias() {
+  return (
+    <div className="space-y-6">
+      <div className="flex justify-between items-center">
+        <div>
+          <h2 className="text-2xl font-bold text-foreground">Categorias</h2>
+          <p className="text-muted-foreground">Organize seus produtos por categorias</p>
+        </div>
+        <Button className="bg-primary hover:bg-primary/90 text-primary-foreground">
+          <Plus className="w-4 h-4 mr-2" />
+          Nova Categoria
+        </Button>
+      </div>
+
+      <Card>
+        <CardContent className="p-6">
+          <div className="text-center py-12">
+            <Tag className="w-16 h-16 text-muted-foreground mx-auto mb-4" />
+            <h3 className="text-xl font-semibold mb-2">Categorias em Desenvolvimento</h3>
+            <p className="text-muted-foreground">
+              O módulo de categorias de produtos estará disponível em breve.
+            </p>
+          </div>
+        </CardContent>
+      </Card>
+    </div>
+  );
+}
+
+// Componente principal Produtos
+export function Produtos() {
+  const location = useLocation();
+  
+  // Determina a aba ativa baseada na URL
+  const getActiveTab = () => {
+    const path = location.pathname;
+    if (path.includes('/estoque')) return 'estoque';
+    if (path.includes('/categorias')) return 'categorias';
+    return 'estoque'; // padrão
+  };
+
+  return (
+    <div className="space-y-6">
+      <div>
+        <h1 className="text-3xl font-bold text-foreground">Produtos</h1>
+        <p className="text-muted-foreground">Gerencie seu catálogo e controle de estoque</p>
+      </div>
+
+      <Tabs value={getActiveTab()} className="space-y-6">
+        <TabsList className="grid w-full grid-cols-2">
+          <TabsTrigger value="estoque" asChild>
+            <NavLink to="/produtos/estoque" className="flex items-center space-x-2">
+              <Archive className="w-4 h-4" />
+              <span>Estoque</span>
+            </NavLink>
+          </TabsTrigger>
+          <TabsTrigger value="categorias" asChild>
+            <NavLink to="/produtos/categorias" className="flex items-center space-x-2">
+              <Tag className="w-4 h-4" />
+              <span>Categorias</span>
+            </NavLink>
+          </TabsTrigger>
+        </TabsList>
+
+        <Routes>
+          <Route index element={<Estoque />} />
+          <Route path="estoque" element={<Estoque />} />
+          <Route path="categorias" element={<Categorias />} />
+        </Routes>
+      </Tabs>
     </div>
   );
 }

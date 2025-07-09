@@ -1,13 +1,16 @@
 
 import React from 'react';
+import { Routes, Route, NavLink, useLocation } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Plus, Search, Filter } from 'lucide-react';
+import { Plus, Search, Filter, ShoppingCart, CreditCard, FileText } from 'lucide-react';
 import { Input } from '@/components/ui/input';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useSales } from '@/hooks/useSales';
 import { Skeleton } from '@/components/ui/skeleton';
 
-export function Vendas() {
+// Componente para Pedidos
+function Pedidos() {
   const { data: sales, isLoading, error } = useSales();
 
   const getStatusColor = (status: string) => {
@@ -45,12 +48,12 @@ export function Vendas() {
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <div>
-          <h1 className="text-3xl font-bold text-foreground">Vendas</h1>
-          <p className="text-muted-foreground">Gerencie todos os seus pedidos e vendas</p>
+          <h2 className="text-2xl font-bold text-foreground">Pedidos</h2>
+          <p className="text-muted-foreground">Gerencie todos os seus pedidos</p>
         </div>
         <Button className="bg-primary hover:bg-primary/90 text-primary-foreground">
           <Plus className="w-4 h-4 mr-2" />
-          Nova Venda
+          Novo Pedido
         </Button>
       </div>
 
@@ -131,6 +134,115 @@ export function Vendas() {
           </div>
         </CardContent>
       </Card>
+    </div>
+  );
+}
+
+// Componente para PDV
+function PDV() {
+  return (
+    <div className="space-y-6">
+      <div className="flex justify-between items-center">
+        <div>
+          <h2 className="text-2xl font-bold text-foreground">PDV - Ponto de Venda</h2>
+          <p className="text-muted-foreground">Sistema de vendas rápido e intuitivo</p>
+        </div>
+      </div>
+
+      <Card>
+        <CardContent className="p-6">
+          <div className="text-center py-12">
+            <CreditCard className="w-16 h-16 text-muted-foreground mx-auto mb-4" />
+            <h3 className="text-xl font-semibold mb-2">PDV em Desenvolvimento</h3>
+            <p className="text-muted-foreground">
+              O sistema de Ponto de Venda estará disponível em breve.
+            </p>
+          </div>
+        </CardContent>
+      </Card>
+    </div>
+  );
+}
+
+// Componente para Propostas
+function Propostas() {
+  return (
+    <div className="space-y-6">
+      <div className="flex justify-between items-center">
+        <div>
+          <h2 className="text-2xl font-bold text-foreground">Propostas</h2>
+          <p className="text-muted-foreground">Gerencie propostas comerciais</p>
+        </div>
+        <Button className="bg-primary hover:bg-primary/90 text-primary-foreground">
+          <Plus className="w-4 h-4 mr-2" />
+          Nova Proposta
+        </Button>
+      </div>
+
+      <Card>
+        <CardContent className="p-6">
+          <div className="text-center py-12">
+            <FileText className="w-16 h-16 text-muted-foreground mx-auto mb-4" />
+            <h3 className="text-xl font-semibold mb-2">Propostas em Desenvolvimento</h3>
+            <p className="text-muted-foreground">
+              O módulo de propostas comerciais estará disponível em breve.
+            </p>
+          </div>
+        </CardContent>
+      </Card>
+    </div>
+  );
+}
+
+// Componente principal Vendas
+export function Vendas() {
+  const location = useLocation();
+  
+  // Determina a aba ativa baseada na URL
+  const getActiveTab = () => {
+    const path = location.pathname;
+    if (path.includes('/pedidos')) return 'pedidos';
+    if (path.includes('/pdv')) return 'pdv';
+    if (path.includes('/propostas')) return 'propostas';
+    return 'pedidos'; // padrão
+  };
+
+  return (
+    <div className="space-y-6">
+      <div>
+        <h1 className="text-3xl font-bold text-foreground">Vendas</h1>
+        <p className="text-muted-foreground">Gerencie todos os seus pedidos e vendas</p>
+      </div>
+
+      <Tabs value={getActiveTab()} className="space-y-6">
+        <TabsList className="grid w-full grid-cols-3">
+          <TabsTrigger value="pedidos" asChild>
+            <NavLink to="/vendas/pedidos" className="flex items-center space-x-2">
+              <ShoppingCart className="w-4 h-4" />
+              <span>Pedidos</span>
+            </NavLink>
+          </TabsTrigger>
+          <TabsTrigger value="pdv" asChild>
+            <NavLink to="/vendas/pdv" className="flex items-center space-x-2">
+              <CreditCard className="w-4 h-4" />
+              <span>PDV</span>
+            </NavLink>
+          </TabsTrigger>
+          <TabsTrigger value="propostas" asChild>
+            <NavLink to="/vendas/propostas" className="flex items-center space-x-2">
+              <FileText className="w-4 h-4" />
+              <span>Propostas</span>
+            </NavLink>
+          </TabsTrigger>
+        </TabsList>
+
+        <Routes>
+          <Route index element={<Pedidos />} />
+          <Route path="pedidos" element={<Pedidos />} />
+          <Route path="pdv" element={<PDV />} />
+          <Route path="propostas" element={<Propostas />} />
+        </Routes>
+      </Tabs>
     </div>
   );
 }
