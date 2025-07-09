@@ -553,6 +553,42 @@ export type Database = {
           },
         ]
       }
+      profiles: {
+        Row: {
+          avatar_url: string | null
+          created_at: string
+          display_name: string | null
+          email: string | null
+          id: string
+          is_active: boolean
+          phone: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          avatar_url?: string | null
+          created_at?: string
+          display_name?: string | null
+          email?: string | null
+          id?: string
+          is_active?: boolean
+          phone?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          avatar_url?: string | null
+          created_at?: string
+          display_name?: string | null
+          email?: string | null
+          id?: string
+          is_active?: boolean
+          phone?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       sale_items: {
         Row: {
           created_at: string
@@ -872,7 +908,11 @@ export type Database = {
           company_id: string
           created_at: string
           id: string
+          invited_at: string | null
+          invited_by: string | null
           is_active: boolean
+          last_login: string | null
+          permissions: Json | null
           role: string
           user_id: string
         }
@@ -880,7 +920,11 @@ export type Database = {
           company_id: string
           created_at?: string
           id?: string
+          invited_at?: string | null
+          invited_by?: string | null
           is_active?: boolean
+          last_login?: string | null
+          permissions?: Json | null
           role?: string
           user_id: string
         }
@@ -888,7 +932,11 @@ export type Database = {
           company_id?: string
           created_at?: string
           id?: string
+          invited_at?: string | null
+          invited_by?: string | null
           is_active?: boolean
+          last_login?: string | null
+          permissions?: Json | null
           role?: string
           user_id?: string
         }
