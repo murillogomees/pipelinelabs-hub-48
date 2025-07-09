@@ -63,10 +63,11 @@ export function SearchableSelect({
   
   const timeoutRef = React.useRef<NodeJS.Timeout>()
 
-  const selectedOption = React.useMemo(() => 
-    options.find(option => option.value === value), 
-    [options, value]
-  )
+  // Buscar a opção selecionada tanto em options quanto em staticOptions
+  const selectedOption = React.useMemo(() => {
+    const allOptions = [...(staticOptions || []), ...(options || [])];
+    return allOptions.find(option => option.value === value);
+  }, [options, staticOptions, value])
 
   const loadOptionsData = React.useCallback(async (searchTerm: string = "", pageNum: number = 1, reset: boolean = false) => {
     if (!loadOptions) return
