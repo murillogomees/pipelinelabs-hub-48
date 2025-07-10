@@ -16,6 +16,7 @@ import { AuthProvider } from "@/components/Auth/AuthProvider";
 import { AuthForm } from "@/components/Auth/AuthForm";
 import { useAuth } from "@/components/Auth/AuthProvider";
 import { SignUpCompany } from "@/pages/SignUpCompany";
+import { Integracoes } from "@/pages/Integracoes";
 import Configuracoes from "@/pages/Configuracoes";
 import NotFound from "@/pages/NotFound";
 
@@ -90,10 +91,7 @@ function AppContent() {
             } />
             <Route path="/integracoes/*" element={
               <MainLayout>
-                <div className="space-y-6">
-                  <h1 className="text-3xl font-bold text-foreground">Integrações</h1>
-                  <p className="text-muted-foreground">Módulo em desenvolvimento</p>
-                </div>
+                <Integracoes />
               </MainLayout>
             } />
             <Route path="/admin/*" element={

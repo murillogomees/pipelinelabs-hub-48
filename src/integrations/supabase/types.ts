@@ -343,6 +343,7 @@ export type Database = {
           company_id: string
           created_at: string
           id: string
+          integration_available_id: string | null
           integration_type: string
           is_active: boolean
           last_sync: string | null
@@ -355,6 +356,7 @@ export type Database = {
           company_id: string
           created_at?: string
           id?: string
+          integration_available_id?: string | null
           integration_type: string
           is_active?: boolean
           last_sync?: string | null
@@ -367,6 +369,7 @@ export type Database = {
           company_id?: string
           created_at?: string
           id?: string
+          integration_available_id?: string | null
           integration_type?: string
           is_active?: boolean
           last_sync?: string | null
@@ -382,7 +385,56 @@ export type Database = {
             referencedRelation: "companies"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "integrations_integration_available_id_fkey"
+            columns: ["integration_available_id"]
+            isOneToOne: false
+            referencedRelation: "integrations_available"
+            referencedColumns: ["id"]
+          },
         ]
+      }
+      integrations_available: {
+        Row: {
+          available_for_plans: string[] | null
+          config_schema: Json | null
+          created_at: string | null
+          description: string | null
+          id: string
+          is_global_only: boolean | null
+          logo_url: string | null
+          name: string
+          type: string
+          updated_at: string | null
+          visible_to_companies: boolean | null
+        }
+        Insert: {
+          available_for_plans?: string[] | null
+          config_schema?: Json | null
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          is_global_only?: boolean | null
+          logo_url?: string | null
+          name: string
+          type: string
+          updated_at?: string | null
+          visible_to_companies?: boolean | null
+        }
+        Update: {
+          available_for_plans?: string[] | null
+          config_schema?: Json | null
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          is_global_only?: boolean | null
+          logo_url?: string | null
+          name?: string
+          type?: string
+          updated_at?: string | null
+          visible_to_companies?: boolean | null
+        }
+        Relationships: []
       }
       invoices: {
         Row: {
@@ -1159,6 +1211,14 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      decrypt_integration_data: {
+        Args: { encrypted_data: string }
+        Returns: Json
+      }
+      encrypt_integration_data: {
+        Args: { data: Json }
+        Returns: string
+      }
       get_default_company_id: {
         Args: Record<PropertyKey, never>
         Returns: string
