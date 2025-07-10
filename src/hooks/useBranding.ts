@@ -4,6 +4,7 @@ import { useCompanySettings } from './useCompanySettings';
 interface BrandingConfig {
   nome_customizado: string;
   cor_primaria: string;
+  cor_secundaria: string;
   logo_url: string;
   favicon_url: string;
   dominio_personalizado: string;
@@ -14,6 +15,7 @@ export function useBranding() {
   const [branding, setBranding] = useState<BrandingConfig>({
     nome_customizado: 'Pipeline Labs',
     cor_primaria: '#3b82f6',
+    cor_secundaria: '#64748b',
     logo_url: '',
     favicon_url: '',
     dominio_personalizado: ''
@@ -25,6 +27,7 @@ export function useBranding() {
       setBranding({
         nome_customizado: brandingData.nome_customizado || brandingData.nome_sistema || 'Pipeline Labs',
         cor_primaria: brandingData.cor_primaria || '#3b82f6',
+        cor_secundaria: brandingData.cor_secundaria || '#64748b',
         logo_url: brandingData.logo_url || '',
         favicon_url: brandingData.favicon_url || '',
         dominio_personalizado: brandingData.dominio_personalizado || ''
@@ -63,8 +66,13 @@ export function useBranding() {
     };
 
     if (brandingData.cor_primaria) {
-      const hslColor = hexToHsl(brandingData.cor_primaria);
-      root.style.setProperty('--primary', hslColor);
+      const hslPrimary = hexToHsl(brandingData.cor_primaria);
+      root.style.setProperty('--primary', hslPrimary);
+    }
+
+    if (brandingData.cor_secundaria) {
+      const hslSecondary = hexToHsl(brandingData.cor_secundaria);
+      root.style.setProperty('--secondary', hslSecondary);
     }
 
     // Update document title

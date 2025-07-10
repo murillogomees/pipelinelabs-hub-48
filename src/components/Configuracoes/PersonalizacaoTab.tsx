@@ -18,6 +18,7 @@ export function PersonalizacaoTab() {
   const [formData, setFormData] = useState({
     nome_customizado: 'Pipeline Labs',
     cor_primaria: '#3b82f6',
+    cor_secundaria: '#64748b',
     logo_url: '',
     favicon_url: '',
     dominio_personalizado: ''
@@ -33,6 +34,7 @@ export function PersonalizacaoTab() {
       setFormData({
         nome_customizado: branding.nome_customizado || branding.nome_sistema || 'Pipeline Labs',
         cor_primaria: branding.cor_primaria || '#3b82f6',
+        cor_secundaria: branding.cor_secundaria || '#64748b',
         logo_url: branding.logo_url || '',
         favicon_url: branding.favicon_url || '',
         dominio_personalizado: branding.dominio_personalizado || ''
@@ -187,6 +189,7 @@ export function PersonalizacaoTab() {
     const brandingData = {
       nome_customizado: formData.nome_customizado,
       cor_primaria: formData.cor_primaria,
+      cor_secundaria: formData.cor_secundaria,
       logo_url: formData.logo_url,
       favicon_url: formData.favicon_url,
       dominio_personalizado: formData.dominio_personalizado
@@ -233,8 +236,11 @@ export function PersonalizacaoTab() {
       return `${Math.round(h * 360)} ${Math.round(s * 100)}% ${Math.round(l * 100)}%`;
     };
 
-    const hslColor = hexToHsl(formData.cor_primaria);
-    root.style.setProperty('--primary', hslColor);
+    const hslPrimary = hexToHsl(formData.cor_primaria);
+    const hslSecondary = hexToHsl(formData.cor_secundaria);
+    
+    root.style.setProperty('--primary', hslPrimary);
+    root.style.setProperty('--secondary', hslSecondary);
 
     // Update document title if customized
     if (formData.nome_customizado && formData.nome_customizado !== 'Pipeline Labs') {
@@ -290,7 +296,9 @@ export function PersonalizacaoTab() {
       return `${Math.round(h * 360)} ${Math.round(s * 100)}% ${Math.round(l * 100)}%`;
     };
     
+    const originalSecondary = originalBranding?.cor_secundaria || '#64748b';
     document.documentElement.style.setProperty('--primary', hexToHsl(originalColor));
+    document.documentElement.style.setProperty('--secondary', hexToHsl(originalSecondary));
     setPreviewMode(false);
     
     toast({
@@ -382,11 +390,15 @@ export function PersonalizacaoTab() {
               />
               <div 
                 className="h-3 w-12 rounded"
-                style={{ backgroundColor: formData.cor_primaria + '80' }}
+                style={{ backgroundColor: formData.cor_secundaria }}
               />
               <div 
                 className="h-3 w-8 rounded"
                 style={{ backgroundColor: formData.cor_primaria + '40' }}
+              />
+              <div 
+                className="h-3 w-6 rounded"
+                style={{ backgroundColor: formData.cor_secundaria + '60' }}
               />
             </div>
           </div>
@@ -441,6 +453,30 @@ export function PersonalizacaoTab() {
                 </div>
                 <p className="text-xs text-muted-foreground">
                   Defina a cor principal que será usada em botões, links e destaques
+                </p>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="cor_secundaria">Cor Secundária da Marca</Label>
+                <div className="flex gap-2">
+                  <Input
+                    id="cor_secundaria"
+                    type="color"
+                    value={formData.cor_secundaria}
+                    onChange={(e) => setFormData(prev => ({ ...prev, cor_secundaria: e.target.value }))}
+                    className="w-20 h-10 p-1 border rounded cursor-pointer"
+                    disabled={!hasWhitelabelAccess()}
+                  />
+                  <Input
+                    value={formData.cor_secundaria.toUpperCase()}
+                    onChange={(e) => setFormData(prev => ({ ...prev, cor_secundaria: e.target.value }))}
+                    placeholder="#64748B"
+                    className="flex-1"
+                    disabled={!hasWhitelabelAccess()}
+                  />
+                </div>
+                <p className="text-xs text-muted-foreground">
+                  Cor usada em elementos secundários, textos auxiliares e fundos
                 </p>
               </div>
 
