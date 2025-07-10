@@ -17,6 +17,7 @@ import {
   Building2
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { useBranding } from '@/hooks/useBranding';
 
 const menuItems = [
   {
@@ -100,7 +101,7 @@ const menuItems = [
     submenu: [
       { title: 'Planos', path: '/admin/planos' },
       { title: 'Usuários', path: '/admin/usuarios' },
-      { title: 'Whitelabel', path: '/admin/whitelabel' }
+      { title: 'Integrações', path: '/admin/integracoes' }
     ]
   },
   {
@@ -119,6 +120,7 @@ interface SidebarProps {
 export function Sidebar({ collapsed }: SidebarProps) {
   const [expandedItems, setExpandedItems] = useState<string[]>([]);
   const location = useLocation();
+  const { branding } = useBranding();
 
   // Expande automaticamente apenas o menu ativo e fecha os demais
   useEffect(() => {
@@ -148,19 +150,19 @@ export function Sidebar({ collapsed }: SidebarProps) {
 
   return (
     <div className={cn(
-      "bg-slate-900 text-white transition-all duration-300 flex flex-col min-h-screen sticky top-0",
+      "bg-sidebar text-sidebar-foreground transition-all duration-300 flex flex-col min-h-screen sticky top-0",
       collapsed ? "w-16" : "w-64"
     )}>
       {/* Logo */}
-      <div className="p-4 border-b border-slate-700">
+      <div className="p-4 border-b border-sidebar-border">
         <div className="flex items-center space-x-3">
-          <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center">
-            <Building2 className="w-5 h-5 text-white" />
+          <div className="w-8 h-8 bg-sidebar-primary rounded-lg flex items-center justify-center">
+            <Building2 className="w-5 h-5 text-sidebar-primary-foreground" />
           </div>
           {!collapsed && (
             <div>
-              <h1 className="text-lg font-bold text-white">Pipeline Labs</h1>
-              <p className="text-xs text-slate-400">ERP Inteligente</p>
+              <h1 className="text-lg font-bold text-sidebar-foreground">{branding.nome_customizado}</h1>
+              <p className="text-xs text-sidebar-foreground/60">ERP Inteligente</p>
             </div>
           )}
         </div>
@@ -181,18 +183,18 @@ export function Sidebar({ collapsed }: SidebarProps) {
                   <button
                     onClick={() => toggleExpanded(item.title)}
                     className={cn(
-                      "w-full flex items-center space-x-3 px-3 py-2 rounded-lg hover:bg-slate-800 transition-colors",
+                      "w-full flex items-center space-x-3 px-3 py-2 rounded-lg hover:bg-sidebar-accent transition-colors",
                       collapsed && "justify-center"
                     )}
                   >
-                    <Icon className="w-5 h-5 text-slate-300 flex-shrink-0" />
+                    <Icon className="w-5 h-5 text-sidebar-foreground/80 flex-shrink-0" />
                     {!collapsed && (
                       <>
-                        <span className="flex-1 text-left text-sm font-medium">{item.title}</span>
+                        <span className="flex-1 text-left text-sm font-medium text-sidebar-foreground">{item.title}</span>
                         {hasSubmenu && (
                           isExpanded ? 
-                            <ChevronDown className="w-4 h-4 text-slate-400" /> :
-                            <ChevronRight className="w-4 h-4 text-slate-400" />
+                            <ChevronDown className="w-4 h-4 text-sidebar-foreground/60" /> :
+                            <ChevronRight className="w-4 h-4 text-sidebar-foreground/60" />
                         )}
                       </>
                     )}
@@ -201,12 +203,16 @@ export function Sidebar({ collapsed }: SidebarProps) {
                   <NavLink
                     to={item.path}
                     className={({ isActive }) => cn(
-                      "flex items-center space-x-3 px-3 py-2 rounded-lg hover:bg-slate-800 transition-colors",
-                      isActive && "bg-blue-600 hover:bg-blue-700",
+                      "flex items-center space-x-3 px-3 py-2 rounded-lg hover:bg-sidebar-accent transition-colors",
+                      isActive && "bg-sidebar-primary hover:bg-sidebar-primary/90 text-sidebar-primary-foreground",
+                      !isActive && "text-sidebar-foreground",
                       collapsed && "justify-center"
                     )}
                   >
-                    <Icon className="w-5 h-5 text-slate-300 flex-shrink-0" />
+                    <Icon className={cn(
+                      "w-5 h-5 flex-shrink-0",
+                      "text-sidebar-foreground/80"
+                    )} />
                     {!collapsed && (
                       <span className="text-sm font-medium">{item.title}</span>
                     )}
@@ -222,8 +228,8 @@ export function Sidebar({ collapsed }: SidebarProps) {
                       key={subItem.path}
                       to={subItem.path}
                       className={({ isActive }) => cn(
-                        "block px-3 py-2 text-sm text-slate-300 hover:text-white hover:bg-slate-800 rounded-lg transition-colors",
-                        (isActive || location.pathname.startsWith(subItem.path)) && "text-blue-400 bg-slate-800"
+                        "block px-3 py-2 text-sm text-sidebar-foreground/80 hover:text-sidebar-foreground hover:bg-sidebar-accent rounded-lg transition-colors",
+                        (isActive || location.pathname.startsWith(subItem.path)) && "text-sidebar-primary bg-sidebar-accent font-medium"
                       )}
                     >
                       {subItem.title}

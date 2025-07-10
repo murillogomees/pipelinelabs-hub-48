@@ -65,6 +65,30 @@ export function useBranding() {
       return `${Math.round(h * 360)} ${Math.round(s * 100)}% ${Math.round(l * 100)}%`;
     };
 
+    // Generate contrasting colors based on luminance
+    const generateContrastColors = (baseHsl: string) => {
+      const [h, s, l] = baseHsl.split(' ').map(v => parseInt(v));
+      const lightness = l;
+      
+      // For dark backgrounds (sidebar), we need light text
+      if (lightness < 50) {
+        return {
+          foreground: `${h} ${Math.min(s, 20)}% 95%`, // Light text
+          accent: `${h} ${Math.min(s + 10, 100)}% ${Math.min(lightness + 15, 25)}%`, // Slightly lighter bg for hovers
+          border: `${h} ${Math.min(s, 30)}% ${Math.min(lightness + 10, 20)}%`, // Subtle border
+          primary: `${h} ${Math.min(s + 20, 100)}% ${Math.max(lightness + 30, 60)}%`, // Active state
+        };
+      } else {
+        // For light backgrounds, we need dark text
+        return {
+          foreground: `${h} ${Math.min(s, 20)}% 15%`, // Dark text
+          accent: `${h} ${Math.min(s + 5, 100)}% ${Math.max(lightness - 5, 92)}%`, // Slightly darker bg for hovers
+          border: `${h} ${Math.min(s, 30)}% ${Math.max(lightness - 10, 85)}%`, // Subtle border
+          primary: `${h} ${Math.min(s + 20, 100)}% ${Math.max(lightness - 30, 40)}%`, // Active state
+        };
+      }
+    };
+
     if (brandingData.cor_primaria) {
       const hslPrimary = hexToHsl(brandingData.cor_primaria);
       root.style.setProperty('--primary', hslPrimary);
@@ -73,6 +97,18 @@ export function useBranding() {
     if (brandingData.cor_secundaria) {
       const hslSecondary = hexToHsl(brandingData.cor_secundaria);
       root.style.setProperty('--secondary', hslSecondary);
+      
+      // Apply sidebar theming based on secondary color
+      const contrastColors = generateContrastColors(hslSecondary);
+      
+      // Update all sidebar-related CSS variables
+      root.style.setProperty('--sidebar-background', hslSecondary);
+      root.style.setProperty('--sidebar-foreground', contrastColors.foreground);
+      root.style.setProperty('--sidebar-accent', contrastColors.accent);
+      root.style.setProperty('--sidebar-accent-foreground', contrastColors.foreground);
+      root.style.setProperty('--sidebar-border', contrastColors.border);
+      root.style.setProperty('--sidebar-primary', contrastColors.primary);
+      root.style.setProperty('--sidebar-primary-foreground', contrastColors.foreground);
     }
 
     // Update document title
