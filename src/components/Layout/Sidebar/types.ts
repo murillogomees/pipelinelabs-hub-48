@@ -1,0 +1,18 @@
+import { LucideIcon } from 'lucide-react';
+
+export interface MenuItem {
+  title: string;
+  icon: LucideIcon;
+  path: string;
+  submenu: SubMenuItem[];
+}
+
+export interface SubMenuItem {
+  title: string;
+  path: string;
+}
+
+export interface SidebarProps {
+  collapsed: boolean;
+  onToggle: () => void;
+}
