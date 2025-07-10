@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Plus, CreditCard, Users, Palette } from 'lucide-react';
+import { Plus, CreditCard, Users } from 'lucide-react';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
@@ -413,31 +413,6 @@ function Usuarios() {
   );
 }
 
-// Componente para Whitelabel
-function Whitelabel() {
-  return (
-    <div className="space-y-6">
-      <div className="flex justify-between items-center">
-        <div>
-          <h2 className="text-2xl font-bold text-foreground">Whitelabel</h2>
-          <p className="text-muted-foreground">Configure a marca do sistema</p>
-        </div>
-      </div>
-
-      <Card>
-        <CardContent className="p-6">
-          <div className="text-center py-12">
-            <Palette className="w-16 h-16 text-muted-foreground mx-auto mb-4" />
-            <h3 className="text-xl font-semibold mb-2">Whitelabel em Desenvolvimento</h3>
-            <p className="text-muted-foreground">
-              O módulo de personalização whitelabel estará disponível em breve.
-            </p>
-          </div>
-        </CardContent>
-      </Card>
-    </div>
-  );
-}
 
 // Componente principal Admin
 export function Admin() {
@@ -448,7 +423,7 @@ export function Admin() {
     const path = location.pathname;
     if (path.includes('/planos')) return 'planos';
     if (path.includes('/usuarios')) return 'usuarios';
-    if (path.includes('/whitelabel')) return 'whitelabel';
+    
     return 'planos'; // padrão
   };
 
@@ -460,7 +435,7 @@ export function Admin() {
       </div>
 
       <Tabs value={getActiveTab()} className="space-y-6">
-        <TabsList className="grid w-full grid-cols-3">
+        <TabsList className="grid w-full grid-cols-2">
           <TabsTrigger value="planos" asChild>
             <NavLink to="/admin/planos" className="flex items-center space-x-2">
               <CreditCard className="w-4 h-4" />
@@ -473,19 +448,12 @@ export function Admin() {
               <span>Usuários</span>
             </NavLink>
           </TabsTrigger>
-          <TabsTrigger value="whitelabel" asChild>
-            <NavLink to="/admin/whitelabel" className="flex items-center space-x-2">
-              <Palette className="w-4 h-4" />
-              <span>Whitelabel</span>
-            </NavLink>
-          </TabsTrigger>
         </TabsList>
 
         <Routes>
           <Route index element={<Planos />} />
           <Route path="planos" element={<Planos />} />
           <Route path="usuarios" element={<Usuarios />} />
-          <Route path="whitelabel" element={<Whitelabel />} />
         </Routes>
       </Tabs>
     </div>
