@@ -73,6 +73,7 @@ export const menuItems: MenuItem[] = [
     icon: Wrench,
     path: '/producao',
     submenu: [
+      { title: 'Produção', path: '/producao' },
       { title: 'Ordens de Serviço', path: '/producao/os' }
     ]
   },
