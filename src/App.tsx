@@ -18,6 +18,7 @@ import { useAuth } from "@/components/Auth/AuthProvider";
 import { SignUpCompany } from "@/pages/SignUpCompany";
 import { Integracoes } from "@/pages/Integracoes";
 import { AdminIntegracoes } from "@/pages/AdminIntegracoes";
+import { AdminUsuarios } from "@/pages/AdminUsuarios";
 import { Relatorios } from "@/pages/Relatorios";
 import Configuracoes from "@/pages/Configuracoes";
 import NotFound from "@/pages/NotFound";
@@ -97,6 +98,11 @@ function AppContent() {
             <Route path="/admin/integracoes" element={
               <MainLayout>
                 <AdminIntegracoes />
+              </MainLayout>
+            } />
+            <Route path="/admin/usuarios" element={
+              <MainLayout>
+                <AdminUsuarios />
               </MainLayout>
             } />
             <Route path="/planos/*" element={
