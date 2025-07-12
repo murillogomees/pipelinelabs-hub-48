@@ -18,6 +18,7 @@ import { useAuth } from "@/components/Auth/AuthProvider";
 import { SignUpCompany } from "@/pages/SignUpCompany";
 import { Integracoes } from "@/pages/Integracoes";
 import { AdminIntegracoes } from "@/pages/AdminIntegracoes";
+import { Relatorios } from "@/pages/Relatorios";
 import Configuracoes from "@/pages/Configuracoes";
 import NotFound from "@/pages/NotFound";
 
@@ -82,14 +83,7 @@ function AppContent() {
                 <Producao />
               </MainLayout>
             } />
-            <Route path="/relatorios/*" element={
-              <MainLayout>
-                <div className="space-y-6">
-                  <h1 className="text-3xl font-bold text-foreground">Relatórios</h1>
-                  <p className="text-muted-foreground">Módulo em desenvolvimento</p>
-                </div>
-              </MainLayout>
-            } />
+            <Route path="/relatorios/*" element={<Relatorios />} />
             <Route path="/integracoes/*" element={
               <MainLayout>
                 <Integracoes />

@@ -775,6 +775,54 @@ export type Database = {
         }
         Relationships: []
       }
+      reports: {
+        Row: {
+          chart_type: string
+          company_id: string
+          config: Json
+          created_at: string
+          created_by: string | null
+          data_sources: string[]
+          description: string | null
+          filters: Json | null
+          id: string
+          is_active: boolean
+          metrics: string[]
+          name: string
+          updated_at: string
+        }
+        Insert: {
+          chart_type?: string
+          company_id: string
+          config?: Json
+          created_at?: string
+          created_by?: string | null
+          data_sources?: string[]
+          description?: string | null
+          filters?: Json | null
+          id?: string
+          is_active?: boolean
+          metrics?: string[]
+          name: string
+          updated_at?: string
+        }
+        Update: {
+          chart_type?: string
+          company_id?: string
+          config?: Json
+          created_at?: string
+          created_by?: string | null
+          data_sources?: string[]
+          description?: string | null
+          filters?: Json | null
+          id?: string
+          is_active?: boolean
+          metrics?: string[]
+          name?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       sale_items: {
         Row: {
           created_at: string
