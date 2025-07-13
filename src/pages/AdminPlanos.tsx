@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
-import { PlanDialog } from "@/components/Plans/PlanDialog";
+
 import { Search, Plus, Crown, Users, Check, X, Edit, Trash2 } from "lucide-react";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 
@@ -79,27 +79,27 @@ export function AdminPlanos() {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div className="flex items-center space-x-3">
           <div className="p-2 rounded-lg bg-primary/10">
             <Crown className="h-6 w-6 text-primary" />
           </div>
           <div>
-            <h1 className="text-3xl font-bold text-foreground">Gestão de Planos</h1>
-            <p className="text-muted-foreground">
+            <h1 className="text-2xl sm:text-3xl font-bold text-foreground">Gestão de Planos</h1>
+            <p className="text-sm sm:text-base text-muted-foreground">
               Configure e gerencie os planos de assinatura do sistema
             </p>
           </div>
         </div>
         
-        <Button onClick={handleCreatePlan}>
+        <Button onClick={handleCreatePlan} className="w-full sm:w-auto">
           <Plus className="h-4 w-4 mr-2" />
           Novo Plano
         </Button>
       </div>
 
       {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
         <Card>
           <CardContent className="p-4">
             <div className="flex items-center space-x-2">
@@ -168,7 +168,7 @@ export function AdminPlanos() {
       </Card>
 
       {/* Plans Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 sm:gap-6">
         {filteredPlans.map((plan) => (
           <Card key={plan.id} className="relative">
             {plan.is_whitelabel && (
@@ -273,13 +273,7 @@ export function AdminPlanos() {
         ))}
       </div>
 
-      {/* Plan Dialog */}
-      <PlanDialog 
-        open={showPlanDialog} 
-        onOpenChange={setShowPlanDialog}
-        plan={selectedPlan}
-        onSave={() => setShowPlanDialog(false)}
-      />
+      {/* TODO: Implementar dialog para criar/editar plano */}
     </div>
   );
 }

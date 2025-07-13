@@ -10,7 +10,7 @@ import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { UserDialog } from '@/components/Admin/UserDialog';
-import { PlanDialog } from '@/components/Plans/PlanDialog';
+
 
 // Componente para Planos
 function Planos() {
@@ -173,13 +173,7 @@ function Planos() {
         </CardContent>
       </Card>
 
-      {/* Dialog para criar/editar plano */}
-      <PlanDialog
-        open={showDialog}
-        onOpenChange={setShowDialog}
-        plan={selectedPlan}
-        onSave={loadPlans}
-      />
+      {/* TODO: Implementar dialog para criar/editar plano */}
     </div>
   );
 }

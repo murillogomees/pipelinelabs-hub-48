@@ -6,9 +6,10 @@ interface SidebarSubmenuProps {
   submenu: SubMenuItem[];
   isExpanded: boolean;
   collapsed: boolean;
+  onNavigate?: () => void;
 }
 
-export function SidebarSubmenu({ submenu, isExpanded, collapsed }: SidebarSubmenuProps) {
+export function SidebarSubmenu({ submenu, isExpanded, collapsed, onNavigate }: SidebarSubmenuProps) {
   const location = useLocation();
 
   if (!isExpanded || collapsed) return null;
@@ -19,6 +20,7 @@ export function SidebarSubmenu({ submenu, isExpanded, collapsed }: SidebarSubmen
         <NavLink
           key={subItem.path}
           to={subItem.path}
+          onClick={onNavigate}
           className={({ isActive }) => cn(
             "block px-3 py-2 text-sm text-sidebar-foreground/80 hover:text-sidebar-foreground hover:bg-sidebar-accent rounded-lg transition-colors",
             (isActive || location.pathname.startsWith(subItem.path)) && "text-sidebar-primary bg-sidebar-accent font-medium"

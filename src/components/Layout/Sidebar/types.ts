@@ -15,5 +15,6 @@ export interface SubMenuItem {
 
 export interface SidebarProps {
   collapsed: boolean;
-  onToggle: () => void;
+  onToggle?: () => void;
+  onNavigate?: () => void;
 }

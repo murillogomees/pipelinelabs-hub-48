@@ -8,13 +8,15 @@ interface SidebarMenuItemProps {
   isExpanded: boolean;
   collapsed: boolean;
   onToggle: () => void;
+  onNavigate?: () => void;
 }
 
 export function SidebarMenuItem({ 
   item, 
   isExpanded, 
   collapsed, 
-  onToggle 
+  onToggle,
+  onNavigate 
 }: SidebarMenuItemProps) {
   const hasSubmenu = item.submenu.length > 0;
 
@@ -32,6 +34,7 @@ export function SidebarMenuItem({
           <SidebarMenuLink
             item={item}
             collapsed={collapsed}
+            onNavigate={onNavigate}
           />
         )}
       </div>
@@ -40,6 +43,7 @@ export function SidebarMenuItem({
         submenu={item.submenu}
         isExpanded={isExpanded}
         collapsed={collapsed}
+        onNavigate={onNavigate}
       />
     </div>
   );

@@ -6,7 +6,7 @@ import { useSidebarState } from './hooks/useSidebarState';
 import { menuItems } from './constants';
 import { useAuth } from '@/hooks/useAuth';
 
-export function Sidebar({ collapsed }: SidebarProps) {
+export function Sidebar({ collapsed, onNavigate }: SidebarProps) {
   const { expandedItems, toggleExpanded } = useSidebarState();
   const { isAdmin } = useAuth();
 
@@ -30,6 +30,7 @@ export function Sidebar({ collapsed }: SidebarProps) {
                 isExpanded={isExpanded}
                 collapsed={collapsed}
                 onToggle={() => toggleExpanded(item.title, collapsed)}
+                onNavigate={onNavigate}
               />
             );
           })}

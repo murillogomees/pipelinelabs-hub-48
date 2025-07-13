@@ -43,13 +43,13 @@ function Estoque() {
 
   return (
     <div className="space-y-6">
-      <div className="flex justify-between items-center">
+      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
         <div>
-          <h2 className="text-2xl font-bold text-foreground">Estoque</h2>
-          <p className="text-muted-foreground">Gerencie seu catálogo e controle de estoque</p>
+          <h2 className="text-xl sm:text-2xl font-bold text-foreground">Estoque</h2>
+          <p className="text-sm sm:text-base text-muted-foreground">Gerencie seu catálogo e controle de estoque</p>
         </div>
         <Button 
-          className="bg-primary hover:bg-primary/90 text-primary-foreground"
+          className="bg-primary hover:bg-primary/90 text-primary-foreground w-full sm:w-auto"
           onClick={handleNewProduct}
         >
           <Plus className="w-4 h-4 mr-2" />
@@ -58,7 +58,7 @@ function Estoque() {
       </div>
 
       {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <Card>
           <CardContent className="p-4">
             <div className="flex items-center">
@@ -119,12 +119,12 @@ function Estoque() {
       <Card>
         <CardHeader>
           <CardTitle>Lista de Produtos</CardTitle>
-          <div className="flex space-x-2">
+          <div className="flex flex-col sm:flex-row gap-2">
             <div className="relative flex-1">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
               <Input placeholder="Buscar produtos..." className="pl-10" />
             </div>
-            <Button variant="outline">
+            <Button variant="outline" className="w-full sm:w-auto">
               <Filter className="w-4 h-4 mr-2" />
               Filtros
             </Button>
@@ -218,12 +218,12 @@ function Estoque() {
 function Categorias() {
   return (
     <div className="space-y-6">
-      <div className="flex justify-between items-center">
+      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
         <div>
-          <h2 className="text-2xl font-bold text-foreground">Categorias</h2>
-          <p className="text-muted-foreground">Organize seus produtos por categorias</p>
+          <h2 className="text-xl sm:text-2xl font-bold text-foreground">Categorias</h2>
+          <p className="text-sm sm:text-base text-muted-foreground">Organize seus produtos por categorias</p>
         </div>
-        <Button className="bg-primary hover:bg-primary/90 text-primary-foreground">
+        <Button className="bg-primary hover:bg-primary/90 text-primary-foreground w-full sm:w-auto">
           <Plus className="w-4 h-4 mr-2" />
           Nova Categoria
         </Button>
@@ -259,22 +259,22 @@ export function Produtos() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-3xl font-bold text-foreground">Produtos</h1>
-        <p className="text-muted-foreground">Gerencie seu catálogo e controle de estoque</p>
+        <h1 className="text-2xl sm:text-3xl font-bold text-foreground">Produtos</h1>
+        <p className="text-sm sm:text-base text-muted-foreground">Gerencie seu catálogo e controle de estoque</p>
       </div>
 
       <Tabs value={getActiveTab()} className="space-y-6">
-        <TabsList className="grid w-full grid-cols-2">
+        <TabsList className="grid w-full grid-cols-2 h-auto">
           <TabsTrigger value="estoque" asChild>
-            <NavLink to="/produtos/estoque" className="flex items-center space-x-2">
+            <NavLink to="/produtos/estoque" className="flex items-center justify-center space-x-2 py-2">
               <Archive className="w-4 h-4" />
-              <span>Estoque</span>
+              <span className="hidden sm:inline">Estoque</span>
             </NavLink>
           </TabsTrigger>
           <TabsTrigger value="categorias" asChild>
-            <NavLink to="/produtos/categorias" className="flex items-center space-x-2">
+            <NavLink to="/produtos/categorias" className="flex items-center justify-center space-x-2 py-2">
               <Tag className="w-4 h-4" />
-              <span>Categorias</span>
+              <span className="hidden sm:inline">Categorias</span>
             </NavLink>
           </TabsTrigger>
         </TabsList>

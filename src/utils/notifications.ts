@@ -15,7 +15,6 @@ export async function createSystemNotification(data: CreateNotificationData) {
     const { data: companyData } = await supabase.rpc('get_user_company_id');
     
     if (!companyData) {
-      console.error('Não foi possível obter company_id para criar notificação');
       return;
     }
 
@@ -32,13 +31,10 @@ export async function createSystemNotification(data: CreateNotificationData) {
       });
 
     if (error) {
-      console.error('Erro ao criar notificação:', error);
       return;
     }
-
-    console.log('Notificação criada com sucesso');
   } catch (error) {
-    console.error('Erro ao criar notificação:', error);
+    // Silently handle errors
   }
 }
 
