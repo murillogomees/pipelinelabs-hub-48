@@ -59,7 +59,9 @@ export function usePermissions() {
 
       const permissions = (userCompaniesData.permissions as Record<string, any>) || {};
       const isAdmin = userCompaniesData.role === "admin";
-      const isSuperAdmin = permissions.super_admin === true;
+      // Super admin é apenas murilloggomes@gmail.com
+      const userEmail = profileData?.email || user.user.email || "";
+      const isSuperAdmin = userEmail === "murilloggomes@gmail.com";
 
       return {
         isSuperAdmin,
