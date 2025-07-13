@@ -5,10 +5,12 @@ import { SidebarMenuItem } from './components/SidebarMenuItem';
 import { useSidebarState } from './hooks/useSidebarState';
 import { menuItems } from './constants';
 import { useAuth } from '@/hooks/useAuth';
+import { useSuperAdmin } from '@/hooks/useSuperAdmin';
 
 export function Sidebar({ collapsed, onNavigate }: SidebarProps) {
   const { expandedItems, toggleExpanded } = useSidebarState();
   const { isAdmin } = useAuth();
+  const { isSuperAdmin } = useSuperAdmin();
 
   return (
     <div className={cn(
@@ -19,7 +21,7 @@ export function Sidebar({ collapsed, onNavigate }: SidebarProps) {
 
       <nav className="flex-1 py-4">
         {menuItems
-          .filter(item => !item.adminOnly || isAdmin)
+          .filter(item => !item.adminOnly || isAdmin || isSuperAdmin)
           .map((item) => {
             const isExpanded = expandedItems.includes(item.title);
 

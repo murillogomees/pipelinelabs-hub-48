@@ -95,9 +95,11 @@ export const menuItems: MenuItem[] = [
     icon: Building2,
     path: '/admin',
     submenu: [
+      { title: 'Painel Geral', path: '/admin' },
       { title: 'Planos', path: '/admin/planos' },
       { title: 'Usuários', path: '/admin/usuarios' },
       { title: 'Integrações', path: '/admin/integracoes' },
+      { title: 'Notificações', path: '/admin/notificacoes' },
       { title: 'Integração ERP', path: '/admin/integracao-erp' }
     ],
     adminOnly: true

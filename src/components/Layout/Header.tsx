@@ -3,6 +3,7 @@ import React, { useState } from 'react';
 import { User, Menu, LogOut, Settings, Crown, Users } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/components/Auth/AuthProvider';
+import { useAuth as useCustomAuth } from '@/hooks/useAuth';
 import { NotificationBell } from '@/components/Notifications/NotificationBell';
 import { GlobalSearchTrigger } from '@/components/Search/GlobalSearchTrigger';
 import { UserProfileDialog } from '@/components/User/UserProfileDialog';
@@ -24,6 +25,7 @@ interface HeaderProps {
 
 export function Header({ onToggleSidebar }: HeaderProps) {
   const { user, signOut } = useAuth();
+  const { isSuperAdmin, email } = useCustomAuth();
   const [profileOpen, setProfileOpen] = useState(false);
   const [teamOpen, setTeamOpen] = useState(false);
   const [planOpen, setPlanOpen] = useState(false);
@@ -69,10 +71,12 @@ export function Header({ onToggleSidebar }: HeaderProps) {
                 <div className="w-8 h-8 bg-blue-600 rounded-full flex items-center justify-center">
                   <User className="w-4 h-4 text-white" />
                 </div>
-                <div className="text-sm text-left">
-                  <p className="font-medium">{user?.email}</p>
-                  <p className="text-gray-500">Pipeline Labs</p>
-                </div>
+                 <div className="text-sm text-left">
+                   <p className="font-medium">{user?.email}</p>
+                   <p className="text-gray-500">
+                     {isSuperAdmin ? "Super Admin" : "Pipeline Labs"}
+                   </p>
+                 </div>
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-56">
