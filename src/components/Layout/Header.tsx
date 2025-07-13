@@ -1,10 +1,10 @@
 
 import React from 'react';
-import { Search, User, Menu, LogOut } from 'lucide-react';
+import { User, Menu, LogOut } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 import { useAuth } from '@/components/Auth/AuthProvider';
 import { NotificationBell } from '@/components/Notifications/NotificationBell';
+import { GlobalSearchTrigger } from '@/components/Search/GlobalSearchTrigger';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -32,13 +32,7 @@ export function Header({ onToggleSidebar }: HeaderProps) {
             <Menu className="w-5 h-5" />
           </Button>
           
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
-            <Input
-              placeholder="Buscar..."
-              className="pl-10 w-80"
-            />
-          </div>
+          <GlobalSearchTrigger />
         </div>
 
         <div className="flex items-center space-x-4">
