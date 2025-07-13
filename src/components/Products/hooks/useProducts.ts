@@ -1,6 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import { NotificationHelpers } from '@/utils/notifications';
 import { Product } from '../types';
 import { Tables, TablesInsert, TablesUpdate } from '@/integrations/supabase/types';
 
@@ -52,12 +53,15 @@ export function useCreateProduct() {
       if (error) throw error;
       return data;
     },
-    onSuccess: () => {
+    onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ['products'] });
       toast({
         title: 'Produto criado',
         description: 'O produto foi criado com sucesso.',
       });
+      
+      // Criar notificação de sistema
+      NotificationHelpers.newProduct(data.name);
     },
     onError: (error: any) => {
       toast({

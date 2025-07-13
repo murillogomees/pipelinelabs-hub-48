@@ -23,6 +23,8 @@ import { AdminPlanos } from "@/pages/AdminPlanos";
 import { IntegracaoERP } from "@/pages/IntegracaoERP";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { ConfiguracoesIntegracoes } from "@/pages/ConfiguracoesIntegracoes";
+import { Notificacoes } from "@/pages/Notificacoes";
+import { AdminNotificacoes } from "@/pages/AdminNotificacoes";
 import { Relatorios } from "@/pages/Relatorios";
 import Configuracoes from "@/pages/Configuracoes";
 import NotFound from "@/pages/NotFound";
@@ -129,6 +131,13 @@ function AppContent() {
                 </ProtectedRoute>
               </MainLayout>
             } />
+            <Route path="/admin/notificacoes" element={
+              <MainLayout>
+                <ProtectedRoute requireAdmin>
+                  <AdminNotificacoes />
+                </ProtectedRoute>
+              </MainLayout>
+            } />
             <Route path="/planos/*" element={
               <MainLayout>
                 <div className="space-y-6">
@@ -138,6 +147,11 @@ function AppContent() {
               </MainLayout>
             } />
             <Route path="/configuracoes/*" element={<Configuracoes />} />
+            <Route path="/notificacoes" element={
+              <MainLayout>
+                <Notificacoes />
+              </MainLayout>
+            } />
             <Route path="/configuracoes/integracoes" element={
               <MainLayout>
                 <ConfiguracoesIntegracoes />
