@@ -22,13 +22,6 @@ export const useIntegrations = () => {
 
   const createIntegration = useMutation({
     mutationFn: async (formData: IntegrationFormData) => {
-      const configSchema = formData.config_fields.map(field => ({
-        field: field.field,
-        type: field.type,
-        label: field.label,
-        required: field.required
-      }));
-
       const { data, error } = await supabase
         .from('integrations_available')
         .insert({
@@ -36,9 +29,12 @@ export const useIntegrations = () => {
           type: formData.type,
           description: formData.description || null,
           logo_url: formData.logo_url || null,
-          config_schema: configSchema,
+          config_schema: formData.config_fields,
+          available_for_plans: formData.available_for_plans,
           visible_to_companies: formData.visible_to_companies
-        });
+        })
+        .select()
+        .single();
       
       if (error) throw error;
       return data;
@@ -61,13 +57,6 @@ export const useIntegrations = () => {
 
   const updateIntegration = useMutation({
     mutationFn: async ({ id, formData }: { id: string, formData: IntegrationFormData }) => {
-      const configSchema = formData.config_fields.map(field => ({
-        field: field.field,
-        type: field.type,
-        label: field.label,
-        required: field.required
-      }));
-
       const { data, error } = await supabase
         .from('integrations_available')
         .update({
@@ -75,10 +64,13 @@ export const useIntegrations = () => {
           type: formData.type,
           description: formData.description || null,
           logo_url: formData.logo_url || null,
-          config_schema: configSchema,
+          config_schema: formData.config_fields,
+          available_for_plans: formData.available_for_plans,
           visible_to_companies: formData.visible_to_companies
         })
-        .eq('id', id);
+        .eq('id', id)
+        .select()
+        .single();
       
       if (error) throw error;
       return data;
@@ -113,6 +105,13 @@ export const useIntegrations = () => {
       toast({
         title: 'Integração removida',
         description: 'A integração foi removida com sucesso.',
+      });
+    },
+    onError: (error) => {
+      toast({
+        title: 'Erro ao remover integração',
+        description: error.message,
+        variant: 'destructive',
       });
     }
   });

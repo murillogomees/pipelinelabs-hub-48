@@ -22,6 +22,7 @@ import { AdminUsuarios } from "@/pages/AdminUsuarios";
 import { AdminPlanos } from "@/pages/AdminPlanos";
 import { IntegracaoERP } from "@/pages/IntegracaoERP";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
+import { ConfiguracoesIntegracoes } from "@/pages/ConfiguracoesIntegracoes";
 import { Relatorios } from "@/pages/Relatorios";
 import Configuracoes from "@/pages/Configuracoes";
 import NotFound from "@/pages/NotFound";
@@ -137,6 +138,11 @@ function AppContent() {
               </MainLayout>
             } />
             <Route path="/configuracoes/*" element={<Configuracoes />} />
+            <Route path="/configuracoes/integracoes" element={
+              <MainLayout>
+                <ConfiguracoesIntegracoes />
+              </MainLayout>
+            } />
             <Route path="*" element={<NotFound />} />
           </>
         )}

@@ -189,6 +189,57 @@ export type Database = {
         }
         Relationships: []
       }
+      company_integrations: {
+        Row: {
+          company_id: string
+          config: Json | null
+          created_at: string
+          credentials: Json | null
+          id: string
+          integration_id: string
+          is_active: boolean | null
+          last_tested: string | null
+          updated_at: string
+        }
+        Insert: {
+          company_id: string
+          config?: Json | null
+          created_at?: string
+          credentials?: Json | null
+          id?: string
+          integration_id: string
+          is_active?: boolean | null
+          last_tested?: string | null
+          updated_at?: string
+        }
+        Update: {
+          company_id?: string
+          config?: Json | null
+          created_at?: string
+          credentials?: Json | null
+          id?: string
+          integration_id?: string
+          is_active?: boolean | null
+          last_tested?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "company_integrations_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "company_integrations_integration_id_fkey"
+            columns: ["integration_id"]
+            isOneToOne: false
+            referencedRelation: "integrations_available"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       company_settings: {
         Row: {
           branding: Json | null

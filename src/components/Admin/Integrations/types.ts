@@ -1,47 +1,35 @@
 export interface ConfigField {
   field: string;
-  type: string;
+  type: 'text' | 'password' | 'email' | 'url' | 'number' | 'boolean';
   label: string;
   required: boolean;
+  placeholder?: string;
+  description?: string;
 }
 
 export interface IntegrationAvailable {
   id: string;
   name: string;
-  type: string;
-  description: string | null;
-  logo_url?: string | null;
-  config_schema: any;
+  type: 'marketplace' | 'logistica' | 'financeiro' | 'api' | 'comunicacao' | 'contabilidade' | 'personalizada';
+  description?: string;
+  logo_url?: string;
+  config_schema: ConfigField[];
+  available_for_plans: string[];
   visible_to_companies: boolean;
-  available_for_plans: string[] | null;
+  is_global_only: boolean;
   created_at: string;
+  updated_at: string;
 }
 
-export type IntegrationType = 
-  | 'marketplace' 
-  | 'logistica' 
-  | 'financeiro' 
-  | 'api' 
-  | 'comunicacao' 
-  | 'contabilidade' 
-  | 'personalizada';
-
-export const INTEGRATION_TYPES: Record<IntegrationType, string> = {
-  marketplace: 'Marketplace',
-  logistica: 'Logística',
-  financeiro: 'Financeiro',
-  api: 'API',
-  comunicacao: 'Comunicação',
-  contabilidade: 'Contabilidade',
-  personalizada: 'Personalizada'
-};
-
-export const INTEGRATION_TYPE_COLORS: Record<IntegrationType, string> = {
-  marketplace: 'bg-blue-100 text-blue-800',
-  logistica: 'bg-green-100 text-green-800',
-  financeiro: 'bg-yellow-100 text-yellow-800',
-  api: 'bg-purple-100 text-purple-800',
-  comunicacao: 'bg-pink-100 text-pink-800',
-  contabilidade: 'bg-indigo-100 text-indigo-800',
-  personalizada: 'bg-gray-100 text-gray-800'
-};
+export interface CompanyIntegration {
+  id: string;
+  company_id: string;
+  integration_id: string;
+  is_active: boolean;
+  credentials?: Record<string, any>;
+  config: Record<string, any>;
+  last_tested?: string;
+  created_at: string;
+  updated_at: string;
+  integration_available?: IntegrationAvailable;
+}
