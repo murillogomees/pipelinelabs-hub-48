@@ -82,7 +82,7 @@ export function TeamManagementDialog({ open, onOpenChange }: TeamManagementDialo
                     type="email"
                     value={inviteForm.email}
                     onChange={(e) => setInviteForm({ ...inviteForm, email: e.target.value })}
-                    placeholder="usuario@exemplo.com"
+                    placeholder="usuario@empresa.com"
                     required
                   />
                 </div>

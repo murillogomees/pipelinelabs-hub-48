@@ -51,7 +51,7 @@ export function useUserManagement(onSave: () => void, onClose: () => void) {
       .eq('user_id', authData.user.id);
 
     if (profileError) {
-      console.error('Erro ao atualizar perfil:', profileError);
+      // Error updating profile
       toast({
         title: "Aviso",
         description: "Usuário criado, mas falha ao atualizar perfil",
@@ -79,7 +79,7 @@ export function useUserManagement(onSave: () => void, onClose: () => void) {
         });
 
       if (companyError) {
-        console.error('Erro ao associar usuário à empresa:', companyError);
+        // Error associating user to company
         toast({
           title: "Aviso",
           description: "Usuário criado, mas falha ao associar à empresa",
@@ -181,7 +181,7 @@ export function useUserManagement(onSave: () => void, onClose: () => void) {
         await createUser(formData);
       }
     } catch (error) {
-      console.error('Erro ao salvar usuário:', error);
+      // Error saving user
       toast({
         title: "Erro",
         description: "Falha ao salvar usuário",

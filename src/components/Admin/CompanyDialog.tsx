@@ -91,7 +91,7 @@ export function CompanyDialog({ open, onOpenChange, onCompanyCreated }: CompanyD
       setFormData(defaultFormData);
       onOpenChange(false);
     } catch (error) {
-      console.error('Erro ao criar empresa:', error);
+      // Error handled by toast notification
       toast({
         title: "Erro",
         description: "Falha ao criar empresa",

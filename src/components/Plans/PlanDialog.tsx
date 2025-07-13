@@ -163,7 +163,7 @@ export function PlanDialog({ open, onOpenChange, plan, onSave }: PlanDialogProps
 
       onSave();
     } catch (error) {
-      console.error("Erro ao salvar plano:", error);
+      // Error saving plan
       toast({
         title: "Erro",
         description: "Erro ao salvar plano. Tente novamente.",

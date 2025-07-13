@@ -43,9 +43,7 @@ export function PersonalizacaoTab() {
   }, [settings]);
 
   const hasWhitelabelAccess = () => {
-    // Check if current plan supports whitelabel
-    // This would be based on the subscription plan features
-    return true; // For demo purposes, allow all users
+    return subscription?.plans?.is_custom || false;
   };
 
   const uploadFile = async (file: File, folder: string): Promise<string> => {
@@ -74,7 +72,7 @@ export function PersonalizacaoTab() {
 
       return publicUrl;
     } catch (error) {
-      console.error('Upload error:', error);
+      // Upload error
       throw error;
     } finally {
       setUploading(false);
@@ -486,7 +484,7 @@ export function PersonalizacaoTab() {
                   id="dominio_personalizado"
                   value={formData.dominio_personalizado}
                   onChange={(e) => setFormData(prev => ({ ...prev, dominio_personalizado: e.target.value }))}
-                  placeholder="app.minhaempresa.com.br"
+                  placeholder="app.suaempresa.com.br"
                   disabled={!hasWhitelabelAccess()}
                 />
                 <p className="text-xs text-muted-foreground">

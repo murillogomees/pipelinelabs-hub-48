@@ -185,7 +185,7 @@ export function IntegrationDialog({
                 <FormLabel>URL do Logo</FormLabel>
                 <FormControl>
                   <Input 
-                    placeholder="https://exemplo.com/logo.png"
+                    placeholder="https://cdn.exemplo.com/logo.png"
                     type="url"
                     {...field} 
                   />

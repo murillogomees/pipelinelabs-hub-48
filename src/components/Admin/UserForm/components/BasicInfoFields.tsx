@@ -38,7 +38,7 @@ export function BasicInfoFields({ formData, onChange, isEditing = false }: Basic
             type="email"
             value={formData.email}
             onChange={(e) => onChange('email', e.target.value)}
-            placeholder="email@exemplo.com"
+            placeholder="usuario@empresa.com"
             required
             disabled={isEditing} // Não permitir alterar email de usuário existente
           />

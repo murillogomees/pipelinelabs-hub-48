@@ -24,7 +24,7 @@ export function useAuth() {
         .single();
       
       if (error) {
-        console.error('Error fetching user role:', error);
+        // Error will be handled by returning null
         return null;
       }
       

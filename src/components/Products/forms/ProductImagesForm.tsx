@@ -60,7 +60,7 @@ export function ProductImagesForm({ data, onChange }: ProductImagesFormProps) {
               type="url"
               value={mainImageUrl}
               onChange={(e) => onChange('main_image_url', e.target.value)}
-              placeholder="https://exemplo.com/imagem.jpg"
+              placeholder="https://cdn.exemplo.com/produto.jpg"
             />
           </div>
           

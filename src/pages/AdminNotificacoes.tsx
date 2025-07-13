@@ -1,8 +1,7 @@
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { TestNotifications } from '@/components/Notifications/TestNotifications';
 import { Badge } from '@/components/ui/badge';
-import { Bell, Users, Database, Zap } from 'lucide-react';
+import { Bell, Database, Zap } from 'lucide-react';
 
 export function AdminNotificacoes() {
   return (
@@ -10,7 +9,7 @@ export function AdminNotificacoes() {
       <div>
         <h1 className="text-3xl font-bold text-foreground">Administração de Notificações</h1>
         <p className="text-muted-foreground">
-          Gerencie e teste o sistema de notificações em tempo real
+          Gerencie o sistema de notificações em tempo real
         </p>
       </div>
 
@@ -57,8 +56,6 @@ export function AdminNotificacoes() {
           </CardContent>
         </Card>
       </div>
-
-      <TestNotifications />
 
       <Card>
         <CardHeader>

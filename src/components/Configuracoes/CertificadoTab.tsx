@@ -64,11 +64,10 @@ export function CertificadoTab() {
   };
 
   const validateCertificate = async () => {
-    // Simulate certificate validation
-    // In a real app, this would call SEFAZ or certificate validation service
+    // TODO: Implementar validação real do certificado via SEFAZ
     return new Promise<boolean>((resolve) => {
       setTimeout(() => {
-        resolve(Math.random() > 0.3); // 70% success rate for demo
+        resolve(false); // Retorna false até implementar validação real
       }, 2000);
     });
   };
@@ -120,7 +119,7 @@ export function CertificadoTab() {
       });
 
     } catch (error) {
-      console.error('Erro ao processar certificado:', error);
+      // Error processing certificate
       toast({
         title: "Erro",
         description: error instanceof Error ? error.message : "Erro ao processar certificado",

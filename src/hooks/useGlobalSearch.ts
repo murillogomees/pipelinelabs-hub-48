@@ -223,7 +223,7 @@ export function useGlobalSearch(query: string) {
         });
 
       } catch (error) {
-        console.error('Search error:', error);
+        // Search error handled silently
       } finally {
         setIsSearching(false);
       }

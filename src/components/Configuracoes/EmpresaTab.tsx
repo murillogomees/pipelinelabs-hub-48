@@ -60,7 +60,7 @@ export function EmpresaTab() {
         setCompany(data);
       }
     } catch (error) {
-      console.error('Erro ao carregar dados da empresa:', error);
+      // Error loading company data
     }
   };
 
@@ -96,7 +96,7 @@ export function EmpresaTab() {
         description: "Dados da empresa atualizados com sucesso"
       });
     } catch (error) {
-      console.error('Erro ao salvar:', error);
+      // Error saving company data
       toast({
         title: "Erro",
         description: "Não foi possível salvar os dados",

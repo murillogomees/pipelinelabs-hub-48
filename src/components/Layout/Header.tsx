@@ -31,7 +31,7 @@ export function Header({ onToggleSidebar }: HeaderProps) {
       await signOut();
       window.location.href = '/auth';
     } catch (error) {
-      console.error('Logout error:', error);
+      // Error handled by redirect
       window.location.href = '/auth';
     }
   };

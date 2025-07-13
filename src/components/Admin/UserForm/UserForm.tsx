@@ -56,7 +56,7 @@ export function UserForm({ user, onSubmit, loading }: UserFormProps) {
           }
         }
       } catch (error) {
-        console.error('Erro ao carregar empresa padrão:', error);
+        // Error loading default company
       }
     };
     loadDefaultCompany();

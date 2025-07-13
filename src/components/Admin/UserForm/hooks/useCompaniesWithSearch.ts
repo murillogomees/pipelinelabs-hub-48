@@ -21,7 +21,7 @@ export function useCompaniesWithSearch() {
     const { data, error, count } = await query;
 
     if (error) {
-      console.error('Erro ao carregar empresas:', error);
+      // Error loading companies
       return {
         options: [],
         hasMore: false,

@@ -88,14 +88,13 @@ export function SistemaTab() {
   };
 
   const getPlanoInfo = () => {
-    if (!subscription?.plan_id) return null;
+    if (!subscription) return null;
     
-    // This would come from your plans data
-    const planoAtual = 'Plano Básico'; // Mock data
-    const usuariosPermitidos = 5; // Mock data
-    const usuariosAtivos = 2; // Mock data
-
-    return { planoAtual, usuariosPermitidos, usuariosAtivos };
+    return {
+      planoAtual: subscription.plans?.name || 'Plano não identificado',
+      usuariosPermitidos: subscription.plans?.user_limit || 1,
+      usuariosAtivos: 1 // TODO: Implementar contagem real de usuários ativos
+    };
   };
 
   const planoInfo = getPlanoInfo();

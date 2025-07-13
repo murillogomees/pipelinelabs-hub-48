@@ -110,7 +110,7 @@ export function useNotifications() {
           table: 'notifications'
         },
         (payload) => {
-          console.log('Notification change:', payload);
+          // Notification received via realtime
           
           // Invalidar queries para atualizar a UI
           queryClient.invalidateQueries({ queryKey: ['notifications'] });
