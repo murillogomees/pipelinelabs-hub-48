@@ -1,14 +1,18 @@
 
-import React from 'react';
-import { User, Menu, LogOut } from 'lucide-react';
+import React, { useState } from 'react';
+import { User, Menu, LogOut, Settings, Crown, Users } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/components/Auth/AuthProvider';
 import { NotificationBell } from '@/components/Notifications/NotificationBell';
 import { GlobalSearchTrigger } from '@/components/Search/GlobalSearchTrigger';
+import { UserProfileDialog } from '@/components/User/UserProfileDialog';
+import { TeamManagementDialog } from '@/components/User/TeamManagementDialog';
+import { PlanSubscriptionDialog } from '@/components/User/PlanSubscriptionDialog';
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 
@@ -18,6 +22,19 @@ interface HeaderProps {
 
 export function Header({ onToggleSidebar }: HeaderProps) {
   const { user, signOut } = useAuth();
+  const [profileOpen, setProfileOpen] = useState(false);
+  const [teamOpen, setTeamOpen] = useState(false);
+  const [planOpen, setPlanOpen] = useState(false);
+
+  const handleSecureSignOut = async () => {
+    try {
+      await signOut();
+      window.location.href = '/auth';
+    } catch (error) {
+      console.error('Logout error:', error);
+      window.location.href = '/auth';
+    }
+  };
 
   return (
     <header className="bg-white border-b border-gray-200 px-6 py-4">
@@ -50,8 +67,25 @@ export function Header({ onToggleSidebar }: HeaderProps) {
                 </div>
               </Button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              <DropdownMenuItem onClick={signOut}>
+            <DropdownMenuContent align="end" className="w-56">
+              <DropdownMenuItem onClick={() => setProfileOpen(true)}>
+                <User className="w-4 h-4 mr-2" />
+                Meu Perfil
+              </DropdownMenuItem>
+              
+              <DropdownMenuItem onClick={() => setPlanOpen(true)}>
+                <Crown className="w-4 h-4 mr-2" />
+                Plano e Assinatura
+              </DropdownMenuItem>
+              
+              <DropdownMenuItem onClick={() => setTeamOpen(true)}>
+                <Users className="w-4 h-4 mr-2" />
+                Minha Equipe
+              </DropdownMenuItem>
+              
+              <DropdownMenuSeparator />
+              
+              <DropdownMenuItem onClick={handleSecureSignOut}>
                 <LogOut className="w-4 h-4 mr-2" />
                 Sair
               </DropdownMenuItem>
@@ -59,6 +93,11 @@ export function Header({ onToggleSidebar }: HeaderProps) {
           </DropdownMenu>
         </div>
       </div>
+
+      {/* Dialogs */}
+      <UserProfileDialog open={profileOpen} onOpenChange={setProfileOpen} />
+      <TeamManagementDialog open={teamOpen} onOpenChange={setTeamOpen} />
+      <PlanSubscriptionDialog open={planOpen} onOpenChange={setPlanOpen} />
     </header>
   );
 }
