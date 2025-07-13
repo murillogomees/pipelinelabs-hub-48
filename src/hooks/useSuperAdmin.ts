@@ -5,15 +5,26 @@ export function useSuperAdmin() {
   const { data: isSuperAdmin = false, isLoading } = useQuery({
     queryKey: ["super-admin"],
     queryFn: async () => {
-      const { data, error } = await supabase.rpc("is_super_admin");
-      
-      if (error) {
-        console.error("Error checking super admin status:", error);
+      try {
+        const { data: user } = await supabase.auth.getUser();
+        if (!user.user) return false;
+
+        const { data, error } = await supabase
+          .from("user_companies")
+          .select("permissions")
+          .eq("user_id", user.user.id)
+          .eq("is_active", true)
+          .maybeSingle();
+        
+        if (error || !data) return false;
+        
+        const permissions = data.permissions as Record<string, any>;
+        return permissions?.super_admin === true;
+      } catch {
         return false;
       }
-      
-      return data as boolean;
     },
+    refetchOnWindowFocus: false,
   });
 
   return {

@@ -13,7 +13,7 @@ interface PlanSubscriptionDialogProps {
 }
 
 export function PlanSubscriptionDialog({ open, onOpenChange }: PlanSubscriptionDialogProps) {
-  const { isAdmin } = useAuth();
+  const { isSuperAdmin, isAdmin } = useAuth();
   const { subscription } = useSubscription();
 
   const getStatusBadge = (status: string) => {
@@ -51,7 +51,23 @@ export function PlanSubscriptionDialog({ open, onOpenChange }: PlanSubscriptionD
         </DialogHeader>
 
         <div className="space-y-6">
-          {subscription ? (
+          {isSuperAdmin ? (
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center justify-between">
+                  <span>Super Administrador</span>
+                  <Badge className="bg-purple-100 text-purple-800">
+                    <Crown className="w-3 h-3 mr-1" />Super Admin
+                  </Badge>
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p className="text-sm text-muted-foreground">
+                  Você tem acesso completo a todas as funcionalidades do sistema como super administrador.
+                </p>
+              </CardContent>
+            </Card>
+          ) : subscription ? (
             <>
               {/* Current Plan Info */}
               <Card>
@@ -94,7 +110,6 @@ export function PlanSubscriptionDialog({ open, onOpenChange }: PlanSubscriptionD
                       </p>
                     </div>
                   </div>
-
                 </CardContent>
               </Card>
 

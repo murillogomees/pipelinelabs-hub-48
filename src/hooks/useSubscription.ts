@@ -1,6 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { useSuperAdmin } from "./useSuperAdmin";
 
 interface Subscription {
   id: string;
@@ -22,7 +21,6 @@ interface Subscription {
 }
 
 export function useSubscription() {
-  const { isSuperAdmin } = useSuperAdmin();
   const { data: subscription, isLoading, error, refetch } = useQuery({
     queryKey: ["subscription"],
     queryFn: async () => {
@@ -52,7 +50,7 @@ export function useSubscription() {
     subscription?.trial_end_date && 
     new Date(subscription.trial_end_date) > new Date();
 
-  const isSubscribed = subscription?.status === "active" || isTrialActive || isSuperAdmin;
+  const isSubscribed = subscription?.status === "active" || isTrialActive;
 
   const trialDaysLeft = subscription?.trial_end_date
     ? Math.ceil((new Date(subscription.trial_end_date).getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24))
@@ -66,9 +64,8 @@ export function useSubscription() {
     isSubscribed,
     isTrialActive,
     trialDaysLeft,
-    planName: isSuperAdmin ? "Super Admin" : subscription?.plans?.name,
-    userLimit: isSuperAdmin ? 999999 : subscription?.plans?.user_limit,
-    features: isSuperAdmin ? ["all_features"] : subscription?.plans?.features || [],
-    isSuperAdmin,
+    planName: subscription?.plans?.name,
+    userLimit: subscription?.plans?.user_limit,
+    features: subscription?.plans?.features || [],
   };
 }

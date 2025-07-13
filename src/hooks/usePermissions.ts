@@ -23,22 +23,16 @@ export function usePermissions() {
         };
       }
 
-      // Buscar permissões do usuário
-      const { data: profileData, error } = await supabase
-        .from("profiles")
-        .select(`
-          email,
-          user_companies!inner(
-            role,
-            permissions,
-            is_active
-          )
-        `)
+      // Buscar permissões do usuário - consulta simples primeiro
+      const { data: userCompaniesData, error: companiesError } = await supabase
+        .from("user_companies")
+        .select("role, permissions, is_active, company_id")
         .eq("user_id", user.user.id)
-        .eq("user_companies.is_active", true)
+        .eq("is_active", true)
         .maybeSingle();
 
-      if (error || !profileData) {
+      if (companiesError) {
+        console.error("Error fetching user companies:", companiesError);
         return {
           isSuperAdmin: false,
           isAdmin: false,
@@ -47,18 +41,31 @@ export function usePermissions() {
         };
       }
 
-      const userCompany = Array.isArray(profileData.user_companies) 
-        ? profileData.user_companies[0] 
-        : profileData.user_companies;
-      const permissions = (userCompany?.permissions as Record<string, any>) || {};
-      const isAdmin = userCompany?.role === "admin";
+      // Buscar email do perfil
+      const { data: profileData } = await supabase
+        .from("profiles")
+        .select("email")
+        .eq("user_id", user.user.id)
+        .maybeSingle();
+
+      if (!userCompaniesData) {
+        return {
+          isSuperAdmin: false,
+          isAdmin: false,
+          permissions: {},
+          email: profileData?.email || user.user.email || null
+        };
+      }
+
+      const permissions = (userCompaniesData.permissions as Record<string, any>) || {};
+      const isAdmin = userCompaniesData.role === "admin";
       const isSuperAdmin = permissions.super_admin === true;
 
       return {
         isSuperAdmin,
         isAdmin,
         permissions,
-        email: profileData.email
+        email: profileData?.email || user.user.email || null
       } as UserPermissions;
     },
     refetchOnWindowFocus: false,
