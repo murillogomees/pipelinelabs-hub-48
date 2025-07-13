@@ -18,7 +18,7 @@ import { useAuth } from "@/components/Auth/AuthProvider";
 import { SignUpCompany } from "@/pages/SignUpCompany";
 import { Integracoes } from "@/pages/Integracoes";
 import { AdminIntegracoes } from "@/pages/AdminIntegracoes";
-import { AdminUsuarios } from "@/pages/AdminUsuarios";
+import AdminUsuarios from "@/pages/AdminUsuarios";
 import { AdminPlanos } from "@/pages/AdminPlanos";
 import { IntegracaoERP } from "@/pages/IntegracaoERP";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
@@ -111,11 +111,9 @@ function AppContent() {
               </MainLayout>
             } />
             <Route path="/admin/usuarios" element={
-              <MainLayout>
-                <ProtectedRoute requireAdmin>
-                  <AdminUsuarios />
-                </ProtectedRoute>
-              </MainLayout>
+              <ProtectedRoute requireAdmin>
+                <AdminUsuarios />
+              </ProtectedRoute>
             } />
             <Route path="/admin/planos" element={
               <MainLayout>
