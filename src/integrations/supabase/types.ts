@@ -1644,6 +1644,36 @@ export type Database = {
           },
         ]
       }
+      user_dashboards: {
+        Row: {
+          company_id: string
+          created_at: string
+          id: string
+          layout_config: Json | null
+          updated_at: string
+          user_id: string
+          widgets: Json
+        }
+        Insert: {
+          company_id: string
+          created_at?: string
+          id?: string
+          layout_config?: Json | null
+          updated_at?: string
+          user_id: string
+          widgets?: Json
+        }
+        Update: {
+          company_id?: string
+          created_at?: string
+          id?: string
+          layout_config?: Json | null
+          updated_at?: string
+          user_id?: string
+          widgets?: Json
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
