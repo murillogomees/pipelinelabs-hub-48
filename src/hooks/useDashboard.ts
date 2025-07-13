@@ -58,11 +58,29 @@ export function useUpdateDashboard() {
     mutationFn: async (config: Partial<DashboardConfig>) => {
       if (!user?.id) throw new Error('User not authenticated');
 
+      // Buscar company_id se não foi fornecido
+      let companyId = config.company_id;
+      if (!companyId) {
+        const { data: userCompany } = await supabase
+          .from('user_companies')
+          .select('company_id')
+          .eq('user_id', user.id)
+          .eq('is_active', true)
+          .limit(1)
+          .maybeSingle();
+        
+        companyId = userCompany?.company_id;
+      }
+
+      if (!companyId) {
+        throw new Error('Nenhuma empresa encontrada para o usuário');
+      }
+
       const { data, error } = await supabase
         .from('user_dashboards')
         .upsert({
           user_id: user.id,
-          company_id: config.company_id!,
+          company_id: companyId,
           widgets: config.widgets || [] as any,
           layout_config: config.layout_config || {} as any,
         })

@@ -124,6 +124,11 @@ export function useAuthForm({ onSuccess }: UseAuthFormProps = {}) {
       description: 'Bem-vindo ao Pipeline Labs.',
     });
     
+    // Aguardar um pouco antes de redirecionar para garantir que o estado seja atualizado
+    setTimeout(() => {
+      window.location.href = '/';
+    }, 1000);
+    
     onSuccess?.();
   };
 

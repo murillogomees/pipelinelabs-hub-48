@@ -23,12 +23,14 @@ export function usePermissions() {
         };
       }
 
-      // Buscar permissões do usuário - consulta simples primeiro
+      // Buscar permissões do usuário - como pode ter múltiplas empresas, pegamos a primeira ativa
       const { data: userCompaniesData, error: companiesError } = await supabase
         .from("user_companies")
         .select("role, permissions, is_active, company_id")
         .eq("user_id", user.user.id)
         .eq("is_active", true)
+        .order("created_at", { ascending: false })
+        .limit(1)
         .maybeSingle();
 
       if (companiesError) {
