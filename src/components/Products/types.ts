@@ -21,6 +21,27 @@ export const PRODUCT_FORMATS = {
   COMPOSICAO: 'composicao'
 } as const;
 
+export const PRODUCTION_TYPES = {
+  PROPRIA: 'propria',
+  TERCEIRO: 'terceiro'
+} as const;
+
+export const UNIT_MEASURES = {
+  CM: 'cm',
+  M: 'm',
+  MM: 'mm'
+} as const;
+
+export const UNITS = {
+  UNIDADE: 'un',
+  PACOTE: 'pct',
+  CAIXA: 'cx',
+  KILOGRAMA: 'kg',
+  GRAMA: 'g',
+  LITRO: 'l',
+  METRO: 'm'
+} as const;
+
 export const TAX_ORIGINS = {
   '0': 'Nacional, exceto as indicadas nos códigos 3, 4, 5 e 8',
   '1': 'Estrangeira - Importação direta, exceto a indicada no código 6',
@@ -31,4 +52,10 @@ export const TAX_ORIGINS = {
   '6': 'Estrangeira - Importação direta, sem similar nacional, constante em lista da CAMEX',
   '7': 'Estrangeira - Adquirida no mercado interno, sem similar nacional, constante lista CAMEX',
   '8': 'Nacional, mercadoria ou bem com Conteúdo de Importação superior a 70%'
+} as const;
+
+export const ITEM_TYPES = {
+  MERCADORIA: 'mercadoria',
+  PRODUTO: 'produto',
+  SERVICO: 'servico'
 } as const;

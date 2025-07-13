@@ -720,73 +720,205 @@ export type Database = {
       }
       products: {
         Row: {
+          additional_tax_data: Json | null
           barcode: string | null
+          brand: string | null
           category_id: string | null
+          cest_code: string | null
           code: string
+          cofins_fixed_value: number | null
           company_id: string
+          condition: string | null
           cost_price: number | null
           created_at: string
+          crossdocking_days: number | null
+          custom_attributes: Json | null
+          depth: number | null
           description: string | null
           dimensions: string | null
+          estimated_taxes_percentage: number | null
+          expiry_date: string | null
+          external_id: string | null
+          external_link: string | null
+          format: string | null
+          free_shipping: boolean | null
+          gross_weight: number | null
+          gtin: string | null
+          gtin_tax: string | null
+          height: number | null
+          icms_base: number | null
+          icms_retention: number | null
           id: string
+          images: Json | null
+          initial_stock: number | null
+          integration_data: Json | null
           is_active: boolean
+          item_type: string | null
+          main_image_url: string | null
           max_stock: number | null
           min_stock: number | null
           name: string
           ncm_code: string | null
+          observations: string | null
+          pis_fixed_value: number | null
           price: number
+          price_list: Json | null
+          product_group: string | null
+          product_type: string | null
+          production_type: string | null
+          promotional_date_end: string | null
+          promotional_date_start: string | null
+          promotional_price: number | null
+          short_description: string | null
           stock_location: string | null
+          stock_notes: string | null
           stock_quantity: number
+          suppliers: Json | null
           tax_origin: string | null
           tax_situation: string | null
+          tipi_exception: string | null
+          unit: string | null
+          unit_measure: string | null
           updated_at: string
+          video_link: string | null
+          volumes: number | null
+          warehouse: string | null
           weight: number | null
+          width: number | null
         }
         Insert: {
+          additional_tax_data?: Json | null
           barcode?: string | null
+          brand?: string | null
           category_id?: string | null
+          cest_code?: string | null
           code: string
+          cofins_fixed_value?: number | null
           company_id: string
+          condition?: string | null
           cost_price?: number | null
           created_at?: string
+          crossdocking_days?: number | null
+          custom_attributes?: Json | null
+          depth?: number | null
           description?: string | null
           dimensions?: string | null
+          estimated_taxes_percentage?: number | null
+          expiry_date?: string | null
+          external_id?: string | null
+          external_link?: string | null
+          format?: string | null
+          free_shipping?: boolean | null
+          gross_weight?: number | null
+          gtin?: string | null
+          gtin_tax?: string | null
+          height?: number | null
+          icms_base?: number | null
+          icms_retention?: number | null
           id?: string
+          images?: Json | null
+          initial_stock?: number | null
+          integration_data?: Json | null
           is_active?: boolean
+          item_type?: string | null
+          main_image_url?: string | null
           max_stock?: number | null
           min_stock?: number | null
           name: string
           ncm_code?: string | null
+          observations?: string | null
+          pis_fixed_value?: number | null
           price?: number
+          price_list?: Json | null
+          product_group?: string | null
+          product_type?: string | null
+          production_type?: string | null
+          promotional_date_end?: string | null
+          promotional_date_start?: string | null
+          promotional_price?: number | null
+          short_description?: string | null
           stock_location?: string | null
+          stock_notes?: string | null
           stock_quantity?: number
+          suppliers?: Json | null
           tax_origin?: string | null
           tax_situation?: string | null
+          tipi_exception?: string | null
+          unit?: string | null
+          unit_measure?: string | null
           updated_at?: string
+          video_link?: string | null
+          volumes?: number | null
+          warehouse?: string | null
           weight?: number | null
+          width?: number | null
         }
         Update: {
+          additional_tax_data?: Json | null
           barcode?: string | null
+          brand?: string | null
           category_id?: string | null
+          cest_code?: string | null
           code?: string
+          cofins_fixed_value?: number | null
           company_id?: string
+          condition?: string | null
           cost_price?: number | null
           created_at?: string
+          crossdocking_days?: number | null
+          custom_attributes?: Json | null
+          depth?: number | null
           description?: string | null
           dimensions?: string | null
+          estimated_taxes_percentage?: number | null
+          expiry_date?: string | null
+          external_id?: string | null
+          external_link?: string | null
+          format?: string | null
+          free_shipping?: boolean | null
+          gross_weight?: number | null
+          gtin?: string | null
+          gtin_tax?: string | null
+          height?: number | null
+          icms_base?: number | null
+          icms_retention?: number | null
           id?: string
+          images?: Json | null
+          initial_stock?: number | null
+          integration_data?: Json | null
           is_active?: boolean
+          item_type?: string | null
+          main_image_url?: string | null
           max_stock?: number | null
           min_stock?: number | null
           name?: string
           ncm_code?: string | null
+          observations?: string | null
+          pis_fixed_value?: number | null
           price?: number
+          price_list?: Json | null
+          product_group?: string | null
+          product_type?: string | null
+          production_type?: string | null
+          promotional_date_end?: string | null
+          promotional_date_start?: string | null
+          promotional_price?: number | null
+          short_description?: string | null
           stock_location?: string | null
+          stock_notes?: string | null
           stock_quantity?: number
+          suppliers?: Json | null
           tax_origin?: string | null
           tax_situation?: string | null
+          tipi_exception?: string | null
+          unit?: string | null
+          unit_measure?: string | null
           updated_at?: string
+          video_link?: string | null
+          volumes?: number | null
+          warehouse?: string | null
           weight?: number | null
+          width?: number | null
         }
         Relationships: [
           {

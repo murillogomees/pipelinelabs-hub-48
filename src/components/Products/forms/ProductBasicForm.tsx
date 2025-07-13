@@ -4,7 +4,8 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { PRODUCT_TYPES, PRODUCT_CONDITIONS, PRODUCT_FORMATS } from '../types';
+import { Switch } from '@/components/ui/switch';
+import { PRODUCT_TYPES, PRODUCT_CONDITIONS, PRODUCT_FORMATS, PRODUCTION_TYPES, UNIT_MEASURES, UNITS } from '../types';
 
 interface ProductBasicFormProps {
   data: any;
@@ -19,7 +20,7 @@ export function ProductBasicForm({ data, onChange }: ProductBasicFormProps) {
           <CardTitle>Informações Básicas</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-3 gap-4">
             <div>
               <Label htmlFor="code">Código/SKU *</Label>
               <Input
@@ -30,11 +31,20 @@ export function ProductBasicForm({ data, onChange }: ProductBasicFormProps) {
               />
             </div>
             <div>
-              <Label htmlFor="barcode">Código de Barras (GTIN)</Label>
+              <Label htmlFor="gtin">GTIN</Label>
               <Input
-                id="barcode"
-                value={data.barcode || ''}
-                onChange={(e) => onChange('barcode', e.target.value)}
+                id="gtin"
+                value={data.gtin || ''}
+                onChange={(e) => onChange('gtin', e.target.value)}
+                placeholder="Ex: 7891234567890"
+              />
+            </div>
+            <div>
+              <Label htmlFor="gtin_tax">GTIN Tributário</Label>
+              <Input
+                id="gtin_tax"
+                value={data.gtin_tax || ''}
+                onChange={(e) => onChange('gtin_tax', e.target.value)}
                 placeholder="Ex: 7891234567890"
               />
             </div>
@@ -50,15 +60,27 @@ export function ProductBasicForm({ data, onChange }: ProductBasicFormProps) {
             />
           </div>
 
-          <div>
-            <Label htmlFor="description">Descrição</Label>
-            <Textarea
-              id="description"
-              value={data.description || ''}
-              onChange={(e) => onChange('description', e.target.value)}
-              placeholder="Descrição detalhada do produto"
-              rows={3}
-            />
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <Label htmlFor="short_description">Descrição Curta</Label>
+              <Textarea
+                id="short_description"
+                value={data.short_description || ''}
+                onChange={(e) => onChange('short_description', e.target.value)}
+                placeholder="Descrição resumida do produto"
+                rows={2}
+              />
+            </div>
+            <div>
+              <Label htmlFor="description">Descrição Complementar</Label>
+              <Textarea
+                id="description"
+                value={data.description || ''}
+                onChange={(e) => onChange('description', e.target.value)}
+                placeholder="Descrição detalhada do produto"
+                rows={2}
+              />
+            </div>
           </div>
 
           <div className="grid grid-cols-3 gap-4">
@@ -113,30 +135,202 @@ export function ProductBasicForm({ data, onChange }: ProductBasicFormProps) {
             </div>
           </div>
 
-          {data.product_type !== PRODUCT_TYPES.SERVICO && (
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <Label htmlFor="weight">Peso (kg)</Label>
-                <Input
-                  id="weight"
-                  type="number"
-                  step="0.001"
-                  value={data.weight || ''}
-                  onChange={(e) => onChange('weight', parseFloat(e.target.value) || 0)}
-                  placeholder="0.000"
-                />
-              </div>
-              <div>
-                <Label htmlFor="dimensions">Dimensões (A x L x P cm)</Label>
-                <Input
-                  id="dimensions"
-                  value={data.dimensions || ''}
-                  onChange={(e) => onChange('dimensions', e.target.value)}
-                  placeholder="Ex: 10 x 15 x 20"
-                />
-              </div>
+          <div className="grid grid-cols-4 gap-4">
+            <div>
+              <Label htmlFor="unit">Unidade</Label>
+              <Select
+                value={data.unit || UNITS.UNIDADE}
+                onValueChange={(value) => onChange('unit', value)}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Selecione a unidade" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value={UNITS.UNIDADE}>Unidade</SelectItem>
+                  <SelectItem value={UNITS.PACOTE}>Pacote</SelectItem>
+                  <SelectItem value={UNITS.CAIXA}>Caixa</SelectItem>
+                  <SelectItem value={UNITS.KILOGRAMA}>Quilograma</SelectItem>
+                  <SelectItem value={UNITS.GRAMA}>Grama</SelectItem>
+                  <SelectItem value={UNITS.LITRO}>Litro</SelectItem>
+                  <SelectItem value={UNITS.METRO}>Metro</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
+            <div>
+              <Label htmlFor="brand">Marca</Label>
+              <Input
+                id="brand"
+                value={data.brand || ''}
+                onChange={(e) => onChange('brand', e.target.value)}
+                placeholder="Nome da marca"
+              />
+            </div>
+            <div>
+              <Label htmlFor="production_type">Produção</Label>
+              <Select
+                value={data.production_type || PRODUCTION_TYPES.PROPRIA}
+                onValueChange={(value) => onChange('production_type', value)}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Selecione" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value={PRODUCTION_TYPES.PROPRIA}>Própria</SelectItem>
+                  <SelectItem value={PRODUCTION_TYPES.TERCEIRO}>Terceiro</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div>
+              <Label htmlFor="expiry_date">Data de Validade</Label>
+              <Input
+                id="expiry_date"
+                type="date"
+                value={data.expiry_date || ''}
+                onChange={(e) => onChange('expiry_date', e.target.value)}
+              />
+            </div>
+          </div>
+
+          <div className="flex items-center space-x-2">
+            <Switch
+              id="free_shipping"
+              checked={data.free_shipping || false}
+              onCheckedChange={(checked) => onChange('free_shipping', checked)}
+            />
+            <Label htmlFor="free_shipping">Frete Grátis</Label>
+          </div>
+
+          {data.product_type !== PRODUCT_TYPES.SERVICO && (
+            <>
+              <div className="grid grid-cols-3 gap-4">
+                <div>
+                  <Label htmlFor="weight">Peso Líquido (kg)</Label>
+                  <Input
+                    id="weight"
+                    type="number"
+                    step="0.001"
+                    value={data.weight || ''}
+                    onChange={(e) => onChange('weight', parseFloat(e.target.value) || null)}
+                    placeholder="0.000"
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="gross_weight">Peso Bruto (kg)</Label>
+                  <Input
+                    id="gross_weight"
+                    type="number"
+                    step="0.001"
+                    value={data.gross_weight || ''}
+                    onChange={(e) => onChange('gross_weight', parseFloat(e.target.value) || null)}
+                    placeholder="0.000"
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="volumes">Volumes</Label>
+                  <Input
+                    id="volumes"
+                    type="number"
+                    value={data.volumes || 1}
+                    onChange={(e) => onChange('volumes', parseInt(e.target.value) || 1)}
+                    placeholder="1"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-5 gap-4">
+                <div>
+                  <Label htmlFor="height">Altura</Label>
+                  <Input
+                    id="height"
+                    type="number"
+                    step="0.01"
+                    value={data.height || ''}
+                    onChange={(e) => onChange('height', parseFloat(e.target.value) || null)}
+                    placeholder="0.00"
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="width">Largura</Label>
+                  <Input
+                    id="width"
+                    type="number"
+                    step="0.01"
+                    value={data.width || ''}
+                    onChange={(e) => onChange('width', parseFloat(e.target.value) || null)}
+                    placeholder="0.00"
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="depth">Profundidade</Label>
+                  <Input
+                    id="depth"
+                    type="number"
+                    step="0.01"
+                    value={data.depth || ''}
+                    onChange={(e) => onChange('depth', parseFloat(e.target.value) || null)}
+                    placeholder="0.00"
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="unit_measure">Unidade de Medida</Label>
+                  <Select
+                    value={data.unit_measure || UNIT_MEASURES.CM}
+                    onValueChange={(value) => onChange('unit_measure', value)}
+                  >
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value={UNIT_MEASURES.CM}>Centímetros</SelectItem>
+                      <SelectItem value={UNIT_MEASURES.M}>Metros</SelectItem>
+                      <SelectItem value={UNIT_MEASURES.MM}>Milímetros</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+            </>
           )}
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Links e Observações</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <Label htmlFor="external_link">Link Externo</Label>
+              <Input
+                id="external_link"
+                type="url"
+                value={data.external_link || ''}
+                onChange={(e) => onChange('external_link', e.target.value)}
+                placeholder="https://..."
+              />
+            </div>
+            <div>
+              <Label htmlFor="video_link">Link de Vídeo</Label>
+              <Input
+                id="video_link"
+                type="url"
+                value={data.video_link || ''}
+                onChange={(e) => onChange('video_link', e.target.value)}
+                placeholder="https://youtube.com/..."
+              />
+            </div>
+          </div>
+
+          <div>
+            <Label htmlFor="observations">Observações</Label>
+            <Textarea
+              id="observations"
+              value={data.observations || ''}
+              onChange={(e) => onChange('observations', e.target.value)}
+              placeholder="Observações adicionais sobre o produto"
+              rows={3}
+            />
+          </div>
         </CardContent>
       </Card>
     </div>
