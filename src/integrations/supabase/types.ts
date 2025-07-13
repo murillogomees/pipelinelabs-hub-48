@@ -668,6 +668,66 @@ export type Database = {
         }
         Relationships: []
       }
+      pos_sales: {
+        Row: {
+          company_id: string
+          created_at: string
+          customer_id: string | null
+          discount: number | null
+          id: string
+          items: Json
+          nfce_issued: boolean | null
+          nfce_key: string | null
+          notes: string | null
+          operator_id: string | null
+          payments: Json
+          receipt_printed: boolean | null
+          sale_number: string
+          status: string
+          tax_amount: number | null
+          total_amount: number
+          updated_at: string
+        }
+        Insert: {
+          company_id: string
+          created_at?: string
+          customer_id?: string | null
+          discount?: number | null
+          id?: string
+          items?: Json
+          nfce_issued?: boolean | null
+          nfce_key?: string | null
+          notes?: string | null
+          operator_id?: string | null
+          payments?: Json
+          receipt_printed?: boolean | null
+          sale_number: string
+          status?: string
+          tax_amount?: number | null
+          total_amount?: number
+          updated_at?: string
+        }
+        Update: {
+          company_id?: string
+          created_at?: string
+          customer_id?: string | null
+          discount?: number | null
+          id?: string
+          items?: Json
+          nfce_issued?: boolean | null
+          nfce_key?: string | null
+          notes?: string | null
+          operator_id?: string | null
+          payments?: Json
+          receipt_printed?: boolean | null
+          sale_number?: string
+          status?: string
+          tax_amount?: number | null
+          total_amount?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
       product_categories: {
         Row: {
           company_id: string
@@ -1012,6 +1072,96 @@ export type Database = {
           phone?: string | null
           updated_at?: string
           user_id?: string
+        }
+        Relationships: []
+      }
+      proposals: {
+        Row: {
+          accepted_at: string | null
+          company_id: string
+          converted_to_sale_id: string | null
+          created_at: string
+          created_by: string | null
+          customer_id: string | null
+          delivery_terms: string | null
+          description: string | null
+          discount: number | null
+          expiration_date: string | null
+          id: string
+          internal_notes: string | null
+          items: Json
+          notes: string | null
+          payment_terms: string | null
+          pdf_generated_at: string | null
+          pdf_url: string | null
+          proposal_number: string
+          rejected_at: string | null
+          sent_at: string | null
+          services: Json | null
+          status: string
+          subtotal: number
+          tax_amount: number | null
+          title: string
+          total_amount: number
+          updated_at: string
+        }
+        Insert: {
+          accepted_at?: string | null
+          company_id: string
+          converted_to_sale_id?: string | null
+          created_at?: string
+          created_by?: string | null
+          customer_id?: string | null
+          delivery_terms?: string | null
+          description?: string | null
+          discount?: number | null
+          expiration_date?: string | null
+          id?: string
+          internal_notes?: string | null
+          items?: Json
+          notes?: string | null
+          payment_terms?: string | null
+          pdf_generated_at?: string | null
+          pdf_url?: string | null
+          proposal_number: string
+          rejected_at?: string | null
+          sent_at?: string | null
+          services?: Json | null
+          status?: string
+          subtotal?: number
+          tax_amount?: number | null
+          title: string
+          total_amount?: number
+          updated_at?: string
+        }
+        Update: {
+          accepted_at?: string | null
+          company_id?: string
+          converted_to_sale_id?: string | null
+          created_at?: string
+          created_by?: string | null
+          customer_id?: string | null
+          delivery_terms?: string | null
+          description?: string | null
+          discount?: number | null
+          expiration_date?: string | null
+          id?: string
+          internal_notes?: string | null
+          items?: Json
+          notes?: string | null
+          payment_terms?: string | null
+          pdf_generated_at?: string | null
+          pdf_url?: string | null
+          proposal_number?: string
+          rejected_at?: string | null
+          sent_at?: string | null
+          services?: Json | null
+          status?: string
+          subtotal?: number
+          tax_amount?: number | null
+          title?: string
+          total_amount?: number
+          updated_at?: string
         }
         Relationships: []
       }
@@ -1505,6 +1655,14 @@ export type Database = {
       }
       encrypt_integration_data: {
         Args: { data: Json }
+        Returns: string
+      }
+      generate_pos_sale_number: {
+        Args: { company_uuid: string }
+        Returns: string
+      }
+      generate_proposal_number: {
+        Args: { company_uuid: string }
         Returns: string
       }
       get_default_company_id: {

@@ -1,13 +1,19 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { Routes, Route, NavLink, useLocation } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Plus, Search, Filter, ShoppingCart, CreditCard, FileText } from 'lucide-react';
+import { Plus, Search, Filter, ShoppingCart, CreditCard, FileText, ChevronRight } from 'lucide-react';
 import { Input } from '@/components/ui/input';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { useSales } from '@/hooks/useSales';
 import { Skeleton } from '@/components/ui/skeleton';
+import { useSales } from '@/hooks/useSales';
+import { useProposals, Proposal } from '@/hooks/useProposals';
+import { POSInterface } from '@/components/POS/POSInterface';
+import { ProposalDialog } from '@/components/Proposals/ProposalDialog';
+import { format } from 'date-fns';
 
 // Componente para Pedidos
 function Pedidos() {
@@ -141,55 +147,44 @@ function Pedidos() {
 // Componente para PDV
 function PDV() {
   return (
-    <div className="space-y-6">
-      <div className="flex justify-between items-center">
-        <div>
-          <h2 className="text-2xl font-bold text-foreground">PDV - Ponto de Venda</h2>
-          <p className="text-muted-foreground">Sistema de vendas rápido e intuitivo</p>
-        </div>
+    <div className="container mx-auto py-6">
+      <div className="mb-6">
+        <h1 className="text-3xl font-bold">Ponto de Venda (PDV)</h1>
+        <p className="text-muted-foreground">
+          Sistema completo de vendas com controle de estoque e pagamentos.
+        </p>
       </div>
-
-      <Card>
-        <CardContent className="p-6">
-          <div className="text-center py-12">
-            <CreditCard className="w-16 h-16 text-muted-foreground mx-auto mb-4" />
-            <h3 className="text-xl font-semibold mb-2">PDV em Desenvolvimento</h3>
-            <p className="text-muted-foreground">
-              O sistema de Ponto de Venda estará disponível em breve.
-            </p>
-          </div>
-        </CardContent>
-      </Card>
+      <POSInterface />
     </div>
   );
 }
 
 // Componente para Propostas
 function Propostas() {
+  const { data: proposals = [], isLoading } = useProposals();
+  const [selectedProposal, setSelectedProposal] = useState<Proposal | undefined>();
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
+
+  const openDialog = (proposal?: Proposal) => {
+    setSelectedProposal(proposal);
+    setIsDialogOpen(true);
+  };
+
   return (
-    <div className="space-y-6">
-      <div className="flex justify-between items-center">
-        <div>
-          <h2 className="text-2xl font-bold text-foreground">Propostas</h2>
-          <p className="text-muted-foreground">Gerencie propostas comerciais</p>
-        </div>
-        <Button className="bg-primary hover:bg-primary/90 text-primary-foreground">
-          <Plus className="w-4 h-4 mr-2" />
+    <div className="container mx-auto py-6">
+      <div className="flex justify-between items-center mb-6">
+        <h1 className="text-3xl font-bold">Propostas Comerciais</h1>
+        <Button onClick={() => openDialog()}>
+          <Plus className="h-4 w-4 mr-2" />
           Nova Proposta
         </Button>
       </div>
 
-      <Card>
-        <CardContent className="p-6">
-          <div className="text-center py-12">
-            <FileText className="w-16 h-16 text-muted-foreground mx-auto mb-4" />
-            <h3 className="text-xl font-semibold mb-2">Propostas em Desenvolvimento</h3>
-            <p className="text-muted-foreground">
-              O módulo de propostas comerciais estará disponível em breve.
-            </p>
-          </div>
-        </CardContent>
-      </Card>
+      <ProposalDialog
+        isOpen={isDialogOpen}
+        onClose={() => setIsDialogOpen(false)}
+        proposal={selectedProposal}
+      />
     </div>
   );
 }
