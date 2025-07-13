@@ -127,15 +127,36 @@ export function useInviteTeamMember() {
 export function useRemoveTeamMember() {
   const queryClient = useQueryClient();
   const { toast } = useToast();
+  const { user } = useAuth();
 
   return useMutation({
     mutationFn: async (memberId: string) => {
+      // Get the member being removed
+      const { data: member } = await supabase
+        .from('user_companies')
+        .select('user_id, role')
+        .eq('id', memberId)
+        .single();
+
+      if (!member) throw new Error('Membro não encontrado');
+
+      // Prevent users from removing themselves
+      if (member.user_id === user?.id) {
+        throw new Error('Você não pode remover a si mesmo da equipe');
+      }
+
       const { error } = await supabase
         .from('user_companies')
         .update({ is_active: false })
         .eq('id', memberId);
 
-      if (error) throw error;
+      if (error) {
+        // Sanitize database errors
+        if (error.message.includes('row-level security policy')) {
+          throw new Error('Você não tem permissão para remover este membro');
+        }
+        throw error;
+      }
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['team-members'] });

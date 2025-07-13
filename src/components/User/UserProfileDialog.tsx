@@ -5,6 +5,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { PasswordValidator } from '@/components/ui/password-validator';
 import { useUserProfile, useUpdateProfile, useChangePassword } from '@/hooks/useUserProfile';
 import { User, Camera, Save, Key } from 'lucide-react';
 
@@ -137,6 +138,9 @@ export function UserProfileDialog({ open, onOpenChange }: UserProfileDialogProps
                   onChange={(e) => setPasswordData({ ...passwordData, newPassword: e.target.value })}
                   placeholder="Digite a nova senha"
                 />
+                {passwordData.newPassword && (
+                  <PasswordValidator password={passwordData.newPassword} />
+                )}
               </div>
 
               <div>

@@ -144,6 +144,47 @@ export type Database = {
           },
         ]
       }
+      audit_log: {
+        Row: {
+          changed_at: string | null
+          changed_by: string | null
+          company_id: string | null
+          id: string
+          new_values: Json | null
+          old_values: Json | null
+          operation: string
+          table_name: string
+        }
+        Insert: {
+          changed_at?: string | null
+          changed_by?: string | null
+          company_id?: string | null
+          id?: string
+          new_values?: Json | null
+          old_values?: Json | null
+          operation: string
+          table_name: string
+        }
+        Update: {
+          changed_at?: string | null
+          changed_by?: string | null
+          company_id?: string | null
+          id?: string
+          new_values?: Json | null
+          old_values?: Json | null
+          operation?: string
+          table_name?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "audit_log_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       companies: {
         Row: {
           address: string | null

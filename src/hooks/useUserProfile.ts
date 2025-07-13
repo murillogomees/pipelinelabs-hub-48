@@ -86,11 +86,56 @@ export function useUpdateProfile() {
 export function useChangePassword() {
   const { toast } = useToast();
 
+  const validatePassword = (password: string): string | null => {
+    if (password.length < 8) {
+      return 'A senha deve ter pelo menos 8 caracteres';
+    }
+    if (!/(?=.*[a-z])/.test(password)) {
+      return 'A senha deve conter pelo menos uma letra minúscula';
+    }
+    if (!/(?=.*[A-Z])/.test(password)) {
+      return 'A senha deve conter pelo menos uma letra maiúscula';
+    }
+    if (!/(?=.*\d)/.test(password)) {
+      return 'A senha deve conter pelo menos um número';
+    }
+    if (!/(?=.*[@$!%*?&])/.test(password)) {
+      return 'A senha deve conter pelo menos um caractere especial (@$!%*?&)';
+    }
+    return null;
+  };
+
+  const sanitizeErrorMessage = (errorMessage: string): string => {
+    if (errorMessage.includes('New password should be different from the old password')) {
+      return 'A nova senha deve ser diferente da atual';
+    }
+    if (errorMessage.includes('Password should be at least')) {
+      return 'A senha não atende aos requisitos de segurança';
+    }
+    return 'Erro ao alterar senha. Verifique se a senha atual está correta.';
+  };
+
   return useMutation({
     mutationFn: async ({ currentPassword, newPassword }: { currentPassword: string; newPassword: string }) => {
-      // First verify current password by attempting to sign in
+      // Validate new password strength
+      const passwordError = validatePassword(newPassword);
+      if (passwordError) {
+        throw new Error(passwordError);
+      }
+
+      // Verify current password by attempting to sign in
       const { data: user } = await supabase.auth.getUser();
       if (!user.user?.email) throw new Error('Usuário não encontrado');
+
+      // Verify current password
+      const { error: signInError } = await supabase.auth.signInWithPassword({
+        email: user.user.email,
+        password: currentPassword
+      });
+
+      if (signInError) {
+        throw new Error('Senha atual incorreta');
+      }
 
       // Update password
       const { error } = await supabase.auth.updateUser({
@@ -106,9 +151,13 @@ export function useChangePassword() {
       });
     },
     onError: (error: any) => {
+      const sanitizedMessage = error.message.includes('A senha deve') ? 
+        error.message : 
+        sanitizeErrorMessage(error.message);
+      
       toast({
         title: 'Erro',
-        description: error.message,
+        description: sanitizedMessage,
         variant: 'destructive',
       });
     },

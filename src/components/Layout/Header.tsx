@@ -8,6 +8,8 @@ import { GlobalSearchTrigger } from '@/components/Search/GlobalSearchTrigger';
 import { UserProfileDialog } from '@/components/User/UserProfileDialog';
 import { TeamManagementDialog } from '@/components/User/TeamManagementDialog';
 import { PlanSubscriptionDialog } from '@/components/User/PlanSubscriptionDialog';
+import { cleanupAuthState } from '@/utils/security';
+import { supabase } from '@/integrations/supabase/client';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -28,10 +30,16 @@ export function Header({ onToggleSidebar }: HeaderProps) {
 
   const handleSecureSignOut = async () => {
     try {
-      await signOut();
+      // Clean up auth state first
+      cleanupAuthState();
+      
+      // Attempt global sign out
+      await supabase.auth.signOut({ scope: 'global' });
+      
+      // Force page reload for complete cleanup
       window.location.href = '/auth';
     } catch (error) {
-      // Error handled by redirect
+      // Even if signOut fails, redirect to auth page
       window.location.href = '/auth';
     }
   };
