@@ -6,12 +6,26 @@ import { Button } from '@/components/ui/button';
 import { Plus, Search, Filter, Package, AlertTriangle, Archive, Tag } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { useProducts } from '@/hooks/useProducts';
+import { useProducts } from '@/components/Products/hooks/useProducts';
+import { ProductDialog } from '@/components/Products/ProductDialog';
+import { Product } from '@/components/Products/types';
 import { Skeleton } from '@/components/ui/skeleton';
 
 // Componente para Estoque (lista principal)
 function Estoque() {
   const { data: products, isLoading, error } = useProducts();
+  const [selectedProduct, setSelectedProduct] = React.useState<Product | null>(null);
+  const [isDialogOpen, setIsDialogOpen] = React.useState(false);
+
+  const handleNewProduct = () => {
+    setSelectedProduct(null);
+    setIsDialogOpen(true);
+  };
+
+  const handleEditProduct = (product: Product) => {
+    setSelectedProduct(product);
+    setIsDialogOpen(true);
+  };
 
   const lowStockProducts = products?.filter(p => p.stock_quantity <= (p.min_stock || 0)) || [];
   const totalValue = products?.reduce((sum, p) => sum + (p.price * p.stock_quantity), 0) || 0;
@@ -34,7 +48,10 @@ function Estoque() {
           <h2 className="text-2xl font-bold text-foreground">Estoque</h2>
           <p className="text-muted-foreground">Gerencie seu catálogo e controle de estoque</p>
         </div>
-        <Button className="bg-primary hover:bg-primary/90 text-primary-foreground">
+        <Button 
+          className="bg-primary hover:bg-primary/90 text-primary-foreground"
+          onClick={handleNewProduct}
+        >
           <Plus className="w-4 h-4 mr-2" />
           Novo Produto
         </Button>
@@ -171,7 +188,11 @@ function Estoque() {
                         </span>
                       </td>
                       <td className="py-3 px-4">
-                        <Button variant="outline" size="sm">
+                        <Button 
+                          variant="outline" 
+                          size="sm"
+                          onClick={() => handleEditProduct(produto)}
+                        >
                           Editar
                         </Button>
                       </td>
@@ -183,6 +204,12 @@ function Estoque() {
           </div>
         </CardContent>
       </Card>
+
+      <ProductDialog
+        open={isDialogOpen}
+        onOpenChange={setIsDialogOpen}
+        product={selectedProduct}
+      />
     </div>
   );
 }
