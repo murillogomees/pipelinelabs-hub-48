@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -66,6 +66,25 @@ export function IntegracaoERP() {
       return data;
     }
   });
+
+  // Carregar dados quando recebidos
+  useEffect(() => {
+    if (integrationSettings) {
+      setStripeSettings({
+        stripe_secret_key: integrationSettings.stripe_secret_key || '',
+        stripe_products: (typeof integrationSettings.stripe_products === 'object' && integrationSettings.stripe_products) 
+          ? integrationSettings.stripe_products as Record<string, string>
+          : {}
+      });
+      setNfeSettings({
+        nfe_api_token: integrationSettings.nfe_api_token || '',
+        nfe_environment: (integrationSettings.nfe_environment === 'prod' || integrationSettings.nfe_environment === 'dev') 
+          ? integrationSettings.nfe_environment 
+          : 'dev',
+        nfe_cnpj: integrationSettings.nfe_cnpj || ''
+      });
+    }
+  }, [integrationSettings]);
 
   // Buscar planos do sistema
   const { data: plans } = useQuery({
@@ -173,8 +192,7 @@ export function IntegracaoERP() {
   const handleSaveStripe = () => {
     saveIntegrationSettings.mutate({
       stripe_secret_key: stripeSettings.stripe_secret_key,
-      stripe_products: stripeSettings.stripe_products,
-      last_sync: new Date().toISOString()
+      stripe_products: stripeSettings.stripe_products
     });
   };
 

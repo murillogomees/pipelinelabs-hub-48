@@ -209,9 +209,14 @@ export type Database = {
           idioma: string | null
           impostos_padrao: Json | null
           moeda: string | null
+          nfe_api_token: string | null
+          nfe_cnpj: string | null
+          nfe_environment: string | null
           notificacoes: Json | null
           regime_tributario: string | null
           serie_nfe: string | null
+          stripe_products: Json | null
+          stripe_secret_key: string | null
           timezone: string | null
           updated_at: string | null
           webhooks: Json | null
@@ -235,9 +240,14 @@ export type Database = {
           idioma?: string | null
           impostos_padrao?: Json | null
           moeda?: string | null
+          nfe_api_token?: string | null
+          nfe_cnpj?: string | null
+          nfe_environment?: string | null
           notificacoes?: Json | null
           regime_tributario?: string | null
           serie_nfe?: string | null
+          stripe_products?: Json | null
+          stripe_secret_key?: string | null
           timezone?: string | null
           updated_at?: string | null
           webhooks?: Json | null
@@ -261,9 +271,14 @@ export type Database = {
           idioma?: string | null
           impostos_padrao?: Json | null
           moeda?: string | null
+          nfe_api_token?: string | null
+          nfe_cnpj?: string | null
+          nfe_environment?: string | null
           notificacoes?: Json | null
           regime_tributario?: string | null
           serie_nfe?: string | null
+          stripe_products?: Json | null
+          stripe_secret_key?: string | null
           timezone?: string | null
           updated_at?: string | null
           webhooks?: Json | null
