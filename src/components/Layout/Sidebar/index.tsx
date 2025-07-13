@@ -4,9 +4,11 @@ import { SidebarHeader } from './components/SidebarHeader';
 import { SidebarMenuItem } from './components/SidebarMenuItem';
 import { useSidebarState } from './hooks/useSidebarState';
 import { menuItems } from './constants';
+import { useAuth } from '@/hooks/useAuth';
 
 export function Sidebar({ collapsed }: SidebarProps) {
   const { expandedItems, toggleExpanded } = useSidebarState();
+  const { isAdmin } = useAuth();
 
   return (
     <div className={cn(
@@ -16,19 +18,21 @@ export function Sidebar({ collapsed }: SidebarProps) {
       <SidebarHeader collapsed={collapsed} />
 
       <nav className="flex-1 py-4">
-        {menuItems.map((item) => {
-          const isExpanded = expandedItems.includes(item.title);
+        {menuItems
+          .filter(item => !item.adminOnly || isAdmin)
+          .map((item) => {
+            const isExpanded = expandedItems.includes(item.title);
 
-          return (
-            <SidebarMenuItem
-              key={item.title}
-              item={item}
-              isExpanded={isExpanded}
-              collapsed={collapsed}
-              onToggle={() => toggleExpanded(item.title, collapsed)}
-            />
-          );
-        })}
+            return (
+              <SidebarMenuItem
+                key={item.title}
+                item={item}
+                isExpanded={isExpanded}
+                collapsed={collapsed}
+                onToggle={() => toggleExpanded(item.title, collapsed)}
+              />
+            );
+          })}
       </nav>
     </div>
   );

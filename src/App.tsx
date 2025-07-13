@@ -20,6 +20,8 @@ import { Integracoes } from "@/pages/Integracoes";
 import { AdminIntegracoes } from "@/pages/AdminIntegracoes";
 import { AdminUsuarios } from "@/pages/AdminUsuarios";
 import { AdminPlanos } from "@/pages/AdminPlanos";
+import { IntegracaoERP } from "@/pages/IntegracaoERP";
+import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { Relatorios } from "@/pages/Relatorios";
 import Configuracoes from "@/pages/Configuracoes";
 import NotFound from "@/pages/NotFound";
@@ -93,22 +95,37 @@ function AppContent() {
             } />
             <Route path="/admin" element={
               <MainLayout>
-                <Admin />
+                <ProtectedRoute requireAdmin>
+                  <Admin />
+                </ProtectedRoute>
               </MainLayout>
             } />
             <Route path="/admin/integracoes" element={
               <MainLayout>
-                <AdminIntegracoes />
+                <ProtectedRoute requireAdmin>
+                  <AdminIntegracoes />
+                </ProtectedRoute>
               </MainLayout>
             } />
             <Route path="/admin/usuarios" element={
               <MainLayout>
-                <AdminUsuarios />
+                <ProtectedRoute requireAdmin>
+                  <AdminUsuarios />
+                </ProtectedRoute>
               </MainLayout>
             } />
             <Route path="/admin/planos" element={
               <MainLayout>
-                <AdminPlanos />
+                <ProtectedRoute requireAdmin>
+                  <AdminPlanos />
+                </ProtectedRoute>
+              </MainLayout>
+            } />
+            <Route path="/admin/integracao-erp" element={
+              <MainLayout>
+                <ProtectedRoute requireAdmin>
+                  <IntegracaoERP />
+                </ProtectedRoute>
               </MainLayout>
             } />
             <Route path="/planos/*" element={

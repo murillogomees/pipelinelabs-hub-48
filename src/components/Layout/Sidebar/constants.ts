@@ -87,7 +87,8 @@ export const menuItems: MenuItem[] = [
     title: 'Integrações',
     icon: Puzzle,
     path: '/integracoes',
-    submenu: []
+    submenu: [],
+    adminOnly: false
   },
   {
     title: 'Admin',
@@ -96,8 +97,10 @@ export const menuItems: MenuItem[] = [
     submenu: [
       { title: 'Planos', path: '/admin/planos' },
       { title: 'Usuários', path: '/admin/usuarios' },
-      { title: 'Integrações', path: '/admin/integracoes' }
-    ]
+      { title: 'Integrações', path: '/admin/integracoes' },
+      { title: 'Integração ERP', path: '/admin/integracao-erp' }
+    ],
+    adminOnly: true
   },
   {
     title: 'Configurações',

@@ -5,6 +5,7 @@ export interface MenuItem {
   icon: LucideIcon;
   path: string;
   submenu: SubMenuItem[];
+  adminOnly?: boolean;
 }
 
 export interface SubMenuItem {
