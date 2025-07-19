@@ -8,7 +8,7 @@ import { Dashboard } from "@/pages/Dashboard";
 import { Vendas } from "@/pages/Vendas";
 import { Produtos } from "@/pages/Produtos";
 import { Clientes } from "@/pages/Clientes";
-import { Financeiro } from "@/pages/Financeiro";
+import Financeiro from "@/pages/Financeiro";
 import { NotasFiscais } from "@/pages/NotasFiscais";
 import { Producao } from "@/pages/Producao";
 import { Admin } from "@/pages/Admin";

@@ -336,15 +336,15 @@ export function FinancialReports() {
               <CardContent>
                 <div className="space-y-4">
                   {expenseCategories
-                    .sort((a, b) => b.value - a.value)
+                    .sort((a, b) => (b.value as number) - (a.value as number))
                     .map((category, index) => {
-                      const percentage = totalExpenses > 0 ? (category.value / totalExpenses) * 100 : 0;
+                      const percentage = totalExpenses > 0 ? ((category.value as number) / totalExpenses) * 100 : 0;
                       return (
                         <div key={category.name} className="space-y-2">
                           <div className="flex justify-between items-center">
                             <span className="text-sm font-medium">{category.name}</span>
                             <span className="text-sm text-muted-foreground">
-                              R$ {category.value.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                              R$ {(category.value as number).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
                             </span>
                           </div>
                           <Progress value={percentage} className="h-2" />
@@ -420,10 +420,10 @@ export function FinancialReports() {
                 <div className="text-center">
                   <p className="text-sm text-muted-foreground">Crescimento Médio Mensal</p>
                   <p className="text-2xl font-bold text-blue-600">
-                    {monthlyData.length > 1 ? 
-                      (((monthlyData[monthlyData.length - 1].revenue / monthlyData[0].revenue) ** (1 / (monthlyData.length - 1)) - 1) * 100).toFixed(1)
-                      : '0.0'
-                    }%
+                      {monthlyData.length > 1 ? 
+                        (((monthlyData[monthlyData.length - 1].revenue / monthlyData[0].revenue) ** (1 / (monthlyData.length - 1)) - 1) * 100).toFixed(1)
+                        : '0.0'
+                      }%
                   </p>
                 </div>
               </CardContent>
