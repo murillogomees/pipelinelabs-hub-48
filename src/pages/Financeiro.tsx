@@ -6,12 +6,16 @@ import { Badge } from '@/components/ui/badge';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Plus, DollarSign, TrendingUp, TrendingDown, BarChart3, Search, Eye, Edit, Trash2, CheckCircle, AlertCircle, Clock, XCircle } from 'lucide-react';
+import { Plus, DollarSign, TrendingUp, TrendingDown, BarChart3, Search, Eye, Edit, Trash2, CheckCircle, AlertCircle, Clock, XCircle, PieChart, FileText, Activity } from 'lucide-react';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useAccountsPayable } from '@/hooks/useAccountsPayable';
 import { useAccountsReceivable } from '@/hooks/useAccountsReceivable';
 import { AccountPayableDialog } from '@/components/Financial/AccountPayableDialog';
 import { AccountReceivableDialog } from '@/components/Financial/AccountReceivableDialog';
+import { FinancialDashboard } from '@/components/Financial/FinancialDashboard';
+import { DREReport } from '@/components/Financial/DREReport';
+import { CashFlowReport } from '@/components/Financial/CashFlowReport';
+import { FinancialReports } from '@/components/Financial/FinancialReports';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 
@@ -389,27 +393,6 @@ function ContasReceber() {
   );
 }
 
-// Componente para Conciliação
-function Conciliacao() {
-  const { accounts: payableAccounts } = useAccountsPayable();
-  const { accounts: receivableAccounts } = useAccountsReceivable();
-
-  const totalPayable = payableAccounts.reduce((sum, account) => sum + account.amount, 0);
-  const totalReceivable = receivableAccounts.reduce((sum, account) => sum + account.amount, 0);
-  const paidPayable = payableAccounts.filter(a => a.status === 'paid').reduce((sum, account) => sum + account.amount, 0);
-  const receivedReceivable = receivableAccounts.filter(a => a.status === 'paid').reduce((sum, account) => sum + account.amount, 0);
-  const balance = receivedReceivable - paidPayable;
-
-  return (
-    <div className="space-y-6">
-      <div className="flex justify-between items-center">
-        <div>
-          <h2 className="text-2xl font-bold text-foreground">Conciliação</h2>
-          <p className="text-muted-foreground">Visão geral do fluxo de caixa</p>
-        </div>
-      </div>
-
-      {/* Cards de resumo financeiro */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
@@ -530,6 +513,14 @@ export function Financeiro() {
     if (path.includes('/conciliacao')) return 'conciliacao';
     return 'pagar'; // padrão
   };
+
+  // Calcular totais
+  const totalPayable = payableAccounts.reduce((sum, account) => sum + account.amount, 0);
+  const paidPayable = payableAccounts.filter(a => a.status === 'paid').reduce((sum, account) => sum + account.amount, 0);
+  const totalReceivable = receivableAccounts.reduce((sum, account) => sum + account.amount, 0);
+  const receivedReceivable = receivableAccounts.filter(a => a.status === 'paid').reduce((sum, account) => sum + account.amount, 0);
+
+  const balance = receivedReceivable - paidPayable;
 
   return (
     <div className="space-y-6">
