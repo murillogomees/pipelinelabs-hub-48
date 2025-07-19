@@ -76,19 +76,48 @@ export function useUpdateDashboard() {
         throw new Error('Nenhuma empresa encontrada para o usuário');
       }
 
-      const { data, error } = await supabase
+      // Primeiro verifica se já existe um dashboard
+      const { data: existing } = await supabase
         .from('user_dashboards')
-        .upsert({
-          user_id: user.id,
-          company_id: companyId,
-          widgets: config.widgets || [] as any,
-          layout_config: config.layout_config || {} as any,
-        })
-        .select()
-        .single();
+        .select('id')
+        .eq('user_id', user.id)
+        .eq('company_id', companyId)
+        .maybeSingle();
 
-      if (error) throw error;
-      return data;
+      let result;
+      if (existing) {
+        // Se existe, faz update
+        const { data, error } = await supabase
+          .from('user_dashboards')
+          .update({
+            widgets: config.widgets || [] as any,
+            layout_config: config.layout_config || {} as any,
+          })
+          .eq('user_id', user.id)
+          .eq('company_id', companyId)
+          .select()
+          .single();
+
+        if (error) throw error;
+        result = data;
+      } else {
+        // Se não existe, faz insert
+        const { data, error } = await supabase
+          .from('user_dashboards')
+          .insert({
+            user_id: user.id,
+            company_id: companyId,
+            widgets: config.widgets || [] as any,
+            layout_config: config.layout_config || {} as any,
+          })
+          .select()
+          .single();
+
+        if (error) throw error;
+        result = data;
+      }
+
+      return result;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['dashboard'] });
