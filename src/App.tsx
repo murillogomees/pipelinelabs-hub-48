@@ -51,17 +51,19 @@ function AppContent() {
   return (
     <BrowserRouter>
       <Routes>
-        {/* Rota pública para landing page */}
-        <Route path="/landing" element={<LandingPage />} />
+        {/* Rota principal - Landing Page */}
+        <Route path="/" element={<LandingPage />} />
         
         {/* Rota pública para cadastro de empresa */}
         <Route path="/cadastro-empresa" element={<SignUpCompany />} />
         
-        {!user ? (
-          <Route path="*" element={<AuthForm />} />
-        ) : (
+        {/* Rota de login para usuários não autenticados */}
+        <Route path="/login" element={<AuthForm />} />
+        
+        {/* Rotas protegidas para usuários autenticados */}
+        {user ? (
           <>
-            <Route path="/" element={
+            <Route path="/dashboard" element={
               <MainLayout>
                 <Dashboard />
               </MainLayout>
@@ -168,9 +170,11 @@ function AppContent() {
                 <ConfiguracoesIntegracoes />
               </MainLayout>
             } />
-            <Route path="*" element={<NotFound />} />
           </>
-        )}
+        ) : null}
+        
+        {/* Rota 404 */}
+        <Route path="*" element={<NotFound />} />
       </Routes>
     </BrowserRouter>
   );
