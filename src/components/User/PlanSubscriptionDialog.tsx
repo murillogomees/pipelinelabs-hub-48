@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Badge } from '@/components/ui/badge';
@@ -5,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useSubscription } from '@/hooks/useSubscription';
 import { useAuth } from '@/hooks/useAuth';
-import { Crown, Users, Calendar, CreditCard, CheckCircle, XCircle } from 'lucide-react';
+import { Crown, Users, Calendar, CreditCard, CheckCircle, XCircle, Clock, ArrowRight } from 'lucide-react';
 
 interface PlanSubscriptionDialogProps {
   open: boolean;
@@ -14,16 +15,18 @@ interface PlanSubscriptionDialogProps {
 
 export function PlanSubscriptionDialog({ open, onOpenChange }: PlanSubscriptionDialogProps) {
   const { isSuperAdmin, isAdmin } = useAuth();
-  const { subscription } = useSubscription();
+  const { subscription, isTrialActive, trialDaysLeft, daysUntilRenewal } = useSubscription();
 
   const getStatusBadge = (status: string) => {
     switch (status) {
       case 'active':
         return <Badge className="bg-green-100 text-green-800"><CheckCircle className="w-3 h-3 mr-1" />Ativo</Badge>;
       case 'trial':
-        return <Badge variant="outline"><Calendar className="w-3 h-3 mr-1" />Período de Teste</Badge>;
+        return <Badge variant="outline"><Clock className="w-3 h-3 mr-1" />Período de Teste</Badge>;
       case 'expired':
         return <Badge variant="destructive"><XCircle className="w-3 h-3 mr-1" />Expirado</Badge>;
+      case 'canceled':
+        return <Badge variant="outline" className="text-orange-600"><XCircle className="w-3 h-3 mr-1" />Cancelado</Badge>;
       default:
         return <Badge variant="outline">{status}</Badge>;
     }
@@ -40,9 +43,32 @@ export function PlanSubscriptionDialog({ open, onOpenChange }: PlanSubscriptionD
     }).format(amount);
   };
 
+  const getTrialStatus = () => {
+    if (!isTrialActive || !subscription?.trial_end_date) return null;
+    
+    return (
+      <Card className="border-orange-200 bg-orange-50">
+        <CardContent className="p-4">
+          <div className="flex items-center space-x-2">
+            <Clock className="w-5 h-5 text-orange-600" />
+            <div>
+              <p className="font-medium text-orange-800">Período de Teste Ativo</p>
+              <p className="text-sm text-orange-600">
+                {trialDaysLeft > 0 
+                  ? `${trialDaysLeft} dias restantes até ${formatDate(subscription.trial_end_date)}`
+                  : 'Teste expira hoje!'
+                }
+              </p>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+    );
+  };
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl">
+      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="flex items-center space-x-2">
             <Crown className="w-5 h-5" />
@@ -69,11 +95,17 @@ export function PlanSubscriptionDialog({ open, onOpenChange }: PlanSubscriptionD
             </Card>
           ) : subscription ? (
             <>
+              {/* Trial Status */}
+              {getTrialStatus()}
+
               {/* Current Plan Info */}
               <Card>
                 <CardHeader>
                   <CardTitle className="flex items-center justify-between">
-                    <span>Plano Atual</span>
+                    <div className="flex items-center space-x-2">
+                      {subscription.plans?.is_custom && <Crown className="w-4 h-4 text-yellow-500" />}
+                      <span>Plano Atual</span>
+                    </div>
                     {getStatusBadge(subscription.status)}
                   </CardTitle>
                 </CardHeader>
@@ -81,15 +113,30 @@ export function PlanSubscriptionDialog({ open, onOpenChange }: PlanSubscriptionD
                   <div className="grid grid-cols-2 gap-4">
                     <div>
                       <p className="text-sm text-muted-foreground">Nome do Plano</p>
-                      <p className="font-medium">{subscription.plans?.name || 'Plano Básico'}</p>
+                      <p className="font-medium flex items-center space-x-2">
+                        <span>{subscription.plans?.name || 'Plano Básico'}</span>
+                        {subscription.plans?.is_whitelabel && 
+                          <Badge variant="secondary" className="bg-purple-100 text-purple-800 text-xs">
+                            White Label
+                          </Badge>
+                        }
+                      </p>
                     </div>
                     <div>
                       <p className="text-sm text-muted-foreground">Valor Pago</p>
                       <p className="font-medium">
-                        {subscription.price_paid ? formatCurrency(subscription.price_paid) : 'Gratuito'}
+                        {subscription.price_paid ? formatCurrency(subscription.price_paid) : 
+                         subscription.plans?.price ? formatCurrency(subscription.plans.price) : 'Gratuito'}
                       </p>
                     </div>
                   </div>
+
+                  {subscription.subscription_number && (
+                    <div>
+                      <p className="text-sm text-muted-foreground">Número da Assinatura</p>
+                      <p className="font-medium">{subscription.subscription_number}</p>
+                    </div>
+                  )}
 
                   <div className="grid grid-cols-2 gap-4">
                     <div>
@@ -108,8 +155,23 @@ export function PlanSubscriptionDialog({ open, onOpenChange }: PlanSubscriptionD
                           : 'Não definido'
                         }
                       </p>
+                      {daysUntilRenewal > 0 && subscription.status === 'active' && (
+                        <p className="text-xs text-muted-foreground">
+                          {daysUntilRenewal} dias restantes
+                        </p>
+                      )}
                     </div>
                   </div>
+
+                  {subscription.payment_method && (
+                    <div>
+                      <p className="text-sm text-muted-foreground">Método de Pagamento</p>
+                      <p className="font-medium flex items-center space-x-2">
+                        <CreditCard className="w-4 h-4" />
+                        <span>{subscription.payment_method}</span>
+                      </p>
+                    </div>
+                  )}
                 </CardContent>
               </Card>
 
@@ -123,7 +185,7 @@ export function PlanSubscriptionDialog({ open, onOpenChange }: PlanSubscriptionD
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                       {(subscription.plans.features as string[]).map((feature, index) => (
                         <div key={index} className="flex items-center space-x-2">
-                          <CheckCircle className="w-4 h-4 text-green-600" />
+                          <CheckCircle className="w-4 h-4 text-green-600 flex-shrink-0" />
                           <span className="text-sm">{feature}</span>
                         </div>
                       ))}
@@ -162,10 +224,17 @@ export function PlanSubscriptionDialog({ open, onOpenChange }: PlanSubscriptionD
                   <Button variant="outline" className="flex-1">
                     Ver Todos os Planos
                   </Button>
-                  <Button className="flex-1">
-                    <Crown className="w-4 h-4 mr-2" />
-                    Fazer Upgrade
-                  </Button>
+                  {subscription.status === 'trial' ? (
+                    <Button className="flex-1">
+                      <Crown className="w-4 h-4 mr-2" />
+                      Ativar Plano
+                    </Button>
+                  ) : (
+                    <Button className="flex-1">
+                      <ArrowRight className="w-4 h-4 mr-2" />
+                      Fazer Upgrade
+                    </Button>
+                  )}
                 </div>
               )}
 
