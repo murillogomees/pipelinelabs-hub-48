@@ -29,6 +29,7 @@ import { AdminNotificacoes } from "@/pages/AdminNotificacoes";
 import { Relatorios } from "@/pages/Relatorios";
 import Configuracoes from "@/pages/Configuracoes";
 import NotFound from "@/pages/NotFound";
+import LandingPage from "@/pages/LandingPage";
 
 const queryClient = new QueryClient();
 
@@ -49,6 +50,9 @@ function AppContent() {
   return (
     <BrowserRouter>
       <Routes>
+        {/* Rota pública para landing page */}
+        <Route path="/landing" element={<LandingPage />} />
+        
         {/* Rota pública para cadastro de empresa */}
         <Route path="/cadastro-empresa" element={<SignUpCompany />} />
         
