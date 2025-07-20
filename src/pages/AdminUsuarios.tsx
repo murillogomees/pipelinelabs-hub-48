@@ -1,24 +1,28 @@
 import { useState } from "react";
-import { useAuth } from "@/hooks/useAuth";
+import { usePermissions } from "@/hooks/usePermissions";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { UserDialog } from "@/components/Admin/UserDialog";
 import { CompanyDialog } from "@/components/Admin/CompanyDialog";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
-import { Search, Plus, UserCheck, UserX, Building2, Users } from "lucide-react";
+import { Search, Plus, UserCheck, UserX, Building2, Users, Settings, Eye } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { MainLayout } from "@/components/Layout/MainLayout";
+import { SuperAdminGuard } from "@/components/PermissionGuard";
+
+type UserType = 'super_admin' | 'contratante' | 'operador';
 
 export default function AdminUsuarios() {
-  const { isSuperAdmin } = useAuth();
+  const { isSuperAdmin } = usePermissions();
   const [showUserDialog, setShowUserDialog] = useState(false);
   const [showCompanyDialog, setShowCompanyDialog] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
+  const [selectedUser, setSelectedUser] = useState<any>(undefined);
 
-  // Buscar todos os usuários e empresas (apenas super admin)
-  const { data: users = [] } = useQuery({
+  // Buscar usuários com informações da empresa e tipo
+  const { data: users = [], refetch: refetchUsers } = useQuery({
     queryKey: ["admin-users"],
     queryFn: async () => {
       if (!isSuperAdmin) return [];
@@ -26,23 +30,47 @@ export default function AdminUsuarios() {
       const { data, error } = await supabase
         .from("profiles")
         .select(`
-          *,
-          user_companies (
+          id,
+          user_id,
+          display_name,
+          email,
+          avatar_url,
+          created_at,
+          user_companies!inner(
+            user_type,
             role,
+            department,
             is_active,
             company_id,
-            companies (name)
+            companies(name)
           )
         `)
         .order("created_at", { ascending: false });
 
       if (error) throw error;
-      return data || [];
+
+      return data?.map((profile) => {
+        const userCompany = profile.user_companies?.[0];
+        return {
+          id: profile.id,
+          user_id: profile.user_id,
+          display_name: profile.display_name || "",
+          email: profile.email || "",
+          avatar_url: profile.avatar_url,
+          created_at: profile.created_at,
+          user_type: userCompany?.user_type as UserType,
+          role: userCompany?.role || "",
+          department: userCompany?.department,
+          is_active: userCompany?.is_active || false,
+          company_name: userCompany?.companies?.name || "",
+          company_id: userCompany?.company_id || "",
+        };
+      }) || [];
     },
     enabled: isSuperAdmin,
   });
 
-  const { data: companies = [] } = useQuery({
+  const { data: companies = [], refetch: refetchCompanies } = useQuery({
     queryKey: ["admin-companies"],
     queryFn: async () => {
       if (!isSuperAdmin) return [];
@@ -50,38 +78,90 @@ export default function AdminUsuarios() {
       const { data, error } = await supabase
         .from("companies")
         .select(`
-          *,
-          user_companies (count),
-          subscriptions (
+          id,
+          name,
+          document,
+          email,
+          phone,
+          created_at,
+          user_companies(count),
+          subscriptions(
             status,
-            plans (name)
+            plans(name)
           )
         `)
         .order("created_at", { ascending: false });
 
       if (error) throw error;
-      return data || [];
+
+      return data?.map((company) => ({
+        id: company.id,
+        name: company.name,
+        document: company.document,
+        email: company.email,
+        phone: company.phone,
+        created_at: company.created_at,
+        user_count: company.user_companies?.[0]?.count || 0,
+        active_subscription: company.subscriptions?.[0]?.status === 'active',
+        plan_name: company.subscriptions?.[0]?.plans?.name,
+      })) || [];
     },
     enabled: isSuperAdmin,
   });
 
   const filteredUsers = users.filter(user => 
     user.display_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    user.email?.toLowerCase().includes(searchTerm.toLowerCase())
+    user.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    user.company_name?.toLowerCase().includes(searchTerm.toLowerCase())
   );
+
+  const handleCreateUser = () => {
+    setSelectedUser(undefined);
+    setShowUserDialog(true);
+  };
+
+  const handleEditUser = (user: any) => {
+    setSelectedUser(user);
+    setShowUserDialog(true);
+  };
+
+  const handleUserSaved = () => {
+    refetchUsers();
+    setShowUserDialog(false);
+  };
+
+  const handleCompanySaved = () => {
+    refetchCompanies();
+    setShowCompanyDialog(false);
+  };
+
+  const getUserTypeLabel = (userType: UserType) => {
+    const labels = {
+      super_admin: "Super Admin",
+      contratante: "Contratante", 
+      operador: "Operador"
+    };
+    return labels[userType];
+  };
+
+  const getUserTypeBadgeVariant = (userType: UserType) => {
+    const variants = {
+      super_admin: "destructive" as const,
+      contratante: "default" as const,
+      operador: "secondary" as const
+    };
+    return variants[userType];
+  };
 
   if (!isSuperAdmin) {
     return (
       <MainLayout>
         <div className="flex items-center justify-center h-full">
-          <Card>
-            <CardHeader>
-              <CardTitle>Acesso Negado</CardTitle>
-              <CardDescription>
-                Apenas super administradores podem acessar esta página.
-              </CardDescription>
-            </CardHeader>
-          </Card>
+          <div className="text-center">
+            <Settings className="mx-auto h-12 w-12 text-muted-foreground mb-4" />
+            <h3 className="text-lg font-semibold text-foreground">Acesso Negado</h3>
+            <p className="text-muted-foreground">Apenas super administradores podem acessar esta funcionalidade.</p>
+          </div>
         </div>
       </MainLayout>
     );
@@ -89,7 +169,8 @@ export default function AdminUsuarios() {
 
   return (
     <MainLayout>
-      <div className="space-y-6">
+      <SuperAdminGuard>
+        <div className="space-y-6">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center space-x-3">
@@ -109,7 +190,7 @@ export default function AdminUsuarios() {
             <Building2 className="h-4 w-4 mr-2" />
             Nova Empresa
           </Button>
-          <Button onClick={() => setShowUserDialog(true)}>
+          <Button onClick={handleCreateUser}>
             <Plus className="h-4 w-4 mr-2" />
             Novo Usuário
           </Button>
@@ -207,25 +288,28 @@ export default function AdminUsuarios() {
                   <div>
                     <h3 className="font-medium">{user.display_name}</h3>
                     <p className="text-sm text-muted-foreground">{user.email}</p>
+                    <p className="text-xs text-muted-foreground">{user.company_name}</p>
+                    {user.department && (
+                      <p className="text-xs text-muted-foreground">Dept: {user.department}</p>
+                    )}
                   </div>
                 </div>
                 
-                 <div className="flex items-center space-x-4">
-                   <div className="text-right">
-                     <Badge variant={user.user_companies?.[0]?.role === 'admin' ? 'default' : 'secondary'}>
-                       {user.user_companies?.[0]?.role === 'admin' ? 'Administrador' : 'Usuário'}
-                     </Badge>
-                     <p className="text-xs text-muted-foreground mt-1">
-                       {user.user_companies?.map(uc => uc.companies?.name).filter(Boolean).join(', ') || 'Nenhuma empresa'}
-                     </p>
-                   </div>
-                  
-                  <Badge variant={user.is_active ? 'default' : 'destructive'}>
+                <div className="flex items-center space-x-2">
+                  <Badge variant={getUserTypeBadgeVariant(user.user_type)}>
+                    {getUserTypeLabel(user.user_type)}
+                  </Badge>
+                  <Badge variant={user.is_active ? 'default' : 'secondary'}>
                     {user.is_active ? 'Ativo' : 'Inativo'}
                   </Badge>
-                  
-                  <Button variant="outline" size="sm">
-                    Editar
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => handleEditUser(user)}
+                    className="flex items-center gap-1"
+                  >
+                    <Eye className="w-4 h-4" />
+                    Ver
                   </Button>
                 </div>
               </div>
@@ -259,18 +343,13 @@ export default function AdminUsuarios() {
                   </div>
                 </div>
                 
-                 <div className="flex items-center space-x-4">
-                   <div className="text-right">
-                     <p className="text-sm font-medium">{company.user_companies?.length || 0} usuários</p>
-                   </div>
-                   
-                   <Badge variant="default">
-                     Ativa
-                   </Badge>
-                  
-                  <Button variant="outline" size="sm">
-                    Gerenciar
-                  </Button>
+                <div className="flex items-center space-x-2">
+                  <Badge variant="outline">
+                    {company.user_count} usuários
+                  </Badge>
+                  <Badge variant={company.active_subscription ? "default" : "secondary"}>
+                    {company.plan_name || "Sem plano"}
+                  </Badge>
                 </div>
               </div>
             ))}
@@ -278,19 +357,21 @@ export default function AdminUsuarios() {
         </CardContent>
       </Card>
 
-      {/* Dialogs */}
-      <UserDialog 
-        open={showUserDialog} 
-        onOpenChange={setShowUserDialog}
-        onSave={() => setShowUserDialog(false)}
-      />
-      
-      <CompanyDialog 
-        open={showCompanyDialog} 
-        onOpenChange={setShowCompanyDialog}
-        onCompanyCreated={() => setShowCompanyDialog(false)}
-      />
-      </div>
+        {/* Dialogs */}
+        <UserDialog 
+          open={showUserDialog} 
+          onOpenChange={setShowUserDialog}
+          user={selectedUser}
+          onSave={handleUserSaved}
+        />
+        
+        <CompanyDialog 
+          open={showCompanyDialog} 
+          onOpenChange={setShowCompanyDialog}
+          onCompanyCreated={handleCompanySaved}
+        />
+        </div>
+      </SuperAdminGuard>
     </MainLayout>
   );
 }

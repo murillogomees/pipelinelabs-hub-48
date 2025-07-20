@@ -444,6 +444,44 @@ export type Database = {
           },
         ]
       }
+      departments: {
+        Row: {
+          company_id: string
+          created_at: string
+          description: string | null
+          id: string
+          is_active: boolean | null
+          name: string
+          updated_at: string
+        }
+        Insert: {
+          company_id: string
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_active?: boolean | null
+          name: string
+          updated_at?: string
+        }
+        Update: {
+          company_id?: string
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_active?: boolean | null
+          name?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "departments_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       integrations: {
         Row: {
           api_credentials: Json | null
@@ -1856,6 +1894,7 @@ export type Database = {
         Row: {
           company_id: string
           created_at: string
+          department: string | null
           id: string
           invited_at: string | null
           invited_by: string | null
@@ -1863,11 +1902,14 @@ export type Database = {
           last_login: string | null
           permissions: Json | null
           role: string
+          specific_permissions: Json | null
           user_id: string
+          user_type: Database["public"]["Enums"]["user_type"] | null
         }
         Insert: {
           company_id: string
           created_at?: string
+          department?: string | null
           id?: string
           invited_at?: string | null
           invited_by?: string | null
@@ -1875,11 +1917,14 @@ export type Database = {
           last_login?: string | null
           permissions?: Json | null
           role?: string
+          specific_permissions?: Json | null
           user_id: string
+          user_type?: Database["public"]["Enums"]["user_type"] | null
         }
         Update: {
           company_id?: string
           created_at?: string
+          department?: string | null
           id?: string
           invited_at?: string | null
           invited_by?: string | null
@@ -1887,7 +1932,9 @@ export type Database = {
           last_login?: string | null
           permissions?: Json | null
           role?: string
+          specific_permissions?: Json | null
           user_id?: string
+          user_type?: Database["public"]["Enums"]["user_type"] | null
         }
         Relationships: [
           {
@@ -1941,6 +1988,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      can_access_company_data: {
+        Args: { company_uuid: string }
+        Returns: boolean
+      }
       decrypt_integration_data: {
         Args: { encrypted_data: string }
         Returns: Json
@@ -1970,6 +2021,10 @@ export type Database = {
         Args: { company_uuid: string }
         Returns: string
       }
+      get_current_user_type: {
+        Args: Record<PropertyKey, never>
+        Returns: Database["public"]["Enums"]["user_type"]
+      }
       get_default_company_id: {
         Args: Record<PropertyKey, never>
         Returns: string
@@ -1977,6 +2032,10 @@ export type Database = {
       get_user_company_id: {
         Args: Record<PropertyKey, never>
         Returns: string
+      }
+      is_company_contratante: {
+        Args: { company_uuid: string }
+        Returns: boolean
       }
       is_current_user_admin: {
         Args: Record<PropertyKey, never>
@@ -1988,7 +2047,7 @@ export type Database = {
       }
     }
     Enums: {
-      [_ in never]: never
+      user_type: "super_admin" | "contratante" | "operador"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -2115,6 +2174,8 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      user_type: ["super_admin", "contratante", "operador"],
+    },
   },
 } as const
