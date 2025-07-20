@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -265,15 +266,14 @@ export function SignUpCompany() {
             <p className="text-muted-foreground">Escolha um plano e comece a usar o Pipeline Labs</p>
           </div>
 
-          <div className="grid md:grid-cols-2 gap-8">
-          {/* Formulário */}
-          <Card>
-            <CardHeader>
-              <CardTitle>Informações da Empresa</CardTitle>
-              <CardDescription>Preencha os dados da sua empresa</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+          <form onSubmit={form.handleSubmit(onSubmit)} className="grid md:grid-cols-2 gap-8">
+            {/* Formulário */}
+            <Card>
+              <CardHeader>
+                <CardTitle>Informações da Empresa</CardTitle>
+                <CardDescription>Preencha os dados da sua empresa</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
                 <FormField
                   control={form.control}
                   name="name"
@@ -366,96 +366,101 @@ export function SignUpCompany() {
                     )}
                   />
                 </div>
-              </form>
-            </CardContent>
-          </Card>
+              </CardContent>
+            </Card>
 
-          {/* Seleção de Planos */}
-          <Card>
-            <CardHeader>
-              <CardTitle>Escolha seu Plano</CardTitle>
-              <CardDescription>Selecione o plano ideal para sua empresa</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                <RadioGroup
-                  onValueChange={(value) => form.setValue("selectedPlan", value)}
-                  value={form.watch("selectedPlan")}
-                  className="space-y-4"
-                >
-                  {plans?.map((plan) => (
-                    <div key={plan.id} className="relative">
-                      <RadioGroupItem
-                        value={plan.id}
-                        id={plan.id}
-                        className="peer sr-only"
-                      />
-                      <Label
-                        htmlFor={plan.id}
-                        className="flex flex-col p-4 border rounded-lg cursor-pointer hover:bg-muted/50 peer-checked:bg-primary/5 peer-checked:border-primary"
-                      >
-                        <div className="flex items-center justify-between mb-2">
-                          <div className="flex items-center gap-2">
-                            {getPlanIcon(plan.name)}
-                            <span className="font-semibold">{plan.name}</span>
-                          </div>
-                          <span className="font-bold text-primary">
-                            {formatPrice(plan.price, plan.is_custom)}
-                          </span>
-                        </div>
-                        
-                        <p className="text-sm text-muted-foreground mb-2">
-                          {plan.description}
-                        </p>
+            {/* Seleção de Planos */}
+            <Card>
+              <CardHeader>
+                <CardTitle>Escolha seu Plano</CardTitle>
+                <CardDescription>Selecione o plano ideal para sua empresa</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4">
+                  <FormField
+                    control={form.control}
+                    name="selectedPlan"
+                    render={({ field }) => (
+                      <FormItem className="space-y-3">
+                        <FormControl>
+                          <RadioGroup
+                            onValueChange={field.onChange}
+                            value={field.value}
+                            className="space-y-4"
+                          >
+                            {plans?.map((plan) => (
+                              <div key={plan.id} className="relative">
+                                <RadioGroupItem
+                                  value={plan.id}
+                                  id={plan.id}
+                                  className="peer sr-only"
+                                />
+                                <Label
+                                  htmlFor={plan.id}
+                                  className="flex flex-col p-4 border rounded-lg cursor-pointer hover:bg-muted/50 peer-checked:bg-primary/5 peer-checked:border-primary"
+                                >
+                                  <div className="flex items-center justify-between mb-2">
+                                    <div className="flex items-center gap-2">
+                                      {getPlanIcon(plan.name)}
+                                      <span className="font-semibold">{plan.name}</span>
+                                    </div>
+                                    <span className="font-bold text-primary">
+                                      {formatPrice(plan.price, plan.is_custom)}
+                                    </span>
+                                  </div>
+                                  
+                                  <p className="text-sm text-muted-foreground mb-2">
+                                    {plan.description}
+                                  </p>
 
-                        <div className="space-y-1">
-                          <div className="flex items-center gap-2 text-sm">
-                            <Check className="h-3 w-3 text-green-600" />
-                            <span>
-                              {plan.user_limit === -1 
-                                ? "Usuários ilimitados" 
-                                : `${plan.user_limit} usuário${plan.user_limit > 1 ? 's' : ''}`
-                              }
-                            </span>
-                          </div>
+                                  <div className="space-y-1">
+                                    <div className="flex items-center gap-2 text-sm">
+                                      <Check className="h-3 w-3 text-green-600" />
+                                      <span>
+                                        {plan.user_limit === -1 
+                                          ? "Usuários ilimitados" 
+                                          : `${plan.user_limit} usuário${plan.user_limit > 1 ? 's' : ''}`
+                                        }
+                                      </span>
+                                    </div>
 
-                          {plan.trial_days > 0 && (
-                            <div className="flex items-center gap-2 text-sm">
-                              <Check className="h-3 w-3 text-green-600" />
-                              <span className="text-green-600 font-medium">
-                                {plan.trial_days} dias grátis
-                              </span>
-                            </div>
-                          )}
+                                    {plan.trial_days > 0 && (
+                                      <div className="flex items-center gap-2 text-sm">
+                                        <Check className="h-3 w-3 text-green-600" />
+                                        <span className="text-green-600 font-medium">
+                                          {plan.trial_days} dias grátis
+                                        </span>
+                                      </div>
+                                    )}
 
-                          {plan.features.slice(0, 2).map((feature, index) => (
-                            <div key={index} className="flex items-center gap-2 text-sm">
-                              <Check className="h-3 w-3 text-green-600" />
-                              <span>{feature}</span>
-                            </div>
-                          ))}
-                        </div>
-                      </Label>
-                    </div>
-                  ))}
-                </RadioGroup>
-                {form.formState.errors.selectedPlan && (
-                  <p className="text-sm font-medium text-destructive">
-                    {form.formState.errors.selectedPlan.message}
-                  </p>
-                )}
-                
-                <Button 
-                  onClick={form.handleSubmit(onSubmit)}
-                  className="w-full" 
-                  disabled={isSubmitting}
-                >
-                  {isSubmitting ? "Cadastrando..." : "Finalizar Cadastro"}
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
-          </div>
+                                    {plan.features.slice(0, 2).map((feature, index) => (
+                                      <div key={index} className="flex items-center gap-2 text-sm">
+                                        <Check className="h-3 w-3 text-green-600" />
+                                        <span>{feature}</span>
+                                      </div>
+                                    ))}
+                                  </div>
+                                </Label>
+                              </div>
+                            ))}
+                          </RadioGroup>
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  
+                  <Button 
+                    type="submit"
+                    className="w-full" 
+                    disabled={isSubmitting}
+                  >
+                    {isSubmitting ? "Cadastrando..." : "Finalizar Cadastro"}
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          </form>
         </div>
       </div>
     </Form>
