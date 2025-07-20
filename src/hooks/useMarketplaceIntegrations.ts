@@ -93,7 +93,7 @@ export function useMarketplaceIntegrations() {
   });
 
   // Criar/Atualizar integração
-  const { mutateAsync: saveIntegration, isPending: isSaving } = useMutation({
+  const { mutateAsync: saveIntegrationMutation, isPending: isSaving } = useMutation({
     mutationFn: async ({
       integrationId,
       formData
@@ -166,43 +166,8 @@ export function useMarketplaceIntegrations() {
     },
   });
 
-  // Testar conexão da integração
-  const testConnection = async (integrationId: string, config: Record<string, any>) => {
-    setTestingConnection(integrationId);
-    
-    try {
-      const integration = availableIntegrations.find(i => i.id === integrationId);
-      
-      // Simular teste de conexão baseado no tipo
-      await new Promise(resolve => setTimeout(resolve, 2000));
-      
-      if (integration?.name === 'Shopee') {
-        await testShopeeConnection(config);
-      } else if (integration?.name === 'Amazon') {
-        await testAmazonConnection(config);
-      }
-
-      toast({
-        title: 'Conexão testada',
-        description: `Conexão com ${integration?.name} testada com sucesso!`,
-      });
-      
-      return true;
-    } catch (error) {
-      console.error('Erro ao testar conexão:', error);
-      toast({
-        title: 'Erro na conexão',
-        description: 'Não foi possível conectar. Verifique suas credenciais.',
-        variant: 'destructive',
-      });
-      return false;
-    } finally {
-      setTestingConnection(null);
-    }
-  };
-
   // Remover integração
-  const { mutateAsync: removeIntegration } = useMutation({
+  const { mutateAsync: removeIntegrationMutation } = useMutation({
     mutationFn: async (integrationId: string) => {
       const { error } = await supabase
         .from('company_integrations')
@@ -230,7 +195,7 @@ export function useMarketplaceIntegrations() {
   });
 
   // Sincronizar dados da integração
-  const { mutateAsync: syncIntegration, isPending: isSyncing } = useMutation({
+  const { mutateAsync: syncIntegrationMutation, isPending: isSyncing } = useMutation({
     mutationFn: async (integrationId: string) => {
       const integration = companyIntegrations.find(i => i.integration_id === integrationId);
       if (!integration) throw new Error('Integração não encontrada');
@@ -270,6 +235,54 @@ export function useMarketplaceIntegrations() {
     },
   });
 
+  // Wrapper functions for component compatibility
+  const saveIntegration = async (integrationId: string, formData: IntegrationFormData): Promise<void> => {
+    await saveIntegrationMutation({ integrationId, formData });
+  };
+
+  const removeIntegration = async (integrationId: string): Promise<void> => {
+    await removeIntegrationMutation(integrationId);
+  };
+
+  const syncIntegration = async (integrationId: string): Promise<void> => {
+    await syncIntegrationMutation(integrationId);
+  };
+
+  // Testar conexão da integração
+  const testConnection = async (integrationId: string, config: Record<string, any>) => {
+    setTestingConnection(integrationId);
+    
+    try {
+      const integration = availableIntegrations.find(i => i.id === integrationId);
+      
+      // Simular teste de conexão baseado no tipo
+      await new Promise(resolve => setTimeout(resolve, 2000));
+      
+      if (integration?.name === 'Shopee') {
+        await testShopeeConnection(config);
+      } else if (integration?.name === 'Amazon') {
+        await testAmazonConnection(config);
+      }
+
+      toast({
+        title: 'Conexão testada',
+        description: `Conexão com ${integration?.name} testada com sucesso!`,
+      });
+      
+      return true;
+    } catch (error) {
+      console.error('Erro ao testar conexão:', error);
+      toast({
+        title: 'Erro na conexão',
+        description: 'Não foi possível conectar. Verifique suas credenciais.',
+        variant: 'destructive',
+      });
+      return false;
+    } finally {
+      setTestingConnection(null);
+    }
+  };
+
   return {
     // Estados
     isLoading: isLoadingAvailable || isLoadingCompany,
@@ -288,9 +301,16 @@ export function useMarketplaceIntegrations() {
     syncIntegration,
     
     // Utilitários
-    getIntegrationConfig: (integrationId: string) => {
+    getIntegrationConfig: (integrationId: string): Record<string, any> => {
       const integration = companyIntegrations.find(i => i.integration_id === integrationId);
-      return integration?.config || {};
+      const config = integration?.config;
+      
+      // Type guard and conversion from Json to Record<string, any>
+      if (config && typeof config === 'object' && config !== null && !Array.isArray(config)) {
+        return config as Record<string, any>;
+      }
+      
+      return {};
     },
     
     isIntegrationActive: (integrationId: string) => {
