@@ -30,6 +30,7 @@ import { Relatorios } from "@/pages/Relatorios";
 import Configuracoes from "@/pages/Configuracoes";
 import NotFound from "@/pages/NotFound";
 import LandingPage from "@/pages/LandingPage";
+import AdminLandingPage from "@/pages/AdminLandingPage";
 
 const queryClient = new QueryClient();
 
@@ -138,6 +139,13 @@ function AppContent() {
               <MainLayout>
                 <ProtectedRoute requireAdmin>
                   <AdminNotificacoes />
+                </ProtectedRoute>
+              </MainLayout>
+            } />
+            <Route path="/admin/landing-page" element={
+              <MainLayout>
+                <ProtectedRoute requireAdmin>
+                  <AdminLandingPage />
                 </ProtectedRoute>
               </MainLayout>
             } />
