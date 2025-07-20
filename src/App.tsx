@@ -31,6 +31,7 @@ import Configuracoes from "@/pages/Configuracoes";
 import NotFound from "@/pages/NotFound";
 import LandingPage from "@/pages/LandingPage";
 import AdminLandingPage from "@/pages/AdminLandingPage";
+import ConfiguracaoNFe from "@/pages/ConfiguracaoNFe";
 
 const queryClient = new QueryClient();
 
@@ -168,6 +169,11 @@ function AppContent() {
             <Route path="/configuracoes/integracoes" element={
               <MainLayout>
                 <ConfiguracoesIntegracoes />
+              </MainLayout>
+            } />
+            <Route path="/configuracoes/nfe" element={
+              <MainLayout>
+                <ConfiguracaoNFe />
               </MainLayout>
             } />
           </>
