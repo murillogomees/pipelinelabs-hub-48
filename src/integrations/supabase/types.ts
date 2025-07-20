@@ -697,6 +697,152 @@ export type Database = {
         }
         Relationships: []
       }
+      nfe_items: {
+        Row: {
+          cofins_base: number | null
+          cofins_percentage: number | null
+          cofins_value: number | null
+          created_at: string
+          icms_base: number | null
+          icms_percentage: number | null
+          icms_value: number | null
+          id: string
+          invoice_id: string
+          ipi_base: number | null
+          ipi_percentage: number | null
+          ipi_value: number | null
+          item_code: string
+          item_description: string
+          ncm_code: string | null
+          pis_base: number | null
+          pis_percentage: number | null
+          pis_value: number | null
+          product_id: string | null
+          quantity: number
+          total_value: number
+          unit_value: number
+        }
+        Insert: {
+          cofins_base?: number | null
+          cofins_percentage?: number | null
+          cofins_value?: number | null
+          created_at?: string
+          icms_base?: number | null
+          icms_percentage?: number | null
+          icms_value?: number | null
+          id?: string
+          invoice_id: string
+          ipi_base?: number | null
+          ipi_percentage?: number | null
+          ipi_value?: number | null
+          item_code: string
+          item_description: string
+          ncm_code?: string | null
+          pis_base?: number | null
+          pis_percentage?: number | null
+          pis_value?: number | null
+          product_id?: string | null
+          quantity: number
+          total_value: number
+          unit_value: number
+        }
+        Update: {
+          cofins_base?: number | null
+          cofins_percentage?: number | null
+          cofins_value?: number | null
+          created_at?: string
+          icms_base?: number | null
+          icms_percentage?: number | null
+          icms_value?: number | null
+          id?: string
+          invoice_id?: string
+          ipi_base?: number | null
+          ipi_percentage?: number | null
+          ipi_value?: number | null
+          item_code?: string
+          item_description?: string
+          ncm_code?: string | null
+          pis_base?: number | null
+          pis_percentage?: number | null
+          pis_value?: number | null
+          product_id?: string | null
+          quantity?: number
+          total_value?: number
+          unit_value?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "nfe_items_invoice_id_fkey"
+            columns: ["invoice_id"]
+            isOneToOne: false
+            referencedRelation: "invoices"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "nfe_items_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      nfe_xmls: {
+        Row: {
+          access_key: string | null
+          company_id: string
+          created_at: string
+          id: string
+          invoice_id: string | null
+          pdf_url: string | null
+          protocol_number: string | null
+          qr_code: string | null
+          rejection_reason: string | null
+          status: string
+          updated_at: string
+          xml_content: string
+          xml_signature: string | null
+        }
+        Insert: {
+          access_key?: string | null
+          company_id: string
+          created_at?: string
+          id?: string
+          invoice_id?: string | null
+          pdf_url?: string | null
+          protocol_number?: string | null
+          qr_code?: string | null
+          rejection_reason?: string | null
+          status?: string
+          updated_at?: string
+          xml_content: string
+          xml_signature?: string | null
+        }
+        Update: {
+          access_key?: string | null
+          company_id?: string
+          created_at?: string
+          id?: string
+          invoice_id?: string | null
+          pdf_url?: string | null
+          protocol_number?: string | null
+          qr_code?: string | null
+          rejection_reason?: string | null
+          status?: string
+          updated_at?: string
+          xml_content?: string
+          xml_signature?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "nfe_xmls_invoice_id_fkey"
+            columns: ["invoice_id"]
+            isOneToOne: false
+            referencedRelation: "invoices"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       notifications: {
         Row: {
           action_url: string | null
@@ -1801,6 +1947,19 @@ export type Database = {
       }
       encrypt_integration_data: {
         Args: { data: Json }
+        Returns: string
+      }
+      generate_nfe_access_key: {
+        Args: {
+          company_cnpj: string
+          serie_nfe: string
+          numero_nfe: string
+          emission_date?: string
+        }
+        Returns: string
+      }
+      generate_nfe_number: {
+        Args: { company_uuid: string; serie_nfe?: string }
         Returns: string
       }
       generate_pos_sale_number: {
