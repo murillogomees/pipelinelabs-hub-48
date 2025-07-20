@@ -256,15 +256,16 @@ export function SignUpCompany() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-background to-muted/50 flex items-center justify-center p-4">
-      <div className="w-full max-w-4xl space-y-8">
-        <div className="text-center">
-          <Building2 className="h-12 w-12 text-primary mx-auto mb-4" />
-          <h1 className="text-3xl font-bold">Cadastre sua Empresa</h1>
-          <p className="text-muted-foreground">Escolha um plano e comece a usar o Pipeline Labs</p>
-        </div>
+    <Form {...form}>
+      <div className="min-h-screen bg-gradient-to-br from-background to-muted/50 flex items-center justify-center p-4">
+        <div className="w-full max-w-4xl space-y-8">
+          <div className="text-center">
+            <Building2 className="h-12 w-12 text-primary mx-auto mb-4" />
+            <h1 className="text-3xl font-bold">Cadastre sua Empresa</h1>
+            <p className="text-muted-foreground">Escolha um plano e comece a usar o Pipeline Labs</p>
+          </div>
 
-        <div className="grid md:grid-cols-2 gap-8">
+          <div className="grid md:grid-cols-2 gap-8">
           {/* Formulário */}
           <Card>
             <CardHeader>
@@ -272,16 +273,79 @@ export function SignUpCompany() {
               <CardDescription>Preencha os dados da sua empresa</CardDescription>
             </CardHeader>
             <CardContent>
-              <Form {...form}>
-                <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+              <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+                <FormField
+                  control={form.control}
+                  name="name"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Nome da Empresa *</FormLabel>
+                      <FormControl>
+                        <Input placeholder="Minha Empresa Ltda" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="document"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>CPF ou CNPJ *</FormLabel>
+                      <FormControl>
+                        <Input 
+                          placeholder="000.000.000-00 ou 00.000.000/0000-00"
+                          {...field}
+                          onChange={(e) => {
+                            const formatted = formatDocument(e.target.value);
+                            field.onChange(formatted);
+                          }}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="email"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Email *</FormLabel>
+                      <FormControl>
+                        <Input type="email" placeholder="contato@empresa.com" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="phone"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Telefone</FormLabel>
+                      <FormControl>
+                        <Input placeholder="(11) 99999-9999" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <div className="grid grid-cols-2 gap-4">
                   <FormField
                     control={form.control}
-                    name="name"
+                    name="city"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Nome da Empresa *</FormLabel>
+                        <FormLabel>Cidade</FormLabel>
                         <FormControl>
-                          <Input placeholder="Minha Empresa Ltda" {...field} />
+                          <Input placeholder="São Paulo" {...field} />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -290,92 +354,19 @@ export function SignUpCompany() {
 
                   <FormField
                     control={form.control}
-                    name="document"
+                    name="state"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>CPF ou CNPJ *</FormLabel>
+                        <FormLabel>Estado</FormLabel>
                         <FormControl>
-                          <Input 
-                            placeholder="000.000.000-00 ou 00.000.000/0000-00"
-                            {...field}
-                            onChange={(e) => {
-                              const formatted = formatDocument(e.target.value);
-                              field.onChange(formatted);
-                            }}
-                          />
+                          <Input placeholder="SP" {...field} />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
                     )}
                   />
-
-                  <FormField
-                    control={form.control}
-                    name="email"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Email *</FormLabel>
-                        <FormControl>
-                          <Input type="email" placeholder="contato@empresa.com" {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-
-                  <FormField
-                    control={form.control}
-                    name="phone"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Telefone</FormLabel>
-                        <FormControl>
-                          <Input placeholder="(11) 99999-9999" {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-
-                  <div className="grid grid-cols-2 gap-4">
-                    <FormField
-                      control={form.control}
-                      name="city"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Cidade</FormLabel>
-                          <FormControl>
-                            <Input placeholder="São Paulo" {...field} />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-
-                    <FormField
-                      control={form.control}
-                      name="state"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Estado</FormLabel>
-                          <FormControl>
-                            <Input placeholder="SP" {...field} />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                  </div>
-
-                  <Button 
-                    type="submit" 
-                    className="w-full" 
-                    disabled={isSubmitting}
-                  >
-                    {isSubmitting ? "Cadastrando..." : "Finalizar Cadastro"}
-                  </Button>
-                </form>
-              </Form>
+                </div>
+              </form>
             </CardContent>
           </Card>
 
@@ -386,82 +377,87 @@ export function SignUpCompany() {
               <CardDescription>Selecione o plano ideal para sua empresa</CardDescription>
             </CardHeader>
             <CardContent>
-              <FormField
-                control={form.control}
-                name="selectedPlan"
-                render={({ field }) => (
-                  <FormItem className="space-y-3">
-                    <FormControl>
-                      <RadioGroup
-                        onValueChange={field.onChange}
-                        value={field.value}
-                        className="space-y-4"
+              <div className="space-y-4">
+                <RadioGroup
+                  onValueChange={(value) => form.setValue("selectedPlan", value)}
+                  value={form.watch("selectedPlan")}
+                  className="space-y-4"
+                >
+                  {plans?.map((plan) => (
+                    <div key={plan.id} className="relative">
+                      <RadioGroupItem
+                        value={plan.id}
+                        id={plan.id}
+                        className="peer sr-only"
+                      />
+                      <Label
+                        htmlFor={plan.id}
+                        className="flex flex-col p-4 border rounded-lg cursor-pointer hover:bg-muted/50 peer-checked:bg-primary/5 peer-checked:border-primary"
                       >
-                        {plans?.map((plan) => (
-                          <div key={plan.id} className="relative">
-                            <RadioGroupItem
-                              value={plan.id}
-                              id={plan.id}
-                              className="peer sr-only"
-                            />
-                            <Label
-                              htmlFor={plan.id}
-                              className="flex flex-col p-4 border rounded-lg cursor-pointer hover:bg-muted/50 peer-checked:bg-primary/5 peer-checked:border-primary"
-                            >
-                              <div className="flex items-center justify-between mb-2">
-                                <div className="flex items-center gap-2">
-                                  {getPlanIcon(plan.name)}
-                                  <span className="font-semibold">{plan.name}</span>
-                                </div>
-                                <span className="font-bold text-primary">
-                                  {formatPrice(plan.price, plan.is_custom)}
-                                </span>
-                              </div>
-                              
-                              <p className="text-sm text-muted-foreground mb-2">
-                                {plan.description}
-                              </p>
-
-                              <div className="space-y-1">
-                                <div className="flex items-center gap-2 text-sm">
-                                  <Check className="h-3 w-3 text-green-600" />
-                                  <span>
-                                    {plan.user_limit === -1 
-                                      ? "Usuários ilimitados" 
-                                      : `${plan.user_limit} usuário${plan.user_limit > 1 ? 's' : ''}`
-                                    }
-                                  </span>
-                                </div>
-
-                                {plan.trial_days > 0 && (
-                                  <div className="flex items-center gap-2 text-sm">
-                                    <Check className="h-3 w-3 text-green-600" />
-                                    <span className="text-green-600 font-medium">
-                                      {plan.trial_days} dias grátis
-                                    </span>
-                                  </div>
-                                )}
-
-                                {plan.features.slice(0, 2).map((feature, index) => (
-                                  <div key={index} className="flex items-center gap-2 text-sm">
-                                    <Check className="h-3 w-3 text-green-600" />
-                                    <span>{feature}</span>
-                                  </div>
-                                ))}
-                              </div>
-                            </Label>
+                        <div className="flex items-center justify-between mb-2">
+                          <div className="flex items-center gap-2">
+                            {getPlanIcon(plan.name)}
+                            <span className="font-semibold">{plan.name}</span>
                           </div>
-                        ))}
-                      </RadioGroup>
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
+                          <span className="font-bold text-primary">
+                            {formatPrice(plan.price, plan.is_custom)}
+                          </span>
+                        </div>
+                        
+                        <p className="text-sm text-muted-foreground mb-2">
+                          {plan.description}
+                        </p>
+
+                        <div className="space-y-1">
+                          <div className="flex items-center gap-2 text-sm">
+                            <Check className="h-3 w-3 text-green-600" />
+                            <span>
+                              {plan.user_limit === -1 
+                                ? "Usuários ilimitados" 
+                                : `${plan.user_limit} usuário${plan.user_limit > 1 ? 's' : ''}`
+                              }
+                            </span>
+                          </div>
+
+                          {plan.trial_days > 0 && (
+                            <div className="flex items-center gap-2 text-sm">
+                              <Check className="h-3 w-3 text-green-600" />
+                              <span className="text-green-600 font-medium">
+                                {plan.trial_days} dias grátis
+                              </span>
+                            </div>
+                          )}
+
+                          {plan.features.slice(0, 2).map((feature, index) => (
+                            <div key={index} className="flex items-center gap-2 text-sm">
+                              <Check className="h-3 w-3 text-green-600" />
+                              <span>{feature}</span>
+                            </div>
+                          ))}
+                        </div>
+                      </Label>
+                    </div>
+                  ))}
+                </RadioGroup>
+                {form.formState.errors.selectedPlan && (
+                  <p className="text-sm font-medium text-destructive">
+                    {form.formState.errors.selectedPlan.message}
+                  </p>
                 )}
-              />
+                
+                <Button 
+                  onClick={form.handleSubmit(onSubmit)}
+                  className="w-full" 
+                  disabled={isSubmitting}
+                >
+                  {isSubmitting ? "Cadastrando..." : "Finalizar Cadastro"}
+                </Button>
+              </div>
             </CardContent>
           </Card>
+          </div>
         </div>
       </div>
-    </div>
+    </Form>
   );
 }
