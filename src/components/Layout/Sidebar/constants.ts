@@ -108,6 +108,8 @@ export const menuItems: MenuItem[] = [
     title: 'Configurações',
     icon: Settings,
     path: '/configuracoes',
-    submenu: []
+    submenu: [
+      { title: 'Configuração NFE.io', path: '/configuracoes/nfe' }
+    ]
   }
 ];

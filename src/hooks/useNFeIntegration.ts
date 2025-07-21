@@ -12,6 +12,7 @@ interface NFeConfig {
   company_cnpj?: string;
   certificate_file?: File;
   certificate_password?: string;
+  certificate_data?: any;
   nfe_series?: string;
   default_cfop?: string;
   auto_send?: boolean;
@@ -36,7 +37,7 @@ export const useNFeIntegration = () => {
   const [uploadingCertificate, setUploadingCertificate] = useState(false);
 
   // Buscar integração NFE.io disponível
-  const { data: nfeIntegration } = useQuery({
+  const { data: nfeIntegration, isLoading: isLoadingIntegration } = useQuery({
     queryKey: ['nfe-integration-available'],
     queryFn: async () => {
       const { data, error } = await supabase
@@ -44,29 +45,40 @@ export const useNFeIntegration = () => {
         .select('*')
         .eq('name', 'NFE.io')
         .eq('type', 'fiscal')
-        .single();
+        .maybeSingle();
       
-      if (error) throw error;
+      if (error) {
+        console.error('Erro ao carregar integração NFE.io:', error);
+        throw error;
+      }
       return data;
-    }
+    },
+    retry: 2,
+    staleTime: 5 * 60 * 1000 // 5 minutos
   });
 
   // Buscar configuração da empresa para NFE.io
   const { data: companyNFeConfig, isLoading } = useQuery({
-    queryKey: ['company-nfe-integration'],
+    queryKey: ['company-nfe-integration', userCompanyId],
     queryFn: async () => {
-      if (!nfeIntegration?.id) return null;
+      if (!nfeIntegration?.id || !userCompanyId) return null;
       
       const { data, error } = await supabase
         .from('company_integrations')
         .select('*')
         .eq('integration_id', nfeIntegration.id)
+        .eq('company_id', userCompanyId)
         .maybeSingle();
       
-      if (error) throw error;
+      if (error) {
+        console.error('Erro ao carregar configuração NFE da empresa:', error);
+        throw error;
+      }
       return data;
     },
-    enabled: !!nfeIntegration?.id
+    enabled: !!nfeIntegration?.id && !!userCompanyId,
+    retry: 2,
+    staleTime: 2 * 60 * 1000 // 2 minutos
   });
 
   // Salvar configuração NFE
@@ -269,7 +281,7 @@ export const useNFeIntegration = () => {
 
   return {
     // Estados
-    isLoading,
+    isLoading: isLoading || isLoadingIntegration,
     isSaving,
     testingConnection,
     uploadingCertificate,
@@ -286,14 +298,28 @@ export const useNFeIntegration = () => {
     queryNFeStatus,
     
     // Utilitários
-    isConfigured: !!companyNFeConfig?.config,
+    isConfigured: !!companyNFeConfig?.config && !!companyNFeConfig?.is_active,
     isActive: !!companyNFeConfig?.is_active,
-    
     getConfig: (): NFeConfig => {
       if (companyNFeConfig?.config && typeof companyNFeConfig.config === 'object') {
         return companyNFeConfig.config as NFeConfig;
       }
       return {};
+    },
+    
+    hasValidConfig: (): boolean => {
+      const config = companyNFeConfig?.config as NFeConfig;
+      return !!(config?.api_token && config?.company_cnpj && config?.certificate_data);
+    },
+    
+    // Status helpers
+    getCertificateStatus: (): 'valid' | 'expired' | 'expiring' | 'invalid' | 'missing' => {
+      const config = companyNFeConfig?.config as NFeConfig;
+      if (!config?.certificate_data) return 'missing';
+      
+      // Implementar validação real do certificado
+      // Por enquanto, retorna válido se existe
+      return 'valid';
     }
   };
 };

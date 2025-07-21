@@ -1,9 +1,11 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Shield, Settings, AlertTriangle } from 'lucide-react';
+import { Shield, Settings, AlertTriangle, Activity } from 'lucide-react';
 import { AdminNFeConfig } from '@/components/Admin/NFeConfig/AdminNFeConfig';
 import { ContratanteCertificateManager } from '@/components/Admin/NFeConfig/ContratanteCertificateManager';
+import { NFeConnectionTest } from '@/components/Admin/NFeConfig/NFeConnectionTest';
+import { NFeStatusMonitor } from '@/components/Admin/NFeConfig/NFeStatusMonitor';
 import { useUserRole } from '@/hooks/useUserRole';
 import { useNFeIntegration } from '@/hooks/useNFeIntegration';
 
@@ -49,16 +51,24 @@ export default function ConfiguracaoNFe() {
         </div>
       </div>
 
-      {isSuperAdmin ? (
+{isSuperAdmin ? (
         <Tabs defaultValue="admin" className="w-full">
-          <TabsList className="grid w-full grid-cols-2">
+          <TabsList className="grid w-full grid-cols-4">
             <TabsTrigger value="admin" className="flex items-center gap-2">
               <Settings className="h-4 w-4" />
-              Configuração Global
+              Config Global
             </TabsTrigger>
             <TabsTrigger value="certificate" className="flex items-center gap-2">
               <Shield className="h-4 w-4" />
               Certificado A1
+            </TabsTrigger>
+            <TabsTrigger value="test" className="flex items-center gap-2">
+              <AlertTriangle className="h-4 w-4" />
+              Teste
+            </TabsTrigger>
+            <TabsTrigger value="monitor" className="flex items-center gap-2">
+              <Activity className="h-4 w-4" />
+              Monitor
             </TabsTrigger>
           </TabsList>
 
@@ -68,6 +78,43 @@ export default function ConfiguracaoNFe() {
 
           <TabsContent value="certificate" className="space-y-6">
             <ContratanteCertificateManager />
+          </TabsContent>
+
+          <TabsContent value="test" className="space-y-6">
+            <NFeConnectionTest />
+          </TabsContent>
+
+          <TabsContent value="monitor" className="space-y-6">
+            <NFeStatusMonitor />
+          </TabsContent>
+        </Tabs>
+      ) : isContratante ? (
+        <Tabs defaultValue="certificate" className="w-full">
+          <TabsList className="grid w-full grid-cols-3">
+            <TabsTrigger value="certificate" className="flex items-center gap-2">
+              <Shield className="h-4 w-4" />
+              Certificado A1
+            </TabsTrigger>
+            <TabsTrigger value="test" className="flex items-center gap-2">
+              <AlertTriangle className="h-4 w-4" />
+              Teste
+            </TabsTrigger>
+            <TabsTrigger value="monitor" className="flex items-center gap-2">
+              <Activity className="h-4 w-4" />
+              Monitor
+            </TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="certificate" className="space-y-6">
+            <ContratanteCertificateManager />
+          </TabsContent>
+
+          <TabsContent value="test" className="space-y-6">
+            <NFeConnectionTest />
+          </TabsContent>
+
+          <TabsContent value="monitor" className="space-y-6">
+            <NFeStatusMonitor />
           </TabsContent>
         </Tabs>
       ) : (
