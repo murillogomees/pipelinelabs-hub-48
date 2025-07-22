@@ -116,20 +116,24 @@ function RouteHandler() {
 
   return (
     <Routes>
-      {/* Landing page for non-authenticated users */}
+      {/* Landing page - accessible for everyone */}
       <Route 
         path="/" 
-        element={!isAuthenticated ? <LandingPage /> : <Navigate to="/dashboard" replace />} 
+        element={
+          <PageSuspenseBoundary>
+            <LandingPage />
+          </PageSuspenseBoundary>
+        } 
       />
       
-      {/* Auth route */}
+      {/* Auth route - only for non-authenticated users */}
       <Route 
         path="/auth" 
-        element={isAuthenticated ? <Navigate to="/dashboard" replace /> : <Auth />} 
+        element={isAuthenticated ? <Navigate to="/app/dashboard" replace /> : <Auth />} 
       />
       
       {/* Protected routes */}
-      <Route path="/" element={
+      <Route path="/app" element={
         <ProtectedRoute>
           <MainLayout>
             <PageSuspenseBoundary>
@@ -138,46 +142,45 @@ function RouteHandler() {
           </MainLayout>
         </ProtectedRoute>
       }>
-        <Route index element={<Navigate to="/dashboard" replace />} />
-        <Route path="/landing" element={<Navigate to="/" replace />} />
-        <Route path="/dashboard" element={<Dashboard />} />
-        <Route path="/vendas" element={<Vendas />} />
-        <Route path="/vendas/pedidos" element={<div>Pedidos</div>} />
-        <Route path="/vendas/pdv" element={<div>PDV</div>} />
-        <Route path="/vendas/propostas" element={<div>Propostas</div>} />
-        <Route path="/produtos" element={<Produtos />} />
-        <Route path="/produtos/estoque" element={<Estoque />} />
-        <Route path="/produtos/categorias" element={<div>Categorias</div>} />
-        <Route path="/compras" element={<Compras />} />
-        <Route path="/compras/cotacoes" element={<div>Cotações</div>} />
-        <Route path="/clientes" element={<Clientes />} />
-        <Route path="/clientes/fornecedores" element={<div>Fornecedores</div>} />
-        <Route path="/financeiro" element={<Financeiro />} />
-        <Route path="/financeiro/pagar" element={<div>Contas a Pagar</div>} />
-        <Route path="/financeiro/receber" element={<div>Contas a Receber</div>} />
-        <Route path="/financeiro/conciliacao" element={<div>Conciliação</div>} />
-        <Route path="/notas-fiscais" element={<NotasFiscais />} />
-        <Route path="/notas-fiscais/nfe" element={<div>NFe</div>} />
-        <Route path="/notas-fiscais/nfce" element={<div>NFCe</div>} />
-        <Route path="/notas-fiscais/nfse" element={<div>NFSe</div>} />
-        <Route path="/emissao-fiscal" element={<EmissaoFiscal />} />
-        <Route path="/producao" element={<Producao />} />
-        <Route path="/producao/os" element={<div>Ordens de Serviço</div>} />
-        <Route path="/relatorios" element={<Relatorios />} />
-        <Route path="/integracoes" element={<Integracoes />} />
-        <Route path="/configuracoes" element={<Configuracoes />} />
-        <Route path="/configuracoes/nfe" element={<ConfiguracaoNFe />} />
-        <Route path="/configuracoes/integracoes" element={<ConfiguracoesIntegracoes />} />
+        <Route index element={<Navigate to="/app/dashboard" replace />} />
+        <Route path="dashboard" element={<Dashboard />} />
+        <Route path="vendas" element={<Vendas />} />
+        <Route path="vendas/pedidos" element={<div>Pedidos</div>} />
+        <Route path="vendas/pdv" element={<div>PDV</div>} />
+        <Route path="vendas/propostas" element={<div>Propostas</div>} />
+        <Route path="produtos" element={<Produtos />} />
+        <Route path="produtos/estoque" element={<Estoque />} />
+        <Route path="produtos/categorias" element={<div>Categorias</div>} />
+        <Route path="compras" element={<Compras />} />
+        <Route path="compras/cotacoes" element={<div>Cotações</div>} />
+        <Route path="clientes" element={<Clientes />} />
+        <Route path="clientes/fornecedores" element={<div>Fornecedores</div>} />
+        <Route path="financeiro" element={<Financeiro />} />
+        <Route path="financeiro/pagar" element={<div>Contas a Pagar</div>} />
+        <Route path="financeiro/receber" element={<div>Contas a Receber</div>} />
+        <Route path="financeiro/conciliacao" element={<div>Conciliação</div>} />
+        <Route path="notas-fiscais" element={<NotasFiscais />} />
+        <Route path="notas-fiscais/nfe" element={<div>NFe</div>} />
+        <Route path="notas-fiscais/nfce" element={<div>NFCe</div>} />
+        <Route path="notas-fiscais/nfse" element={<div>NFSe</div>} />
+        <Route path="emissao-fiscal" element={<EmissaoFiscal />} />
+        <Route path="producao" element={<Producao />} />
+        <Route path="producao/os" element={<div>Ordens de Serviço</div>} />
+        <Route path="relatorios" element={<Relatorios />} />
+        <Route path="integracoes" element={<Integracoes />} />
+        <Route path="configuracoes" element={<Configuracoes />} />
+        <Route path="configuracoes/nfe" element={<ConfiguracaoNFe />} />
+        <Route path="configuracoes/integracoes" element={<ConfiguracoesIntegracoes />} />
         
         {/* Admin routes */}
-        <Route path="/admin" element={<ProtectedRoute requireAdmin><Admin /></ProtectedRoute>} />
-        <Route path="/admin/planos" element={<ProtectedRoute requireAdmin><AdminPlanos /></ProtectedRoute>} />
-        <Route path="/admin/usuarios" element={<ProtectedRoute requireAdmin><AdminUsuarios /></ProtectedRoute>} />
-        <Route path="/admin/integracoes" element={<ProtectedRoute requireAdmin><AdminIntegracoes /></ProtectedRoute>} />
-        <Route path="/admin/notificacoes" element={<ProtectedRoute requireAdmin><AdminNotificacoes /></ProtectedRoute>} />
-        <Route path="/admin/backup" element={<ProtectedRoute requireSuperAdmin><AdminBackup /></ProtectedRoute>} />
-        <Route path="/admin/audit-logs" element={<ProtectedRoute requireAdmin><AdminAuditLogs /></ProtectedRoute>} />
-        <Route path="/admin/landing-page" element={<ProtectedRoute requireSuperAdmin><AdminLandingPage /></ProtectedRoute>} />
+        <Route path="admin" element={<ProtectedRoute requireAdmin><Admin /></ProtectedRoute>} />
+        <Route path="admin/planos" element={<ProtectedRoute requireAdmin><AdminPlanos /></ProtectedRoute>} />
+        <Route path="admin/usuarios" element={<ProtectedRoute requireAdmin><AdminUsuarios /></ProtectedRoute>} />
+        <Route path="admin/integracoes" element={<ProtectedRoute requireAdmin><AdminIntegracoes /></ProtectedRoute>} />
+        <Route path="admin/notificacoes" element={<ProtectedRoute requireAdmin><AdminNotificacoes /></ProtectedRoute>} />
+        <Route path="admin/backup" element={<ProtectedRoute requireSuperAdmin><AdminBackup /></ProtectedRoute>} />
+        <Route path="admin/audit-logs" element={<ProtectedRoute requireAdmin><AdminAuditLogs /></ProtectedRoute>} />
+        <Route path="admin/landing-page" element={<ProtectedRoute requireSuperAdmin><AdminLandingPage /></ProtectedRoute>} />
         
         <Route path="*" element={<NotFound />} />
       </Route>
