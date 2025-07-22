@@ -1,3 +1,4 @@
+
 import { 
   Home, 
   ShoppingCart, 
@@ -10,7 +11,8 @@ import {
   Wrench,
   Puzzle,
   Building2,
-  ShoppingBag
+  ShoppingBag,
+  Database
 } from 'lucide-react';
 import { MenuItem } from './types';
 
@@ -111,6 +113,7 @@ export const menuItems: MenuItem[] = [
       { title: 'Usuários', path: '/admin/usuarios' },
       { title: 'Integrações', path: '/admin/integracoes' },
       { title: 'Notificações', path: '/admin/notificacoes' },
+      { title: 'Backup', path: '/admin/backup' },
       { title: 'Integração ERP', path: '/admin/integracao-erp' }
     ],
     adminOnly: true
