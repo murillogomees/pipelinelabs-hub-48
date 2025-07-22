@@ -6,6 +6,10 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
+// NFe.io API Base URLs
+const NFE_IO_PROD_URL = 'https://api.nfe.io/v1';
+const NFE_IO_SANDBOX_URL = 'https://api.sandbox.nfe.io/v1';
+
 interface NFeConfig {
   api_token: string;
   environment: 'sandbox' | 'production';
@@ -120,18 +124,20 @@ class NFeIOService {
 
   async issueNFe(nfeData: NFeData): Promise<any> {
     try {
+      const companyId = this.config.company_cnpj.replace(/[^0-9]/g, '');
+      
       const nfePayload = {
-        company_id: this.config.company_cnpj,
+        company_id: companyId,
         service_invoice: {
           borrower: {
-            federal_tax_number: nfeData.customer.document,
+            federal_tax_number: nfeData.customer.document.replace(/[^0-9]/g, ''),
             name: nfeData.customer.name,
             email: nfeData.customer.email,
             address: nfeData.customer.address ? {
               street: nfeData.customer.address,
               city: nfeData.customer.city,
               state: nfeData.customer.state,
-              postal_code: nfeData.customer.zipcode,
+              postal_code: nfeData.customer.zipcode?.replace(/[^0-9]/g, ''),
               country: 'BRA'
             } : undefined
           },
@@ -149,40 +155,171 @@ class NFeIOService {
         }
       };
 
-      const result = await this.makeRequest('/companies/:company_id/service_invoices', 'POST', nfePayload);
+      console.log('Emitindo NFe com payload:', JSON.stringify(nfePayload, null, 2));
+      
+      const endpoint = `/companies/${companyId}/service_invoices`;
+      const result = await this.makeRequest(endpoint, 'POST', nfePayload);
+      
+      console.log('NFe emitida com sucesso:', result);
       
       // Se configurado para envio automático
       if (this.config.auto_send) {
-        await this.sendNFe(result.id);
+        await this.sendNFe(companyId, result.id);
       }
 
       // Se configurado para notificação por email
       if (this.config.email_notification && nfeData.customer.email) {
-        await this.sendNFeByEmail(result.id, nfeData.customer.email);
+        await this.sendNFeByEmail(companyId, result.id, nfeData.customer.email);
       }
 
       return result;
     } catch (error: any) {
+      console.error('Erro ao emitir NFe:', error);
       throw new Error(`Erro ao emitir NFe: ${error.message}`);
+    }
+  }
+
+  async issueNFeProduct(nfeData: any): Promise<any> {
+    try {
+      const companyId = this.config.company_cnpj.replace(/[^0-9]/g, '');
+      
+      const nfePayload = {
+        company_id: companyId,
+        product_invoice: {
+          buyer: {
+            federal_tax_number: nfeData.customer.document.replace(/[^0-9]/g, ''),
+            name: nfeData.customer.name,
+            email: nfeData.customer.email,
+            address: nfeData.customer.address ? {
+              street: nfeData.customer.address,
+              number: nfeData.customer.number || 'S/N',
+              neighborhood: nfeData.customer.neighborhood || '',
+              city: nfeData.customer.city,
+              state: nfeData.customer.state,
+              postal_code: nfeData.customer.zipcode?.replace(/[^0-9]/g, ''),
+              country: 'BRA'
+            } : undefined
+          },
+          items: nfeData.items.map((item: any) => ({
+            product_code: item.code || item.product_id,
+            description: item.description,
+            unit_of_measurement: item.unit_of_measurement || 'UN',
+            quantity: item.quantity,
+            unit_cost_value: item.unit_value,
+            total_value: item.total_value,
+            ncm_code: item.ncm_code,
+            cfop_code: item.cfop || this.config.default_cfop || '5102',
+            icms_tax_situation: item.icms_tax_situation || '00',
+            icms_tax_percentage: item.icms_tax_percentage || 0,
+            ipi_tax_situation: item.ipi_tax_situation || '99',
+            ipi_tax_percentage: item.ipi_tax_percentage || 0,
+            pis_tax_situation: item.pis_tax_situation || '99',
+            pis_tax_percentage: item.pis_tax_percentage || 0,
+            cofins_tax_situation: item.cofins_tax_situation || '99',
+            cofins_tax_percentage: item.cofins_tax_percentage || 0
+          })),
+          serie: this.config.nfe_series || '1',
+          issue_date: nfeData.issue_date || new Date().toISOString(),
+          nature_operation: nfeData.nature_operation || 'Venda de mercadoria',
+          additional_information: nfeData.notes
+        }
+      };
+
+      console.log('Emitindo NFe de produto com payload:', JSON.stringify(nfePayload, null, 2));
+      
+      const endpoint = `/companies/${companyId}/product_invoices`;
+      const result = await this.makeRequest(endpoint, 'POST', nfePayload);
+      
+      console.log('NFe de produto emitida com sucesso:', result);
+      
+      return result;
+    } catch (error: any) {
+      console.error('Erro ao emitir NFe de produto:', error);
+      throw new Error(`Erro ao emitir NFe de produto: ${error.message}`);
     }
   }
 
   async queryNFeStatus(nfeId: string): Promise<any> {
     try {
-      const result = await this.makeRequest(`/companies/:company_id/service_invoices/${nfeId}`);
+      const companyId = this.config.company_cnpj.replace(/[^0-9]/g, '');
+      const result = await this.makeRequest(`/companies/${companyId}/service_invoices/${nfeId}`);
       return result;
     } catch (error: any) {
       throw new Error(`Erro ao consultar status da NFe: ${error.message}`);
     }
   }
 
-  private async sendNFe(nfeId: string): Promise<any> {
-    return await this.makeRequest(`/companies/:company_id/service_invoices/${nfeId}/send`, 'POST');
+  async queryNFeProductStatus(nfeId: string): Promise<any> {
+    try {
+      const companyId = this.config.company_cnpj.replace(/[^0-9]/g, '');
+      const result = await this.makeRequest(`/companies/${companyId}/product_invoices/${nfeId}`);
+      return result;
+    } catch (error: any) {
+      throw new Error(`Erro ao consultar status da NFe de produto: ${error.message}`);
+    }
   }
 
-  private async sendNFeByEmail(nfeId: string, email: string): Promise<any> {
+  async cancelNFe(nfeId: string, reason: string): Promise<any> {
+    try {
+      const companyId = this.config.company_cnpj.replace(/[^0-9]/g, '');
+      const payload = {
+        justification: reason
+      };
+      const result = await this.makeRequest(`/companies/${companyId}/service_invoices/${nfeId}/cancel`, 'POST', payload);
+      return result;
+    } catch (error: any) {
+      throw new Error(`Erro ao cancelar NFe: ${error.message}`);
+    }
+  }
+
+  async cancelNFeProduct(nfeId: string, reason: string): Promise<any> {
+    try {
+      const companyId = this.config.company_cnpj.replace(/[^0-9]/g, '');
+      const payload = {
+        justification: reason
+      };
+      const result = await this.makeRequest(`/companies/${companyId}/product_invoices/${nfeId}/cancel`, 'POST', payload);
+      return result;
+    } catch (error: any) {
+      throw new Error(`Erro ao cancelar NFe de produto: ${error.message}`);
+    }
+  }
+
+  async downloadNFeXML(nfeId: string, isProduct: boolean = false): Promise<any> {
+    try {
+      const companyId = this.config.company_cnpj.replace(/[^0-9]/g, '');
+      const endpoint = isProduct 
+        ? `/companies/${companyId}/product_invoices/${nfeId}/xml`
+        : `/companies/${companyId}/service_invoices/${nfeId}/xml`;
+      
+      const result = await this.makeRequest(endpoint);
+      return result;
+    } catch (error: any) {
+      throw new Error(`Erro ao baixar XML: ${error.message}`);
+    }
+  }
+
+  async downloadNFePDF(nfeId: string, isProduct: boolean = false): Promise<any> {
+    try {
+      const companyId = this.config.company_cnpj.replace(/[^0-9]/g, '');
+      const endpoint = isProduct 
+        ? `/companies/${companyId}/product_invoices/${nfeId}/pdf`
+        : `/companies/${companyId}/service_invoices/${nfeId}/pdf`;
+      
+      const result = await this.makeRequest(endpoint);
+      return result;
+    } catch (error: any) {
+      throw new Error(`Erro ao baixar PDF: ${error.message}`);
+    }
+  }
+
+  private async sendNFe(companyId: string, nfeId: string): Promise<any> {
+    return await this.makeRequest(`/companies/${companyId}/service_invoices/${nfeId}/send`, 'POST');
+  }
+
+  private async sendNFeByEmail(companyId: string, nfeId: string, email: string): Promise<any> {
     const payload = { emails: [email] };
-    return await this.makeRequest(`/companies/:company_id/service_invoices/${nfeId}/send_email`, 'POST', payload);
+    return await this.makeRequest(`/companies/${companyId}/service_invoices/${nfeId}/send_email`, 'POST', payload);
   }
 
   private generateRpsNumber(): string {
@@ -196,13 +333,14 @@ const handler = async (req: Request): Promise<Response> => {
   }
 
   try {
-    const { action, config, nfeData, nfeId } = await req.json();
+    const { action, config, nfeData, nfeId, reason, format, isProduct } = await req.json();
     
-    if (!config || !config.api_token) {
+    // Para test_connection, não é obrigatório ter config completo
+    if (action !== 'test_connection' && (!config || !config.api_token)) {
       throw new Error('Configuração da NFE.io não encontrada');
     }
 
-    const nfeService = new NFeIOService(config);
+    const nfeService = new NFeIOService(config || { api_token: Deno.env.get('NFE_IO_API_TOKEN') || '' });
 
     let result;
 
@@ -219,14 +357,38 @@ const handler = async (req: Request): Promise<Response> => {
         if (!nfeData) throw new Error('Dados da NFe são obrigatórios');
         result = await nfeService.issueNFe(nfeData);
         break;
+
+      case 'issue_nfe_product':
+        if (!nfeData) throw new Error('Dados da NFe são obrigatórios');
+        result = await nfeService.issueNFeProduct(nfeData);
+        break;
         
       case 'query_status':
         if (!nfeId) throw new Error('ID da NFe é obrigatório');
-        result = await nfeService.queryNFeStatus(nfeId);
+        result = isProduct 
+          ? await nfeService.queryNFeProductStatus(nfeId)
+          : await nfeService.queryNFeStatus(nfeId);
+        break;
+
+      case 'cancel_nfe':
+        if (!nfeId || !reason) throw new Error('ID da NFe e motivo do cancelamento são obrigatórios');
+        result = isProduct 
+          ? await nfeService.cancelNFeProduct(nfeId, reason)
+          : await nfeService.cancelNFe(nfeId, reason);
+        break;
+
+      case 'download_xml':
+        if (!nfeId) throw new Error('ID da NFe é obrigatório');
+        result = await nfeService.downloadNFeXML(nfeId, isProduct);
+        break;
+
+      case 'download_pdf':
+        if (!nfeId) throw new Error('ID da NFe é obrigatório');
+        result = await nfeService.downloadNFePDF(nfeId, isProduct);
         break;
         
       default:
-        throw new Error('Ação não reconhecida');
+        throw new Error(`Ação não reconhecida: ${action}`);
     }
 
     return new Response(JSON.stringify(result), {

@@ -232,7 +232,7 @@ export const useNFeIntegration = () => {
     }
   });
 
-  // Emitir NFe
+  // Emitir NFe (Serviços)
   const { mutateAsync: issueNFe } = useMutation({
     mutationFn: async (nfeData: any) => {
       if (!companyNFeConfig?.config) throw new Error('NFE.io não configurada');
@@ -263,19 +263,141 @@ export const useNFeIntegration = () => {
     }
   });
 
+  // Emitir NFe de Produto
+  const { mutateAsync: issueNFeProduct } = useMutation({
+    mutationFn: async (nfeData: any) => {
+      if (!companyNFeConfig?.config) throw new Error('NFE.io não configurada');
+
+      const { data, error } = await supabase.functions.invoke('nfe-io-integration', {
+        body: { 
+          action: 'issue_nfe_product',
+          config: companyNFeConfig.config,
+          nfeData 
+        }
+      });
+      
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: () => {
+      toast({
+        title: 'NFe de Produto emitida',
+        description: 'Nota fiscal de produto emitida com sucesso!',
+      });
+    },
+    onError: (error: any) => {
+      toast({
+        title: 'Erro ao emitir NFe de Produto',
+        description: error.message,
+        variant: 'destructive',
+      });
+    }
+  });
+
   // Consultar status da NFe
-  const queryNFeStatus = async (nfeId: string) => {
+  const queryNFeStatus = async (nfeId: string, isProduct: boolean = false) => {
     if (!companyNFeConfig?.config) throw new Error('NFE.io não configurada');
 
     const { data, error } = await supabase.functions.invoke('nfe-io-integration', {
       body: { 
         action: 'query_status',
         config: companyNFeConfig.config,
-        nfeId 
+        nfeId,
+        isProduct
       }
     });
     
     if (error) throw error;
+    return data;
+  };
+
+  // Cancelar NFe
+  const { mutateAsync: cancelNFe } = useMutation({
+    mutationFn: async ({ nfeId, reason, isProduct = false }: { nfeId: string; reason: string; isProduct?: boolean }) => {
+      if (!companyNFeConfig?.config) throw new Error('NFE.io não configurada');
+
+      const { data, error } = await supabase.functions.invoke('nfe-io-integration', {
+        body: { 
+          action: 'cancel_nfe',
+          config: companyNFeConfig.config,
+          nfeId,
+          reason,
+          isProduct
+        }
+      });
+      
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: () => {
+      toast({
+        title: 'NFe cancelada',
+        description: 'Nota fiscal cancelada com sucesso!',
+      });
+    },
+    onError: (error: any) => {
+      toast({
+        title: 'Erro ao cancelar NFe',
+        description: error.message,
+        variant: 'destructive',
+      });
+    }
+  });
+
+  // Download XML da NFe
+  const downloadNFeXML = async (nfeId: string, isProduct: boolean = false) => {
+    if (!companyNFeConfig?.config) throw new Error('NFE.io não configurada');
+
+    const { data, error } = await supabase.functions.invoke('nfe-io-integration', {
+      body: { 
+        action: 'download_xml',
+        config: companyNFeConfig.config,
+        nfeId,
+        isProduct
+      }
+    });
+    
+    if (error) throw error;
+    
+    // Se retornou XML, fazer download
+    if (data.xml_content) {
+      const blob = new Blob([data.xml_content], { type: 'application/xml' });
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `nfe_${nfeId}.xml`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      window.URL.revokeObjectURL(url);
+    } else if (data.xml_url) {
+      // Se retornou URL, abrir em nova janela
+      window.open(data.xml_url, '_blank');
+    }
+    
+    return data;
+  };
+
+  // Download PDF da NFe
+  const downloadNFePDF = async (nfeId: string, isProduct: boolean = false) => {
+    if (!companyNFeConfig?.config) throw new Error('NFE.io não configurada');
+
+    const { data, error } = await supabase.functions.invoke('nfe-io-integration', {
+      body: { 
+        action: 'download_pdf',
+        config: companyNFeConfig.config,
+        nfeId,
+        isProduct
+      }
+    });
+    
+    if (error) throw error;
+    
+    // Abrir PDF em nova janela
+    if (data.pdf_url) {
+      window.open(data.pdf_url, '_blank');
+    }
+    
     return data;
   };
 
@@ -295,7 +417,11 @@ export const useNFeIntegration = () => {
     testConnection,
     validateCertificate,
     issueNFe,
+    issueNFeProduct,
     queryNFeStatus,
+    cancelNFe,
+    downloadNFeXML,
+    downloadNFePDF,
     
     // Utilitários
     isConfigured: !!companyNFeConfig?.config && !!companyNFeConfig?.is_active,
