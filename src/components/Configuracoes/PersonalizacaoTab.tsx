@@ -8,8 +8,10 @@ import { Badge } from '@/components/ui/badge';
 import { Upload, Palette, Eye, Crown, AlertTriangle } from 'lucide-react';
 import { useCompanySettings } from '@/hooks/useCompanySettings';
 import { useSubscription } from '@/hooks/useSubscription';
+import { useCDN } from '@/hooks/useCDN';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
+import { CDNConfigSection } from './CDNConfigSection';
 
 export function PersonalizacaoTab() {
   const { settings, loading, updateSettings } = useCompanySettings();
@@ -402,6 +404,9 @@ export function PersonalizacaoTab() {
           </div>
         </CardContent>
       </Card>
+
+      {/* CDN Configuration */}
+      <CDNConfigSection hasAccess={hasWhitelabelAccess()} />
 
       {/* Configuration Form */}
       <Card>

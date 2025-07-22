@@ -3,7 +3,10 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
-import { Upload, X, Star } from 'lucide-react';
+import { Upload, X, Star, Image } from 'lucide-react';
+import { uploadToCDN, buildCDNUrl } from '@/utils/cdn';
+import { useToast } from '@/hooks/use-toast';
+import { supabase } from '@/integrations/supabase/client';
 
 interface ProductImagesFormProps {
   data: any;
@@ -12,6 +15,8 @@ interface ProductImagesFormProps {
 
 export function ProductImagesForm({ data, onChange }: ProductImagesFormProps) {
   const [newImageUrl, setNewImageUrl] = useState('');
+  const [uploading, setUploading] = useState(false);
+  const { toast } = useToast();
   
   const images = data.images ? (typeof data.images === 'string' ? JSON.parse(data.images) : data.images) : [];
   const mainImageUrl = data.main_image_url || '';
@@ -44,6 +49,62 @@ export function ProductImagesForm({ data, onChange }: ProductImagesFormProps) {
 
   const setMainImage = (imageUrl: string) => {
     onChange('main_image_url', imageUrl);
+  };
+
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (!file.type.startsWith('image/')) {
+      toast({
+        title: "Erro",
+        description: "Por favor, selecione um arquivo de imagem válido",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    if (file.size > 10 * 1024 * 1024) { // 10MB limit
+      toast({
+        title: "Erro",
+        description: "O arquivo deve ter no máximo 10MB",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    try {
+      setUploading(true);
+      
+      // Get company ID
+      const { data: companyId } = await supabase.rpc('get_user_company_id');
+      if (!companyId) throw new Error('Company ID not found');
+
+      const { url } = await uploadToCDN(file, 'produtos', companyId);
+      
+      // Add to gallery
+      const updatedImages = [...images, url];
+      onChange('images', JSON.stringify(updatedImages));
+      
+      // Set as main image if it's the first one
+      if (!mainImageUrl) {
+        onChange('main_image_url', url);
+      }
+      
+      toast({
+        title: "Sucesso",
+        description: "Imagem carregada com sucesso via CDN"
+      });
+    } catch (error) {
+      console.error('Upload error:', error);
+      toast({
+        title: "Erro",
+        description: "Falha ao fazer upload da imagem",
+        variant: "destructive"
+      });
+    } finally {
+      setUploading(false);
+    }
   };
 
   return (
@@ -124,6 +185,28 @@ export function ProductImagesForm({ data, onChange }: ProductImagesFormProps) {
             ))}
           </div>
 
+          {/* Upload via CDN */}
+          <div className="border-2 border-dashed border-muted-foreground/25 rounded-lg p-4">
+            <div className="text-center space-y-2">
+              <Image className="mx-auto h-8 w-8 text-muted-foreground" />
+              <div>
+                <p className="text-sm font-medium">Upload de Imagem via CDN</p>
+                <p className="text-xs text-muted-foreground">JPG, PNG, WebP até 10MB</p>
+              </div>
+              <Input
+                type="file"
+                accept="image/*"
+                onChange={handleFileUpload}
+                disabled={uploading}
+                className="max-w-xs mx-auto"
+              />
+              {uploading && (
+                <p className="text-xs text-muted-foreground">Fazendo upload...</p>
+              )}
+            </div>
+          </div>
+
+          {/* Manual URL Input */}
           <div className="flex space-x-2">
             <Input
               type="url"
@@ -134,12 +217,13 @@ export function ProductImagesForm({ data, onChange }: ProductImagesFormProps) {
             />
             <Button onClick={addImage} disabled={!newImageUrl}>
               <Upload className="w-4 h-4 mr-2" />
-              Adicionar
+              Adicionar URL
             </Button>
           </div>
 
           <div className="text-sm text-muted-foreground">
-            <p>• Adicione URLs de imagens para criar uma galeria</p>
+            <p>• Use o upload direto para otimização automática via CDN</p>
+            <p>• Ou adicione URLs de imagens manualmente</p>
             <p>• Use o ícone de estrela para definir a imagem principal</p>
             <p>• Formatos suportados: JPG, PNG, WEBP</p>
           </div>
