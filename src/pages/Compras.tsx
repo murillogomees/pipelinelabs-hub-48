@@ -81,22 +81,23 @@ export default function Compras() {
   const stats = getDashboardStats();
 
   return (
-    <div className="flex-1 space-y-6 p-6">
+    <div className="space-mobile">
       {/* Header */}
-      <div className="flex justify-between items-center">
-        <div>
-          <h1 className="text-3xl font-bold text-foreground">Compras</h1>
-          <p className="text-muted-foreground">Gerencie seus pedidos de compra e fornecedores</p>
+      <div className="flex-mobile gap-mobile items-center">
+        <div className="flex-1">
+          <h1 className="heading-mobile font-bold">Compras</h1>
+          <p className="text-mobile text-muted-foreground">Gerencie seus pedidos de compra e fornecedores</p>
         </div>
-        <Button onClick={() => setShowCreateDialog(true)} className="bg-primary hover:bg-primary/90">
+        <Button onClick={() => setShowCreateDialog(true)} className="btn-mobile bg-primary hover:bg-primary/90">
           <Plus className="w-4 h-4 mr-2" />
-          Novo Pedido
+          <span className="hidden sm:inline">Novo Pedido</span>
+          <span className="sm:hidden">Novo</span>
         </Button>
       </div>
 
       {/* Dashboard Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-        <Card>
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-mobile">
+        <Card className="card-mobile">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Total de Pedidos</CardTitle>
             <Package className="h-4 w-4 text-muted-foreground" />
@@ -106,27 +107,27 @@ export default function Compras() {
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="card-mobile">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Pendentes</CardTitle>
             <Calendar className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-yellow-600">{stats.pending}</div>
+            <div className="text-2xl font-bold text-warning">{stats.pending}</div>
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="card-mobile">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Confirmados</CardTitle>
             <Package className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-green-600">{stats.confirmed}</div>
+            <div className="text-2xl font-bold text-success">{stats.confirmed}</div>
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="card-mobile">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Valor Total</CardTitle>
             <DollarSign className="h-4 w-4 text-muted-foreground" />
