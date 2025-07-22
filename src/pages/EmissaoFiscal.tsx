@@ -18,6 +18,7 @@ import {
 import { NFeDialog } from '@/components/NFe/NFeDialog';
 import { useNFe } from '@/hooks/useNFe';
 import { useAuth } from '@/hooks/useAuth';
+import { usePermissions } from '@/hooks/usePermissions';
 import { useNFeIntegration } from '@/hooks/useNFeIntegration';
 import { 
   Table,
@@ -45,7 +46,8 @@ const statusLabels = {
 } as const;
 
 export function EmissaoFiscal() {
-  const { user, isAdmin } = useAuth();
+  const { user } = useAuth();
+  const { isAdmin } = usePermissions();
   const { nfeList, isLoading } = useNFe();
   const { nfeIntegration, isConfigured } = useNFeIntegration();
   const [activeTab, setActiveTab] = useState('emissao');
