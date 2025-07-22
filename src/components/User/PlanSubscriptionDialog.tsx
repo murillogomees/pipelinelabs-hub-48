@@ -1,11 +1,10 @@
-
 import React from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useSubscription } from '@/hooks/useSubscription';
-import { useAuth } from '@/hooks/useAuth';
+import { usePermissions } from '@/hooks/usePermissions';
 import { Crown, Users, Calendar, CreditCard, CheckCircle, XCircle, Clock, ArrowRight } from 'lucide-react';
 
 interface PlanSubscriptionDialogProps {
@@ -14,7 +13,7 @@ interface PlanSubscriptionDialogProps {
 }
 
 export function PlanSubscriptionDialog({ open, onOpenChange }: PlanSubscriptionDialogProps) {
-  const { isSuperAdmin, isAdmin } = useAuth();
+  const { isSuperAdmin, isAdmin } = usePermissions();
   const { subscription, isTrialActive, trialDaysLeft, daysUntilRenewal } = useSubscription();
 
   const getStatusBadge = (status: string) => {
