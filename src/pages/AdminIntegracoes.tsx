@@ -5,7 +5,6 @@ import { Loader2, Plus } from 'lucide-react';
 import { useIntegrations } from '@/components/Admin/Integrations/hooks/useIntegrations';
 import { IntegrationCard } from '@/components/Admin/Integrations/IntegrationCard';
 import { IntegrationDialog } from '@/components/Admin/Integrations/IntegrationDialog';
-import { EmptyState } from '@/components/Admin/Integrations/EmptyState';
 import { ProtectedRoute } from '@/components/ProtectedRoute';
 import type { IntegrationAvailable } from '@/components/Admin/Integrations/types';
 import type { IntegrationFormData } from '@/components/Admin/Integrations/schema';
@@ -94,7 +93,11 @@ export function AdminIntegracoes() {
               ))}
             </div>
 
-            {(!integrations || integrations.length === 0) && <EmptyState />}
+            {(!integrations || integrations.length === 0) && (
+              <div className="text-center py-12">
+                <p className="text-muted-foreground">Nenhuma integração encontrada</p>
+              </div>
+            )}
           </>
         )}
       </div>

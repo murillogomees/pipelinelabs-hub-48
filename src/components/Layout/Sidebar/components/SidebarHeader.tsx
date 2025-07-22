@@ -1,12 +1,10 @@
 import { Building2 } from 'lucide-react';
-import { useBranding } from '@/hooks/useBranding';
 
 interface SidebarHeaderProps {
   collapsed: boolean;
 }
 
 export function SidebarHeader({ collapsed }: SidebarHeaderProps) {
-  const { branding } = useBranding();
 
   return (
     <div className="p-4 border-b border-sidebar-border">
@@ -16,7 +14,7 @@ export function SidebarHeader({ collapsed }: SidebarHeaderProps) {
         </div>
         {!collapsed && (
           <div>
-            <h1 className="text-lg font-bold text-sidebar-foreground">{branding.nome_customizado}</h1>
+            <h1 className="text-lg font-bold text-sidebar-foreground">Pipeline Labs</h1>
             <p className="text-xs text-sidebar-foreground/60">ERP Inteligente</p>
           </div>
         )}

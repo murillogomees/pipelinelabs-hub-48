@@ -30,8 +30,6 @@ import { AdminNotificacoes } from "@/pages/AdminNotificacoes";
 import { Relatorios } from "@/pages/Relatorios";
 import Configuracoes from "@/pages/Configuracoes";
 import NotFound from "@/pages/NotFound";
-import LandingPage from "@/pages/LandingPage";
-import AdminLandingPage from "@/pages/AdminLandingPage";
 import ConfiguracaoNFe from "@/pages/ConfiguracaoNFe";
 import { EmissaoFiscal } from "@/pages/EmissaoFiscal";
 
@@ -54,14 +52,14 @@ function AppContent() {
   return (
     <BrowserRouter>
       <Routes>
-        {/* Rota principal - Landing Page para não autenticados, Dashboard para autenticados */}
+        {/* Rota principal - Dashboard para usuários autenticados */}
         <Route path="/" element={
           user ? (
             <MainLayout>
               <Dashboard />
             </MainLayout>
           ) : (
-            <LandingPage />
+            <Auth />
           )
         } />
         
@@ -187,13 +185,6 @@ function AppContent() {
               <MainLayout>
                 <ProtectedRoute requireAdmin>
                   <AdminNotificacoes />
-                </ProtectedRoute>
-              </MainLayout>
-            } />
-            <Route path="/admin/landing-page" element={
-              <MainLayout>
-                <ProtectedRoute requireAdmin>
-                  <AdminLandingPage />
                 </ProtectedRoute>
               </MainLayout>
             } />
