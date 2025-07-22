@@ -3,7 +3,7 @@ import React, { useState } from 'react';
 import { User, Menu, LogOut, Settings, Crown, Users } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/components/Auth/AuthProvider';
-import { useAuth as useCustomAuth } from '@/hooks/useAuth';
+import { usePermissions } from '@/hooks/usePermissions';
 import { NotificationBell } from '@/components/Notifications/NotificationBell';
 import { GlobalSearchTrigger } from '@/components/Search/GlobalSearchTrigger';
 import { UserProfileDialog } from '@/components/User/UserProfileDialog';
@@ -25,7 +25,7 @@ interface HeaderProps {
 
 export function Header({ onToggleSidebar }: HeaderProps) {
   const { user, signOut } = useAuth();
-  const { isSuperAdmin, email } = useCustomAuth();
+  const { isSuperAdmin, email } = usePermissions();
   const [profileOpen, setProfileOpen] = useState(false);
   const [teamOpen, setTeamOpen] = useState(false);
   const [planOpen, setPlanOpen] = useState(false);

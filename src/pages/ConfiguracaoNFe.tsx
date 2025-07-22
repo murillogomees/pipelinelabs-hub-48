@@ -1,3 +1,4 @@
+
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Alert, AlertDescription } from '@/components/ui/alert';
@@ -6,11 +7,11 @@ import { AdminNFeConfig } from '@/components/Admin/NFeConfig/AdminNFeConfig';
 import { ContratanteCertificateManager } from '@/components/Admin/NFeConfig/ContratanteCertificateManager';
 import { NFeConnectionTest } from '@/components/Admin/NFeConfig/NFeConnectionTest';
 import { NFeStatusMonitor } from '@/components/Admin/NFeConfig/NFeStatusMonitor';
-import { useUserRole } from '@/hooks/useUserRole';
+import { usePermissions } from '@/hooks/usePermissions';
 import { useNFeIntegration } from '@/hooks/useNFeIntegration';
 
 export default function ConfiguracaoNFe() {
-  const { isSuperAdmin, isContratante } = useUserRole();
+  const { isSuperAdmin, isContratante } = usePermissions();
   const { nfeIntegration } = useNFeIntegration();
 
   if (!nfeIntegration) {
@@ -51,7 +52,7 @@ export default function ConfiguracaoNFe() {
         </div>
       </div>
 
-{isSuperAdmin ? (
+      {isSuperAdmin ? (
         <Tabs defaultValue="admin" className="w-full">
           <TabsList className="grid w-full grid-cols-4">
             <TabsTrigger value="admin" className="flex items-center gap-2">

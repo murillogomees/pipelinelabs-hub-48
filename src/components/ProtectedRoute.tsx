@@ -2,17 +2,25 @@
 import React from 'react';
 import { Navigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
+import { usePermissions } from '@/hooks/usePermissions';
 import { Loader2 } from 'lucide-react';
 
 interface ProtectedRouteProps {
   children: React.ReactNode;
+  requireAdmin?: boolean;
+  requireSuperAdmin?: boolean;
 }
 
-export function ProtectedRoute({ children }: ProtectedRouteProps) {
+export function ProtectedRoute({ 
+  children, 
+  requireAdmin = false, 
+  requireSuperAdmin = false 
+}: ProtectedRouteProps) {
   const { isAuthenticated, isLoading, error } = useAuth();
+  const { isSuperAdmin, isAdmin, isLoading: permissionsLoading } = usePermissions();
 
   // Mostrar loading durante verificação de autenticação
-  if (isLoading) {
+  if (isLoading || permissionsLoading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <div className="text-center">
@@ -36,6 +44,37 @@ export function ProtectedRoute({ children }: ProtectedRouteProps) {
     return <Navigate to="/auth" replace />;
   }
 
-  // Se estiver autenticado, renderizar children
+  // Verificar permissões específicas
+  if (requireSuperAdmin && !isSuperAdmin) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="text-center">
+          <h2 className="text-xl font-semibold text-foreground mb-2">
+            Acesso Restrito
+          </h2>
+          <p className="text-muted-foreground">
+            Você não tem permissão para acessar esta área.
+          </p>
+        </div>
+      </div>
+    );
+  }
+
+  if (requireAdmin && !isAdmin) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="text-center">
+          <h2 className="text-xl font-semibold text-foreground mb-2">
+            Acesso Restrito
+          </h2>
+          <p className="text-muted-foreground">
+            Você não tem permissão para acessar esta área.
+          </p>
+        </div>
+      </div>
+    );
+  }
+
+  // Se estiver autenticado e tiver as permissões necessárias, renderizar children
   return <>{children}</>;
 }
