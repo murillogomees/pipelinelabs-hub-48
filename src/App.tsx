@@ -38,6 +38,7 @@ const AdminIntegracoes = React.lazy(() => import('@/pages/AdminIntegracoes').the
 const AdminNotificacoes = React.lazy(() => import('@/pages/AdminNotificacoes').then(module => ({ default: module.AdminNotificacoes })));
 const AdminBackup = React.lazy(() => import('@/pages/AdminBackup'));
 const AdminAuditLogs = React.lazy(() => import('@/pages/AdminAuditLogs'));
+const AdminCache = React.lazy(() => import('@/pages/AdminCache').then(module => ({ default: module.AdminCache })));
 const AdminLandingPage = React.lazy(() => import('@/pages/AdminLandingPage').then(module => ({ default: module.AdminLandingPage })));
 
 // Landing Page
@@ -179,6 +180,7 @@ function RouteHandler() {
         <Route path="admin/integracoes" element={<ProtectedRoute requireAdmin><AdminIntegracoes /></ProtectedRoute>} />
         <Route path="admin/notificacoes" element={<ProtectedRoute requireAdmin><AdminNotificacoes /></ProtectedRoute>} />
         <Route path="admin/backup" element={<ProtectedRoute requireSuperAdmin><AdminBackup /></ProtectedRoute>} />
+        <Route path="admin/cache" element={<ProtectedRoute requireSuperAdmin><AdminCache /></ProtectedRoute>} />
         <Route path="admin/audit-logs" element={<ProtectedRoute requireAdmin><AdminAuditLogs /></ProtectedRoute>} />
         <Route path="admin/landing-page" element={<ProtectedRoute requireSuperAdmin><AdminLandingPage /></ProtectedRoute>} />
         

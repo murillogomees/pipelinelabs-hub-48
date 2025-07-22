@@ -129,6 +129,7 @@ export const menuItems = [
       { title: 'Integrações', path: '/app/admin/integracoes' },
       { title: 'Notificações', path: '/app/admin/notificacoes' },
       { title: 'Backup', path: '/app/admin/backup' },
+      { title: 'Cache', path: '/app/admin/cache' },
       { title: 'Integração ERP', path: '/app/admin/integracao-erp' },
       { title: 'Logs de Auditoria', path: '/app/admin/audit-logs' },
       { title: 'Landing Page', path: '/app/admin/landing-page' }
