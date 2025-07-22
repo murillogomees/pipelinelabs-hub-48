@@ -16,17 +16,21 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 // Cleanup function to remove auth state
 const cleanupAuthState = () => {
-  localStorage.removeItem('supabase.auth.token');
-  Object.keys(localStorage).forEach((key) => {
-    if (key.startsWith('supabase.auth.') || key.includes('sb-')) {
-      localStorage.removeItem(key);
-    }
-  });
-  Object.keys(sessionStorage || {}).forEach((key) => {
-    if (key.startsWith('supabase.auth.') || key.includes('sb-')) {
-      sessionStorage.removeItem(key);
-    }
-  });
+  try {
+    localStorage.removeItem('supabase.auth.token');
+    Object.keys(localStorage).forEach((key) => {
+      if (key.startsWith('supabase.auth.') || key.includes('sb-')) {
+        localStorage.removeItem(key);
+      }
+    });
+    Object.keys(sessionStorage || {}).forEach((key) => {
+      if (key.startsWith('supabase.auth.') || key.includes('sb-')) {
+        sessionStorage.removeItem(key);
+      }
+    });
+  } catch (error) {
+    console.error('Error cleaning up auth state:', error);
+  }
 };
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
@@ -35,39 +39,84 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    let mounted = true;
+
     // Set up auth state listener FIRST
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (event, session) => {
+      async (event, session) => {
+        if (!mounted) return;
+
+        console.log('Auth state change:', event, session?.user?.email);
+
         setSession(session);
         setUser(session?.user ?? null);
         setLoading(false);
         
-        // Defer data fetching to prevent deadlocks
+        // Defer any additional processing
         if (event === 'SIGNED_IN' && session?.user) {
           setTimeout(() => {
-            // Any additional data fetching can go here
+            if (mounted) {
+              console.log('User signed in successfully');
+            }
           }, 0);
+        }
+
+        if (event === 'SIGNED_OUT') {
+          cleanupAuthState();
         }
       }
     );
 
     // THEN check for existing session
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setSession(session);
-      setUser(session?.user ?? null);
-      setLoading(false);
-    });
+    const getInitialSession = async () => {
+      try {
+        const { data: { session }, error } = await supabase.auth.getSession();
+        
+        if (error) {
+          console.error('Error getting initial session:', error);
+          if (mounted) {
+            setSession(null);
+            setUser(null);
+            setLoading(false);
+          }
+          return;
+        }
 
-    return () => subscription.unsubscribe();
+        if (mounted) {
+          setSession(session);
+          setUser(session?.user ?? null);
+          setLoading(false);
+        }
+      } catch (error) {
+        console.error('Error in getInitialSession:', error);
+        if (mounted) {
+          setSession(null);
+          setUser(null);
+          setLoading(false);
+        }
+      }
+    };
+
+    getInitialSession();
+
+    return () => {
+      mounted = false;
+      subscription.unsubscribe();
+    };
   }, []);
 
   const signOut = async () => {
     try {
       cleanupAuthState();
       await supabase.auth.signOut({ scope: 'global' });
-      window.location.href = '/auth';
+      
+      // Force redirect after a short delay
+      setTimeout(() => {
+        window.location.href = '/auth';
+      }, 100);
     } catch (error) {
       console.error('Error signing out:', error);
+      // Force redirect even if signout fails
       window.location.href = '/auth';
     }
   };
@@ -75,10 +124,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const signIn = async (email: string, password: string) => {
     try {
       cleanupAuthState();
+      
+      // Try to sign out first
       try {
         await supabase.auth.signOut({ scope: 'global' });
       } catch (err) {
-        // Continue even if this fails
+        console.warn('Error during pre-signin cleanup:', err);
       }
       
       const { data, error } = await supabase.auth.signInWithPassword({
@@ -89,11 +140,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       if (error) throw error;
       
       if (data.user) {
-        window.location.href = '/';
+        // Don't redirect immediately, let the auth state change handle it
+        console.log('Sign in successful, waiting for auth state change...');
       }
       
       return { error: null };
     } catch (error) {
+      console.error('Sign in error:', error);
       return { error };
     }
   };
@@ -115,6 +168,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       
       return { error };
     } catch (error) {
+      console.error('Sign up error:', error);
       return { error };
     }
   };

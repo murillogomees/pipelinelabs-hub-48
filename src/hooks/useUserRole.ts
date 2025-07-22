@@ -1,102 +1,151 @@
-import { usePermissions } from './usePermissions';
 
-export type UserType = 'super_admin' | 'contratante' | 'operador';
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
 
-export interface UserRole {
-  userType: UserType | null;
-  isSuperAdmin: boolean;
-  isContratante: boolean;
-  isOperador: boolean;
+interface UserRoleData {
+  userType: 'super_admin' | 'contratante' | 'operador' | null;
   companyId: string | null;
   department: string | null;
-  isLoading: boolean;
+  specificPermissions: Record<string, boolean>;
 }
 
-export function useUserRole(): UserRole {
-  const {
-    userType,
-    isSuperAdmin,
-    isContratante,
-    isOperador,
-    companyId,
-    department,
-    isLoading
-  } = usePermissions();
+export function useUserRole() {
+  const { data: roleData, isLoading, error } = useQuery({
+    queryKey: ["user-role"],
+    queryFn: async (): Promise<UserRoleData> => {
+      try {
+        const { data: user } = await supabase.auth.getUser();
+        
+        if (!user.user) {
+          return {
+            userType: null,
+            companyId: null,
+            department: null,
+            specificPermissions: {}
+          };
+        }
+
+        // Verificar diretamente se é super admin pelo email
+        const userEmail = user.user.email || "";
+        const isSuperAdminByEmail = userEmail === "murilloggomes@gmail.com";
+        
+        if (isSuperAdminByEmail) {
+          return {
+            userType: 'super_admin',
+            companyId: null,
+            department: null,
+            specificPermissions: {
+              super_admin: true,
+              full_access: true
+            }
+          };
+        }
+
+        // Buscar dados do usuário com tratamento de erro melhorado
+        const { data: userCompaniesData, error: companiesError } = await supabase
+          .from("user_companies")
+          .select("user_type, department, specific_permissions, company_id")
+          .eq("user_id", user.user.id)
+          .eq("is_active", true)
+          .order("created_at", { ascending: false })
+          .limit(1)
+          .maybeSingle();
+
+        if (companiesError) {
+          console.error("Error fetching user companies:", companiesError);
+          throw companiesError;
+        }
+
+        if (!userCompaniesData) {
+          return {
+            userType: null,
+            companyId: null,
+            department: null,
+            specificPermissions: {}
+          };
+        }
+
+        return {
+          userType: userCompaniesData.user_type || null,
+          companyId: userCompaniesData.company_id,
+          department: userCompaniesData.department,
+          specificPermissions: (userCompaniesData.specific_permissions as Record<string, any>) || {}
+        };
+      } catch (error: any) {
+        console.error("Error in useUserRole:", error);
+        
+        // Fallback para super admin mesmo com erro
+        const { data: user } = await supabase.auth.getUser();
+        const userEmail = user.user?.email || "";
+        const isSuperAdminByEmail = userEmail === "murilloggomes@gmail.com";
+        
+        if (isSuperAdminByEmail) {
+          return {
+            userType: 'super_admin',
+            companyId: null,
+            department: null,
+            specificPermissions: { super_admin: true, full_access: true }
+          };
+        }
+        
+        throw error;
+      }
+    },
+    refetchOnWindowFocus: false,
+    retry: (failureCount, error) => {
+      // Não tentar novamente para erros de autenticação
+      if (error?.message?.includes('JWT')) return false;
+      return failureCount < 2;
+    },
+    staleTime: 5 * 60 * 1000, // 5 minutos
+  });
 
   return {
-    userType,
-    isSuperAdmin,
-    isContratante,
-    isOperador,
-    companyId,
-    department,
-    isLoading
+    userType: roleData?.userType || null,
+    companyId: roleData?.companyId || null,
+    department: roleData?.department || null,
+    specificPermissions: roleData?.specificPermissions || {},
+    isLoading,
+    error
   };
 }
 
-// Funções de conveniência para verificação de acesso
 export function useRoleChecks() {
-  const {
-    isSuperAdmin,
-    isContratante,
-    isOperador,
-    companyId,
-    department,
-    canManageSystem,
-    canManageCompany,
-    canManageUsers,
-    canAccessAdminPanel,
-    canAccessDepartmentData,
-    canManageCompanyData
-  } = usePermissions();
+  const { userType, companyId, specificPermissions } = useUserRole();
+
+  const canAccessSystemAdmin = () => {
+    return userType === 'super_admin';
+  };
+
+  const canAccessCompanyAdmin = (targetCompanyId?: string) => {
+    if (userType === 'super_admin') return true;
+    if (userType === 'contratante') {
+      return !targetCompanyId || companyId === targetCompanyId;
+    }
+    return false;
+  };
+
+  const canAccessOperationalData = (targetCompanyId?: string, targetDepartment?: string) => {
+    if (userType === 'super_admin') return true;
+    if (userType === 'contratante') {
+      return !targetCompanyId || companyId === targetCompanyId;
+    }
+    if (userType === 'operador') {
+      const companyMatch = !targetCompanyId || companyId === targetCompanyId;
+      const departmentMatch = !targetDepartment || !targetDepartment;
+      return companyMatch && departmentMatch;
+    }
+    return false;
+  };
+
+  const hasSpecificPermission = (permission: string) => {
+    return specificPermissions[permission] === true;
+  };
 
   return {
-    // Verificações básicas
-    canAccessSystemAdmin: () => isSuperAdmin,
-    canAccessCompanyAdmin: (targetCompanyId?: string) => {
-      if (isSuperAdmin) return true;
-      if (!targetCompanyId) return isContratante;
-      return isContratante && companyId === targetCompanyId;
-    },
-    canAccessOperationalData: (targetCompanyId?: string, targetDepartment?: string) => {
-      if (isSuperAdmin) return true;
-      if (isContratante && (!targetCompanyId || companyId === targetCompanyId)) return true;
-      if (isOperador && (!targetCompanyId || companyId === targetCompanyId)) {
-        return !targetDepartment || department === targetDepartment;
-      }
-      return false;
-    },
-
-    // Verificações de funcionalidades específicas
-    canManageTeam: (targetCompanyId?: string) => {
-      if (isSuperAdmin) return true;
-      return isContratante && (!targetCompanyId || companyId === targetCompanyId);
-    },
-    canEditCompanySettings: (targetCompanyId?: string) => {
-      if (isSuperAdmin) return true;
-      return isContratante && (!targetCompanyId || companyId === targetCompanyId);
-    },
-    canViewFinancialReports: (targetCompanyId?: string) => {
-      if (isSuperAdmin) return true;
-      return isContratante && (!targetCompanyId || companyId === targetCompanyId);
-    },
-    canManageProducts: (targetCompanyId?: string) => {
-      if (isSuperAdmin) return true;
-      if (isContratante && (!targetCompanyId || companyId === targetCompanyId)) return true;
-      return isOperador && (!targetCompanyId || companyId === targetCompanyId);
-    },
-    canManageCustomers: (targetCompanyId?: string) => {
-      if (isSuperAdmin) return true;
-      if (isContratante && (!targetCompanyId || companyId === targetCompanyId)) return true;
-      return isOperador && (!targetCompanyId || companyId === targetCompanyId);
-    },
-
-    // Verificações herdadas
-    canManageSystem,
-    canManageCompany,
-    canManageUsers,
-    canAccessAdminPanel,
-    canAccessDepartmentData,
-    canManageCompanyData
+    canAccessSystemAdmin,
+    canAccessCompanyAdmin,
+    canAccessOperationalData,
+    hasSpecificPermission
   };
 }

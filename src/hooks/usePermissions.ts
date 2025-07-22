@@ -1,3 +1,4 @@
+
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -8,7 +9,7 @@ interface UserPermissions {
   isSuperAdmin: boolean;
   isContratante: boolean;
   isOperador: boolean;
-  isAdmin: boolean; // Legacy compatibility
+  isAdmin: boolean;
   companyId: string | null;
   department: string | null;
   specificPermissions: Record<string, boolean>;
@@ -18,11 +19,11 @@ interface UserPermissions {
 export function usePermissions() {
   const { data: permissionsData, isLoading, error } = useQuery({
     queryKey: ["user-permissions"],
-    queryFn: async () => {
+    queryFn: async (): Promise<UserPermissions> => {
       try {
-        const { data: user } = await supabase.auth.getUser();
+        const { data: user, error: userError } = await supabase.auth.getUser();
         
-        if (!user.user) {
+        if (userError || !user.user) {
           return {
             userType: null,
             isSuperAdmin: false,
@@ -36,8 +37,6 @@ export function usePermissions() {
           };
         }
 
-        
-        // Verificar diretamente se é super admin pelo email
         const userEmail = user.user.email || "";
         const isSuperAdminByEmail = userEmail === "murilloggomes@gmail.com";
         
@@ -63,71 +62,20 @@ export function usePermissions() {
           };
         }
 
-        // Tentar buscar dados do usuário normalmente
-        try {
-          const { data: userCompaniesData, error: companiesError } = await supabase
-            .from("user_companies")
-            .select("user_type, department, specific_permissions, is_active, company_id, role")
-            .eq("user_id", user.user.id)
-            .eq("is_active", true)
-            .order("created_at", { ascending: false })
-            .limit(1)
-            .maybeSingle();
+        // Buscar dados do usuário com tratamento de erro
+        const { data: userCompaniesData, error: companiesError } = await supabase
+          .from("user_companies")
+          .select("user_type, department, specific_permissions, is_active, company_id, role, permissions")
+          .eq("user_id", user.user.id)
+          .eq("is_active", true)
+          .order("created_at", { ascending: false })
+          .limit(1)
+          .maybeSingle();
 
-          if (companiesError) {
-            console.error("Error fetching user companies:", companiesError);
-            // Se der erro mas é super admin, retornar permissões completas
-            if (isSuperAdminByEmail) {
-              return {
-                userType: 'super_admin' as UserType,
-                isSuperAdmin: true,
-                isContratante: false,
-                isOperador: false,
-                isAdmin: true,
-                companyId: null,
-                department: null,
-                specificPermissions: { super_admin: true, full_access: true },
-                email: userEmail
-              };
-            }
-            throw companiesError;
-          }
-
-          if (!userCompaniesData) {
-            return {
-              userType: null,
-              isSuperAdmin: isSuperAdminByEmail,
-              isContratante: false,
-              isOperador: false,
-              isAdmin: isSuperAdminByEmail,
-              companyId: null,
-              department: null,
-              specificPermissions: isSuperAdminByEmail ? { super_admin: true } : {},
-              email: userEmail
-            };
-          }
-
-          const userType = userCompaniesData.user_type as UserType;
-          const specificPermissions = (userCompaniesData.specific_permissions as Record<string, any>) || {};
+        if (companiesError) {
+          console.error("Error fetching user companies:", companiesError);
           
-          const isSuperAdmin = userType === 'super_admin' || isSuperAdminByEmail;
-          const isContratante = userType === 'contratante';
-          const isOperador = userType === 'operador';
-          const isAdmin = isSuperAdmin || isContratante;
-
-          return {
-            userType,
-            isSuperAdmin,
-            isContratante,
-            isOperador,
-            isAdmin,
-            companyId: userCompaniesData.company_id,
-            department: userCompaniesData.department,
-            specificPermissions: isSuperAdminByEmail ? { ...specificPermissions, super_admin: true, full_access: true } : specificPermissions,
-            email: userEmail
-          } as UserPermissions;
-        } catch (dbError) {
-          // Se houver erro no banco mas é super admin, permitir acesso
+          // Se der erro mas é super admin, retornar permissões
           if (isSuperAdminByEmail) {
             return {
               userType: 'super_admin' as UserType,
@@ -141,31 +89,81 @@ export function usePermissions() {
               email: userEmail
             };
           }
-          throw dbError;
+          
+          throw companiesError;
         }
+
+        if (!userCompaniesData) {
+          return {
+            userType: null,
+            isSuperAdmin: isSuperAdminByEmail,
+            isContratante: false,
+            isOperador: false,
+            isAdmin: isSuperAdminByEmail,
+            companyId: null,
+            department: null,
+            specificPermissions: isSuperAdminByEmail ? { super_admin: true } : {},
+            email: userEmail
+          };
+        }
+
+        const userType = userCompaniesData.user_type as UserType;
+        const specificPermissions = (userCompaniesData.specific_permissions as Record<string, any>) || {};
+        const permissions = (userCompaniesData.permissions as Record<string, any>) || {};
+        
+        // Combinar permissões específicas e gerais
+        const allPermissions = { ...permissions, ...specificPermissions };
+        
+        const isSuperAdmin = userType === 'super_admin' || isSuperAdminByEmail || allPermissions.super_admin === true;
+        const isContratante = userType === 'contratante';
+        const isOperador = userType === 'operador';
+        const isAdmin = isSuperAdmin || isContratante;
+
+        return {
+          userType,
+          isSuperAdmin,
+          isContratante,
+          isOperador,
+          isAdmin,
+          companyId: userCompaniesData.company_id,
+          department: userCompaniesData.department,
+          specificPermissions: isSuperAdminByEmail ? { ...allPermissions, super_admin: true, full_access: true } : allPermissions,
+          email: userEmail
+        } as UserPermissions;
       } catch (error) {
         console.error("Error in usePermissions:", error);
         
         // Verificar se é super admin pelo email mesmo com erro
-        const { data: user } = await supabase.auth.getUser();
-        const userEmail = user.user?.email || "";
-        const isSuperAdminByEmail = userEmail === "murilloggomes@gmail.com";
-        
-        return {
-          userType: isSuperAdminByEmail ? 'super_admin' as UserType : null,
-          isSuperAdmin: isSuperAdminByEmail,
-          isContratante: false,
-          isOperador: false,
-          isAdmin: isSuperAdminByEmail,
-          companyId: null,
-          department: null,
-          specificPermissions: isSuperAdminByEmail ? { super_admin: true, full_access: true } : {},
-          email: userEmail
-        };
+        try {
+          const { data: user } = await supabase.auth.getUser();
+          const userEmail = user.user?.email || "";
+          const isSuperAdminByEmail = userEmail === "murilloggomes@gmail.com";
+          
+          return {
+            userType: isSuperAdminByEmail ? 'super_admin' as UserType : null,
+            isSuperAdmin: isSuperAdminByEmail,
+            isContratante: false,
+            isOperador: false,
+            isAdmin: isSuperAdminByEmail,
+            companyId: null,
+            department: null,
+            specificPermissions: isSuperAdminByEmail ? { super_admin: true, full_access: true } : {},
+            email: userEmail
+          };
+        } catch (fallbackError) {
+          console.error("Fallback error in usePermissions:", fallbackError);
+          throw error;
+        }
       }
     },
     refetchOnWindowFocus: false,
     refetchOnMount: true,
+    retry: (failureCount, error) => {
+      // Não tentar novamente para erros de autenticação
+      if (error?.message?.includes('JWT')) return false;
+      return failureCount < 2;
+    },
+    staleTime: 2 * 60 * 1000, // 2 minutos
   });
 
   return {
@@ -173,14 +171,14 @@ export function usePermissions() {
     isSuperAdmin: permissionsData?.isSuperAdmin || false,
     isContratante: permissionsData?.isContratante || false,
     isOperador: permissionsData?.isOperador || false,
-    isAdmin: permissionsData?.isAdmin || false, // Legacy
+    isAdmin: permissionsData?.isAdmin || false,
     companyId: permissionsData?.companyId || null,
     department: permissionsData?.department || null,
     specificPermissions: permissionsData?.specificPermissions || {},
-    permissions: permissionsData?.specificPermissions || {}, // Legacy compatibility
+    permissions: permissionsData?.specificPermissions || {},
     email: permissionsData?.email || null,
     isLoading,
-    hasFullAccess: permissionsData?.isSuperAdmin || false, // Legacy compatibility
+    hasFullAccess: permissionsData?.isSuperAdmin || false,
     
     // Funções de conveniência específicas por hierarquia
     canManageSystem: permissionsData?.isSuperAdmin || false,
@@ -203,6 +201,8 @@ export function usePermissions() {
     canManageCompanyData: (companyId: string) => {
       if (permissionsData?.isSuperAdmin) return true;
       return permissionsData?.isContratante && permissionsData?.companyId === companyId;
-    }
+    },
+
+    error
   };
 }
