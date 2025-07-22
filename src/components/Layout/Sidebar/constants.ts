@@ -9,7 +9,8 @@ import {
   BarChart3,
   Wrench,
   Puzzle,
-  Building2
+  Building2,
+  ShoppingBag
 } from 'lucide-react';
 import { MenuItem } from './types';
 
@@ -37,6 +38,15 @@ export const menuItems: MenuItem[] = [
     submenu: [
       { title: 'Estoque', path: '/produtos/estoque' },
       { title: 'Categorias', path: '/produtos/categorias' }
+    ]
+  },
+  {
+    title: 'Compras',
+    icon: ShoppingBag,
+    path: '/compras',
+    submenu: [
+      { title: 'Pedidos de Compra', path: '/compras' },
+      { title: 'Cotações', path: '/compras/cotacoes' }
     ]
   },
   {

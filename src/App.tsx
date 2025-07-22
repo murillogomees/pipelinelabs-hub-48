@@ -12,6 +12,7 @@ import { Clientes } from "@/pages/Clientes";
 import Financeiro from "@/pages/Financeiro";
 import { NotasFiscais } from "@/pages/NotasFiscais";
 import { Producao } from "@/pages/Producao";
+import Compras from "@/pages/Compras";
 import { Admin } from "@/pages/Admin";
 import { AuthProvider } from "@/components/Auth/AuthProvider";
 import { AuthForm } from "@/components/Auth/AuthForm";
@@ -97,6 +98,11 @@ function AppContent() {
             <Route path="/producao/*" element={
               <MainLayout>
                 <Producao />
+              </MainLayout>
+            } />
+            <Route path="/compras/*" element={
+              <MainLayout>
+                <Compras />
               </MainLayout>
             } />
             <Route path="/relatorios/*" element={<Relatorios />} />
