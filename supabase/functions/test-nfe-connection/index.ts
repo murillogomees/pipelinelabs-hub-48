@@ -1,4 +1,5 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
+import { checkRateLimit, createRateLimitHeaders } from "../_shared/rate-limiter.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -8,6 +9,17 @@ const corsHeaders = {
 serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
+  }
+
+  // Apply rate limiting: 20 requests per minute for connection tests
+  const rateLimitResponse = await checkRateLimit(req, {
+    maxRequests: 20,
+    windowMs: 60000,
+    message: 'Muitas tentativas de conexão. Tente novamente em alguns instantes.'
+  });
+
+  if (rateLimitResponse) {
+    return rateLimitResponse;
   }
 
   try {

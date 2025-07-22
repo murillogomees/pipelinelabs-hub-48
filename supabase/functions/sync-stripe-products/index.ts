@@ -1,6 +1,7 @@
 
 import { serve } from "https://deno.land/std@0.170.0/http/server.ts";
 import Stripe from 'https://esm.sh/stripe@12.18.0?target=deno';
+import { checkRateLimit, createRateLimitHeaders } from "../_shared/rate-limiter.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -30,6 +31,17 @@ serve(async (req) => {
     return new Response(null, {
       headers: corsHeaders,
     });
+  }
+
+  // Apply rate limiting: 10 requests per minute for Stripe sync
+  const rateLimitResponse = await checkRateLimit(req, {
+    maxRequests: 10,
+    windowMs: 60000,
+    message: 'Muitas tentativas de sincronização. Tente novamente em alguns instantes.'
+  });
+
+  if (rateLimitResponse) {
+    return rateLimitResponse;
   }
 
   try {

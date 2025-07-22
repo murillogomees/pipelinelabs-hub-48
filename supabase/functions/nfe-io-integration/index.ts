@@ -1,5 +1,6 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { checkRateLimit, createRateLimitHeaders } from "../_shared/rate-limiter.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -332,6 +333,17 @@ const handler = async (req: Request): Promise<Response> => {
     return new Response(null, { headers: corsHeaders });
   }
 
+  // Apply rate limiting: 30 requests per minute for NFE operations
+  const rateLimitResponse = await checkRateLimit(req, {
+    maxRequests: 30,
+    windowMs: 60000, // 1 minute
+    message: 'Muitas requisições para integração NFE.io. Tente novamente em alguns instantes.'
+  });
+
+  if (rateLimitResponse) {
+    return rateLimitResponse;
+  }
+
   try {
     const { action, config, nfeData, nfeId, reason, format, isProduct } = await req.json();
     
@@ -391,11 +403,20 @@ const handler = async (req: Request): Promise<Response> => {
         throw new Error(`Ação não reconhecida: ${action}`);
     }
 
+    // Add rate limit headers to successful responses
+    const rateLimitHeaders = createRateLimitHeaders(
+      req.headers.get('authorization') ? `user:${req.headers.get('authorization')?.split('.')[1]}` : 
+      `ip:${req.headers.get('x-forwarded-for') || req.headers.get('x-real-ip') || 'unknown'}`,
+      30,
+      60000
+    );
+
     return new Response(JSON.stringify(result), {
       status: 200,
       headers: {
         "Content-Type": "application/json",
         ...corsHeaders,
+        ...rateLimitHeaders,
       },
     });
 
