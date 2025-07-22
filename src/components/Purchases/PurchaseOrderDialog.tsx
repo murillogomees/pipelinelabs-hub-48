@@ -34,7 +34,7 @@ interface OrderItem {
 
 export function PurchaseOrderDialog({ open, onOpenChange, onSubmit, initialData }: PurchaseOrderDialogProps) {
   const { suppliers } = useSuppliers();
-  const { products } = useProducts();
+  const { data: products } = useProducts();
 
   const [formData, setFormData] = useState({
     supplier_id: '',
@@ -199,7 +199,7 @@ export function PurchaseOrderDialog({ open, onOpenChange, onSubmit, initialData 
                     value={formData.supplier_id}
                     onValueChange={handleSupplierChange}
                     placeholder="Selecione um fornecedor"
-                    options={suppliers?.map(supplier => ({
+                    staticOptions={suppliers?.map(supplier => ({
                       value: supplier.id,
                       label: supplier.name
                     })) || []}
@@ -290,7 +290,7 @@ export function PurchaseOrderDialog({ open, onOpenChange, onSubmit, initialData 
                           }));
                         }}
                         placeholder="Selecione um produto"
-                        options={products?.map(product => ({
+                        staticOptions={products?.map(product => ({
                           value: product.id,
                           label: `${product.name} - ${product.code}`
                         })) || []}
