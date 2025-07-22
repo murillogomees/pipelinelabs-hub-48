@@ -18,7 +18,8 @@ import {
   HardDrive,
   Building2,
   Type,
-  Shield
+  Shield,
+  Palette
 } from 'lucide-react';
 
 export const menuItems = [
@@ -129,7 +130,8 @@ export const menuItems = [
       { title: 'Notificações', path: '/admin/notificacoes' },
       { title: 'Backup', path: '/admin/backup' },
       { title: 'Integração ERP', path: '/admin/integracao-erp' },
-      { title: 'Logs de Auditoria', path: '/admin/audit-logs' }
+      { title: 'Logs de Auditoria', path: '/admin/audit-logs' },
+      { title: 'Landing Page', path: '/admin/landing-page' }
     ]
   }
 ];

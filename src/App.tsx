@@ -38,6 +38,10 @@ const AdminIntegracoes = React.lazy(() => import('@/pages/AdminIntegracoes').the
 const AdminNotificacoes = React.lazy(() => import('@/pages/AdminNotificacoes').then(module => ({ default: module.AdminNotificacoes })));
 const AdminBackup = React.lazy(() => import('@/pages/AdminBackup'));
 const AdminAuditLogs = React.lazy(() => import('@/pages/AdminAuditLogs'));
+const AdminLandingPage = React.lazy(() => import('@/pages/AdminLandingPage').then(module => ({ default: module.AdminLandingPage })));
+
+// Landing Page
+const LandingPage = React.lazy(() => import('@/pages/LandingPage').then(module => ({ default: module.LandingPage })));
 
 // Loading components para diferentes tamanhos
 const PageLoader = () => (
@@ -112,10 +116,16 @@ function RouteHandler() {
 
   return (
     <Routes>
+      {/* Landing page for non-authenticated users */}
+      <Route 
+        path="/" 
+        element={!isAuthenticated ? <LandingPage /> : <Navigate to="/dashboard" replace />} 
+      />
+      
       {/* Auth route */}
       <Route 
         path="/auth" 
-        element={isAuthenticated ? <Navigate to="/" replace /> : <Auth />} 
+        element={isAuthenticated ? <Navigate to="/dashboard" replace /> : <Auth />} 
       />
       
       {/* Protected routes */}
@@ -129,6 +139,7 @@ function RouteHandler() {
         </ProtectedRoute>
       }>
         <Route index element={<Navigate to="/dashboard" replace />} />
+        <Route path="/landing" element={<Navigate to="/" replace />} />
         <Route path="/dashboard" element={<Dashboard />} />
         <Route path="/vendas" element={<Vendas />} />
         <Route path="/vendas/pedidos" element={<div>Pedidos</div>} />
@@ -166,6 +177,7 @@ function RouteHandler() {
         <Route path="/admin/notificacoes" element={<ProtectedRoute requireAdmin><AdminNotificacoes /></ProtectedRoute>} />
         <Route path="/admin/backup" element={<ProtectedRoute requireSuperAdmin><AdminBackup /></ProtectedRoute>} />
         <Route path="/admin/audit-logs" element={<ProtectedRoute requireAdmin><AdminAuditLogs /></ProtectedRoute>} />
+        <Route path="/admin/landing-page" element={<ProtectedRoute requireSuperAdmin><AdminLandingPage /></ProtectedRoute>} />
         
         <Route path="*" element={<NotFound />} />
       </Route>
