@@ -2,7 +2,7 @@
 import React, { useState } from 'react';
 import { User, Menu, LogOut, Settings, Crown, Users } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { useAuth } from '@/components/Auth/AuthProvider';
+import { useAuth } from '@/hooks/useAuth';
 import { usePermissions } from '@/hooks/usePermissions';
 import { NotificationBell } from '@/components/Notifications/NotificationBell';
 import { GlobalSearchTrigger } from '@/components/Search/GlobalSearchTrigger';
