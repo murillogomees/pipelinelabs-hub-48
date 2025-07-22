@@ -37,7 +37,7 @@ export function useCertificateManager() {
       // Encrypt certificate and password
       const encryptionResult = await CertificateEncryption.encryptCertificate(arrayBuffer, password);
       
-      // Update company settings with encrypted data using the correct field names
+      // Update company settings using existing database fields
       const updateData = {
         certificate_data: encryptionResult.encryptedCertificate,
         certificate_password_encrypted: encryptionResult.encryptedPassword,
@@ -221,7 +221,7 @@ export function useCertificateManager() {
       
       if (!user || !userCompany?.company_id) return;
 
-      // Create audit log entry directly in the table
+      // Use the correct table name - 'audit_logs' not 'audit_log'
       await supabase.from('audit_logs').insert({
         company_id: userCompany.company_id,
         user_id: user.id,
