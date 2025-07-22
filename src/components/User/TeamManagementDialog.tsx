@@ -7,7 +7,7 @@ import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useTeamMembers, useInviteTeamMember, useRemoveTeamMember } from '@/hooks/useTeamManagement';
-import { useAuth } from '@/hooks/useAuth';
+import { usePermissions } from '@/hooks/usePermissions';
 import { User, UserPlus, Mail, Trash2, Shield, Users } from 'lucide-react';
 
 interface TeamManagementDialogProps {
@@ -16,7 +16,7 @@ interface TeamManagementDialogProps {
 }
 
 export function TeamManagementDialog({ open, onOpenChange }: TeamManagementDialogProps) {
-  const { isAdmin } = useAuth();
+  const { isAdmin } = usePermissions();
   const { data: teamMembers = [] } = useTeamMembers();
   const inviteTeamMember = useInviteTeamMember();
   const removeTeamMember = useRemoveTeamMember();

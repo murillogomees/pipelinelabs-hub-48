@@ -17,7 +17,7 @@ import {
   Settings
 } from 'lucide-react';
 import { useNFeIntegration } from '@/hooks/useNFeIntegration';
-import { useUserRole } from '@/hooks/useUserRole';
+import { usePermissions } from '@/hooks/usePermissions';
 
 interface CertificateStatusProps {
   certificateInfo?: any;
@@ -75,7 +75,7 @@ const CertificateStatus = ({ certificateInfo, isLoading }: CertificateStatusProp
 };
 
 export const ContratanteCertificateManager = () => {
-  const { isContratante } = useUserRole();
+  const { isContratante } = usePermissions();
   const { 
     saveNFeConfig, 
     validateCertificate,
