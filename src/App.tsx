@@ -15,18 +15,18 @@ const Dashboard = React.lazy(() => import('@/pages/Dashboard').then(module => ({
 const Vendas = React.lazy(() => import('@/pages/Vendas').then(module => ({ default: module.Vendas })));
 const Produtos = React.lazy(() => import('@/pages/Produtos').then(module => ({ default: module.Produtos })));
 const Clientes = React.lazy(() => import('@/pages/Clientes').then(module => ({ default: module.Clientes })));
-const Compras = React.lazy(() => import('@/pages/Compras').then(module => ({ default: module.Compras || (() => <div>Compras</div>) })));
-const Financeiro = React.lazy(() => import('@/pages/Financeiro').then(module => ({ default: module.Financeiro || (() => <div>Financeiro</div>) })));
+const Compras = React.lazy(() => import('@/pages/Compras'));
+const Financeiro = React.lazy(() => import('@/pages/Financeiro'));
 const NotasFiscais = React.lazy(() => import('@/pages/NotasFiscais').then(module => ({ default: module.NotasFiscais })));
 const Producao = React.lazy(() => import('@/pages/Producao').then(module => ({ default: module.Producao })));
 const Relatorios = React.lazy(() => import('@/pages/Relatorios').then(module => ({ default: module.Relatorios })));
-const Configuracoes = React.lazy(() => import('@/pages/Configuracoes').then(module => ({ default: module.Configuracoes || (() => <div>Configurações</div>) })));
+const Configuracoes = React.lazy(() => import('@/pages/Configuracoes'));
 const Integracoes = React.lazy(() => import('@/pages/Integracoes').then(module => ({ default: module.Integracoes })));
-const Estoque = React.lazy(() => import('@/pages/Estoque').then(module => ({ default: module.Estoque || (() => <div>Estoque</div>) })));
+const Estoque = React.lazy(() => import('@/pages/Estoque'));
 const EmissaoFiscal = React.lazy(() => import('@/pages/EmissaoFiscal').then(module => ({ default: module.EmissaoFiscal })));
-const ConfiguracaoNFe = React.lazy(() => import('@/pages/ConfiguracaoNFe').then(module => ({ default: module.ConfiguracaoNFe || (() => <div>Configuração NFe</div>) })));
-const ConfiguracoesIntegracoes = React.lazy(() => import('@/pages/ConfiguracoesIntegracoes').then(module => ({ default: module.ConfiguracoesIntegracoes || (() => <div>Integrações</div>) })));
-const NotFound = React.lazy(() => import('@/pages/NotFound').then(module => ({ default: module.NotFound || (() => <div>404 - Página não encontrada</div>) })));
+const ConfiguracaoNFe = React.lazy(() => import('@/pages/ConfiguracaoNFe'));
+const ConfiguracoesIntegracoes = React.lazy(() => import('@/pages/ConfiguracoesIntegracoes').then(module => ({ default: module.ConfiguracoesIntegracoes })));
+const NotFound = React.lazy(() => import('@/pages/NotFound'));
 
 // Admin pages
 const Admin = React.lazy(() => import('@/pages/Admin').then(module => ({ default: module.Admin })));
