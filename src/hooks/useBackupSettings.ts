@@ -42,7 +42,7 @@ export function useBackupSettings() {
     mutationFn: async (settings: Partial<BackupSettings>) => {
       const { data, error } = await supabase
         .from("backup_settings")
-        .upsert(settings)
+        .upsert(settings as any)
         .select()
         .single();
 

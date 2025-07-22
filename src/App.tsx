@@ -1,17 +1,19 @@
+
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { Toaster } from '@/components/ui/toaster';
 import { MainLayout } from '@/components/Layout/MainLayout';
 import { ProtectedRoute } from '@/components/ProtectedRoute';
 import { useAuth } from '@/hooks/useAuth';
-import Auth from '@/pages/Auth';
-import Admin from '@/pages/Admin';
-import AdminPlanos from '@/pages/AdminPlanos';
-import AdminUsuarios from '@/pages/AdminUsuarios';
-import AdminIntegracoes from '@/pages/AdminIntegracoes';
-import AdminNotificacoes from '@/pages/AdminNotificacoes';
-import IntegracaoERP from '@/pages/Admin/IntegracaoERP';
+import { Auth } from '@/pages/Auth';
+import { Admin } from '@/pages/Admin';
+import { AdminPlanos } from '@/pages/AdminPlanos';
+import { AdminUsuarios } from '@/pages/AdminUsuarios';
+import { AdminIntegracoes } from '@/pages/AdminIntegracoes';
+import { AdminNotificacoes } from '@/pages/AdminNotificacoes';
+import { IntegracaoERP } from '@/pages/IntegracaoERP';
 import React from 'react';
+import { Outlet } from 'react-router-dom';
 
 const AdminBackup = React.lazy(() => import('./pages/AdminBackup'));
 
@@ -53,7 +55,9 @@ function App() {
           {/* Protected routes */}
           <Route path="/" element={
             <ProtectedRoute>
-              <MainLayout />
+              <MainLayout>
+                <Outlet />
+              </MainLayout>
             </ProtectedRoute>
           }>
             <Route index element={<Navigate to="/dashboard" replace />} />

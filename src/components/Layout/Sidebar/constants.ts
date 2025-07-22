@@ -3,31 +3,37 @@ import {
   Home, 
   ShoppingCart, 
   Package, 
+  ShoppingBag, 
   Users, 
   DollarSign, 
   FileText, 
   Settings, 
-  BarChart3,
-  Wrench,
-  Puzzle,
+  BarChart3, 
+  Zap, 
+  FileSpreadsheet,
+  Settings2,
+  UserCheck,
+  CreditCard,
+  Bell,
+  HardDrive,
   Building2,
-  ShoppingBag,
-  Database
+  Type
 } from 'lucide-react';
-import { MenuItem } from './types';
 
-export const menuItems: MenuItem[] = [
+export const menuItems = [
   {
     title: 'Dashboard',
     icon: Home,
-    path: '/',
-    submenu: []
+    path: '/dashboard',
+    expanded: false,
+    children: []
   },
   {
     title: 'Vendas',
     icon: ShoppingCart,
     path: '/vendas',
-    submenu: [
+    expanded: false,
+    children: [
       { title: 'Pedidos', path: '/vendas/pedidos' },
       { title: 'PDV', path: '/vendas/pdv' },
       { title: 'Propostas', path: '/vendas/propostas' }
@@ -37,7 +43,8 @@ export const menuItems: MenuItem[] = [
     title: 'Produtos',
     icon: Package,
     path: '/produtos',
-    submenu: [
+    expanded: false,
+    children: [
       { title: 'Estoque', path: '/produtos/estoque' },
       { title: 'Categorias', path: '/produtos/categorias' }
     ]
@@ -46,8 +53,8 @@ export const menuItems: MenuItem[] = [
     title: 'Compras',
     icon: ShoppingBag,
     path: '/compras',
-    submenu: [
-      { title: 'Pedidos de Compra', path: '/compras' },
+    expanded: false,
+    children: [
       { title: 'Cotações', path: '/compras/cotacoes' }
     ]
   },
@@ -55,8 +62,8 @@ export const menuItems: MenuItem[] = [
     title: 'Clientes',
     icon: Users,
     path: '/clientes',
-    submenu: [
-      { title: 'Clientes', path: '/clientes' },
+    expanded: false,
+    children: [
       { title: 'Fornecedores', path: '/clientes/fornecedores' }
     ]
   },
@@ -64,7 +71,8 @@ export const menuItems: MenuItem[] = [
     title: 'Financeiro',
     icon: DollarSign,
     path: '/financeiro',
-    submenu: [
+    expanded: false,
+    children: [
       { title: 'Contas a Pagar', path: '/financeiro/pagar' },
       { title: 'Contas a Receber', path: '/financeiro/receber' },
       { title: 'Conciliação', path: '/financeiro/conciliacao' }
@@ -74,19 +82,26 @@ export const menuItems: MenuItem[] = [
     title: 'Notas Fiscais',
     icon: FileText,
     path: '/notas-fiscais',
-    submenu: [
+    expanded: false,
+    children: [
       { title: 'NFe', path: '/notas-fiscais/nfe' },
       { title: 'NFCe', path: '/notas-fiscais/nfce' },
-      { title: 'NFSe', path: '/notas-fiscais/nfse' },
-      { title: 'Emissão Fiscal', path: '/emissao-fiscal' }
+      { title: 'NFSe', path: '/notas-fiscais/nfse' }
     ]
   },
   {
+    title: 'Emissão Fiscal',
+    icon: FileSpreadsheet,
+    path: '/emissao-fiscal',
+    expanded: false,
+    children: []
+  },
+  {
     title: 'Produção',
-    icon: Wrench,
+    icon: Settings2,
     path: '/producao',
-    submenu: [
-      { title: 'Produção', path: '/producao' },
+    expanded: false,
+    children: [
       { title: 'Ordens de Serviço', path: '/producao/os' }
     ]
   },
@@ -94,36 +109,38 @@ export const menuItems: MenuItem[] = [
     title: 'Relatórios',
     icon: BarChart3,
     path: '/relatorios',
-    submenu: []
+    expanded: false,
+    children: []
   },
   {
     title: 'Integrações',
-    icon: Puzzle,
+    icon: Zap,
     path: '/integracoes',
-    submenu: [],
-    adminOnly: false
+    expanded: false,
+    children: []
   },
   {
-    title: 'Admin',
-    icon: Building2,
+    title: 'Configurações',
+    icon: Settings,
+    path: '/configuracoes',
+    expanded: false,
+    children: [
+      { title: 'Configuração NFE.io', path: '/configuracoes/nfe' }
+    ]
+  },
+  {
+    title: 'Administração',
+    icon: UserCheck,
     path: '/admin',
-    submenu: [
-      { title: 'Painel Geral', path: '/admin' },
+    expanded: false,
+    adminOnly: true,
+    children: [
       { title: 'Planos', path: '/admin/planos' },
       { title: 'Usuários', path: '/admin/usuarios' },
       { title: 'Integrações', path: '/admin/integracoes' },
       { title: 'Notificações', path: '/admin/notificacoes' },
       { title: 'Backup', path: '/admin/backup' },
       { title: 'Integração ERP', path: '/admin/integracao-erp' }
-    ],
-    adminOnly: true
-  },
-  {
-    title: 'Configurações',
-    icon: Settings,
-    path: '/configuracoes',
-    submenu: [
-      { title: 'Configuração NFE.io', path: '/configuracoes/nfe' }
     ]
   }
 ];
