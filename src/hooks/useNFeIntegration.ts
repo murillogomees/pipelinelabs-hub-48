@@ -1,3 +1,4 @@
+
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
@@ -40,18 +41,23 @@ export const useNFeIntegration = () => {
   const { data: nfeIntegration, isLoading: isLoadingIntegration } = useQuery({
     queryKey: ['nfe-integration-available'],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from('integrations_available')
-        .select('*')
-        .eq('name', 'NFE.io')
-        .eq('type', 'fiscal')
-        .maybeSingle();
-      
-      if (error) {
-        console.error('Erro ao carregar integração NFE.io:', error);
-        throw error;
+      try {
+        const { data, error } = await supabase
+          .from('integrations_available')
+          .select('*')
+          .eq('name', 'NFE.io')
+          .eq('type', 'fiscal')
+          .maybeSingle();
+        
+        if (error) {
+          console.error('Erro ao carregar integração NFE.io:', error);
+          throw error;
+        }
+        return data;
+      } catch (err) {
+        console.error('Erro ao carregar integração NFE.io:', err);
+        return null;
       }
-      return data;
     },
     retry: 2,
     staleTime: 5 * 60 * 1000 // 5 minutos
@@ -63,18 +69,23 @@ export const useNFeIntegration = () => {
     queryFn: async () => {
       if (!nfeIntegration?.id || !userCompanyId) return null;
       
-      const { data, error } = await supabase
-        .from('company_integrations')
-        .select('*')
-        .eq('integration_id', nfeIntegration.id)
-        .eq('company_id', userCompanyId)
-        .maybeSingle();
-      
-      if (error) {
-        console.error('Erro ao carregar configuração NFE da empresa:', error);
-        throw error;
+      try {
+        const { data, error } = await supabase
+          .from('company_integrations')
+          .select('*')
+          .eq('integration_id', nfeIntegration.id)
+          .eq('company_id', userCompanyId)
+          .maybeSingle();
+        
+        if (error) {
+          console.error('Erro ao carregar configuração NFE da empresa:', error);
+          throw error;
+        }
+        return data;
+      } catch (err) {
+        console.error('Erro ao carregar configuração NFE da empresa:', err);
+        return null;
       }
-      return data;
     },
     enabled: !!nfeIntegration?.id && !!userCompanyId,
     retry: 2,
