@@ -75,7 +75,8 @@ export const menuItems: MenuItem[] = [
     submenu: [
       { title: 'NFe', path: '/notas-fiscais/nfe' },
       { title: 'NFCe', path: '/notas-fiscais/nfce' },
-      { title: 'NFSe', path: '/notas-fiscais/nfse' }
+      { title: 'NFSe', path: '/notas-fiscais/nfse' },
+      { title: 'Emissão Fiscal', path: '/emissao-fiscal' }
     ]
   },
   {

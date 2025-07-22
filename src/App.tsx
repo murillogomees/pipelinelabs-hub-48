@@ -15,7 +15,7 @@ import { Producao } from "@/pages/Producao";
 import Compras from "@/pages/Compras";
 import { Admin } from "@/pages/Admin";
 import { AuthProvider } from "@/components/Auth/AuthProvider";
-import { AuthForm } from "@/components/Auth/AuthForm";
+import { Auth } from "@/pages/Auth";
 import { useAuth } from "@/components/Auth/AuthProvider";
 import { SignUpCompany } from "@/pages/SignUpCompany";
 import { Integracoes } from "@/pages/Integracoes";
@@ -33,6 +33,7 @@ import NotFound from "@/pages/NotFound";
 import LandingPage from "@/pages/LandingPage";
 import AdminLandingPage from "@/pages/AdminLandingPage";
 import ConfiguracaoNFe from "@/pages/ConfiguracaoNFe";
+import { EmissaoFiscal } from "@/pages/EmissaoFiscal";
 
 const queryClient = new QueryClient();
 
@@ -53,18 +54,56 @@ function AppContent() {
   return (
     <BrowserRouter>
       <Routes>
-        {/* Rota principal - Landing Page */}
-        <Route path="/" element={<LandingPage />} />
+        {/* Rota principal - Landing Page para não autenticados, Dashboard para autenticados */}
+        <Route path="/" element={
+          user ? (
+            <MainLayout>
+              <Dashboard />
+            </MainLayout>
+          ) : (
+            <LandingPage />
+          )
+        } />
         
         {/* Rota pública para cadastro de empresa */}
-        <Route path="/cadastro-empresa" element={<SignUpCompany />} />
+        <Route path="/cadastro-empresa" element={
+          user ? (
+            <MainLayout>
+              <Dashboard />
+            </MainLayout>
+          ) : (
+            <SignUpCompany />
+          )
+        } />
         
-        {/* Rota de login para usuários não autenticados */}
-        <Route path="/login" element={<AuthForm />} />
+        {/* Rota de autenticação para usuários não autenticados */}
+        <Route path="/auth" element={
+          user ? (
+            <MainLayout>
+              <Dashboard />
+            </MainLayout>
+          ) : (
+            <Auth />
+          )
+        } />
+        <Route path="/login" element={
+          user ? (
+            <MainLayout>
+              <Dashboard />
+            </MainLayout>
+          ) : (
+            <Auth />
+          )
+        } />
         
         {/* Rotas protegidas para usuários autenticados */}
         {user ? (
           <>
+            <Route path="/app" element={
+              <MainLayout>
+                <Dashboard />
+              </MainLayout>
+            } />
             <Route path="/dashboard" element={
               <MainLayout>
                 <Dashboard />
@@ -180,6 +219,11 @@ function AppContent() {
             <Route path="/configuracoes/nfe" element={
               <MainLayout>
                 <ConfiguracaoNFe />
+              </MainLayout>
+            } />
+            <Route path="/emissao-fiscal" element={
+              <MainLayout>
+                <EmissaoFiscal />
               </MainLayout>
             } />
           </>
