@@ -1,5 +1,5 @@
+
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -18,11 +18,8 @@ serve(async (req) => {
       throw new Error("Stripe secret key é obrigatório");
     }
 
-    // Simular sincronização com Stripe (em produção usar SDK oficial)
-    // const stripe = new Stripe(stripe_secret_key);
-    // const products = await stripe.products.list();
-    
-    // Para demo, simular produtos
+    // This is a simplified version that just returns mock data
+    // In production, you would use the Stripe SDK to fetch real data
     const mockProducts = [
       { id: "prod_basic", name: "Plano Básico", active: true },
       { id: "prod_premium", name: "Plano Premium", active: true },
