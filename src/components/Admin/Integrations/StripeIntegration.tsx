@@ -76,9 +76,9 @@ export function StripeIntegration() {
     setSelectedPrice('');
   };
 
-  const handleDeleteMapping = (id: string) => {
+  const handleDeleteMapping = (planId: string) => {
     if (window.confirm('Tem certeza que deseja remover este mapeamento?')) {
-      deletePlanMapping.mutate(id);
+      deletePlanMapping.mutate(planId);
     }
   };
 
@@ -249,20 +249,20 @@ export function StripeIntegration() {
                       </TableRow>
                     </TableHeader>
                     <TableBody>
-                      {stripeMappings.map(mapping => (
-                        <TableRow key={mapping.id}>
+                       {stripeMappings.map(mapping => (
+                         <TableRow key={mapping.id}>
+                           <TableCell>
+                             {plans?.find(p => p.id === (mapping as any).plan_id)?.name || (mapping as any).plan_id}
+                           </TableCell>
+                           <TableCell className="font-mono text-sm">
+                             {(mapping as any).stripe_product_id}
+                           </TableCell>
                           <TableCell>
-                            {plans?.find(p => p.id === mapping.plan_id)?.name || mapping.plan_id}
-                          </TableCell>
-                          <TableCell className="font-mono text-sm">
-                            {mapping.stripe_product_id}
-                          </TableCell>
-                          <TableCell>
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              onClick={() => handleDeleteMapping(mapping.id)}
-                            >
+                             <Button
+                               variant="ghost"
+                               size="icon"
+                               onClick={() => handleDeleteMapping((mapping as any).plan_id)}
+                             >
                               <Trash2 className="h-4 w-4" />
                             </Button>
                           </TableCell>

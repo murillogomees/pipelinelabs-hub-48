@@ -64,13 +64,13 @@ export function useStripeIntegration(companyId?: string) {
           } as StripeSettings;
         }
 
-        // Safe property access with fallbacks
+        // Safe property access with fallbacks - using correct column names
         return {
-          secretKey: (data as any)?.stripe_secret_key || '',
-          publishableKey: (data as any)?.stripe_publishable_key || '',
-          webhookSecret: (data as any)?.stripe_webhook_secret || '',
-          products: (data as any)?.stripe_products || {},
-          planMappings: (data as any)?.stripe_plan_mappings || {}
+          secretKey: (data as any).stripe_secret_key || '',
+          publishableKey: (data as any).stripe_publishable_key || '',
+          webhookSecret: (data as any).stripe_webhook_secret || '',
+          products: (data as any).stripe_products || {},
+          planMappings: {}
         } as StripeSettings;
       } catch (err) {
         console.error('Error in stripeSettings query:', err);
@@ -81,28 +81,30 @@ export function useStripeIntegration(companyId?: string) {
     refetchOnWindowFocus: false
   });
 
-  // Convert plan mappings from settings to array format
+  // Get stripe mappings from the existing table
   const { data: stripeMappings, isLoading: mappingsLoading } = useQuery({
-    queryKey: ['stripe-mappings', companyId, stripeSettings?.planMappings],
+    queryKey: ['stripe-mappings', companyId],
     queryFn: async () => {
-      if (!stripeSettings?.planMappings) return [];
+      if (!companyId) return [];
 
       try {
-        // Convert the planMappings object to StripeMapping array
-        const mappings: StripeMapping[] = Object.entries(stripeSettings.planMappings).map(([planId, mapping]) => ({
-          id: `mapping-${planId}`,
-          plan_id: planId,
-          stripe_product_id: mapping.stripeProductId,
-          stripe_price_id: mapping.stripePriceId
-        }));
+        const { data, error } = await (supabase as any)
+          .from('stripe_products_mapping')
+          .select('*')
+          .eq('company_id', companyId);
 
-        return mappings;
+        if (error) {
+          console.error('Error fetching stripe mappings:', error);
+          return [];
+        }
+
+        return (data || []) as StripeMapping[];
       } catch (err) {
-        console.error('Error processing stripe mappings:', err);
+        console.error('Error in stripeMappings query:', err);
         return [];
       }
     },
-    enabled: !!stripeSettings?.planMappings,
+    enabled: !!companyId,
     refetchOnWindowFocus: false
   });
 
@@ -115,7 +117,7 @@ export function useStripeIntegration(companyId?: string) {
         // Check if company_settings exists for this company
         const { data: existingSettings, error: checkError } = await supabase
           .from('company_settings')
-          .select('id, stripe_plan_mappings')
+          .select('id')
           .eq('company_id', companyId)
           .maybeSingle();
 
@@ -128,7 +130,7 @@ export function useStripeIntegration(companyId?: string) {
         } as any;
 
         if (existingSettings) {
-          // Update existing settings, preserve existing plan mappings
+          // Update existing settings
           const { error } = await supabase
             .from('company_settings')
             .update(updateData)
@@ -141,9 +143,7 @@ export function useStripeIntegration(companyId?: string) {
             .from('company_settings')
             .insert({
               company_id: companyId,
-              ...updateData,
-              stripe_products: {},
-              stripe_plan_mappings: {}
+              ...updateData
             } as any);
 
           if (error) throw error;
@@ -241,35 +241,17 @@ export function useStripeIntegration(companyId?: string) {
       if (!companyId) throw new Error('Company ID is required');
 
       try {
-        // Get current company settings
-        const { data: settings, error: fetchError } = await supabase
-          .from('company_settings')
-          .select('stripe_plan_mappings')
-          .eq('company_id', companyId)
-          .maybeSingle();
-
-        if (fetchError) throw fetchError;
-
-        // Get existing mappings or create empty object
-        const currentMappings = (settings as any)?.stripe_plan_mappings || {};
-        
-        // Add or update the mapping
-        const updatedMappings = {
-          ...currentMappings,
-          [mapping.planId]: {
-            stripeProductId: mapping.stripeProductId,
-            stripePriceId: mapping.stripePriceId
-          }
-        };
-
-        // Update the company settings
-        const { error } = await supabase
-          .from('company_settings')
-          .update({
-            stripe_plan_mappings: updatedMappings,
-            updated_at: new Date().toISOString()
-          } as any)
-          .eq('company_id', companyId);
+        // Use the stripe_products_mapping table (cast to any for TypeScript)
+        const { error } = await (supabase as any)
+          .from('stripe_products_mapping')
+          .upsert({
+            company_id: companyId,
+            plan_id: mapping.planId,
+            stripe_product_id: mapping.stripeProductId,
+            stripe_price_id: mapping.stripePriceId
+          }, {
+            onConflict: 'company_id,plan_id'
+          });
 
         if (error) throw error;
 
@@ -280,7 +262,6 @@ export function useStripeIntegration(companyId?: string) {
       }
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['stripe-settings', companyId] });
       queryClient.invalidateQueries({ queryKey: ['stripe-mappings', companyId] });
       toast({
         title: 'Mapeamento salvo',
@@ -302,29 +283,11 @@ export function useStripeIntegration(companyId?: string) {
       if (!companyId) throw new Error('Company ID is required');
 
       try {
-        // Get current company settings
-        const { data: settings, error: fetchError } = await supabase
-          .from('company_settings')
-          .select('stripe_plan_mappings')
+        const { error } = await (supabase as any)
+          .from('stripe_products_mapping')
+          .delete()
           .eq('company_id', companyId)
-          .maybeSingle();
-
-        if (fetchError) throw fetchError;
-
-        // Get existing mappings
-        const currentMappings = (settings as any)?.stripe_plan_mappings || {};
-        
-        // Remove the mapping
-        const { [planId]: removed, ...updatedMappings } = currentMappings;
-
-        // Update the company settings
-        const { error } = await supabase
-          .from('company_settings')
-          .update({
-            stripe_plan_mappings: updatedMappings,
-            updated_at: new Date().toISOString()
-          } as any)
-          .eq('company_id', companyId);
+          .eq('plan_id', planId);
 
         if (error) throw error;
         
@@ -335,7 +298,6 @@ export function useStripeIntegration(companyId?: string) {
       }
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['stripe-settings', companyId] });
       queryClient.invalidateQueries({ queryKey: ['stripe-mappings', companyId] });
       toast({
         title: 'Mapeamento removido',
