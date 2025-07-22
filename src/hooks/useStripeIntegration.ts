@@ -53,12 +53,12 @@ export function useStripeIntegration(companyId?: string) {
           return null;
         }
 
-        // Handle potential missing data or attributes
+        // Handle potential missing data or attributes - use safe property access
         return {
-          secretKey: data?.stripe_secret_key || '',
-          publishableKey: data?.stripe_publishable_key || '',
-          webhookSecret: data?.stripe_webhook_secret || '',
-          products: data?.stripe_products || {}
+          secretKey: (data as any)?.stripe_secret_key || '',
+          publishableKey: (data as any)?.stripe_publishable_key || '',
+          webhookSecret: (data as any)?.stripe_webhook_secret || '',
+          products: (data as any)?.stripe_products || {}
         } as StripeSettings;
       } catch (err) {
         console.error('Error in stripeSettings query:', err);
@@ -69,30 +69,16 @@ export function useStripeIntegration(companyId?: string) {
     refetchOnWindowFocus: false
   });
 
-  // Get plan mappings using RPC function if available, otherwise fallback to direct query
+  // Get plan mappings - using direct query approach only since RPC may not be available
   const { data: stripeMappings, isLoading: mappingsLoading } = useQuery({
     queryKey: ['stripe-mappings', companyId],
     queryFn: async () => {
       if (!companyId) return [];
 
       try {
-        // First, try using the RPC function if it exists
-        try {
-          const { data: rpcData, error: rpcError } = await supabase.rpc(
-            'get_stripe_mappings',
-            { company_uuid: companyId }
-          );
-          
-          if (!rpcError && rpcData) {
-            return rpcData as StripeMapping[];
-          }
-        } catch (rpcErr) {
-          console.log('RPC not available, falling back to direct query', rpcErr);
-        }
-
-        // Fallback to direct query
+        // Use direct query to stripe_products_mapping table with proper error handling
         const { data, error } = await supabase
-          .from('stripe_products_mapping')
+          .from('stripe_products_mapping' as any)
           .select('id, plan_id, stripe_product_id, stripe_price_id')
           .eq('company_id', companyId);
 
@@ -101,7 +87,7 @@ export function useStripeIntegration(companyId?: string) {
           return [];
         }
 
-        return data as StripeMapping[];
+        return (data || []) as StripeMapping[];
       } catch (err) {
         console.error('Error in stripeMappings query:', err);
         return [];
@@ -134,7 +120,7 @@ export function useStripeIntegration(companyId?: string) {
               stripe_secret_key: settings.secretKey,
               stripe_publishable_key: settings.publishableKey,
               stripe_webhook_secret: settings.webhookSecret
-            })
+            } as any)
             .eq('company_id', companyId);
 
           if (error) throw error;
@@ -148,7 +134,7 @@ export function useStripeIntegration(companyId?: string) {
               stripe_publishable_key: settings.publishableKey,
               stripe_webhook_secret: settings.webhookSecret,
               stripe_products: {}
-            });
+            } as any);
 
           if (error) throw error;
         }
@@ -216,7 +202,7 @@ export function useStripeIntegration(companyId?: string) {
         .from('company_settings')
         .update({
           stripe_products: data.products
-        })
+        } as any)
         .eq('company_id', companyId);
 
       if (error) throw error;
@@ -225,7 +211,7 @@ export function useStripeIntegration(companyId?: string) {
       
       toast({
         title: 'Produtos sincronizados',
-        description: `${data.products.length || 0} produtos sincronizados com sucesso.`,
+        description: `${data.products?.length || 0} produtos sincronizados com sucesso.`,
       });
     } catch (error: any) {
       console.error('Error syncing Stripe products:', error);
@@ -245,28 +231,9 @@ export function useStripeIntegration(companyId?: string) {
       if (!companyId) throw new Error('Company ID is required');
 
       try {
-        // First, try using the RPC function if it exists
-        try {
-          const { data: rpcData, error: rpcError } = await supabase.rpc(
-            'save_stripe_mapping',
-            {
-              company_uuid: companyId,
-              plan_uuid: mapping.planId,
-              s_product_id: mapping.stripeProductId,
-              s_price_id: mapping.stripePriceId
-            }
-          );
-          
-          if (!rpcError) {
-            return { success: true };
-          }
-        } catch (rpcErr) {
-          console.log('RPC not available, falling back to direct query', rpcErr);
-        }
-
-        // Fallback to direct query - first check if mapping exists
+        // Direct query approach - check if mapping exists
         const { data: existingMapping, error: queryError } = await supabase
-          .from('stripe_products_mapping')
+          .from('stripe_products_mapping' as any)
           .select('id')
           .eq('company_id', companyId)
           .eq('plan_id', mapping.planId)
@@ -277,7 +244,7 @@ export function useStripeIntegration(companyId?: string) {
         if (existingMapping) {
           // Update existing mapping
           const { error } = await supabase
-            .from('stripe_products_mapping')
+            .from('stripe_products_mapping' as any)
             .update({
               stripe_product_id: mapping.stripeProductId,
               stripe_price_id: mapping.stripePriceId,
@@ -289,7 +256,7 @@ export function useStripeIntegration(companyId?: string) {
         } else {
           // Create new mapping
           const { error } = await supabase
-            .from('stripe_products_mapping')
+            .from('stripe_products_mapping' as any)
             .insert({
               company_id: companyId,
               plan_id: mapping.planId,
@@ -326,23 +293,9 @@ export function useStripeIntegration(companyId?: string) {
   const deletePlanMapping = useMutation({
     mutationFn: async (mappingId: string) => {
       try {
-        // First, try using the RPC function if it exists
-        try {
-          const { error: rpcError } = await supabase.rpc(
-            'delete_stripe_mapping',
-            { mapping_uuid: mappingId }
-          );
-          
-          if (!rpcError) {
-            return { success: true };
-          }
-        } catch (rpcErr) {
-          console.log('RPC not available, falling back to direct query', rpcErr);
-        }
-
-        // Fallback to direct delete
+        // Direct delete approach
         const { error } = await supabase
-          .from('stripe_products_mapping')
+          .from('stripe_products_mapping' as any)
           .delete()
           .eq('id', mappingId);
 
