@@ -37,7 +37,7 @@ const AdminUsuarios = React.lazy(() => import('@/pages/AdminUsuarios'));
 const AdminIntegracoes = React.lazy(() => import('@/pages/AdminIntegracoes').then(module => ({ default: module.AdminIntegracoes })));
 const AdminNotificacoes = React.lazy(() => import('@/pages/AdminNotificacoes').then(module => ({ default: module.AdminNotificacoes })));
 const AdminBackup = React.lazy(() => import('@/pages/AdminBackup'));
-const IntegracaoERP = React.lazy(() => import('@/pages/IntegracaoERP'));
+const AdminAuditLogs = React.lazy(() => import('@/pages/AdminAuditLogs'));
 
 // Loading components para diferentes tamanhos
 const PageLoader = () => (
@@ -163,7 +163,7 @@ function RouteHandler() {
         <Route path="/admin/integracoes" element={<ProtectedRoute requireAdmin><AdminIntegracoes /></ProtectedRoute>} />
         <Route path="/admin/notificacoes" element={<ProtectedRoute requireAdmin><AdminNotificacoes /></ProtectedRoute>} />
         <Route path="/admin/backup" element={<ProtectedRoute requireSuperAdmin><AdminBackup /></ProtectedRoute>} />
-        <Route path="/admin/integracao-erp" element={<ProtectedRoute requireAdmin><IntegracaoERP /></ProtectedRoute>} />
+        <Route path="/admin/audit-logs" element={<ProtectedRoute requireAdmin><AdminAuditLogs /></ProtectedRoute>} />
         
         <Route path="*" element={<NotFound />} />
       </Route>

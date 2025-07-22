@@ -17,7 +17,8 @@ import {
   Bell,
   HardDrive,
   Building2,
-  Type
+  Type,
+  Shield
 } from 'lucide-react';
 
 export const menuItems = [
@@ -127,7 +128,8 @@ export const menuItems = [
       { title: 'Integrações', path: '/admin/integracoes' },
       { title: 'Notificações', path: '/admin/notificacoes' },
       { title: 'Backup', path: '/admin/backup' },
-      { title: 'Integração ERP', path: '/admin/integracao-erp' }
+      { title: 'Integração ERP', path: '/admin/integracao-erp' },
+      { title: 'Logs de Auditoria', path: '/admin/audit-logs' }
     ]
   }
 ];
