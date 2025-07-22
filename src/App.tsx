@@ -5,7 +5,7 @@ import { Toaster } from '@/components/ui/toaster';
 import { MainLayout } from '@/components/Layout/MainLayout';
 import { ProtectedRoute } from '@/components/ProtectedRoute';
 import { ErrorBoundary } from '@/components/ErrorBoundary';
-import { useAuth } from '@/hooks/useAuth';
+import { AuthProvider, useAuth } from '@/components/Auth/AuthProvider';
 import { Auth } from '@/pages/Auth';
 import React, { Suspense, useEffect } from 'react';
 import { Outlet, useLocation } from 'react-router-dom';
@@ -73,9 +73,10 @@ const queryClient = new QueryClient({
 });
 
 function AppRoutes() {
-  const { isAuthenticated, isLoading } = useAuth();
+  const { user, loading } = useAuth();
+  const isAuthenticated = !!user;
 
-  if (isLoading) {
+  if (loading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
@@ -91,7 +92,8 @@ function AppRoutes() {
 }
 
 function RouteHandler() {
-  const { isAuthenticated } = useAuth();
+  const { user } = useAuth();
+  const isAuthenticated = !!user;
   const location = useLocation();
 
   // Preload de componentes baseado na rota atual
@@ -176,10 +178,12 @@ function RouteHandler() {
 function App() {
   return (
     <QueryClientProvider client={queryClient}>
-      <ErrorBoundary>
-        <AppRoutes />
-        <Toaster />
-      </ErrorBoundary>
+      <AuthProvider>
+        <ErrorBoundary>
+          <AppRoutes />
+          <Toaster />
+        </ErrorBoundary>
+      </AuthProvider>
     </QueryClientProvider>
   );
 }
