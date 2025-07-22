@@ -163,9 +163,11 @@ function AppContent() {
               </MainLayout>
             } />
             <Route path="/admin/usuarios" element={
-              <ProtectedRoute requireAdmin>
-                <AdminUsuarios />
-              </ProtectedRoute>
+              <MainLayout>
+                <ProtectedRoute requireAdmin>
+                  <AdminUsuarios />
+                </ProtectedRoute>
+              </MainLayout>
             } />
             <Route path="/admin/planos" element={
               <MainLayout>

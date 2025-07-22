@@ -4,13 +4,11 @@ import { SidebarHeader } from './components/SidebarHeader';
 import { SidebarMenuItem } from './components/SidebarMenuItem';
 import { useSidebarState } from './hooks/useSidebarState';
 import { menuItems } from './constants';
-import { useAuth } from '@/hooks/useAuth';
-import { useSuperAdmin } from '@/hooks/useSuperAdmin';
+import { usePermissions } from '@/hooks/usePermissions';
 
 export function Sidebar({ collapsed, onNavigate }: SidebarProps) {
   const { expandedItems, toggleExpanded } = useSidebarState();
-  const { isAdmin } = useAuth();
-  const { isSuperAdmin } = useSuperAdmin();
+  const { isAdmin, isSuperAdmin } = usePermissions();
 
   return (
     <div className={cn(
