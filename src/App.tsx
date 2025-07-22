@@ -74,6 +74,24 @@ const queryClient = new QueryClient({
 
 function AppRoutes() {
   const { isAuthenticated, isLoading } = useAuth();
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+      </div>
+    );
+  }
+
+  return (
+    <Router>
+      <RouteHandler />
+    </Router>
+  );
+}
+
+function RouteHandler() {
+  const { isAuthenticated } = useAuth();
   const location = useLocation();
 
   // Preload de componentes baseado na rota atual
@@ -90,79 +108,68 @@ function AppRoutes() {
     }
   }, [isAuthenticated]);
 
-  if (isLoading) {
-    return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
-      </div>
-    );
-  }
-
   return (
-    <Router>
-      <Routes>
-        {/* Auth route */}
-        <Route 
-          path="/auth" 
-          element={isAuthenticated ? <Navigate to="/" replace /> : <Auth />} 
-        />
+    <Routes>
+      {/* Auth route */}
+      <Route 
+        path="/auth" 
+        element={isAuthenticated ? <Navigate to="/" replace /> : <Auth />} 
+      />
+      
+      {/* Protected routes */}
+      <Route path="/" element={
+        <ProtectedRoute>
+          <MainLayout>
+            <PageSuspenseBoundary>
+              <Outlet />
+            </PageSuspenseBoundary>
+          </MainLayout>
+        </ProtectedRoute>
+      }>
+        <Route index element={<Navigate to="/dashboard" replace />} />
+        <Route path="/dashboard" element={<Dashboard />} />
+        <Route path="/vendas" element={<Vendas />} />
+        <Route path="/vendas/pedidos" element={<div>Pedidos</div>} />
+        <Route path="/vendas/pdv" element={<div>PDV</div>} />
+        <Route path="/vendas/propostas" element={<div>Propostas</div>} />
+        <Route path="/produtos" element={<Produtos />} />
+        <Route path="/produtos/estoque" element={<Estoque />} />
+        <Route path="/produtos/categorias" element={<div>Categorias</div>} />
+        <Route path="/compras" element={<Compras />} />
+        <Route path="/compras/cotacoes" element={<div>Cotações</div>} />
+        <Route path="/clientes" element={<Clientes />} />
+        <Route path="/clientes/fornecedores" element={<div>Fornecedores</div>} />
+        <Route path="/financeiro" element={<Financeiro />} />
+        <Route path="/financeiro/pagar" element={<div>Contas a Pagar</div>} />
+        <Route path="/financeiro/receber" element={<div>Contas a Receber</div>} />
+        <Route path="/financeiro/conciliacao" element={<div>Conciliação</div>} />
+        <Route path="/notas-fiscais" element={<NotasFiscais />} />
+        <Route path="/notas-fiscais/nfe" element={<div>NFe</div>} />
+        <Route path="/notas-fiscais/nfce" element={<div>NFCe</div>} />
+        <Route path="/notas-fiscais/nfse" element={<div>NFSe</div>} />
+        <Route path="/emissao-fiscal" element={<EmissaoFiscal />} />
+        <Route path="/producao" element={<Producao />} />
+        <Route path="/producao/os" element={<div>Ordens de Serviço</div>} />
+        <Route path="/relatorios" element={<Relatorios />} />
+        <Route path="/integracoes" element={<Integracoes />} />
+        <Route path="/configuracoes" element={<Configuracoes />} />
+        <Route path="/configuracoes/nfe" element={<ConfiguracaoNFe />} />
+        <Route path="/configuracoes/integracoes" element={<ConfiguracoesIntegracoes />} />
         
-        {/* Protected routes */}
-        <Route path="/" element={
-          <ProtectedRoute>
-            <MainLayout>
-              <PageSuspenseBoundary>
-                <Outlet />
-              </PageSuspenseBoundary>
-            </MainLayout>
-          </ProtectedRoute>
-        }>
-          <Route index element={<Navigate to="/dashboard" replace />} />
-          <Route path="/dashboard" element={<Dashboard />} />
-          <Route path="/vendas" element={<Vendas />} />
-          <Route path="/vendas/pedidos" element={<div>Pedidos</div>} />
-          <Route path="/vendas/pdv" element={<div>PDV</div>} />
-          <Route path="/vendas/propostas" element={<div>Propostas</div>} />
-          <Route path="/produtos" element={<Produtos />} />
-          <Route path="/produtos/estoque" element={<Estoque />} />
-          <Route path="/produtos/categorias" element={<div>Categorias</div>} />
-          <Route path="/compras" element={<Compras />} />
-          <Route path="/compras/cotacoes" element={<div>Cotações</div>} />
-          <Route path="/clientes" element={<Clientes />} />
-          <Route path="/clientes/fornecedores" element={<div>Fornecedores</div>} />
-          <Route path="/financeiro" element={<Financeiro />} />
-          <Route path="/financeiro/pagar" element={<div>Contas a Pagar</div>} />
-          <Route path="/financeiro/receber" element={<div>Contas a Receber</div>} />
-          <Route path="/financeiro/conciliacao" element={<div>Conciliação</div>} />
-          <Route path="/notas-fiscais" element={<NotasFiscais />} />
-          <Route path="/notas-fiscais/nfe" element={<div>NFe</div>} />
-          <Route path="/notas-fiscais/nfce" element={<div>NFCe</div>} />
-          <Route path="/notas-fiscais/nfse" element={<div>NFSe</div>} />
-          <Route path="/emissao-fiscal" element={<EmissaoFiscal />} />
-          <Route path="/producao" element={<Producao />} />
-          <Route path="/producao/os" element={<div>Ordens de Serviço</div>} />
-          <Route path="/relatorios" element={<Relatorios />} />
-          <Route path="/integracoes" element={<Integracoes />} />
-          <Route path="/configuracoes" element={<Configuracoes />} />
-          <Route path="/configuracoes/nfe" element={<ConfiguracaoNFe />} />
-          <Route path="/configuracoes/integracoes" element={<ConfiguracoesIntegracoes />} />
-          
-          {/* Admin routes */}
-          <Route path="/admin" element={<ProtectedRoute requireAdmin><Admin /></ProtectedRoute>} />
-          <Route path="/admin/planos" element={<ProtectedRoute requireAdmin><AdminPlanos /></ProtectedRoute>} />
-          <Route path="/admin/usuarios" element={<ProtectedRoute requireAdmin><AdminUsuarios /></ProtectedRoute>} />
-          <Route path="/admin/integracoes" element={<ProtectedRoute requireAdmin><AdminIntegracoes /></ProtectedRoute>} />
-          <Route path="/admin/notificacoes" element={<ProtectedRoute requireAdmin><AdminNotificacoes /></ProtectedRoute>} />
-          <Route path="/admin/backup" element={<ProtectedRoute requireSuperAdmin><AdminBackup /></ProtectedRoute>} />
-          <Route path="/admin/integracao-erp" element={<ProtectedRoute requireAdmin><IntegracaoERP /></ProtectedRoute>} />
-          
-          <Route path="*" element={<NotFound />} />
-        </Route>
+        {/* Admin routes */}
+        <Route path="/admin" element={<ProtectedRoute requireAdmin><Admin /></ProtectedRoute>} />
+        <Route path="/admin/planos" element={<ProtectedRoute requireAdmin><AdminPlanos /></ProtectedRoute>} />
+        <Route path="/admin/usuarios" element={<ProtectedRoute requireAdmin><AdminUsuarios /></ProtectedRoute>} />
+        <Route path="/admin/integracoes" element={<ProtectedRoute requireAdmin><AdminIntegracoes /></ProtectedRoute>} />
+        <Route path="/admin/notificacoes" element={<ProtectedRoute requireAdmin><AdminNotificacoes /></ProtectedRoute>} />
+        <Route path="/admin/backup" element={<ProtectedRoute requireSuperAdmin><AdminBackup /></ProtectedRoute>} />
+        <Route path="/admin/integracao-erp" element={<ProtectedRoute requireAdmin><IntegracaoERP /></ProtectedRoute>} />
+        
+        <Route path="*" element={<NotFound />} />
+      </Route>
 
-        <Route path="*" element={<Navigate to="/" replace />} />
-      </Routes>
-      <Toaster />
-    </Router>
+      <Route path="*" element={<Navigate to="/" replace />} />
+    </Routes>
   );
 }
 
@@ -171,6 +178,7 @@ function App() {
     <QueryClientProvider client={queryClient}>
       <ErrorBoundary>
         <AppRoutes />
+        <Toaster />
       </ErrorBoundary>
     </QueryClientProvider>
   );
