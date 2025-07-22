@@ -5,6 +5,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { usePermissions } from '@/hooks/usePermissions';
 import { StripeIntegration } from '@/components/Admin/Integrations/StripeIntegration';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { NFEIntegration } from '@/components/Admin/Integrations/NFEIntegration';
 
 export default function IntegracaoERP() {
   const { isAdmin, canManagePlans } = usePermissions();
@@ -37,6 +38,7 @@ export default function IntegracaoERP() {
       <Tabs defaultValue="payment">
         <TabsList className="mb-6">
           <TabsTrigger value="payment">Pagamentos</TabsTrigger>
+          <TabsTrigger value="fiscal">Fiscal</TabsTrigger>
           <TabsTrigger value="erp">ERP</TabsTrigger>
           <TabsTrigger value="ecommerce">E-commerce</TabsTrigger>
         </TabsList>
@@ -44,6 +46,12 @@ export default function IntegracaoERP() {
         <TabsContent value="payment">
           <div className="grid grid-cols-1 gap-6">
             <StripeIntegration />
+          </div>
+        </TabsContent>
+
+        <TabsContent value="fiscal">
+          <div className="grid grid-cols-1 gap-6">
+            <NFEIntegration />
           </div>
         </TabsContent>
         

@@ -22,7 +22,7 @@ import { Integracoes } from "@/pages/Integracoes";
 import { AdminIntegracoes } from "@/pages/AdminIntegracoes";
 import AdminUsuarios from "@/pages/AdminUsuarios";
 import { AdminPlanos } from "@/pages/AdminPlanos";
-import { IntegracaoERP } from "@/pages/IntegracaoERP";
+import IntegracaoERP from '@/pages/IntegracaoERP';
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { ConfiguracoesIntegracoes } from "@/pages/ConfiguracoesIntegracoes";
 import { Notificacoes } from "@/pages/Notificacoes";
@@ -178,9 +178,7 @@ function AppContent() {
             } />
             <Route path="/admin/integracao-erp" element={
               <MainLayout>
-                <ProtectedRoute requireAdmin>
-                  <IntegracaoERP />
-                </ProtectedRoute>
+                <IntegracaoERP />
               </MainLayout>
             } />
             <Route path="/admin/notificacoes" element={
