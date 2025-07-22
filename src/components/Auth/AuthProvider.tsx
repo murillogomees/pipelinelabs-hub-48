@@ -2,6 +2,7 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
+import { createLogger } from '@/utils/logger';
 
 interface AuthContextType {
   user: User | null;
@@ -13,6 +14,8 @@ interface AuthContextType {
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
+
+const authLogger = createLogger('AuthProvider');
 
 // Cleanup function to remove auth state
 const cleanupAuthState = () => {
@@ -29,7 +32,7 @@ const cleanupAuthState = () => {
       }
     });
   } catch (error) {
-    console.error('Error cleaning up auth state:', error);
+    authLogger.error('Error cleaning up auth state', error);
   }
 };
 
@@ -46,7 +49,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       async (event, session) => {
         if (!mounted) return;
 
-        console.log('Auth state change:', event, session?.user?.email);
+        authLogger.info('Auth state change', { event, email: session?.user?.email });
 
         setSession(session);
         setUser(session?.user ?? null);
@@ -56,7 +59,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         if (event === 'SIGNED_IN' && session?.user) {
           setTimeout(() => {
             if (mounted) {
-              console.log('User signed in successfully');
+              authLogger.info('User signed in successfully');
             }
           }, 0);
         }
@@ -73,7 +76,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         const { data: { session }, error } = await supabase.auth.getSession();
         
         if (error) {
-          console.error('Error getting initial session:', error);
+          authLogger.error('Error getting initial session', error);
           if (mounted) {
             setSession(null);
             setUser(null);
@@ -88,7 +91,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           setLoading(false);
         }
       } catch (error) {
-        console.error('Error in getInitialSession:', error);
+        authLogger.error('Error in getInitialSession', error);
         if (mounted) {
           setSession(null);
           setUser(null);
@@ -115,7 +118,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         window.location.href = '/auth';
       }, 100);
     } catch (error) {
-      console.error('Error signing out:', error);
+      authLogger.error('Error signing out', error);
       // Force redirect even if signout fails
       window.location.href = '/auth';
     }
@@ -129,7 +132,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       try {
         await supabase.auth.signOut({ scope: 'global' });
       } catch (err) {
-        console.warn('Error during pre-signin cleanup:', err);
+        authLogger.warn('Error during pre-signin cleanup', err);
       }
       
       const { data, error } = await supabase.auth.signInWithPassword({
@@ -141,12 +144,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       
       if (data.user) {
         // Don't redirect immediately, let the auth state change handle it
-        console.log('Sign in successful, waiting for auth state change...');
+        authLogger.info('Sign in successful, waiting for auth state change...');
       }
       
       return { error: null };
     } catch (error) {
-      console.error('Sign in error:', error);
+      authLogger.authError('Sign in error', error);
       return { error };
     }
   };
@@ -168,7 +171,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       
       return { error };
     } catch (error) {
-      console.error('Sign up error:', error);
+      authLogger.authError('Sign up error', error);
       return { error };
     }
   };

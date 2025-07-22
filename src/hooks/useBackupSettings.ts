@@ -2,6 +2,9 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { createLogger } from "@/utils/logger";
+
+const backupLogger = createLogger('BackupSettings');
 
 interface BackupSettings {
   id: string;
@@ -30,7 +33,7 @@ export function useBackupSettings() {
         .maybeSingle();
 
       if (error) {
-        console.error("Error fetching backup settings:", error);
+        backupLogger.error("Error fetching backup settings", error);
         throw error;
       }
 
@@ -57,7 +60,7 @@ export function useBackupSettings() {
       });
     },
     onError: (error) => {
-      console.error("Error updating backup settings:", error);
+      backupLogger.error("Error updating backup settings", error);
       toast({
         title: "Erro ao salvar",
         description: "Não foi possível salvar as configurações de backup.",
@@ -81,7 +84,7 @@ export function useBackupSettings() {
       });
     },
     onError: (error) => {
-      console.error("Error triggering backup:", error);
+      backupLogger.error("Error triggering backup", error);
       toast({
         title: "Erro no backup",
         description: "Não foi possível iniciar o backup manual.",

@@ -2,6 +2,9 @@
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import type { User, Session } from "@supabase/supabase-js";
+import { createLogger } from "@/utils/logger";
+
+const authLogger = createLogger('useAuth');
 
 interface AuthData {
   user: User | null;
@@ -17,7 +20,7 @@ export function useAuth() {
         const { data: { session }, error } = await supabase.auth.getSession();
         
         if (error) {
-          console.error("Error getting session:", error);
+          authLogger.error("Error getting session", error);
           return {
             user: null,
             session: null,
@@ -31,7 +34,7 @@ export function useAuth() {
           isAuthenticated: !!session?.user
         };
       } catch (error) {
-        console.error("Error in useAuth:", error);
+        authLogger.error("Error in useAuth", error);
         return {
           user: null,
           session: null,
@@ -54,7 +57,7 @@ export function useAuth() {
       await supabase.auth.signOut();
       window.location.href = '/auth';
     } catch (error) {
-      console.error('Error signing out:', error);
+      authLogger.error('Error signing out', error);
       // Force redirect even if signout fails
       window.location.href = '/auth';
     }
