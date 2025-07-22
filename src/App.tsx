@@ -7,10 +7,12 @@ import { ProtectedRoute } from '@/components/ProtectedRoute';
 import { ErrorBoundary } from '@/components/ErrorBoundary';
 import { useAuth } from '@/hooks/useAuth';
 import { Auth } from '@/pages/Auth';
-import React, { Suspense } from 'react';
-import { Outlet } from 'react-router-dom';
+import React, { Suspense, useEffect } from 'react';
+import { Outlet, useLocation } from 'react-router-dom';
+import { PageSuspenseBoundary } from '@/components/Common/SuspenseBoundary';
+import { ComponentPreloader } from '@/utils/preloader';
 
-// Lazy loading das páginas para melhor performance - usando imports diretos por enquanto
+// Lazy loading das páginas para melhor performance
 const Dashboard = React.lazy(() => import('@/pages/Dashboard').then(module => ({ default: module.Dashboard })));
 const Vendas = React.lazy(() => import('@/pages/Vendas').then(module => ({ default: module.Vendas })));
 const Produtos = React.lazy(() => import('@/pages/Produtos').then(module => ({ default: module.Produtos })));
@@ -28,7 +30,7 @@ const ConfiguracaoNFe = React.lazy(() => import('@/pages/ConfiguracaoNFe'));
 const ConfiguracoesIntegracoes = React.lazy(() => import('@/pages/ConfiguracoesIntegracoes').then(module => ({ default: module.ConfiguracoesIntegracoes })));
 const NotFound = React.lazy(() => import('@/pages/NotFound'));
 
-// Admin pages
+// Admin pages - também lazy loaded
 const Admin = React.lazy(() => import('@/pages/Admin').then(module => ({ default: module.Admin })));
 const AdminPlanos = React.lazy(() => import('@/pages/AdminPlanos').then(module => ({ default: module.AdminPlanos })));
 const AdminUsuarios = React.lazy(() => import('@/pages/AdminUsuarios'));
@@ -37,10 +39,22 @@ const AdminNotificacoes = React.lazy(() => import('@/pages/AdminNotificacoes').t
 const AdminBackup = React.lazy(() => import('@/pages/AdminBackup'));
 const IntegracaoERP = React.lazy(() => import('@/pages/IntegracaoERP'));
 
-// Loading component para Suspense
+// Loading components para diferentes tamanhos
 const PageLoader = () => (
   <div className="flex items-center justify-center min-h-[400px]">
     <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+  </div>
+);
+
+const SmallLoader = () => (
+  <div className="flex items-center justify-center min-h-[200px]">
+    <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-primary"></div>
+  </div>
+);
+
+const ComponentLoader = () => (
+  <div className="flex items-center justify-center p-4">
+    <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-primary"></div>
   </div>
 );
 
@@ -60,6 +74,21 @@ const queryClient = new QueryClient({
 
 function AppRoutes() {
   const { isAuthenticated, isLoading } = useAuth();
+  const location = useLocation();
+
+  // Preload de componentes baseado na rota atual
+  useEffect(() => {
+    if (isAuthenticated && location.pathname) {
+      ComponentPreloader.preloadByRoute(location.pathname);
+    }
+  }, [isAuthenticated, location.pathname]);
+
+  // Preload de componentes críticos na inicialização
+  useEffect(() => {
+    if (isAuthenticated) {
+      ComponentPreloader.preloadCriticalComponents();
+    }
+  }, [isAuthenticated]);
 
   if (isLoading) {
     return (
@@ -82,9 +111,9 @@ function AppRoutes() {
         <Route path="/" element={
           <ProtectedRoute>
             <MainLayout>
-              <Suspense fallback={<PageLoader />}>
+              <PageSuspenseBoundary>
                 <Outlet />
-              </Suspense>
+              </PageSuspenseBoundary>
             </MainLayout>
           </ProtectedRoute>
         }>
