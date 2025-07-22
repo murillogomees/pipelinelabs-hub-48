@@ -1,9 +1,10 @@
+
 import React from 'react';
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { MainLayout } from "@/components/Layout/MainLayout";
 import { Dashboard } from "@/pages/Dashboard";
 import { Vendas } from "@/pages/Vendas";
@@ -52,173 +53,203 @@ function AppContent() {
   return (
     <BrowserRouter>
       <Routes>
-        {/* Rota principal - Dashboard para usuários autenticados */}
+        {/* Rotas públicas */}
+        <Route path="/auth" element={user ? <Navigate to="/" replace /> : <Auth />} />
+        <Route path="/login" element={user ? <Navigate to="/" replace /> : <Auth />} />
+        <Route path="/cadastro-empresa" element={user ? <Navigate to="/" replace /> : <SignUpCompany />} />
+        
+        {/* Rotas protegidas */}
         <Route path="/" element={
-          user ? (
+          <ProtectedRoute>
             <MainLayout>
               <Dashboard />
             </MainLayout>
-          ) : (
-            <Auth />
-          )
+          </ProtectedRoute>
         } />
         
-        {/* Rota pública para cadastro de empresa */}
-        <Route path="/cadastro-empresa" element={
-          user ? (
+        <Route path="/app" element={
+          <ProtectedRoute>
             <MainLayout>
               <Dashboard />
             </MainLayout>
-          ) : (
-            <SignUpCompany />
-          )
+          </ProtectedRoute>
         } />
         
-        {/* Rota de autenticação para usuários não autenticados */}
-        <Route path="/auth" element={
-          user ? (
+        <Route path="/dashboard" element={
+          <ProtectedRoute>
             <MainLayout>
               <Dashboard />
             </MainLayout>
-          ) : (
-            <Auth />
-          )
-        } />
-        <Route path="/login" element={
-          user ? (
-            <MainLayout>
-              <Dashboard />
-            </MainLayout>
-          ) : (
-            <Auth />
-          )
+          </ProtectedRoute>
         } />
         
-        {/* Rotas protegidas para usuários autenticados */}
-        {user ? (
-          <>
-            <Route path="/app" element={
-              <MainLayout>
-                <Dashboard />
-              </MainLayout>
-            } />
-            <Route path="/dashboard" element={
-              <MainLayout>
-                <Dashboard />
-              </MainLayout>
-            } />
-            <Route path="/vendas/*" element={
-              <MainLayout>
-                <Vendas />
-              </MainLayout>
-            } />
-            <Route path="/produtos/*" element={
-              <MainLayout>
-                <Produtos />
-              </MainLayout>
-            } />
-            <Route path="/clientes/*" element={
-              <MainLayout>
-                <Clientes />
-              </MainLayout>
-            } />
-            <Route path="/financeiro/*" element={
-              <MainLayout>
-                <Financeiro />
-              </MainLayout>
-            } />
-            <Route path="/notas-fiscais/*" element={
-              <MainLayout>
-                <NotasFiscais />
-              </MainLayout>
-            } />
-            <Route path="/producao/*" element={
-              <MainLayout>
-                <Producao />
-              </MainLayout>
-            } />
-            <Route path="/compras/*" element={
-              <MainLayout>
-                <Compras />
-              </MainLayout>
-            } />
-            <Route path="/relatorios/*" element={<Relatorios />} />
-            <Route path="/integracoes/*" element={
-              <MainLayout>
-                <Integracoes />
-              </MainLayout>
-            } />
-            <Route path="/admin" element={
-              <MainLayout>
-                <ProtectedRoute requireAdmin>
-                  <Admin />
-                </ProtectedRoute>
-              </MainLayout>
-            } />
-            <Route path="/admin/integracoes" element={
-              <MainLayout>
-                <ProtectedRoute requireAdmin>
-                  <AdminIntegracoes />
-                </ProtectedRoute>
-              </MainLayout>
-            } />
-            <Route path="/admin/usuarios" element={
-              <MainLayout>
-                <ProtectedRoute requireAdmin>
-                  <AdminUsuarios />
-                </ProtectedRoute>
-              </MainLayout>
-            } />
-            <Route path="/admin/planos" element={
-              <MainLayout>
-                <ProtectedRoute requireAdmin>
-                  <AdminPlanos />
-                </ProtectedRoute>
-              </MainLayout>
-            } />
-            <Route path="/admin/integracao-erp" element={
-              <MainLayout>
-                <IntegracaoERP />
-              </MainLayout>
-            } />
-            <Route path="/admin/notificacoes" element={
-              <MainLayout>
-                <ProtectedRoute requireAdmin>
-                  <AdminNotificacoes />
-                </ProtectedRoute>
-              </MainLayout>
-            } />
-            <Route path="/planos/*" element={
-              <MainLayout>
-                <div className="space-y-6">
-                  <h1 className="text-3xl font-bold text-foreground">Planos</h1>
-                  <p className="text-muted-foreground">Módulo em desenvolvimento</p>
-                </div>
-              </MainLayout>
-            } />
-            <Route path="/configuracoes/*" element={<Configuracoes />} />
-            <Route path="/notificacoes" element={
-              <MainLayout>
-                <Notificacoes />
-              </MainLayout>
-            } />
-            <Route path="/configuracoes/integracoes" element={
-              <MainLayout>
-                <ConfiguracoesIntegracoes />
-              </MainLayout>
-            } />
-            <Route path="/configuracoes/nfe" element={
-              <MainLayout>
-                <ConfiguracaoNFe />
-              </MainLayout>
-            } />
-            <Route path="/emissao-fiscal" element={
-              <MainLayout>
-                <EmissaoFiscal />
-              </MainLayout>
-            } />
-          </>
-        ) : null}
+        <Route path="/vendas/*" element={
+          <ProtectedRoute>
+            <MainLayout>
+              <Vendas />
+            </MainLayout>
+          </ProtectedRoute>
+        } />
+        
+        <Route path="/produtos/*" element={
+          <ProtectedRoute>
+            <MainLayout>
+              <Produtos />
+            </MainLayout>
+          </ProtectedRoute>
+        } />
+        
+        <Route path="/clientes/*" element={
+          <ProtectedRoute>
+            <MainLayout>
+              <Clientes />
+            </MainLayout>
+          </ProtectedRoute>
+        } />
+        
+        <Route path="/financeiro/*" element={
+          <ProtectedRoute>
+            <MainLayout>
+              <Financeiro />
+            </MainLayout>
+          </ProtectedRoute>
+        } />
+        
+        <Route path="/notas-fiscais/*" element={
+          <ProtectedRoute>
+            <MainLayout>
+              <NotasFiscais />
+            </MainLayout>
+          </ProtectedRoute>
+        } />
+        
+        <Route path="/producao/*" element={
+          <ProtectedRoute>
+            <MainLayout>
+              <Producao />
+            </MainLayout>
+          </ProtectedRoute>
+        } />
+        
+        <Route path="/compras/*" element={
+          <ProtectedRoute>
+            <MainLayout>
+              <Compras />
+            </MainLayout>
+          </ProtectedRoute>
+        } />
+        
+        <Route path="/relatorios/*" element={
+          <ProtectedRoute>
+            <Relatorios />
+          </ProtectedRoute>
+        } />
+        
+        <Route path="/integracoes/*" element={
+          <ProtectedRoute>
+            <MainLayout>
+              <Integracoes />
+            </MainLayout>
+          </ProtectedRoute>
+        } />
+        
+        <Route path="/notificacoes" element={
+          <ProtectedRoute>
+            <MainLayout>
+              <Notificacoes />
+            </MainLayout>
+          </ProtectedRoute>
+        } />
+        
+        <Route path="/configuracoes/*" element={
+          <ProtectedRoute>
+            <Configuracoes />
+          </ProtectedRoute>
+        } />
+        
+        <Route path="/configuracoes/integracoes" element={
+          <ProtectedRoute>
+            <MainLayout>
+              <ConfiguracoesIntegracoes />
+            </MainLayout>
+          </ProtectedRoute>
+        } />
+        
+        <Route path="/configuracoes/nfe" element={
+          <ProtectedRoute>
+            <MainLayout>
+              <ConfiguracaoNFe />
+            </MainLayout>
+          </ProtectedRoute>
+        } />
+        
+        <Route path="/emissao-fiscal" element={
+          <ProtectedRoute>
+            <MainLayout>
+              <EmissaoFiscal />
+            </MainLayout>
+          </ProtectedRoute>
+        } />
+        
+        <Route path="/planos/*" element={
+          <ProtectedRoute>
+            <MainLayout>
+              <div className="space-y-6">
+                <h1 className="text-3xl font-bold text-foreground">Planos</h1>
+                <p className="text-muted-foreground">Módulo em desenvolvimento</p>
+              </div>
+            </MainLayout>
+          </ProtectedRoute>
+        } />
+        
+        {/* Rotas administrativas */}
+        <Route path="/admin" element={
+          <ProtectedRoute requireAdmin>
+            <MainLayout>
+              <Admin />
+            </MainLayout>
+          </ProtectedRoute>
+        } />
+        
+        <Route path="/admin/integracoes" element={
+          <ProtectedRoute requireAdmin>
+            <MainLayout>
+              <AdminIntegracoes />
+            </MainLayout>
+          </ProtectedRoute>
+        } />
+        
+        <Route path="/admin/usuarios" element={
+          <ProtectedRoute requireAdmin>
+            <MainLayout>
+              <AdminUsuarios />
+            </MainLayout>
+          </ProtectedRoute>
+        } />
+        
+        <Route path="/admin/planos" element={
+          <ProtectedRoute requireAdmin>
+            <MainLayout>
+              <AdminPlanos />
+            </MainLayout>
+          </ProtectedRoute>
+        } />
+        
+        <Route path="/admin/integracao-erp" element={
+          <ProtectedRoute requireAdmin>
+            <MainLayout>
+              <IntegracaoERP />
+            </MainLayout>
+          </ProtectedRoute>
+        } />
+        
+        <Route path="/admin/notificacoes" element={
+          <ProtectedRoute requireAdmin>
+            <MainLayout>
+              <AdminNotificacoes />
+            </MainLayout>
+          </ProtectedRoute>
+        } />
         
         {/* Rota 404 */}
         <Route path="*" element={<NotFound />} />
