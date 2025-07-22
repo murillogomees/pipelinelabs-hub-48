@@ -8,10 +8,10 @@ import { useAuth } from '@/hooks/useAuth';
 import { Auth } from '@/pages/Auth';
 import { Admin } from '@/pages/Admin';
 import { AdminPlanos } from '@/pages/AdminPlanos';
-import { AdminUsuarios } from '@/pages/AdminUsuarios';
+import AdminUsuarios from '@/pages/AdminUsuarios';
 import { AdminIntegracoes } from '@/pages/AdminIntegracoes';
 import { AdminNotificacoes } from '@/pages/AdminNotificacoes';
-import { IntegracaoERP } from '@/pages/IntegracaoERP';
+import IntegracaoERP from '@/pages/IntegracaoERP';
 import React from 'react';
 import { Outlet } from 'react-router-dom';
 

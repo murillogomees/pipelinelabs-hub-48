@@ -25,7 +25,7 @@ export function useBackupSettings() {
     queryKey: ["backup-settings"],
     queryFn: async (): Promise<BackupSettings | null> => {
       const { data, error } = await supabase
-        .from("backup_settings")
+        .from("backup_settings" as any)
         .select("*")
         .maybeSingle();
 
@@ -34,14 +34,14 @@ export function useBackupSettings() {
         throw error;
       }
 
-      return data;
+      return data as BackupSettings | null;
     },
   });
 
   const updateSettingsMutation = useMutation({
     mutationFn: async (settings: Partial<BackupSettings>) => {
       const { data, error } = await supabase
-        .from("backup_settings")
+        .from("backup_settings" as any)
         .upsert(settings as any)
         .select()
         .single();
@@ -68,7 +68,7 @@ export function useBackupSettings() {
 
   const triggerBackupMutation = useMutation({
     mutationFn: async () => {
-      const { data, error } = await supabase.rpc("trigger_manual_backup");
+      const { data, error } = await supabase.rpc("trigger_manual_backup" as any);
       
       if (error) throw error;
       return data;

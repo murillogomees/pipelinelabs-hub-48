@@ -25,15 +25,13 @@ export const menuItems = [
     title: 'Dashboard',
     icon: Home,
     path: '/dashboard',
-    expanded: false,
-    children: []
+    submenu: []
   },
   {
     title: 'Vendas',
     icon: ShoppingCart,
     path: '/vendas',
-    expanded: false,
-    children: [
+    submenu: [
       { title: 'Pedidos', path: '/vendas/pedidos' },
       { title: 'PDV', path: '/vendas/pdv' },
       { title: 'Propostas', path: '/vendas/propostas' }
@@ -43,8 +41,7 @@ export const menuItems = [
     title: 'Produtos',
     icon: Package,
     path: '/produtos',
-    expanded: false,
-    children: [
+    submenu: [
       { title: 'Estoque', path: '/produtos/estoque' },
       { title: 'Categorias', path: '/produtos/categorias' }
     ]
@@ -53,8 +50,7 @@ export const menuItems = [
     title: 'Compras',
     icon: ShoppingBag,
     path: '/compras',
-    expanded: false,
-    children: [
+    submenu: [
       { title: 'Cotações', path: '/compras/cotacoes' }
     ]
   },
@@ -62,8 +58,7 @@ export const menuItems = [
     title: 'Clientes',
     icon: Users,
     path: '/clientes',
-    expanded: false,
-    children: [
+    submenu: [
       { title: 'Fornecedores', path: '/clientes/fornecedores' }
     ]
   },
@@ -71,8 +66,7 @@ export const menuItems = [
     title: 'Financeiro',
     icon: DollarSign,
     path: '/financeiro',
-    expanded: false,
-    children: [
+    submenu: [
       { title: 'Contas a Pagar', path: '/financeiro/pagar' },
       { title: 'Contas a Receber', path: '/financeiro/receber' },
       { title: 'Conciliação', path: '/financeiro/conciliacao' }
@@ -82,8 +76,7 @@ export const menuItems = [
     title: 'Notas Fiscais',
     icon: FileText,
     path: '/notas-fiscais',
-    expanded: false,
-    children: [
+    submenu: [
       { title: 'NFe', path: '/notas-fiscais/nfe' },
       { title: 'NFCe', path: '/notas-fiscais/nfce' },
       { title: 'NFSe', path: '/notas-fiscais/nfse' }
@@ -93,15 +86,13 @@ export const menuItems = [
     title: 'Emissão Fiscal',
     icon: FileSpreadsheet,
     path: '/emissao-fiscal',
-    expanded: false,
-    children: []
+    submenu: []
   },
   {
     title: 'Produção',
     icon: Settings2,
     path: '/producao',
-    expanded: false,
-    children: [
+    submenu: [
       { title: 'Ordens de Serviço', path: '/producao/os' }
     ]
   },
@@ -109,22 +100,19 @@ export const menuItems = [
     title: 'Relatórios',
     icon: BarChart3,
     path: '/relatorios',
-    expanded: false,
-    children: []
+    submenu: []
   },
   {
     title: 'Integrações',
     icon: Zap,
     path: '/integracoes',
-    expanded: false,
-    children: []
+    submenu: []
   },
   {
     title: 'Configurações',
     icon: Settings,
     path: '/configuracoes',
-    expanded: false,
-    children: [
+    submenu: [
       { title: 'Configuração NFE.io', path: '/configuracoes/nfe' }
     ]
   },
@@ -132,9 +120,8 @@ export const menuItems = [
     title: 'Administração',
     icon: UserCheck,
     path: '/admin',
-    expanded: false,
     adminOnly: true,
-    children: [
+    submenu: [
       { title: 'Planos', path: '/admin/planos' },
       { title: 'Usuários', path: '/admin/usuarios' },
       { title: 'Integrações', path: '/admin/integracoes' },
