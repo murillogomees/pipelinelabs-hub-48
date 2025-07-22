@@ -43,17 +43,11 @@ export function useStockMovements() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from('stock_movements' as any)
-        .select(`
-          *,
-          products:product_id (
-            name,
-            code
-          )
-        `)
+        .select('*')
         .order('created_at', { ascending: false });
 
       if (error) throw error;
-      return data as (StockMovement & { products: { name: string; code: string } })[];
+      return data || [];
     },
   });
 

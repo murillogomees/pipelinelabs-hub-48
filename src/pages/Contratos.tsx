@@ -40,17 +40,19 @@ export default function Contratos() {
     return type === 'cliente' ? 'Cliente' : 'Fornecedor';
   };
 
-  // Calcular estatísticas
+  // Filter valid contracts and calculate statistics
+  const validContracts = (contracts || []).filter((c: any) => c && c.id) as any[];
+  
   const stats = {
-    total: contracts?.length || 0,
-    active: contracts?.filter(c => c.status === 'active').length || 0,
-    expiring: contracts?.filter(c => {
+    total: validContracts.length,
+    active: validContracts.filter(c => c.status === 'active').length,
+    expiring: validContracts.filter(c => {
       const endDate = new Date(c.end_date);
       const now = new Date();
       const thirtyDaysFromNow = new Date(now.getTime() + (30 * 24 * 60 * 60 * 1000));
       return endDate >= now && endDate <= thirtyDaysFromNow;
-    }).length || 0,
-    totalValue: contracts?.reduce((sum, c) => sum + c.contract_value, 0) || 0,
+    }).length,
+    totalValue: validContracts.reduce((sum, c) => sum + (c.contract_value || 0), 0),
   };
 
   if (isLoading) {
@@ -140,71 +142,71 @@ export default function Contratos() {
                   <TableHead>Ações</TableHead>
                 </TableRow>
               </TableHeader>
-              <TableBody>
-                {contracts?.map((contract) => (
-                  <TableRow key={contract.id}>
-                    <TableCell className="font-medium">
-                      {contract.contract_number}
-                    </TableCell>
-                    <TableCell>
-                      <div>
-                        <div className="font-medium">{contract.title}</div>
-                        {contract.description && (
-                          <div className="text-sm text-muted-foreground max-w-xs truncate">
-                            {contract.description}
-                          </div>
-                        )}
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      <Badge variant="outline">
-                        {getTypeLabel(contract.contract_type)}
-                      </Badge>
-                    </TableCell>
-                    <TableCell>
-                      {contract.customers?.name || contract.suppliers?.name || '-'}
-                    </TableCell>
-                    <TableCell>
-                      <Badge className={getStatusColor(contract.status)}>
-                        {getStatusLabel(contract.status)}
-                      </Badge>
-                    </TableCell>
-                    <TableCell>
-                      {new Date(contract.start_date).toLocaleDateString('pt-BR')}
-                    </TableCell>
-                    <TableCell>
-                      <div className="flex items-center">
-                        {new Date(contract.end_date).toLocaleDateString('pt-BR')}
-                        {(() => {
-                          const endDate = new Date(contract.end_date);
-                          const now = new Date();
-                          const thirtyDaysFromNow = new Date(now.getTime() + (30 * 24 * 60 * 60 * 1000));
-                          return endDate >= now && endDate <= thirtyDaysFromNow ? (
-                            <AlertCircle className="h-4 w-4 ml-1 text-orange-500" />
-                          ) : null;
-                        })()}
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      {formatCurrency(contract.contract_value)}
-                    </TableCell>
-                    <TableCell>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => {
-                          setSelectedContract(contract);
-                          setDialogOpen(true);
-                        }}
-                      >
-                        Editar
-                      </Button>
-                    </TableCell>
-                  </TableRow>
-                ))}
+               <TableBody>
+                 {validContracts.map((contract: any) => (
+                   <TableRow key={contract.id}>
+                     <TableCell className="font-medium">
+                       {contract.contract_number}
+                     </TableCell>
+                     <TableCell>
+                       <div>
+                         <div className="font-medium">{contract.title}</div>
+                         {contract.description && (
+                           <div className="text-sm text-muted-foreground max-w-xs truncate">
+                             {contract.description}
+                           </div>
+                         )}
+                       </div>
+                     </TableCell>
+                     <TableCell>
+                       <Badge variant="outline">
+                         {getTypeLabel(contract.contract_type)}
+                       </Badge>
+                     </TableCell>
+                      <TableCell>
+                        {contract.contract_type === 'cliente' ? 'Cliente' : 'Fornecedor'}
+                      </TableCell>
+                     <TableCell>
+                       <Badge className={getStatusColor(contract.status)}>
+                         {getStatusLabel(contract.status)}
+                       </Badge>
+                     </TableCell>
+                     <TableCell>
+                       {new Date(contract.start_date).toLocaleDateString('pt-BR')}
+                     </TableCell>
+                     <TableCell>
+                       <div className="flex items-center">
+                         {new Date(contract.end_date).toLocaleDateString('pt-BR')}
+                         {(() => {
+                           const endDate = new Date(contract.end_date);
+                           const now = new Date();
+                           const thirtyDaysFromNow = new Date(now.getTime() + (30 * 24 * 60 * 60 * 1000));
+                           return endDate >= now && endDate <= thirtyDaysFromNow ? (
+                             <AlertCircle className="h-4 w-4 ml-1 text-orange-500" />
+                           ) : null;
+                         })()}
+                       </div>
+                     </TableCell>
+                     <TableCell>
+                       {formatCurrency(contract.contract_value)}
+                     </TableCell>
+                     <TableCell>
+                       <Button
+                         variant="outline"
+                         size="sm"
+                         onClick={() => {
+                           setSelectedContract(contract);
+                           setDialogOpen(true);
+                         }}
+                       >
+                         Editar
+                       </Button>
+                     </TableCell>
+                   </TableRow>
+                 ))}
               </TableBody>
             </Table>
-            {!contracts?.length && (
+            {!validContracts.length && (
               <div className="text-center py-8 text-muted-foreground">
                 <FileText className="h-12 w-12 mx-auto mb-4" />
                 <h3 className="text-lg font-medium mb-2">Nenhum contrato encontrado</h3>

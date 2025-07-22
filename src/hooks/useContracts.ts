@@ -51,6 +51,7 @@ export interface ContractFormData {
   renewal_terms?: string;
   termination_clause?: string;
   notification_days: number;
+  company_id?: string;
 }
 
 export function useContracts() {
@@ -62,31 +63,32 @@ export function useContracts() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from('contracts' as any)
-        .select(`
-          *,
-          customers:customer_id (
-            name
-          ),
-          suppliers:supplier_id (
-            name
-          )
-        `)
+        .select('*')
         .order('created_at', { ascending: false });
 
       if (error) throw error;
-      return data as (Contract & { 
-        customers?: { name: string }; 
-        suppliers?: { name: string };
-      })[];
+      return data || [];
     },
   });
 
   const createMutation = useMutation({
     mutationFn: async (data: ContractFormData) => {
+      // Get user's company ID
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error('User not authenticated');
+
+      const { data: userCompany } = await supabase
+        .from('user_companies' as any)
+        .select('company_id')
+        .eq('user_id', user.id)
+        .single();
+
+      if (!userCompany || !('company_id' in userCompany)) throw new Error('User company not found');
+
       // Generate contract number
       const { data: contractNumber, error: contractNumberError } = await supabase
         .rpc('generate_contract_number' as any, { 
-          company_uuid: data.company_id || null 
+          company_uuid: (userCompany as any).company_id 
         });
 
       if (contractNumberError) throw contractNumberError;
@@ -95,6 +97,7 @@ export function useContracts() {
         .from('contracts' as any)
         .insert([{
           ...data,
+          company_id: (userCompany as any).company_id,
           contract_number: contractNumber
         }])
         .select()

@@ -127,9 +127,9 @@ export function StockMovementDialog({ open, onOpenChange, onSubmit }: StockMovem
                   value={formData.warehouse_from || ''}
                   onValueChange={(value) => setFormData({ ...formData, warehouse_from: value })}
                   placeholder="Selecione o depósito"
-                  staticOptions={warehouses?.map(warehouse => ({
-                    value: warehouse.name,
-                    label: warehouse.name
+                   staticOptions={(warehouses || []).filter((w: any) => w && w.name).map(warehouse => ({
+                    value: (warehouse as any).name,
+                    label: (warehouse as any).name
                   })) || []}
                 />
               </div>
@@ -139,9 +139,9 @@ export function StockMovementDialog({ open, onOpenChange, onSubmit }: StockMovem
                   value={formData.warehouse_to || ''}
                   onValueChange={(value) => setFormData({ ...formData, warehouse_to: value })}
                   placeholder="Selecione o depósito"
-                  staticOptions={warehouses?.map(warehouse => ({
-                    value: warehouse.name,
-                    label: warehouse.name
+                  staticOptions={(warehouses || []).filter((w: any) => w && w.name).map(warehouse => ({
+                    value: (warehouse as any).name,
+                    label: (warehouse as any).name
                   })) || []}
                 />
               </div>

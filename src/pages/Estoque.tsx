@@ -95,38 +95,38 @@ export default function Estoque() {
                       <TableHead>Motivo</TableHead>
                     </TableRow>
                   </TableHeader>
-                  <TableBody>
-                    {movements?.map((movement) => (
-                      <TableRow key={movement.id}>
-                        <TableCell>
-                          {new Date(movement.created_at).toLocaleDateString('pt-BR')}
-                        </TableCell>
-                        <TableCell>
-                          <div>
-                            <div className="font-medium">{movement.products.name}</div>
-                            <div className="text-sm text-muted-foreground">{movement.products.code}</div>
-                          </div>
-                        </TableCell>
-                        <TableCell>
-                          <Badge className={getMovementTypeColor(movement.movement_type)}>
-                            {movement.movement_type}
-                          </Badge>
-                        </TableCell>
-                        <TableCell className="text-center">
-                          <span className={movement.movement_type === 'saida' ? 'text-red-600' : 'text-green-600'}>
-                            {movement.movement_type === 'saida' ? '-' : '+'}{movement.quantity}
-                          </span>
-                        </TableCell>
-                        <TableCell className="text-center">{movement.previous_quantity}</TableCell>
-                        <TableCell className="text-center">{movement.new_quantity}</TableCell>
-                        <TableCell>
-                          {movement.total_cost ? formatCurrency(movement.total_cost) : '-'}
-                        </TableCell>
-                        <TableCell className="max-w-xs truncate">
-                          {movement.reason || '-'}
-                        </TableCell>
-                      </TableRow>
-                    ))}
+                   <TableBody>
+                     {(movements || []).filter((m: any) => m && m.id).map((movement: any) => (
+                       <TableRow key={movement.id}>
+                         <TableCell>
+                           {new Date(movement.created_at).toLocaleDateString('pt-BR')}
+                         </TableCell>
+                          <TableCell>
+                            <div>
+                              <div className="font-medium">Produto #{movement.product_id}</div>
+                              <div className="text-sm text-muted-foreground">ID: {movement.product_id}</div>
+                            </div>
+                          </TableCell>
+                         <TableCell>
+                           <Badge className={getMovementTypeColor(movement.movement_type)}>
+                             {movement.movement_type}
+                           </Badge>
+                         </TableCell>
+                         <TableCell className="text-center">
+                           <span className={movement.movement_type === 'saida' ? 'text-red-600' : 'text-green-600'}>
+                             {movement.movement_type === 'saida' ? '-' : '+'}{movement.quantity}
+                           </span>
+                         </TableCell>
+                         <TableCell className="text-center">{movement.previous_quantity}</TableCell>
+                         <TableCell className="text-center">{movement.new_quantity}</TableCell>
+                         <TableCell>
+                           {movement.total_cost ? formatCurrency(movement.total_cost) : '-'}
+                         </TableCell>
+                         <TableCell className="max-w-xs truncate">
+                           {movement.reason || '-'}
+                         </TableCell>
+                       </TableRow>
+                     ))}
                   </TableBody>
                 </Table>
                 {!movements?.length && (
@@ -147,51 +147,51 @@ export default function Estoque() {
               </Button>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {warehouses?.map((warehouse) => (
-                <Card key={warehouse.id} className="cursor-pointer hover:shadow-md transition-shadow">
-                  <CardHeader>
-                    <CardTitle className="flex items-center justify-between">
-                      <div className="flex items-center gap-2">
-                        <Warehouse className="h-5 w-5" />
-                        {warehouse.name}
-                      </div>
-                      <div className="flex gap-1">
-                        {warehouse.is_default && (
-                          <Badge variant="secondary">Padrão</Badge>
-                        )}
-                        <Badge variant={warehouse.is_active ? "default" : "secondary"}>
-                          {warehouse.is_active ? "Ativo" : "Inativo"}
-                        </Badge>
-                      </div>
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    {warehouse.description && (
-                      <p className="text-sm text-muted-foreground mb-2">
-                        {warehouse.description}
-                      </p>
-                    )}
-                    {warehouse.address && (
-                      <p className="text-sm text-muted-foreground">
-                        <strong>Endereço:</strong> {warehouse.address}
-                      </p>
-                    )}
-                    <div className="flex justify-end mt-4">
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => {
-                          setSelectedWarehouse(warehouse);
-                          setWarehouseDialogOpen(true);
-                        }}
-                      >
-                        Editar
-                      </Button>
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
+             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+               {(warehouses || []).filter((w: any) => w && w.id).map((warehouse: any) => (
+                 <Card key={warehouse.id} className="cursor-pointer hover:shadow-md transition-shadow">
+                   <CardHeader>
+                     <CardTitle className="flex items-center justify-between">
+                       <div className="flex items-center gap-2">
+                         <Warehouse className="h-5 w-5" />
+                         {warehouse.name}
+                       </div>
+                       <div className="flex gap-1">
+                         {warehouse.is_default && (
+                           <Badge variant="secondary">Padrão</Badge>
+                         )}
+                         <Badge variant={warehouse.is_active ? "default" : "secondary"}>
+                           {warehouse.is_active ? "Ativo" : "Inativo"}
+                         </Badge>
+                       </div>
+                     </CardTitle>
+                   </CardHeader>
+                   <CardContent>
+                     {warehouse.description && (
+                       <p className="text-sm text-muted-foreground mb-2">
+                         {warehouse.description}
+                       </p>
+                     )}
+                     {warehouse.address && (
+                       <p className="text-sm text-muted-foreground">
+                         <strong>Endereço:</strong> {warehouse.address}
+                       </p>
+                     )}
+                     <div className="flex justify-end mt-4">
+                       <Button
+                         variant="outline"
+                         size="sm"
+                         onClick={() => {
+                           setSelectedWarehouse(warehouse);
+                           setWarehouseDialogOpen(true);
+                         }}
+                       >
+                         Editar
+                       </Button>
+                     </div>
+                   </CardContent>
+                 </Card>
+               ))}
             </div>
 
             {!warehouses?.length && (

@@ -35,7 +35,7 @@ export function useWarehouses() {
         .order('name');
 
       if (error) throw error;
-      return data as Warehouse[];
+      return data || [];
     },
   });
 
