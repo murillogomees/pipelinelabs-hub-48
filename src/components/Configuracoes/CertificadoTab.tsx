@@ -66,6 +66,11 @@ export function CertificadoTab() {
     }
   };
 
+  // Use only existing database fields
+  const hasUploadedCertificate = settings?.certificado_base64;
+  const certificateName = settings?.certificado_nome || 'N/A';
+  const certificateExpiration = settings?.certificado_validade;
+
   return (
     <div className="space-y-6">
       <Card>
@@ -84,13 +89,13 @@ export function CertificadoTab() {
             {getStatusBadge()}
           </div>
 
-          {settings?.certificate_uploaded_at && (
+          {hasUploadedCertificate && (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 p-4 bg-muted rounded-lg">
               <div className="flex items-center gap-2">
                 <Key className="h-4 w-4 text-muted-foreground" />
                 <div>
-                  <p className="text-sm font-medium">Nome Comum (CN)</p>
-                  <p className="text-xs text-muted-foreground">{settings.certificate_cn || 'N/A'}</p>
+                  <p className="text-sm font-medium">Nome do Certificado</p>
+                  <p className="text-xs text-muted-foreground">{certificateName}</p>
                 </div>
               </div>
               <div className="flex items-center gap-2">
@@ -98,8 +103,8 @@ export function CertificadoTab() {
                 <div>
                   <p className="text-sm font-medium">Expira em</p>
                   <p className="text-xs text-muted-foreground">
-                    {settings.certificate_expires_at 
-                      ? `${getDaysUntilExpiration()} dias (${new Date(settings.certificate_expires_at).toLocaleDateString('pt-BR')})`
+                    {certificateExpiration 
+                      ? `${getDaysUntilExpiration()} dias (${new Date(certificateExpiration).toLocaleDateString('pt-BR')})`
                       : 'N/A'
                     }
                   </p>
@@ -156,7 +161,7 @@ export function CertificadoTab() {
             </Button>
           </div>
 
-          {settings?.certificate_uploaded_at && (
+          {hasUploadedCertificate && (
             <div className="pt-4 border-t space-y-4">
               <div className="flex items-center justify-between">
                 <h4 className="text-sm font-medium">Certificado Atual</h4>
@@ -194,12 +199,10 @@ export function CertificadoTab() {
               </div>
               
               <div className="text-xs text-muted-foreground space-y-1">
-                <p>Enviado em: {new Date(settings.certificate_uploaded_at).toLocaleString('pt-BR')}</p>
-                {settings.certificate_fingerprint && (
-                  <p>Fingerprint: {settings.certificate_fingerprint}</p>
-                )}
-                {settings.certificate_last_used_at && (
-                  <p>Último uso: {new Date(settings.certificate_last_used_at).toLocaleString('pt-BR')}</p>
+                <p>Certificado: {certificateName}</p>
+                <p>Status: {settings?.certificado_status || 'Desconhecido'}</p>
+                {certificateExpiration && (
+                  <p>Validade: {new Date(certificateExpiration).toLocaleDateString('pt-BR')}</p>
                 )}
               </div>
             </div>
