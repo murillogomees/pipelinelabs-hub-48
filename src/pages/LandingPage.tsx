@@ -4,6 +4,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Badge } from '@/components/ui/badge';
 import { Check, Star, ArrowRight, Users, TrendingUp, Shield, Zap } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { useLandingPageConfig } from '@/hooks/useLandingPageConfig';
 
 // Mockup images
 import dashboardMockup from '@/assets/dashboard-mockup.jpg';
@@ -128,6 +129,7 @@ const plans = [
 
 export function LandingPage() {
   const navigate = useNavigate();
+  const { config } = useLandingPageConfig();
 
   return (
     <div className="min-h-screen bg-background">
@@ -135,8 +137,12 @@ export function LandingPage() {
       <header className="border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
         <div className="container mx-auto px-4 py-4 flex items-center justify-between">
           <div className="flex items-center space-x-2">
-            <div className="h-8 w-8 bg-primary rounded-md"></div>
-            <span className="font-bold text-xl">Pipeline Labs</span>
+            {config.logo_url ? (
+              <img src={config.logo_url} alt={config.company_name} className="h-8 w-8" />
+            ) : (
+              <div className="h-8 w-8 bg-primary rounded-md"></div>
+            )}
+            <span className="font-bold text-xl">{config.company_name}</span>
           </div>
           <div className="flex items-center space-x-4">
             <Button variant="ghost" onClick={() => navigate('/auth')}>
@@ -153,24 +159,21 @@ export function LandingPage() {
       <section className="py-20 px-4">
         <div className="container mx-auto text-center">
           <Badge variant="secondary" className="mb-4">
-            🚀 ERP Inteligente e Dinâmico
+            {config.hero_badge}
           </Badge>
           <h1 className="text-4xl md:text-6xl font-bold mb-6 bg-gradient-to-r from-primary to-primary/60 bg-clip-text text-transparent">
-            Sistema Completo de Gestão
-            <br />
-            para Pequenos Empreendedores
+            {config.hero_title}
           </h1>
           <p className="text-xl text-muted-foreground mb-8 max-w-3xl mx-auto">
-            Automatize processos, facilite gestões estratégicas e financeiras, 
-            integre com sistemas e canais de vendas. Tudo em uma plataforma escalável e adaptável.
+            {config.hero_subtitle}
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Button size="lg" onClick={() => navigate('/auth')} className="text-lg px-8 py-6">
-              Começar Teste Grátis
+              {config.hero_cta_button}
               <ArrowRight className="ml-2 h-5 w-5" />
             </Button>
             <Button size="lg" variant="outline" className="text-lg px-8 py-6">
-              Ver Demo
+              {config.hero_secondary_button}
             </Button>
           </div>
         </div>
