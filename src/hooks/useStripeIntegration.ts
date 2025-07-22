@@ -4,6 +4,32 @@ import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 
+interface StripeSettings {
+  secretKey: string;
+  publishableKey: string;
+  webhookSecret?: string;
+  products: Record<string, any>;
+}
+
+interface StripeMapping {
+  id: string;
+  plan_id: string;
+  stripe_product_id: string;
+  stripe_price_id: string;
+}
+
+interface SaveSettingsParams {
+  secretKey: string;
+  publishableKey: string;
+  webhookSecret?: string;
+}
+
+interface PlanMappingParams {
+  planId: string;
+  stripeProductId: string;
+  stripePriceId: string;
+}
+
 export function useStripeIntegration(companyId?: string) {
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
@@ -31,29 +57,35 @@ export function useStripeIntegration(companyId?: string) {
         publishableKey: data?.stripe_publishable_key || '',
         webhookSecret: data?.stripe_webhook_secret || '',
         products: data?.stripe_products || {}
-      };
+      } as StripeSettings;
     },
     enabled: !!companyId,
     refetchOnWindowFocus: false
   });
 
-  // Get plan mappings
+  // Get plan mappings - use proper type handling
   const { data: stripeMappings, isLoading: mappingsLoading } = useQuery({
     queryKey: ['stripe-mappings', companyId],
     queryFn: async () => {
       if (!companyId) return [];
 
-      const { data, error } = await supabase
-        .from('stripe_products_mapping')
-        .select('id, plan_id, stripe_product_id, stripe_price_id')
-        .eq('company_id', companyId);
+      // This table might not exist in the types yet, so we'll use a more generic approach
+      try {
+        const { data, error } = await supabase
+          .from('stripe_products_mapping')
+          .select('id, plan_id, stripe_product_id, stripe_price_id')
+          .eq('company_id', companyId);
 
-      if (error) {
-        console.error('Error fetching Stripe mappings:', error);
+        if (error) {
+          console.error('Error fetching Stripe mappings:', error);
+          return [];
+        }
+
+        return data as StripeMapping[];
+      } catch (err) {
+        console.error('Error in stripeMappings query:', err);
         return [];
       }
-
-      return data;
     },
     enabled: !!companyId,
     refetchOnWindowFocus: false
@@ -61,11 +93,7 @@ export function useStripeIntegration(companyId?: string) {
 
   // Save Stripe API keys
   const saveStripeSettings = useMutation({
-    mutationFn: async (settings: {
-      secretKey: string,
-      publishableKey: string,
-      webhookSecret?: string
-    }) => {
+    mutationFn: async (settings: SaveSettingsParams) => {
       if (!companyId) throw new Error('Company ID is required');
 
       const { error } = await supabase
@@ -87,7 +115,7 @@ export function useStripeIntegration(companyId?: string) {
         description: 'As configurações do Stripe foram salvas com sucesso.',
       });
     },
-    onError: (error) => {
+    onError: (error: any) => {
       toast({
         title: 'Erro ao salvar configurações',
         description: error.message,
@@ -111,13 +139,15 @@ export function useStripeIntegration(companyId?: string) {
 
     try {
       // Call the edge function to sync products
+      const { data: session } = await supabase.auth.getSession();
+      
       const response = await fetch(
         'https://ycqinuwrlhuxotypqlfh.supabase.co/functions/v1/sync-stripe-products', 
         {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
-            'Authorization': `Bearer ${supabase.auth.getSession()}`
+            'Authorization': `Bearer ${session.session?.access_token}`
           },
           body: JSON.stringify({ stripe_secret_key: stripeSettings.secretKey })
         }
@@ -144,7 +174,7 @@ export function useStripeIntegration(companyId?: string) {
       
       toast({
         title: 'Produtos sincronizados',
-        description: `${data.products_synced} produtos sincronizados com sucesso.`,
+        description: `${data.products.length || 0} produtos sincronizados com sucesso.`,
       });
     } catch (error: any) {
       console.error('Error syncing Stripe products:', error);
@@ -158,50 +188,56 @@ export function useStripeIntegration(companyId?: string) {
     }
   };
 
-  // Create or update plan mapping
+  // Create or update plan mapping - handle the table not being in types
   const savePlanMapping = useMutation({
-    mutationFn: async (mapping: {
-      planId: string,
-      stripeProductId: string,
-      stripePriceId: string
-    }) => {
+    mutationFn: async (mapping: PlanMappingParams) => {
       if (!companyId) throw new Error('Company ID is required');
 
-      // Check if mapping already exists
-      const { data: existingMapping } = await supabase
-        .from('stripe_products_mapping')
-        .select('id')
-        .eq('company_id', companyId)
-        .eq('plan_id', mapping.planId)
-        .maybeSingle();
-
-      if (existingMapping) {
-        // Update existing mapping
-        const { error } = await supabase
+      try {
+        // Check if mapping already exists
+        const { data: existingMapping, error: queryError } = await supabase
           .from('stripe_products_mapping')
-          .update({
-            stripe_product_id: mapping.stripeProductId,
-            stripe_price_id: mapping.stripePriceId,
-            updated_at: new Date().toISOString()
-          })
-          .eq('id', existingMapping.id);
+          .select('id')
+          .eq('company_id', companyId)
+          .eq('plan_id', mapping.planId)
+          .maybeSingle();
 
-        if (error) throw error;
-      } else {
-        // Create new mapping
-        const { error } = await supabase
-          .from('stripe_products_mapping')
-          .insert({
-            company_id: companyId,
-            plan_id: mapping.planId,
-            stripe_product_id: mapping.stripeProductId,
-            stripe_price_id: mapping.stripePriceId
-          });
+        if (queryError) {
+          console.error("Error checking for existing mapping:", queryError);
+          throw queryError;
+        }
 
-        if (error) throw error;
+        if (existingMapping) {
+          // Update existing mapping
+          const { error } = await supabase
+            .from('stripe_products_mapping')
+            .update({
+              stripe_product_id: mapping.stripeProductId,
+              stripe_price_id: mapping.stripePriceId,
+              updated_at: new Date().toISOString()
+            })
+            .eq('id', existingMapping.id);
+
+          if (error) throw error;
+        } else {
+          // Create new mapping
+          const { error } = await supabase
+            .from('stripe_products_mapping')
+            .insert({
+              company_id: companyId,
+              plan_id: mapping.planId,
+              stripe_product_id: mapping.stripeProductId,
+              stripe_price_id: mapping.stripePriceId
+            });
+
+          if (error) throw error;
+        }
+
+        return { success: true };
+      } catch (err) {
+        console.error("Error in savePlanMapping:", err);
+        throw err;
       }
-
-      return { success: true };
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['stripe-mappings', companyId] });
@@ -210,7 +246,7 @@ export function useStripeIntegration(companyId?: string) {
         description: 'O mapeamento do plano foi salvo com sucesso.',
       });
     },
-    onError: (error) => {
+    onError: (error: any) => {
       toast({
         title: 'Erro ao salvar mapeamento',
         description: error.message,
@@ -219,16 +255,21 @@ export function useStripeIntegration(companyId?: string) {
     }
   });
 
-  // Delete plan mapping
+  // Delete plan mapping - handle the table not being in types
   const deletePlanMapping = useMutation({
     mutationFn: async (mappingId: string) => {
-      const { error } = await supabase
-        .from('stripe_products_mapping')
-        .delete()
-        .eq('id', mappingId);
+      try {
+        const { error } = await supabase
+          .from('stripe_products_mapping')
+          .delete()
+          .eq('id', mappingId);
 
-      if (error) throw error;
-      return { success: true };
+        if (error) throw error;
+        return { success: true };
+      } catch (err) {
+        console.error("Error in deletePlanMapping:", err);
+        throw err;
+      }
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['stripe-mappings', companyId] });
@@ -237,7 +278,7 @@ export function useStripeIntegration(companyId?: string) {
         description: 'O mapeamento do plano foi removido com sucesso.',
       });
     },
-    onError: (error) => {
+    onError: (error: any) => {
       toast({
         title: 'Erro ao remover mapeamento',
         description: error.message,

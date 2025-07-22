@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -30,15 +30,15 @@ export function StripeIntegration() {
     deletePlanMapping
   } = useStripeIntegration(companyId || undefined);
   
-  const { data: plans } = usePlans();
+  const { plans } = usePlans();
   
   const [formData, setFormData] = useState({
-    secretKey: stripeSettings?.secretKey || '',
-    publishableKey: stripeSettings?.publishableKey || '',
-    webhookSecret: stripeSettings?.webhookSecret || ''
+    secretKey: '',
+    publishableKey: '',
+    webhookSecret: ''
   });
 
-  React.useEffect(() => {
+  useEffect(() => {
     if (stripeSettings) {
       setFormData({
         secretKey: stripeSettings.secretKey || '',
@@ -77,7 +77,7 @@ export function StripeIntegration() {
   };
 
   const handleDeleteMapping = (id: string) => {
-    if (confirm('Tem certeza que deseja remover este mapeamento?')) {
+    if (window.confirm('Tem certeza que deseja remover este mapeamento?')) {
       deletePlanMapping.mutate(id);
     }
   };
