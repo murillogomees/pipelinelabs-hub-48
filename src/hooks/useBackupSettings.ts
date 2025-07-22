@@ -34,7 +34,7 @@ export function useBackupSettings() {
         throw error;
       }
 
-      return data ? (data as BackupSettings) : null;
+      return data ? (data as unknown as BackupSettings) : null;
     },
   });
 
