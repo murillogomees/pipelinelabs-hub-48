@@ -54,7 +54,7 @@ export function MainLayout({ children }: MainLayoutProps) {
         <Header onToggleSidebar={toggleSidebar} />
         
         <main className="flex-1 overflow-y-auto bg-background">
-          <div className="p-3 sm:p-4 lg:p-6">
+          <div className="p-mobile container-mobile">
             {children}
           </div>
         </main>

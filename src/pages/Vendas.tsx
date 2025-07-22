@@ -3,7 +3,7 @@ import React, { useState } from 'react';
 import { Routes, Route, NavLink, useLocation } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Plus, Search, Filter, ShoppingCart, CreditCard, FileText, ChevronRight } from 'lucide-react';
+import { Plus, Search, Filter, ShoppingCart, CreditCard, FileText } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
@@ -41,102 +41,101 @@ function Pedidos() {
 
   if (error) {
     return (
-      <div className="p-6">
-        <div className="text-center">
-          <h2 className="text-xl font-semibold text-gray-900">Erro ao carregar vendas</h2>
-          <p className="text-gray-600 mt-2">Tente novamente mais tarde.</p>
-        </div>
+      <div className="text-center py-8">
+        <h2 className="text-xl font-semibold text-destructive">Erro ao carregar vendas</h2>
+        <p className="text-muted-foreground mt-2">Tente novamente mais tarde.</p>
       </div>
     );
   }
 
   return (
-    <div className="space-y-6">
-      <div className="flex justify-between items-center">
-        <div>
-          <h2 className="text-2xl font-bold text-foreground">Pedidos</h2>
-          <p className="text-muted-foreground">Gerencie todos os seus pedidos</p>
+    <div className="space-mobile">
+      <div className="flex-mobile gap-mobile items-center">
+        <div className="flex-1">
+          <h2 className="heading-mobile font-bold">Pedidos</h2>
+          <p className="text-mobile text-muted-foreground">Gerencie todos os seus pedidos</p>
         </div>
-        <Button className="bg-primary hover:bg-primary/90 text-primary-foreground">
+        <Button className="btn-mobile bg-primary hover:bg-primary/90 text-primary-foreground">
           <Plus className="w-4 h-4 mr-2" />
-          Novo Pedido
+          <span className="hidden sm:inline">Novo Pedido</span>
+          <span className="sm:hidden">Novo</span>
         </Button>
       </div>
 
-      <Card>
+      <Card className="card-mobile">
         <CardHeader>
           <CardTitle>Pedidos Recentes</CardTitle>
-          <div className="flex space-x-2">
+          <div className="flex-mobile gap-mobile">
             <div className="relative flex-1">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
-              <Input placeholder="Buscar pedidos..." className="pl-10" />
+              <Input placeholder="Buscar pedidos..." className="pl-10 input-mobile" />
             </div>
-            <Button variant="outline">
+            <Button variant="outline" size="sm">
               <Filter className="w-4 h-4 mr-2" />
-              Filtros
+              <span className="hidden sm:inline">Filtros</span>
             </Button>
           </div>
         </CardHeader>
         <CardContent>
           <div className="overflow-x-auto">
-            <table className="w-full">
-              <thead>
-                <tr className="border-b">
-                  <th className="text-left py-3 px-4">Pedido</th>
-                  <th className="text-left py-3 px-4">Cliente</th>
-                  <th className="text-left py-3 px-4">Data</th>
-                  <th className="text-left py-3 px-4">Status</th>
-                  <th className="text-left py-3 px-4">Valor</th>
-                  <th className="text-left py-3 px-4">Ações</th>
-                </tr>
-              </thead>
-              <tbody>
+            <Table className="table-mobile">
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Pedido</TableHead>
+                  <TableHead className="hidden sm:table-cell">Cliente</TableHead>
+                  <TableHead className="hidden md:table-cell">Data</TableHead>
+                  <TableHead>Status</TableHead>
+                  <TableHead>Valor</TableHead>
+                  <TableHead className="hidden sm:table-cell">Ações</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
                 {isLoading ? (
                   Array.from({ length: 5 }).map((_, i) => (
-                    <tr key={i} className="border-b">
-                      <td className="py-3 px-4"><Skeleton className="h-4 w-16" /></td>
-                      <td className="py-3 px-4"><Skeleton className="h-4 w-24" /></td>
-                      <td className="py-3 px-4"><Skeleton className="h-4 w-20" /></td>
-                      <td className="py-3 px-4"><Skeleton className="h-4 w-16" /></td>
-                      <td className="py-3 px-4"><Skeleton className="h-4 w-20" /></td>
-                      <td className="py-3 px-4"><Skeleton className="h-8 w-20" /></td>
-                    </tr>
+                    <TableRow key={i}>
+                      <TableCell><Skeleton className="h-4 w-16" /></TableCell>
+                      <TableCell className="hidden sm:table-cell"><Skeleton className="h-4 w-24" /></TableCell>
+                      <TableCell className="hidden md:table-cell"><Skeleton className="h-4 w-20" /></TableCell>
+                      <TableCell><Skeleton className="h-4 w-16" /></TableCell>
+                      <TableCell><Skeleton className="h-4 w-20" /></TableCell>
+                      <TableCell className="hidden sm:table-cell"><Skeleton className="h-8 w-20" /></TableCell>
+                    </TableRow>
                   ))
                 ) : sales?.length === 0 ? (
-                  <tr>
-                    <td colSpan={6} className="text-center py-8 text-muted-foreground">
+                  <TableRow>
+                    <TableCell colSpan={6} className="text-center py-8 text-muted-foreground">
                       Nenhuma venda encontrada. Clique em "Nova Venda" para criar sua primeira venda.
-                    </td>
-                  </tr>
+                    </TableCell>
+                  </TableRow>
                 ) : (
                   sales?.map((venda) => (
-                    <tr key={venda.id} className="border-b hover:bg-muted/50">
-                      <td className="py-3 px-4 font-medium">{venda.sale_number}</td>
-                      <td className="py-3 px-4">{venda.customers?.name || 'Cliente não informado'}</td>
-                      <td className="py-3 px-4">
+                    <TableRow key={venda.id} className="hover:bg-muted/50">
+                      <TableCell className="font-medium">{venda.sale_number}</TableCell>
+                      <TableCell className="hidden sm:table-cell">{venda.customers?.name || 'Cliente não informado'}</TableCell>
+                      <TableCell className="hidden md:table-cell">
                         {new Date(venda.sale_date).toLocaleDateString('pt-BR')}
-                      </td>
-                      <td className="py-3 px-4">
-                        <span className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(venda.status)}`}>
+                      </TableCell>
+                      <TableCell>
+                        <Badge className={getStatusColor(venda.status)}>
                           {getStatusText(venda.status)}
-                        </span>
-                      </td>
-                      <td className="py-3 px-4 font-medium">
+                        </Badge>
+                      </TableCell>
+                      <TableCell className="font-medium">
                         {new Intl.NumberFormat('pt-BR', {
                           style: 'currency',
                           currency: 'BRL',
                         }).format(venda.total_amount)}
-                      </td>
-                      <td className="py-3 px-4">
+                      </TableCell>
+                      <TableCell className="hidden sm:table-cell">
                         <Button variant="outline" size="sm">
                           Ver Detalhes
                         </Button>
-                      </td>
-                    </tr>
+                      </TableCell>
+                    </TableRow>
                   ))
                 )}
-              </tbody>
-            </table>
+              </TableBody>
+            </Table>
           </div>
         </CardContent>
       </Card>
@@ -147,10 +146,10 @@ function Pedidos() {
 // Componente para PDV
 function PDV() {
   return (
-    <div className="container mx-auto py-6">
+    <div className="space-mobile">
       <div className="mb-6">
-        <h1 className="text-3xl font-bold">Ponto de Venda (PDV)</h1>
-        <p className="text-muted-foreground">
+        <h1 className="heading-mobile font-bold">Ponto de Venda (PDV)</h1>
+        <p className="text-mobile text-muted-foreground">
           Sistema completo de vendas com controle de estoque e pagamentos.
         </p>
       </div>
@@ -171,12 +170,15 @@ function Propostas() {
   };
 
   return (
-    <div className="container mx-auto py-6">
-      <div className="flex justify-between items-center mb-6">
-        <h1 className="text-3xl font-bold">Propostas Comerciais</h1>
-        <Button onClick={() => openDialog()}>
+    <div className="space-mobile">
+      <div className="flex-mobile gap-mobile items-center">
+        <div className="flex-1">
+          <h1 className="heading-mobile font-bold">Propostas Comerciais</h1>
+        </div>
+        <Button onClick={() => openDialog()} className="btn-mobile">
           <Plus className="h-4 w-4 mr-2" />
-          Nova Proposta
+          <span className="hidden sm:inline">Nova Proposta</span>
+          <span className="sm:hidden">Nova</span>
         </Button>
       </div>
 
@@ -193,40 +195,39 @@ function Propostas() {
 export function Vendas() {
   const location = useLocation();
   
-  // Determina a aba ativa baseada na URL
   const getActiveTab = () => {
     const path = location.pathname;
     if (path.includes('/pedidos')) return 'pedidos';
     if (path.includes('/pdv')) return 'pdv';
     if (path.includes('/propostas')) return 'propostas';
-    return 'pedidos'; // padrão
+    return 'pedidos';
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-mobile">
       <div>
-        <h1 className="text-3xl font-bold text-foreground">Vendas</h1>
-        <p className="text-muted-foreground">Gerencie todos os seus pedidos e vendas</p>
+        <h1 className="heading-mobile font-bold">Vendas</h1>
+        <p className="text-mobile text-muted-foreground">Gerencie todos os seus pedidos e vendas</p>
       </div>
 
-      <Tabs value={getActiveTab()} className="space-y-6">
-        <TabsList className="grid w-full grid-cols-3">
+      <Tabs value={getActiveTab()} className="space-mobile">
+        <TabsList className="grid w-full grid-cols-3 h-auto">
           <TabsTrigger value="pedidos" asChild>
-            <NavLink to="/vendas/pedidos" className="flex items-center space-x-2">
+            <NavLink to="/vendas/pedidos" className="flex items-center justify-center space-x-2 py-2">
               <ShoppingCart className="w-4 h-4" />
-              <span>Pedidos</span>
+              <span className="hidden sm:inline">Pedidos</span>
             </NavLink>
           </TabsTrigger>
           <TabsTrigger value="pdv" asChild>
-            <NavLink to="/vendas/pdv" className="flex items-center space-x-2">
+            <NavLink to="/vendas/pdv" className="flex items-center justify-center space-x-2 py-2">
               <CreditCard className="w-4 h-4" />
-              <span>PDV</span>
+              <span className="hidden sm:inline">PDV</span>
             </NavLink>
           </TabsTrigger>
           <TabsTrigger value="propostas" asChild>
-            <NavLink to="/vendas/propostas" className="flex items-center space-x-2">
+            <NavLink to="/vendas/propostas" className="flex items-center justify-center space-x-2 py-2">
               <FileText className="w-4 h-4" />
-              <span>Propostas</span>
+              <span className="hidden sm:inline">Propostas</span>
             </NavLink>
           </TabsTrigger>
         </TabsList>
