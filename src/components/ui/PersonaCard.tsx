@@ -1,7 +1,6 @@
 import React from 'react';
 import { Card, CardContent } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { AlertTriangle, CheckCircle, MapPin, User, Heart, Clock } from 'lucide-react';
+import { AlertTriangle, CheckCircle, MapPin } from 'lucide-react';
 import { carlaPersona, lucasPersonaCard, anaPersona, eduardoPersona, patriciaPersona, joaoPersona } from '@/assets';
 
 interface PersonaData {
@@ -66,12 +65,9 @@ export function PersonaCard({ persona = defaultPersona, className = '' }: Person
       <CardContent className="p-0">
         {/* Foto da persona */}
         <div className="relative">
-          {/* Localização no canto superior esquerdo */}
-          <div className="absolute top-3 left-3 bg-black/60 text-white text-xs px-2 py-1 rounded-md backdrop-blur-sm">
-            <div className="flex items-center gap-1">
-              <MapPin className="h-3 w-3" />
-              <span>{currentPersona.location}</span>
-            </div>
+          {/* Localização no canto superior esquerdo - apenas ícone */}
+          <div className="absolute top-3 left-3 bg-black/60 text-white p-2 rounded-md backdrop-blur-sm">
+            <MapPin className="h-4 w-4" />
           </div>
           
           <img 
@@ -86,12 +82,9 @@ export function PersonaCard({ persona = defaultPersona, className = '' }: Person
         </div>
 
         <div className="p-8 space-y-6">
-          {/* Identificação simplificada - removido badge e localização */}
+          {/* Identificação simplificada - removido ícone e situação */}
           <div className="flex items-center text-xs text-muted-foreground pb-2 border-b border-muted/30">
-            <div className="flex items-center gap-1">
-              <User className="h-3 w-3" />
-              <span>{currentPersona.situation}</span>
-            </div>
+            <span>{currentPersona.age} anos</span>
           </div>
 
           {/* Maiores dificuldades */}
