@@ -17,7 +17,7 @@ export function Sidebar({ collapsed, onNavigate }: SidebarProps) {
     )}>
       <SidebarHeader collapsed={collapsed} />
 
-      <nav className="flex-1 py-4">
+      <nav className="flex-1 py-4 overflow-y-auto overflow-x-hidden">
         {menuItems
           .filter(item => !item.adminOnly || isAdmin || isSuperAdmin)
           .map((item) => {
