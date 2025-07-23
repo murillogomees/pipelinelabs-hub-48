@@ -4,7 +4,7 @@ interface SidebarHeaderProps {
   collapsed: boolean;
 }
 
-export function SidebarHeader({ collapsed }: SidebarHeaderProps) {
+export function SidebarHeader({ collapsed }: SidebarHeaderProps): JSX.Element {
   return (
     <div className="flex items-center gap-2 p-4 border-b border-border">
       <div className="p-2 rounded-lg bg-primary/10">
