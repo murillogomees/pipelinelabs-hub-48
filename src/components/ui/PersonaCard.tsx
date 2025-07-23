@@ -65,9 +65,12 @@ export function PersonaCard({ persona = defaultPersona, className = '' }: Person
       <CardContent className="p-0">
         {/* Foto da persona */}
         <div className="relative">
-          {/* Localização no canto superior esquerdo - apenas ícone */}
-          <div className="absolute top-3 left-3 bg-black/60 text-white p-2 rounded-md backdrop-blur-sm">
-            <MapPin className="h-4 w-4" />
+          {/* Localização no canto superior esquerdo com texto */}
+          <div className="absolute top-3 left-3 bg-black/60 text-white text-xs px-2 py-1 rounded-md backdrop-blur-sm">
+            <div className="flex items-center gap-1">
+              <MapPin className="h-3 w-3" />
+              <span>{currentPersona.location}</span>
+            </div>
           </div>
           
           <img 
@@ -82,10 +85,6 @@ export function PersonaCard({ persona = defaultPersona, className = '' }: Person
         </div>
 
         <div className="p-8 space-y-6">
-          {/* Identificação simplificada - removido ícone e situação */}
-          <div className="flex items-center text-xs text-muted-foreground pb-2 border-b border-muted/30">
-            <span>{currentPersona.age} anos</span>
-          </div>
 
           {/* Maiores dificuldades */}
           <div className="space-y-3">
