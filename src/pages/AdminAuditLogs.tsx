@@ -1,167 +1,423 @@
-import { useState } from 'react';
-import { Shield, AlertTriangle, Info, Download } from 'lucide-react';
+import React, { useState } from 'react';
+import { useQuery } from '@tanstack/react-query';
+import { format } from 'date-fns';
+import { ptBR } from 'date-fns/locale';
+import { Calendar, Filter, User, Database, Clock, Search, RefreshCw } from 'lucide-react';
+import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/components/Auth/AuthProvider';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
-import { useToast } from '@/hooks/use-toast';
-import { useAuditLogs, AuditLogFilters } from '@/hooks/useAuditLogs';
-import { AuditLogsFilters } from '@/components/Admin/AuditLogs/AuditLogsFilters';
-import { AuditLogsTable } from '@/components/Admin/AuditLogs/AuditLogsTable';
-import { StatsCard } from '@/components/Dashboard/StatsCard';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { toast } from 'sonner';
 
-export default function AdminAuditLogs() {
-  const { toast } = useToast();
-  const [filters, setFilters] = useState<AuditLogFilters>({
-    limit: 100,
-    offset: 0
+interface AuditLog {
+  id: string;
+  company_id: string;
+  user_id: string | null;
+  user_email: string | null;
+  user_name: string | null;
+  action: string;
+  resource_type: string;
+  resource_id: string | null;
+  old_values: any;
+  new_values: any;
+  ip_address: any;
+  user_agent: string | null;
+  severity: string;
+  status: string;
+  details: any;
+  created_at: string;
+}
+
+const AdminAuditLogs = () => {
+  const { user } = useAuth();
+  const [filters, setFilters] = useState({
+    action: '',
+    resource_type: '',
+    severity: '',
+    user_search: '',
+    start_date: '',
+    end_date: '',
   });
 
-  const { logs, isLoading, refetch } = useAuditLogs(filters);
+  // Verificar se o usuário é admin
+  if (!user) {
+    return (
+      <div className="flex items-center justify-center min-h-[400px]">
+        <p className="text-muted-foreground">Carregando...</p>
+      </div>
+    );
+  }
 
-  // Calculate stats
-  const totalLogs = logs?.length || 0;
-  const criticalCount = logs?.filter(log => log.severity === 'critical').length || 0;
-  const errorCount = logs?.filter(log => log.severity === 'error').length || 0;
-  const warningCount = logs?.filter(log => log.severity === 'warning').length || 0;
-
-  const handleExport = async () => {
-    try {
-      if (!logs || logs.length === 0) {
-        toast({
-          title: 'Nenhum dado para exportar',
-          description: 'Não há logs de auditoria para exportar.',
-          variant: 'destructive',
+  const { data: auditLogs, isLoading, error, refetch } = useQuery({
+    queryKey: ['audit-logs', filters],
+    queryFn: async (): Promise<AuditLog[]> => {
+      try {
+        const { data, error } = await supabase.rpc('get_audit_logs', {
+          p_company_id: null,
+          p_user_id: null,
+          p_action: filters.action || null,
+          p_resource_type: filters.resource_type || null,
+          p_severity: filters.severity || null,
+          p_start_date: filters.start_date ? new Date(filters.start_date).toISOString() : null,
+          p_end_date: filters.end_date ? new Date(filters.end_date).toISOString() : null,
+          p_limit: 100,
+          p_offset: 0,
         });
-        return;
+
+        if (error) {
+          console.error('Erro ao buscar audit logs:', error);
+          throw error;
+        }
+
+        return data || [];
+      } catch (err) {
+        console.error('Erro na query de audit logs:', err);
+        toast.error('Erro ao carregar logs de auditoria');
+        return [];
       }
+    },
+    enabled: !!user,
+    refetchInterval: 30000, // Atualizar a cada 30 segundos
+  });
 
-      // Create CSV content
-      const headers = [
-        'Data/Hora',
-        'Usuário',
-        'Email',
-        'Ação',
-        'Recurso',
-        'ID do Recurso',
-        'Severidade',
-        'Status',
-        'IP',
-        'Detalhes'
-      ];
+  const handleFilterChange = (key: string, value: string) => {
+    setFilters(prev => ({ ...prev, [key]: value }));
+  };
 
-      const csvData = logs.map(log => [
-        new Date(log.created_at).toLocaleString('pt-BR'),
-        log.user_name || 'N/A',
-        log.user_email || 'N/A',
-        log.action,
-        log.resource_type,
-        log.resource_id || 'N/A',
-        log.severity,
-        log.status,
-        log.ip_address || 'N/A',
-        JSON.stringify(log.details || {})
-      ]);
+  const getActionBadge = (action: string, status: string) => {
+    const baseAction = action.split(':')[0];
+    
+    let variant: "default" | "secondary" | "destructive" | "outline" = "default";
+    let icon = "📝";
 
-      const csvContent = [headers, ...csvData]
-        .map(row => row.map(cell => `"${cell}"`).join(','))
-        .join('\n');
+    switch (baseAction) {
+      case 'create':
+      case 'insert':
+        variant = "default";
+        icon = "🟢";
+        break;
+      case 'update':
+      case 'edit':
+        variant = "secondary";
+        icon = "🟡";
+        break;
+      case 'delete':
+      case 'remove':
+        variant = "destructive";
+        icon = "🔴";
+        break;
+      case 'login':
+      case 'auth':
+        variant = "outline";
+        icon = "🔐";
+        break;
+      default:
+        variant = "outline";
+        icon = "📋";
+    }
 
-      // Download CSV
-      const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-      const link = document.createElement('a');
-      const url = URL.createObjectURL(blob);
-      link.setAttribute('href', url);
-      link.setAttribute('download', `audit_logs_${new Date().toISOString().split('T')[0]}.csv`);
-      link.style.visibility = 'hidden';
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
+    return (
+      <Badge variant={variant} className="font-mono text-xs">
+        {icon} {action}
+      </Badge>
+    );
+  };
 
-      toast({
-        title: 'Exportação concluída',
-        description: 'Os logs de auditoria foram exportados com sucesso.',
-      });
-    } catch (error) {
-      console.error('Error exporting logs:', error);
-      toast({
-        title: 'Erro na exportação',
-        description: 'Não foi possível exportar os logs de auditoria.',
-        variant: 'destructive',
+  const getSeverityBadge = (severity: string) => {
+    let variant: "default" | "secondary" | "destructive" | "outline" = "default";
+    
+    switch (severity) {
+      case 'critical':
+        variant = "destructive";
+        break;
+      case 'warning':
+        variant = "secondary";
+        break;
+      case 'info':
+        variant = "outline";
+        break;
+      default:
+        variant = "default";
+    }
+
+    return <Badge variant={variant}>{severity}</Badge>;
+  };
+
+  const formatChanges = (oldValues: any, newValues: any) => {
+    if (!oldValues && !newValues) return '-';
+    
+    const changes = [];
+    
+    if (newValues && typeof newValues === 'object') {
+      Object.keys(newValues).forEach(key => {
+        const oldVal = oldValues?.[key];
+        const newVal = newValues[key];
+        
+        if (oldVal !== newVal) {
+          changes.push(`${key}: ${oldVal || 'vazio'} → ${newVal || 'vazio'}`);
+        }
       });
     }
+    
+    return changes.length > 0 ? changes.slice(0, 3).join(', ') + (changes.length > 3 ? '...' : '') : '-';
   };
+
+  if (error) {
+    return (
+      <div className="container mx-auto p-6">
+        <Card>
+          <CardContent className="p-6">
+            <div className="text-center">
+              <p className="text-red-600 mb-4">Erro ao carregar logs de auditoria</p>
+              <Button onClick={() => refetch()}>
+                <RefreshCw className="h-4 w-4 mr-2" />
+                Tentar Novamente
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
 
   return (
     <div className="container mx-auto p-6 space-y-6">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold">Logs de Auditoria</h1>
+          <h1 className="text-3xl font-bold">Logs de Auditoria</h1>
           <p className="text-muted-foreground">
-            Rastreamento completo de ações críticas e alterações no sistema
+            Rastreamento de ações sensíveis no sistema
           </p>
         </div>
-        <Badge variant="outline" className="w-fit">
-          <Shield className="h-4 w-4 mr-1" />
-          Segurança
-        </Badge>
+        <Button onClick={() => refetch()} disabled={isLoading}>
+          <RefreshCw className={`h-4 w-4 mr-2 ${isLoading ? 'animate-spin' : ''}`} />
+          Atualizar
+        </Button>
       </div>
 
-      {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        <StatsCard
-          title="Total de Logs"
-          value={totalLogs.toString()}
-          icon={Info}
-          color="blue"
-        />
-        <StatsCard
-          title="Críticos"
-          value={criticalCount.toString()}
-          icon={AlertTriangle}
-          color="red"
-        />
-        <StatsCard
-          title="Erros"
-          value={errorCount.toString()}
-          icon={AlertTriangle}
-          color="red"
-        />
-        <StatsCard
-          title="Avisos"
-          value={warningCount.toString()}
-          icon={AlertTriangle}
-          color="orange"
-        />
-      </div>
-
-      {/* Filters */}
+      {/* Filtros */}
       <Card>
         <CardHeader>
-          <CardTitle>Filtros de Pesquisa</CardTitle>
+          <CardTitle className="flex items-center gap-2">
+            <Filter className="h-5 w-5" />
+            Filtros
+          </CardTitle>
         </CardHeader>
-        <CardContent>
-          <AuditLogsFilters
-            filters={filters}
-            onFiltersChange={setFilters}
-            onExport={handleExport}
-          />
+        <CardContent className="space-y-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            <div className="space-y-2">
+              <label className="text-sm font-medium">Tipo de Ação</label>
+              <Select value={filters.action} onValueChange={(value) => handleFilterChange('action', value)}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Todas as ações" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="">Todas as ações</SelectItem>
+                  <SelectItem value="create">Criação</SelectItem>
+                  <SelectItem value="update">Atualização</SelectItem>
+                  <SelectItem value="delete">Exclusão</SelectItem>
+                  <SelectItem value="login">Login</SelectItem>
+                  <SelectItem value="auth">Autenticação</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="space-y-2">
+              <label className="text-sm font-medium">Tipo de Recurso</label>
+              <Select value={filters.resource_type} onValueChange={(value) => handleFilterChange('resource_type', value)}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Todos os recursos" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="">Todos os recursos</SelectItem>
+                  <SelectItem value="user">Usuário</SelectItem>
+                  <SelectItem value="company">Empresa</SelectItem>
+                  <SelectItem value="product">Produto</SelectItem>
+                  <SelectItem value="sale">Venda</SelectItem>
+                  <SelectItem value="invoice">Nota Fiscal</SelectItem>
+                  <SelectItem value="customer">Cliente</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="space-y-2">
+              <label className="text-sm font-medium">Severidade</label>
+              <Select value={filters.severity} onValueChange={(value) => handleFilterChange('severity', value)}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Todas as severidades" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="">Todas</SelectItem>
+                  <SelectItem value="info">Info</SelectItem>
+                  <SelectItem value="warning">Warning</SelectItem>
+                  <SelectItem value="critical">Critical</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="space-y-2">
+              <label className="text-sm font-medium">Data Inicial</label>
+              <Input
+                type="date"
+                value={filters.start_date}
+                onChange={(e) => handleFilterChange('start_date', e.target.value)}
+              />
+            </div>
+
+            <div className="space-y-2">
+              <label className="text-sm font-medium">Data Final</label>
+              <Input
+                type="date"
+                value={filters.end_date}
+                onChange={(e) => handleFilterChange('end_date', e.target.value)}
+              />
+            </div>
+
+            <div className="space-y-2">
+              <label className="text-sm font-medium">Buscar Usuário</label>
+              <div className="relative">
+                <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                <Input
+                  placeholder="Email ou nome do usuário"
+                  value={filters.user_search}
+                  onChange={(e) => handleFilterChange('user_search', e.target.value)}
+                  className="pl-9"
+                />
+              </div>
+            </div>
+          </div>
         </CardContent>
       </Card>
 
-      {/* Logs Table */}
+      {/* Estatísticas */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <Card>
+          <CardContent className="p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-muted-foreground">Total de Logs</p>
+                <p className="text-2xl font-bold">{auditLogs?.length || 0}</p>
+              </div>
+              <Database className="h-8 w-8 text-blue-600" />
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardContent className="p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-muted-foreground">Usuários Únicos</p>
+                <p className="text-2xl font-bold">
+                  {auditLogs ? new Set(auditLogs.map(log => log.user_id)).size : 0}
+                </p>
+              </div>
+              <User className="h-8 w-8 text-green-600" />
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardContent className="p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-muted-foreground">Última Atualização</p>
+                <p className="text-sm font-medium">
+                  {auditLogs?.[0]?.created_at 
+                    ? format(new Date(auditLogs[0].created_at), "dd/MM/yyyy HH:mm", { locale: ptBR })
+                    : '-'
+                  }
+                </p>
+              </div>
+              <Clock className="h-8 w-8 text-orange-600" />
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Tabela de Logs */}
       <Card>
         <CardHeader>
           <CardTitle>Logs de Auditoria</CardTitle>
         </CardHeader>
         <CardContent>
-          <AuditLogsTable
-            logs={logs || []}
-            filters={filters}
-            onFiltersChange={setFilters}
-            isLoading={isLoading}
-          />
+          {isLoading ? (
+            <div className="flex items-center justify-center p-8">
+              <RefreshCw className="h-8 w-8 animate-spin" />
+              <span className="ml-2">Carregando logs...</span>
+            </div>
+          ) : auditLogs && auditLogs.length > 0 ? (
+            <div className="overflow-x-auto">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Data/Hora</TableHead>
+                    <TableHead>Usuário</TableHead>
+                    <TableHead>Ação</TableHead>
+                    <TableHead>Recurso</TableHead>
+                    <TableHead>Severidade</TableHead>
+                    <TableHead>Alterações</TableHead>
+                    <TableHead>Status</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {auditLogs.map((log) => (
+                    <TableRow key={log.id}>
+                      <TableCell className="font-mono text-xs">
+                        {format(new Date(log.created_at), "dd/MM/yyyy HH:mm:ss", { locale: ptBR })}
+                      </TableCell>
+                      <TableCell>
+                        <div className="space-y-1">
+                          <div className="font-medium">{log.user_name || 'Sistema'}</div>
+                          <div className="text-xs text-muted-foreground">{log.user_email}</div>
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        {getActionBadge(log.action, log.status)}
+                      </TableCell>
+                      <TableCell>
+                        <div className="space-y-1">
+                          <div className="font-medium">{log.resource_type}</div>
+                          {log.resource_id && (
+                            <div className="text-xs text-muted-foreground font-mono">
+                              ID: {log.resource_id.slice(0, 8)}...
+                            </div>
+                          )}
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        {getSeverityBadge(log.severity)}
+                      </TableCell>
+                      <TableCell className="max-w-xs">
+                        <div className="text-xs text-muted-foreground truncate" title={formatChanges(log.old_values, log.new_values)}>
+                          {formatChanges(log.old_values, log.new_values)}
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <Badge variant={log.status === 'success' ? 'default' : 'destructive'}>
+                          {log.status}
+                        </Badge>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
+          ) : (
+            <div className="text-center py-8">
+              <Database className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+              <p className="text-muted-foreground">Nenhum log de auditoria encontrado</p>
+            </div>
+          )}
         </CardContent>
       </Card>
     </div>
   );
-}
+};
+
+export default AdminAuditLogs;
