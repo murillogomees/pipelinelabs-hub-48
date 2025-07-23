@@ -40,7 +40,7 @@ export function PersonaCard({ className = '' }: PersonaCardProps) {
               </div>
             </div>
             <div className="flex gap-1">
-              <Badge variant="secondary" className="text-xs px-1.5 py-0.5 h-4">
+              <Badge variant="secondary" className="text-xs px-1 py-0 h-3">
                 Mãe solo • 5 anos
               </Badge>
             </div>
