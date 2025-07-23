@@ -59,35 +59,35 @@ export function PersonaCardCompact({ persona, className = '' }: PersonaCardCompa
             </div>
           </div>
 
-          {/* Maiores dificuldades - Destacado */}
-          <div className="space-y-4">
+          {/* Maiores dificuldades */}
+          <div className="space-y-3">
             <div className="flex items-center gap-2 text-red-600">
-              <AlertTriangle className="h-5 w-5" />
-              <span className="font-bold text-base">Principais Dificuldades</span>
+              <AlertTriangle className="h-4 w-4" />
+              <span className="font-semibold text-sm">Principais Dificuldades</span>
             </div>
             
-            <div className="space-y-3">
+            <div className="space-y-2">
               {(persona.problems || []).slice(0, 4).map((problem, index) => (
-                <div key={index} className="flex items-start gap-3 text-base">
-                  <div className="w-2 h-2 bg-red-500 rounded-full mt-2 flex-shrink-0"></div>
-                  <span className="font-medium">{problem}</span>
+                <div key={index} className="flex items-start gap-2 text-sm">
+                  <div className="w-1.5 h-1.5 bg-red-500 rounded-full mt-2 flex-shrink-0"></div>
+                  <span>{problem}</span>
                 </div>
               ))}
             </div>
           </div>
 
-          {/* Soluções do Pipeline Labs - Destacado */}
-          <div className="space-y-4">
+          {/* Soluções do Pipeline Labs */}
+          <div className="space-y-3">
             <div className="flex items-center gap-2 text-green-600">
-              <CheckCircle className="h-5 w-5" />
-              <span className="font-bold text-base">Com Pipeline Labs</span>
+              <CheckCircle className="h-4 w-4" />
+              <span className="font-semibold text-sm">Com Pipeline Labs</span>
             </div>
             
-            <div className="space-y-3">
+            <div className="space-y-2">
               {(persona.solutions || []).slice(0, 4).map((solution, index) => (
-                <div key={index} className="flex items-start gap-3 text-base">
-                  <CheckCircle className="h-5 w-5 text-green-500 mt-0.5 flex-shrink-0" />
-                  <span className="font-medium">{solution}</span>
+                <div key={index} className="flex items-start gap-2 text-sm">
+                  <CheckCircle className="h-4 w-4 text-green-500 mt-0.5 flex-shrink-0" />
+                  <span>{solution}</span>
                 </div>
               ))}
             </div>
