@@ -31,6 +31,7 @@ export const useMarketplaceIntegrations = () => {
   const { data: integrations, isLoading } = useQuery({
     queryKey: ['marketplace-integrations'],
     queryFn: async () => {
+      // Para testes, buscar todas as integrações (incluindo company_id null)
       const { data, error } = await (supabase as any)
         .from('marketplace_integrations')
         .select('*')
