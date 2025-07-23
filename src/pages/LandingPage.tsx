@@ -208,12 +208,9 @@ export function LandingPage() {
 
             {/* Grid responsivo: 3 cards por linha no desktop, 2 no tablet, 1 no mobile */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 max-w-6xl mx-auto">
-              {/* Featured persona card - Carla */}
-              <PersonaCard />
-              
-              {/* Other personas with compact cards */}
-              {painSection.content_data?.personas?.slice(1).map((persona: any, index: number) => (
-                <PersonaCardCompact key={index + 1} persona={persona} />
+              {/* All personas with the same style */}
+              {painSection.content_data?.personas?.map((persona: any, index: number) => (
+                <PersonaCard key={index} persona={persona} />
               ))}
             </div>
           </div>

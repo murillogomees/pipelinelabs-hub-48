@@ -14,3 +14,5 @@ export { default as successTeam } from './success-team.jpg';
 export { default as carlaPersona } from './carla-persona.jpg';
 export { default as lucasPersona } from './lucas-persona.jpg';
 export { default as lucasPersonaCard } from './lucas-persona-card.jpg';
+export { default as anaPersona } from './ana-persona.jpg';
+export { default as eduardoPersona } from './eduardo-persona.jpg';
