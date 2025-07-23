@@ -62,38 +62,35 @@ export function PersonaCard({ persona = defaultPersona, className = '' }: Person
   const personaImage = getPersonaImage(currentPersona.id);
 
   return (
-    <Card className={`overflow-hidden shadow-lg h-auto min-h-[700px] ${className}`}>
+    <Card className={`overflow-hidden shadow-lg h-auto min-h-[650px] ${className}`}>
       <CardContent className="p-0">
         {/* Foto da persona */}
         <div className="relative">
+          {/* Localização no canto superior esquerdo */}
+          <div className="absolute top-3 left-3 bg-black/60 text-white text-xs px-2 py-1 rounded-md backdrop-blur-sm">
+            <div className="flex items-center gap-1">
+              <MapPin className="h-3 w-3" />
+              <span>{currentPersona.location}</span>
+            </div>
+          </div>
+          
           <img 
             src={personaImage} 
             alt={`${currentPersona.name} - ${currentPersona.business}`} 
             className="w-full h-48 object-cover"
           />
           <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/60 to-transparent p-4">
-            <h3 className="text-white font-bold text-2xl">{currentPersona.name}</h3>
+            <h3 className="text-white font-bold text-2xl">{currentPersona.name}, {currentPersona.age}</h3>
             <p className="text-white/90 text-base">{currentPersona.business}</p>
           </div>
         </div>
 
         <div className="p-8 space-y-6">
-          {/* Identificação - Minimalista */}
-          <div className="flex items-center justify-between text-xs text-muted-foreground pb-2 border-b border-muted/30">
-            <div className="flex items-center gap-3">
-              <div className="flex items-center gap-1">
-                <User className="h-3 w-3" />
-                <span>{currentPersona.age} anos</span>
-              </div>
-              <div className="flex items-center gap-1">
-                <MapPin className="h-3 w-3" />
-                <span>{currentPersona.location}</span>
-              </div>
-            </div>
-            <div className="flex gap-1">
-              <Badge variant="secondary" className="text-xs px-2 py-1 font-medium">
-                {currentPersona.situation}
-              </Badge>
+          {/* Identificação simplificada - removido badge e localização */}
+          <div className="flex items-center text-xs text-muted-foreground pb-2 border-b border-muted/30">
+            <div className="flex items-center gap-1">
+              <User className="h-3 w-3" />
+              <span>{currentPersona.situation}</span>
             </div>
           </div>
 
