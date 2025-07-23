@@ -9,7 +9,7 @@ interface BasicInfoFieldsProps {
     display_name: string;
     email: string;
     phone: string;
-    role: string;
+    user_type: string;
     is_active: boolean;
   };
   onChange: (field: string, value: string | boolean) => void;
@@ -57,17 +57,17 @@ export function BasicInfoFields({ formData, onChange, isEditing = false }: Basic
         </div>
 
         <div className="space-y-2">
-          <Label htmlFor="role">Cargo</Label>
+          <Label htmlFor="user_type">Tipo de Usuário</Label>
           <SearchableSelect
-            value={formData.role}
-            onValueChange={(value) => onChange('role', value)}
-            placeholder="Selecione o cargo..."
-            searchPlaceholder="Buscar cargo..."
+            value={formData.user_type}
+            onValueChange={(value) => onChange('user_type', value)}
+            placeholder="Selecione o tipo..."
+            searchPlaceholder="Buscar tipo..."
             staticOptions={[
-              { value: "user", label: "Usuário" },
-              { value: "admin", label: "Administrador" }
+              { value: "operador", label: "Operador" },
+              { value: "contratante", label: "Contratante" }
             ]}
-            emptyMessage="Nenhum cargo encontrado"
+            emptyMessage="Nenhum tipo encontrado"
           />
         </div>
       </div>

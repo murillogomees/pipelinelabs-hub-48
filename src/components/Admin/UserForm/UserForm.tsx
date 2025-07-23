@@ -17,19 +17,19 @@ const defaultFormData: UserFormData = {
   email: '',
   phone: '',
   is_active: true,
-  role: 'user',
+  user_type: 'operador',
   password: '',
   company_id: '',
   permissions: {
     dashboard: true,
-    vendas: true,
-    produtos: true,
-    clientes: true,
-    financeiro: true,
-    notas_fiscais: true,
+    vendas: false,
+    produtos: false,
+    clientes: false,
+    financeiro: false,
+    notas_fiscais: false,
     producao: false,
-    admin: false
-  }
+    contratos: false,
+  },
 };
 
 export function UserForm({ user, onSubmit, loading }: UserFormProps) {
@@ -69,18 +69,18 @@ export function UserForm({ user, onSubmit, loading }: UserFormProps) {
         email: user.email || '',
         phone: user.phone || '',
         is_active: user.is_active,
-        role: user.user_companies[0]?.role || 'user',
+        user_type: user.user_companies[0]?.user_type || 'operador',
         password: '',
         company_id: user.user_companies[0]?.company_id || '',
         permissions: {
           dashboard: true,
-          vendas: true,
-          produtos: true,
-          clientes: true,
-          financeiro: true,
-          notas_fiscais: true,
+          vendas: false,
+          produtos: false,
+          clientes: false,
+          financeiro: false,
+          notas_fiscais: false,
           producao: false,
-          admin: false,
+          contratos: false,
           ...user.user_companies[0]?.permissions
         }
       });

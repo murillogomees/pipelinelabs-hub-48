@@ -73,7 +73,7 @@ export function useUserManagement(onSave: () => void, onClose: () => void) {
         .insert({
           user_id: authData.user.id,
           company_id: formData.company_id || currentUserCompany.company_id,
-          role: formData.role,
+        user_type: formData.user_type,
           permissions: formData.permissions,
           is_active: formData.is_active
         });
@@ -121,7 +121,7 @@ export function useUserManagement(onSave: () => void, onClose: () => void) {
     const { error: companyError } = await supabase
       .from('user_companies')
       .update({
-        role: formData.role,
+        user_type: formData.user_type,
         permissions: formData.permissions,
         is_active: formData.is_active
       })

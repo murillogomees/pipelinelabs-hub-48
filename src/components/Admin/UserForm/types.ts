@@ -3,7 +3,7 @@ export interface UserFormData {
   email: string;
   phone: string;
   is_active: boolean;
-  role: string;
+  user_type: 'contratante' | 'operador';
   password: string;
   company_id: string;
   permissions: {
@@ -14,7 +14,7 @@ export interface UserFormData {
     financeiro: boolean;
     notas_fiscais: boolean;
     producao: boolean;
-    admin: boolean;
+    contratos: boolean;
   };
 }
 
@@ -32,7 +32,7 @@ export interface User {
   is_active: boolean;
   user_companies: Array<{
     id: string;
-    role: string;
+    user_type: 'contratante' | 'operador';
     company_id: string;
     permissions: Record<string, boolean>;
   }>;

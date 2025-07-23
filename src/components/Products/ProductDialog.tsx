@@ -6,8 +6,6 @@ import { ProductBasicForm } from './forms/ProductBasicForm';
 import { ProductStockForm } from './forms/ProductStockForm';
 import { ProductPriceForm } from './forms/ProductPriceForm';
 import { ProductTaxForm } from './forms/ProductTaxForm';
-import { ProductAttributesForm } from './forms/ProductAttributesForm';
-import { ProductImagesForm } from './forms/ProductImagesForm';
 import { useCreateProduct, useUpdateProduct } from './hooks/useProducts';
 import { Product } from './types';
 import { ProductFormData } from './schema';
@@ -97,13 +95,11 @@ export function ProductDialog({ open, onOpenChange, product }: ProductDialogProp
         </DialogHeader>
 
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-          <TabsList className="grid w-full grid-cols-6">
+          <TabsList className="grid w-full grid-cols-4">
             <TabsTrigger value="dados">Dados</TabsTrigger>
             <TabsTrigger value="estoque">Estoque</TabsTrigger>
             <TabsTrigger value="preco">Preço</TabsTrigger>
             <TabsTrigger value="tributacao">Tributação</TabsTrigger>
-            <TabsTrigger value="atributos">Atributos</TabsTrigger>
-            <TabsTrigger value="imagens">Imagens</TabsTrigger>
           </TabsList>
 
           <TabsContent value="dados" className="space-y-4">
@@ -134,19 +130,6 @@ export function ProductDialog({ open, onOpenChange, product }: ProductDialogProp
             />
           </TabsContent>
 
-          <TabsContent value="atributos" className="space-y-4">
-            <ProductAttributesForm 
-              data={formData} 
-              onChange={handleFormChange}
-            />
-          </TabsContent>
-
-          <TabsContent value="imagens" className="space-y-4">
-            <ProductImagesForm 
-              data={formData} 
-              onChange={handleFormChange}
-            />
-          </TabsContent>
         </Tabs>
 
         <div className="flex justify-end space-x-2 pt-4 border-t">

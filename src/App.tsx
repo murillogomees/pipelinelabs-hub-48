@@ -52,11 +52,9 @@ const Analytics = React.lazy(() => import('@/pages/Analytics'));
 
 // LGPD pages
 const Privacidade = React.lazy(() => import('@/pages/Privacidade'));
-const UserDadosPessoais = React.lazy(() => import('@/pages/UserDadosPessoais'));
 
-// Terms pages
+// Terms pages  
 const TermosDeUso = React.lazy(() => import('@/pages/TermosDeUso'));
-const UserTermosAceitos = React.lazy(() => import('@/pages/UserTermosAceitos'));
 
 // SLA page
 const SLA = React.lazy(() => import('@/pages/SLA'));
@@ -214,12 +212,6 @@ function RouteHandler() {
         <Route path="admin/monitoramento" element={<ProtectedRoute requireSuperAdmin><AdminMonitoramento /></ProtectedRoute>} />
         <Route path="admin/versions" element={<ProtectedRoute requireSuperAdmin><AdminVersions /></ProtectedRoute>} />
         <Route path="analytics" element={<Analytics />} />
-        
-        {/* User LGPD routes */}
-        <Route path="user/dados-pessoais" element={<UserDadosPessoais />} />
-        
-        {/* User Terms routes */}
-        <Route path="user/termos-aceitos" element={<UserTermosAceitos />} />
         
         <Route path="*" element={<NotFound />} />
       </Route>

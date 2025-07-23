@@ -30,24 +30,6 @@ export function ProductBasicForm({ data, onChange }: ProductBasicFormProps) {
                 placeholder="Ex: PRD001"
               />
             </div>
-            <div>
-              <Label htmlFor="gtin">GTIN</Label>
-              <Input
-                id="gtin"
-                value={data.gtin || ''}
-                onChange={(e) => onChange('gtin', e.target.value)}
-                placeholder="Ex: 7891234567890"
-              />
-            </div>
-            <div>
-              <Label htmlFor="gtin_tax">GTIN Tributário</Label>
-              <Input
-                id="gtin_tax"
-                value={data.gtin_tax || ''}
-                onChange={(e) => onChange('gtin_tax', e.target.value)}
-                placeholder="Ex: 7891234567890"
-              />
-            </div>
           </div>
 
           <div>
