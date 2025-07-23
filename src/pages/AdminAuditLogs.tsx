@@ -217,7 +217,6 @@ const AdminAuditLogs = () => {
                   <SelectValue placeholder="Todas as ações" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">Todas as ações</SelectItem>
                   <SelectItem value="create">Criação</SelectItem>
                   <SelectItem value="update">Atualização</SelectItem>
                   <SelectItem value="delete">Exclusão</SelectItem>
@@ -234,7 +233,6 @@ const AdminAuditLogs = () => {
                   <SelectValue placeholder="Todos os recursos" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">Todos os recursos</SelectItem>
                   <SelectItem value="user">Usuário</SelectItem>
                   <SelectItem value="company">Empresa</SelectItem>
                   <SelectItem value="product">Produto</SelectItem>
@@ -252,7 +250,6 @@ const AdminAuditLogs = () => {
                   <SelectValue placeholder="Todas as severidades" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">Todas</SelectItem>
                   <SelectItem value="info">Info</SelectItem>
                   <SelectItem value="warning">Warning</SelectItem>
                   <SelectItem value="critical">Critical</SelectItem>
