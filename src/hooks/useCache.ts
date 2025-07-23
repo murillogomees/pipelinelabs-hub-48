@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { cacheManager, generateCacheKey, CACHE_TTL } from '@/lib/cache/redis';
+import { useRedisCache } from '@/hooks/useRedisCache';
 import { createLogger } from '@/utils/logger';
 
 const cacheLogger = createLogger('useCache');

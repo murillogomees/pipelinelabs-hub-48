@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { BaseLayout } from '@/components/Base/BaseLayout';
 import { BaseCard } from '@/components/Base/BaseCard';
 import { Button } from '@/components/ui/button';
@@ -19,25 +19,69 @@ import {
   Info
 } from 'lucide-react';
 import { useCacheStats, useCacheInvalidation } from '@/hooks/useCache';
+import { useRedisCache } from '@/hooks/useRedisCache';
 import { toast } from 'sonner';
 import { formatDistanceToNow } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 
 export function AdminCache() {
-  const { stats, loading, refreshStats } = useCacheStats();
-  const { invalidatePattern, flushAllCache } = useCacheInvalidation();
+  const redisCache = useRedisCache();
   const [searchTerm, setSearchTerm] = useState('');
   const [invalidating, setInvalidating] = useState(false);
   const [flushing, setFlushing] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [stats, setStats] = useState<{
+    keys: string[];
+    redisAvailable: boolean;
+    fallbackSize: number;
+    totalKeys: number;
+  } | null>(null);
   
   const filteredKeys = stats?.keys?.filter(key => 
     key.toLowerCase().includes(searchTerm.toLowerCase())
   ) || [];
+
+  const refreshStats = async () => {
+    setLoading(true);
+    try {
+      const redisStats = await redisCache.getStats();
+      if (redisStats) {
+        setStats({
+          keys: redisStats.keys || [],
+          redisAvailable: true,
+          fallbackSize: 0,
+          totalKeys: redisStats.totalKeys || 0
+        });
+      } else {
+        // Fallback para stats locais
+        setStats({
+          keys: [],
+          redisAvailable: false,
+          fallbackSize: 0,
+          totalKeys: 0
+        });
+      }
+    } catch (error) {
+      console.error('Erro ao obter stats:', error);
+      setStats({
+        keys: [],
+        redisAvailable: false,
+        fallbackSize: 0,
+        totalKeys: 0
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    refreshStats();
+  }, []);
   
   const handleInvalidateKey = async (key: string) => {
     setInvalidating(true);
     try {
-      await invalidatePattern(key);
+      await redisCache.remove(key);
       await refreshStats();
       toast.success(`Cache invalidado: ${key}`);
     } catch (error) {
@@ -54,7 +98,7 @@ export function AdminCache() {
     
     setFlushing(true);
     try {
-      await flushAllCache();
+      await redisCache.flush();
       await refreshStats();
       toast.success('Todo o cache foi limpo');
     } catch (error) {

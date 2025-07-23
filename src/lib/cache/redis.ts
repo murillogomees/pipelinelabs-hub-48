@@ -7,20 +7,26 @@ const cacheLogger = createLogger('cache');
 let redisClient: Redis | null = null;
 
 export const getRedisClient = (): Redis | null => {
-  // Redis não deve ser usado no client-side
+  // Redis só funciona em edge functions (server-side)
   if (typeof window !== 'undefined') {
-    cacheLogger.warn('Redis não disponível no client-side. Usando fallback em memória.');
+    return null;
+  }
+
+  // Verificar se está em ambiente Deno (edge functions)
+  // @ts-ignore - Deno só existe em edge functions
+  if (typeof globalThis.Deno === 'undefined') {
     return null;
   }
 
   if (!redisClient) {
     try {
-      // Configuração do Redis usando variáveis de ambiente (apenas server-side)
-      const redisUrl = process.env.UPSTASH_REDIS_REST_URL;
-      const redisToken = process.env.UPSTASH_REDIS_REST_TOKEN;
+      // Configuração do Redis usando variáveis de ambiente Deno
+      // @ts-ignore - Deno só existe em edge functions
+      const redisUrl = globalThis.Deno.env.get('UPSTASH_REDIS_REST_URL');
+      // @ts-ignore - Deno só existe em edge functions
+      const redisToken = globalThis.Deno.env.get('UPSTASH_REDIS_REST_TOKEN');
       
       if (!redisUrl || !redisToken) {
-        cacheLogger.warn('Redis não configurado. Usando fallback sem cache.');
         return null;
       }
       
@@ -29,7 +35,7 @@ export const getRedisClient = (): Redis | null => {
         token: redisToken,
       });
       
-      cacheLogger.info('Redis client inicializado');
+      cacheLogger.info('Redis client inicializado em edge function');
     } catch (error) {
       cacheLogger.error('Erro ao conectar com Redis:', error);
       return null;
