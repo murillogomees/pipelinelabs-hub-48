@@ -13,6 +13,7 @@ import {
 import { MarketplaceIntegration } from '@/hooks/useMarketplaceIntegrations';
 import { formatDistanceToNow } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
+import { MARKETPLACE_CONFIGS, getStatusIcon, getStatusColor, MarketplaceType } from './constants';
 
 interface MarketplaceCardProps {
   integration: MarketplaceIntegration;
@@ -24,61 +25,6 @@ interface MarketplaceCardProps {
   isLoading?: boolean;
 }
 
-const marketplaceInfo = {
-  mercadolivre: {
-    name: 'Mercado Livre',
-    color: 'bg-yellow-500',
-    url: 'https://mercadolivre.com.br'
-  },
-  shopee: {
-    name: 'Shopee',
-    color: 'bg-orange-500',
-    url: 'https://shopee.com.br'
-  },
-  amazon: {
-    name: 'Amazon',
-    color: 'bg-orange-600',
-    url: 'https://amazon.com.br'
-  },
-  magalu: {
-    name: 'Magalu Marketplace',
-    color: 'bg-blue-600',
-    url: 'https://marketplace.magazineluiza.com.br'
-  },
-  b2w: {
-    name: 'B2W Marketplace',
-    color: 'bg-purple-600',
-    url: 'https://marketplace.americanas.com'
-  },
-  bling: {
-    name: 'Bling',
-    color: 'bg-green-600',
-    url: 'https://bling.com.br'
-  }
-};
-
-const getStatusIcon = (status: string) => {
-  switch (status) {
-    case 'active':
-      return '🟢';
-    case 'error':
-      return '🔴';
-    default:
-      return '🟡';
-  }
-};
-
-const getStatusColor = (status: string) => {
-  switch (status) {
-    case 'active':
-      return 'bg-success text-success-foreground';
-    case 'error':
-      return 'bg-destructive text-destructive-foreground';
-    default:
-      return 'bg-warning text-warning-foreground';
-  }
-};
-
 export const MarketplaceCard = ({
   integration,
   onToggleStatus,
@@ -88,7 +34,7 @@ export const MarketplaceCard = ({
   onDelete,
   isLoading
 }: MarketplaceCardProps) => {
-  const marketplace = marketplaceInfo[integration.marketplace as keyof typeof marketplaceInfo];
+  const marketplace = MARKETPLACE_CONFIGS[integration.marketplace as MarketplaceType];
   const isActive = integration.status === 'active';
 
   return (

@@ -26,67 +26,9 @@ import {
 } from '@/components/ui/select';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-
-const marketplaceConfigs = {
-  mercadolivre: {
-    name: 'Mercado Livre',
-    auth_type: 'oauth',
-    fields: [
-      { name: 'app_id', label: 'App ID', type: 'text' },
-      { name: 'client_secret', label: 'Client Secret', type: 'password' },
-      { name: 'refresh_token', label: 'Refresh Token', type: 'password' },
-      { name: 'seller_id', label: 'Seller ID', type: 'text' }
-    ]
-  },
-  shopee: {
-    name: 'Shopee',
-    auth_type: 'apikey',
-    fields: [
-      { name: 'api_key', label: 'API Key', type: 'password' },
-      { name: 'secret_key', label: 'Secret Key', type: 'password' },
-      { name: 'shop_id', label: 'Shop ID', type: 'text' },
-      { name: 'environment', label: 'Ambiente', type: 'select', options: ['sandbox', 'production'] }
-    ]
-  },
-  amazon: {
-    name: 'Amazon',
-    auth_type: 'apikey',
-    fields: [
-      { name: 'access_key_id', label: 'Access Key ID', type: 'password' },
-      { name: 'secret_access_key', label: 'Secret Access Key', type: 'password' },
-      { name: 'marketplace_id', label: 'Marketplace ID', type: 'text' },
-      { name: 'seller_id', label: 'Seller ID', type: 'text' }
-    ]
-  },
-  magalu: {
-    name: 'Magalu Marketplace',
-    auth_type: 'apikey',
-    fields: [
-      { name: 'api_key', label: 'API Key', type: 'password' },
-      { name: 'store_id', label: 'Store ID', type: 'text' }
-    ]
-  },
-  b2w: {
-    name: 'B2W Marketplace',
-    auth_type: 'apikey',
-    fields: [
-      { name: 'api_key', label: 'API Key', type: 'password' },
-      { name: 'seller_id', label: 'Seller ID', type: 'text' },
-      { name: 'environment', label: 'Ambiente', type: 'select', options: ['sandbox', 'production'] }
-    ]
-  },
-  bling: {
-    name: 'Bling',
-    auth_type: 'apikey',
-    fields: [
-      { name: 'api_key', label: 'API Key', type: 'password' },
-      { name: 'client_id', label: 'Client ID', type: 'text' }
-    ]
-  }
-};
+import { MARKETPLACE_CONFIGS, MarketplaceType } from './constants';
 
 const formSchema = z.object({
   marketplace: z.string().min(1, 'Selecione um marketplace'),
@@ -124,7 +66,7 @@ export const MarketplaceConnectionDialog = ({
   });
 
   const handleSubmit = (values: FormData) => {
-    const config = marketplaceConfigs[selectedMarketplace as keyof typeof marketplaceConfigs];
+    const config = MARKETPLACE_CONFIGS[selectedMarketplace as MarketplaceType];
     
     onSubmit({
       marketplace: values.marketplace,
@@ -143,7 +85,7 @@ export const MarketplaceConnectionDialog = ({
     form.setValue('marketplace', marketplace);
   };
 
-  const config = marketplaceConfigs[selectedMarketplace as keyof typeof marketplaceConfigs];
+  const config = MARKETPLACE_CONFIGS[selectedMarketplace as MarketplaceType];
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -167,7 +109,7 @@ export const MarketplaceConnectionDialog = ({
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
-                      {Object.entries(marketplaceConfigs).map(([key, marketplace]) => (
+                      {Object.entries(MARKETPLACE_CONFIGS).map(([key, marketplace]) => (
                         <SelectItem key={key} value={key}>
                           <div className="flex items-center space-x-2">
                             <span>{marketplace.name}</span>
@@ -210,11 +152,6 @@ export const MarketplaceConnectionDialog = ({
                             ))}
                           </SelectContent>
                         </Select>
-                      ) : field.type === 'textarea' ? (
-                        <Textarea
-                          placeholder={field.label}
-                          {...form.register(`credentials.${field.name}` as any)}
-                        />
                       ) : (
                         <Input
                           type={field.type}
@@ -238,7 +175,7 @@ export const MarketplaceConnectionDialog = ({
                   name="sync_interval_minutes"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Intervalo de Sincronização (minutos)</FormLabel>
+                      <FormLabel>Intervalo (minutos)</FormLabel>
                       <FormControl>
                         <Input
                           type="number"
@@ -257,7 +194,7 @@ export const MarketplaceConnectionDialog = ({
                   name="webhook_url"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>URL do Webhook (opcional)</FormLabel>
+                      <FormLabel>Webhook URL (opcional)</FormLabel>
                       <FormControl>
                         <Input 
                           type="url" 
@@ -282,7 +219,7 @@ export const MarketplaceConnectionDialog = ({
                 Cancelar
               </Button>
               <Button type="submit" disabled={isLoading}>
-                {isLoading ? 'Conectando...' : 'Conectar Marketplace'}
+                {isLoading ? 'Conectando...' : 'Conectar'}
               </Button>
             </DialogFooter>
           </form>

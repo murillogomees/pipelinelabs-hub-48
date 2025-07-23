@@ -8,12 +8,21 @@ export interface MarketplaceIntegration {
   marketplace: string;
   status: 'active' | 'inactive' | 'error';
   auth_type: 'oauth' | 'apikey';
-  credentials: Record<string, any>;
+  credentials: Record<string, string>;
   config: Record<string, any>;
   last_sync: string | null;
   created_at: string;
   updated_at: string;
 }
+
+const TOAST_MESSAGES = {
+  created: { title: 'Integração criada', description: 'Marketplace configurado com sucesso' },
+  updated: { title: 'Integração atualizada', description: 'Configurações atualizadas' },
+  removed: { title: 'Integração removida', description: 'Marketplace desconectado' },
+  tested: { title: 'Conexão testada', description: 'Teste realizado com sucesso' },
+  synced: { title: 'Sincronização concluída', description: 'Dados sincronizados' },
+  error: { title: 'Erro', variant: 'destructive' as const }
+};
 
 export const useMarketplaceIntegrations = () => {
   const { toast } = useToast();
@@ -36,7 +45,7 @@ export const useMarketplaceIntegrations = () => {
     mutationFn: async (integration: {
       marketplace: string;
       auth_type: 'oauth' | 'apikey';
-      credentials: Record<string, any>;
+      credentials: Record<string, string>;
       config?: Record<string, any>;
     }) => {
       const { data, error } = await (supabase as any)
@@ -56,17 +65,10 @@ export const useMarketplaceIntegrations = () => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['marketplace-integrations'] });
-      toast({
-        title: 'Integração criada',
-        description: 'A integração com o marketplace foi configurada com sucesso.',
-      });
+      toast(TOAST_MESSAGES.created);
     },
-    onError: (error) => {
-      toast({
-        title: 'Erro ao criar integração',
-        description: error.message,
-        variant: 'destructive',
-      });
+    onError: (error: any) => {
+      toast({ ...TOAST_MESSAGES.error, description: error.message });
     }
   });
 
@@ -87,17 +89,10 @@ export const useMarketplaceIntegrations = () => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['marketplace-integrations'] });
-      toast({
-        title: 'Integração atualizada',
-        description: 'As configurações foram atualizadas com sucesso.',
-      });
+      toast(TOAST_MESSAGES.updated);
     },
-    onError: (error) => {
-      toast({
-        title: 'Erro ao atualizar integração',
-        description: error.message,
-        variant: 'destructive',
-      });
+    onError: (error: any) => {
+      toast({ ...TOAST_MESSAGES.error, description: error.message });
     }
   });
 
@@ -112,39 +107,21 @@ export const useMarketplaceIntegrations = () => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['marketplace-integrations'] });
-      toast({
-        title: 'Integração removida',
-        description: 'A integração foi removida com sucesso.',
-      });
+      toast(TOAST_MESSAGES.removed);
     },
-    onError: (error) => {
-      toast({
-        title: 'Erro ao remover integração',
-        description: error.message,
-        variant: 'destructive',
-      });
+    onError: (error: any) => {
+      toast({ ...TOAST_MESSAGES.error, description: error.message });
     }
   });
 
   const testConnection = useMutation({
     mutationFn: async (id: string) => {
-      // TODO: Implementar teste de conexão real
+      // TODO: Implementar teste real
       await new Promise(resolve => setTimeout(resolve, 2000));
       return { success: true };
     },
-    onSuccess: () => {
-      toast({
-        title: 'Conexão testada',
-        description: 'A conexão com o marketplace foi testada com sucesso.',
-      });
-    },
-    onError: () => {
-      toast({
-        title: 'Falha no teste',
-        description: 'Não foi possível conectar com o marketplace.',
-        variant: 'destructive',
-      });
-    }
+    onSuccess: () => toast(TOAST_MESSAGES.tested),
+    onError: () => toast({ ...TOAST_MESSAGES.error, description: 'Falha na conexão' })
   });
 
   const syncNow = useMutation({
@@ -161,18 +138,9 @@ export const useMarketplaceIntegrations = () => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['marketplace-integrations'] });
-      toast({
-        title: 'Sincronização concluída',
-        description: 'Os dados foram sincronizados com sucesso.',
-      });
+      toast(TOAST_MESSAGES.synced);
     },
-    onError: () => {
-      toast({
-        title: 'Erro na sincronização',
-        description: 'Não foi possível sincronizar os dados.',
-        variant: 'destructive',
-      });
-    }
+    onError: () => toast({ ...TOAST_MESSAGES.error, description: 'Falha na sincronização' })
   });
 
   return {
