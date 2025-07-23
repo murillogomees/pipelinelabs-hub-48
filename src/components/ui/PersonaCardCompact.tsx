@@ -53,7 +53,7 @@ export function PersonaCardCompact({ persona, className = '' }: PersonaCardCompa
               </div>
             </div>
             <div className="flex gap-1">
-              <Badge variant="secondary" className="text-xs px-2 py-0.5 h-5">
+              <Badge variant="secondary" className="text-xs px-1.5 py-0.5 h-4">
                 {persona.situation ? (persona.situation.length > 20 ? persona.situation.slice(0, 20) + '...' : persona.situation) : 'Empreendedor'}
               </Badge>
             </div>
