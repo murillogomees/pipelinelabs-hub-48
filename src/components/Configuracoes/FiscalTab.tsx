@@ -6,6 +6,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Checkbox } from '@/components/ui/checkbox';
 import { useCompanySettings } from '@/hooks/useCompanySettings';
+import { FISCAL_DEFAULTS, SUCCESS_MESSAGES } from './constants';
 
 export function FiscalTab() {
   const { settings, loading, updateSettings } = useCompanySettings();

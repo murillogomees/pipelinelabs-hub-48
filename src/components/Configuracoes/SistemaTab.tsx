@@ -9,6 +9,7 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Settings, Users, Package, Bell, Webhook } from 'lucide-react';
 import { useCompanySettings } from '@/hooks/useCompanySettings';
 import { useSubscription } from '@/hooks/useSubscription';
+import { SYSTEM_DEFAULTS, SUCCESS_MESSAGES } from './constants';
 
 export function SistemaTab() {
   const { settings, loading, updateSettings } = useCompanySettings();

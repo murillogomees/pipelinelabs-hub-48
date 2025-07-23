@@ -2,12 +2,14 @@ import React from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card } from '@/components/ui/card';
 import { Building2, Receipt, DollarSign, Shield, Palette, Settings } from 'lucide-react';
-import { EmpresaTab } from '@/components/Configuracoes/EmpresaTab';
-import { FiscalTab } from '@/components/Configuracoes/FiscalTab';
-import { FinanceiroTab } from '@/components/Configuracoes/FinanceiroTab';
-import { CertificadoTab } from '@/components/Configuracoes/CertificadoTab';
-import { PersonalizacaoTab } from '@/components/Configuracoes/PersonalizacaoTab';
-import { SistemaTab } from '@/components/Configuracoes/SistemaTab';
+import { 
+  EmpresaTab, 
+  FiscalTab, 
+  FinanceiroTab, 
+  CertificadoTab, 
+  PersonalizacaoTab, 
+  SistemaTab 
+} from '@/components/Configuracoes';
 
 export default function Configuracoes() {
   return (

@@ -8,26 +8,18 @@ import { Badge } from '@/components/ui/badge';
 import { Upload, Palette, Eye, Crown, AlertTriangle } from 'lucide-react';
 import { useCompanySettings } from '@/hooks/useCompanySettings';
 import { useSubscription } from '@/hooks/useSubscription';
-import { useCDN } from '@/hooks/useCDN';
 import { useToast } from '@/hooks/use-toast';
-import { supabase } from '@/integrations/supabase/client';
 import { CDNConfigSection } from './CDNConfigSection';
+import { useFileUpload } from './hooks/useFileUpload';
+import { BRANDING_DEFAULTS, validateDomain, applyBrandingToDOM, hexToHsl } from './utils/brandingUtils';
+import { SUCCESS_MESSAGES, ERROR_MESSAGES } from './constants';
 
 export function PersonalizacaoTab() {
   const { settings, loading, updateSettings } = useCompanySettings();
   const { subscription } = useSubscription();
   const { toast } = useToast();
-  const [formData, setFormData] = useState({
-    nome_customizado: 'Pipeline Labs',
-    cor_primaria: '#3b82f6',
-    cor_secundaria: '#64748b',
-    logo_url: '',
-    favicon_url: '',
-    dominio_personalizado: ''
-  });
-  const [logoFile, setLogoFile] = useState<File | null>(null);
-  const [faviconFile, setFaviconFile] = useState<File | null>(null);
-  const [uploading, setUploading] = useState(false);
+  const { uploading, handleFileUpload } = useFileUpload();
+  const [formData, setFormData] = useState(BRANDING_DEFAULTS);
   const [previewMode, setPreviewMode] = useState(false);
 
   useEffect(() => {
@@ -48,76 +40,14 @@ export function PersonalizacaoTab() {
     return subscription?.plans?.is_custom || false;
   };
 
-  const uploadFile = async (file: File, folder: string): Promise<string> => {
-    try {
-      setUploading(true);
-      
-      // Get user company ID for folder structure
-      const { data: companyId } = await supabase.rpc('get_user_company_id');
-      if (!companyId) throw new Error('Company ID not found');
-
-      const fileExt = file.name.split('.').pop();
-      const fileName = `${companyId}/${folder}/${Date.now()}.${fileExt}`;
-      
-      const { data, error } = await supabase.storage
-        .from('whitelabel')
-        .upload(fileName, file, {
-          cacheControl: '3600',
-          upsert: true
-        });
-
-      if (error) throw error;
-
-      const { data: { publicUrl } } = supabase.storage
-        .from('whitelabel')
-        .getPublicUrl(fileName);
-
-      return publicUrl;
-    } catch (error) {
-      // Upload error
-      throw error;
-    } finally {
-      setUploading(false);
-    }
-  };
 
   const handleLogoChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    if (!file.type.startsWith('image/')) {
-      toast({
-        title: "Erro",
-        description: "Por favor, selecione um arquivo de imagem válido (PNG, JPG, etc.)",
-        variant: "destructive"
-      });
-      return;
-    }
-
-    if (file.size > 5 * 1024 * 1024) { // 5MB limit
-      toast({
-        title: "Erro",
-        description: "O arquivo deve ter no máximo 5MB",
-        variant: "destructive"
-      });
-      return;
-    }
-
-    try {
-      setLogoFile(file);
-      const url = await uploadFile(file, 'logos');
+    const url = await handleFileUpload(file, 'logos', 'logo');
+    if (url) {
       setFormData(prev => ({ ...prev, logo_url: url }));
-      
-      toast({
-        title: "Sucesso",
-        description: "Logo carregado com sucesso"
-      });
-    } catch (error) {
-      toast({
-        title: "Erro",
-        description: "Falha ao fazer upload do logo",
-        variant: "destructive"
-      });
     }
   };
 
@@ -125,53 +55,18 @@ export function PersonalizacaoTab() {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    if (!file.type.startsWith('image/')) {
-      toast({
-        title: "Erro",
-        description: "Por favor, selecione um arquivo de imagem válido (PNG, JPG, etc.)",
-        variant: "destructive"
-      });
-      return;
-    }
-
-    if (file.size > 1 * 1024 * 1024) { // 1MB limit for favicon
-      toast({
-        title: "Erro",
-        description: "O favicon deve ter no máximo 1MB",
-        variant: "destructive"
-      });
-      return;
-    }
-
-    try {
-      setFaviconFile(file);
-      const url = await uploadFile(file, 'favicons');
+    const url = await handleFileUpload(file, 'favicons', 'favicon');
+    if (url) {
       setFormData(prev => ({ ...prev, favicon_url: url }));
-      
-      toast({
-        title: "Sucesso",
-        description: "Favicon carregado com sucesso"
-      });
-    } catch (error) {
-      toast({
-        title: "Erro",
-        description: "Falha ao fazer upload do favicon",
-        variant: "destructive"
-      });
     }
   };
 
-  const validateDomain = (domain: string): boolean => {
-    if (!domain) return true; // Optional field
-    const domainRegex = /^[a-zA-Z0-9][a-zA-Z0-9-_.]*[a-zA-Z0-9]$/;
-    return domainRegex.test(domain);
-  };
 
   const handleSave = async () => {
     if (!hasWhitelabelAccess()) {
       toast({
         title: "Acesso Negado",
-        description: "Seu plano atual não inclui personalização whitelabel",
+        description: ERROR_MESSAGES.whitelabel,
         variant: "destructive"
       });
       return;
@@ -180,7 +75,7 @@ export function PersonalizacaoTab() {
     if (formData.dominio_personalizado && !validateDomain(formData.dominio_personalizado)) {
       toast({
         title: "Erro",
-        description: "Por favor, insira um domínio válido",
+        description: ERROR_MESSAGES.domain,
         variant: "destructive"
       });
       return;
@@ -203,61 +98,13 @@ export function PersonalizacaoTab() {
       applyChanges(true);
       toast({
         title: "Sucesso",
-        description: "Personalização salva e aplicada com sucesso!"
+        description: SUCCESS_MESSAGES.branding
       });
     }
   };
 
   const applyChanges = (permanent: boolean = false) => {
-    // Apply color changes to CSS variables
-    const root = document.documentElement;
-    
-    // Convert hex to HSL for our design system
-    const hexToHsl = (hex: string) => {
-      const r = parseInt(hex.slice(1, 3), 16) / 255;
-      const g = parseInt(hex.slice(3, 5), 16) / 255;
-      const b = parseInt(hex.slice(5, 7), 16) / 255;
-
-      const max = Math.max(r, g, b);
-      const min = Math.min(r, g, b);
-      let h = 0, s = 0, l = (max + min) / 2;
-
-      if (max !== min) {
-        const d = max - min;
-        s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
-        switch (max) {
-          case r: h = (g - b) / d + (g < b ? 6 : 0); break;
-          case g: h = (b - r) / d + 2; break;
-          case b: h = (r - g) / d + 4; break;
-        }
-        h /= 6;
-      }
-
-      return `${Math.round(h * 360)} ${Math.round(s * 100)}% ${Math.round(l * 100)}%`;
-    };
-
-    const hslPrimary = hexToHsl(formData.cor_primaria);
-    const hslSecondary = hexToHsl(formData.cor_secundaria);
-    
-    root.style.setProperty('--primary', hslPrimary);
-    root.style.setProperty('--secondary', hslSecondary);
-
-    // Update document title if customized
-    if (formData.nome_customizado && formData.nome_customizado !== 'Pipeline Labs') {
-      document.title = formData.nome_customizado;
-    }
-
-    // Update favicon if provided
-    if (formData.favicon_url && permanent) {
-      const favicon = document.querySelector('link[rel="icon"]') || document.createElement('link');
-      favicon.setAttribute('rel', 'icon');
-      favicon.setAttribute('href', formData.favicon_url);
-      favicon.setAttribute('type', 'image/png');
-      if (!document.querySelector('link[rel="icon"]')) {
-        document.head.appendChild(favicon);
-      }
-    }
-
+    applyBrandingToDOM(formData, permanent);
     setPreviewMode(!permanent);
     
     if (!permanent) {
@@ -272,31 +119,10 @@ export function PersonalizacaoTab() {
   const resetPreview = () => {
     if (!previewMode) return;
     
-    // Reset to original/saved colors
     const originalBranding = settings?.branding as any;
-    const originalColor = originalBranding?.cor_primaria || '#3b82f6';
-    const hexToHsl = (hex: string) => {
-      // Same conversion function as above
-      const r = parseInt(hex.slice(1, 3), 16) / 255;
-      const g = parseInt(hex.slice(3, 5), 16) / 255;
-      const b = parseInt(hex.slice(5, 7), 16) / 255;
-      const max = Math.max(r, g, b);
-      const min = Math.min(r, g, b);
-      let h = 0, s = 0, l = (max + min) / 2;
-      if (max !== min) {
-        const d = max - min;
-        s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
-        switch (max) {
-          case r: h = (g - b) / d + (g < b ? 6 : 0); break;
-          case g: h = (b - r) / d + 2; break;
-          case b: h = (r - g) / d + 4; break;
-        }
-        h /= 6;
-      }
-      return `${Math.round(h * 360)} ${Math.round(s * 100)}% ${Math.round(l * 100)}%`;
-    };
+    const originalColor = originalBranding?.cor_primaria || BRANDING_DEFAULTS.cor_primaria;
+    const originalSecondary = originalBranding?.cor_secundaria || BRANDING_DEFAULTS.cor_secundaria;
     
-    const originalSecondary = originalBranding?.cor_secundaria || '#64748b';
     document.documentElement.style.setProperty('--primary', hexToHsl(originalColor));
     document.documentElement.style.setProperty('--secondary', hexToHsl(originalSecondary));
     setPreviewMode(false);

@@ -7,6 +7,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { useCompanySettings } from '@/hooks/useCompanySettings';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import { COMPANY_DEFAULTS, SUCCESS_MESSAGES, ERROR_MESSAGES, LOADING_MESSAGES } from './constants';
 
 export function EmpresaTab() {
   const { settings, loading, updateSettings } = useCompanySettings();
@@ -21,8 +22,7 @@ export function EmpresaTab() {
     city: '',
     state: '',
     zipcode: '',
-    timezone: 'America/Sao_Paulo',
-    idioma: 'pt-BR'
+    ...COMPANY_DEFAULTS
   });
 
   useEffect(() => {
