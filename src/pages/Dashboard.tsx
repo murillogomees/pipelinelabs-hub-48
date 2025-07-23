@@ -4,8 +4,10 @@ import { Button } from '@/components/ui/button';
 import { Plus, LayoutGrid } from 'lucide-react';
 import { DashboardWidget } from '@/components/Dashboard/DashboardWidget';
 import { WidgetSelector } from '@/components/Dashboard/WidgetSelector';
+import { AnalyticsTracker } from '@/components/Dashboard/AnalyticsTracker';
 import { useDashboard, useUpdateDashboard, WIDGET_TYPES, Widget } from '@/hooks/useDashboard';
 import { useAuth } from '@/hooks/useAuth';
+import { useAnalyticsTracker } from '@/hooks/useAnalyticsTracker';
 import { supabase } from '@/integrations/supabase/client';
 import { Responsive, WidthProvider } from 'react-grid-layout';
 import 'react-grid-layout/css/styles.css';
@@ -17,6 +19,7 @@ export function Dashboard() {
   const { user } = useAuth();
   const { data: dashboardConfig } = useDashboard();
   const updateDashboard = useUpdateDashboard();
+  const { trackButtonClick, trackFeatureUsage } = useAnalyticsTracker();
   const [showWidgetSelector, setShowWidgetSelector] = useState(false);
   const [widgets, setWidgets] = useState<Widget[]>([]);
   const [layouts, setLayouts] = useState({});
@@ -78,6 +81,10 @@ export function Dashboard() {
   const handleAddWidget = async (widgetType: string) => {
     const widgetConfig = Object.values(WIDGET_TYPES).find(w => w.id === widgetType);
     if (!widgetConfig) return;
+
+    // Track widget addition
+    trackFeatureUsage('dashboard', 'widget_added');
+    trackButtonClick('add_widget', `dashboard:${widgetType}`);
 
     const newWidget: Widget = {
       id: `widget-${Date.now()}`,
@@ -159,6 +166,7 @@ export function Dashboard() {
 
   return (
     <div className="space-y-6">
+      <AnalyticsTracker />
       {/* Header */}
       <div className="flex justify-between items-center">
         <div>

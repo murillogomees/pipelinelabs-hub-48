@@ -1,6 +1,7 @@
 export { AnalyticsDashboard } from './AnalyticsDashboard';
 export { AnalyticsCard } from './AnalyticsCard';
 export { AnalyticsFilters } from './AnalyticsFilters';
+export { QuickStatsCard } from './QuickStatsCard';
 export { AnalyticsProvider, useAnalyticsContext } from './AnalyticsProvider';
 export { 
   EventsByDayChart, 

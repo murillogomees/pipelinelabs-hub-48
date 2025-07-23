@@ -1,9 +1,10 @@
 import { useState } from 'react';
 import { useAnalyticsMetrics } from '@/hooks/useAnalytics';
 import { AnalyticsCard } from './AnalyticsCard';
+import { QuickStatsCard } from './QuickStatsCard';
 import { EventsByDayChart, TopEventsChart, DeviceBreakdownChart, RouteBreakdownChart } from './AnalyticsCharts';
 import { AnalyticsFilters } from './AnalyticsFilters';
-import { Activity, Users, TrendingUp, Monitor } from 'lucide-react';
+import { Activity, Users, TrendingUp, Monitor, BarChart3, Clock } from 'lucide-react';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Skeleton } from '@/components/ui/skeleton';
 
@@ -75,33 +76,61 @@ export const AnalyticsDashboard = () => {
 
         <div className="lg:col-span-3">
           {isLoading ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-              {[...Array(4)].map((_, i) => (
-                <Skeleton key={i} className="h-32" />
-              ))}
+            <div className="space-y-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                {[...Array(4)].map((_, i) => (
+                  <Skeleton key={i} className="h-32" />
+                ))}
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {[...Array(2)].map((_, i) => (
+                  <Skeleton key={i} className="h-24" />
+                ))}
+              </div>
             </div>
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-              <AnalyticsCard
-                title="Total de Eventos"
-                value={metrics?.total_events || 0}
-                icon={Activity}
-              />
-              <AnalyticsCard
-                title="Usuários Únicos"
-                value={metrics?.unique_users || 0}
-                icon={Users}
-              />
-              <AnalyticsCard
-                title="Eventos por Dia"
-                value={metrics?.total_events ? Math.round(metrics.total_events / 30) : 0}
-                icon={TrendingUp}
-              />
-              <AnalyticsCard
-                title="Tipos de Evento"
-                value={metrics?.top_events?.length || 0}
-                icon={Monitor}
-              />
+            <div className="space-y-6">
+              {/* Métricas principais */}
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                <AnalyticsCard
+                  title="Total de Eventos"
+                  value={metrics?.total_events || 0}
+                  icon={Activity}
+                />
+                <AnalyticsCard
+                  title="Usuários Únicos"
+                  value={metrics?.unique_users || 0}
+                  icon={Users}
+                />
+                <AnalyticsCard
+                  title="Eventos por Dia"
+                  value={metrics?.total_events ? Math.round(metrics.total_events / 30) : 0}
+                  icon={TrendingUp}
+                />
+                <AnalyticsCard
+                  title="Tipos de Evento"
+                  value={metrics?.top_events?.length || 0}
+                  icon={Monitor}
+                />
+              </div>
+
+              {/* Estatísticas rápidas */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <QuickStatsCard
+                  title="Engajamento Médio"
+                  value={metrics?.total_events && metrics?.unique_users ? 
+                    (metrics.total_events / metrics.unique_users).toFixed(1) : 0}
+                  format="number"
+                  icon={<BarChart3 className="h-4 w-4 text-muted-foreground" />}
+                />
+                <QuickStatsCard
+                  title="Atividade por Usuário"
+                  value={metrics?.total_events && metrics?.unique_users ? 
+                    Math.round(metrics.total_events / metrics.unique_users) : 0}
+                  format="number"
+                  icon={<Clock className="h-4 w-4 text-muted-foreground" />}
+                />
+              </div>
             </div>
           )}
 
