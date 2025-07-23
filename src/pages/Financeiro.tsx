@@ -1,21 +1,49 @@
 import React, { useState } from 'react';
-import { Routes, Route, NavLink, useLocation } from 'react-router-dom';
+import { Routes, Route, Navigate, NavLink, useLocation } from 'react-router-dom';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Plus, DollarSign, TrendingUp, TrendingDown, BarChart3, Search, Eye, Edit, Trash2, CheckCircle, AlertCircle, Clock, XCircle, PieChart, FileText, Activity } from 'lucide-react';
-import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { useAccountsPayable } from '@/hooks/useAccountsPayable';
-import { useAccountsReceivable } from '@/hooks/useAccountsReceivable';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { Badge } from '@/components/ui/badge';
+import { 
+  LayoutDashboard, 
+  TrendingDown, 
+  TrendingUp, 
+  BarChart3, 
+  FileText,
+  Search,
+  Plus,
+  Edit,
+  Trash2,
+  Eye,
+  DollarSign,
+  Calendar,
+  Building,
+  Banknote,
+  Receipt,
+  Tags,
+  Settings,
+  GitBranch,
+  FileSpreadsheet,
+  CheckCircle, 
+  AlertCircle, 
+  Clock, 
+  XCircle
+} from 'lucide-react';
+import { FinancialDashboard, DREReport, CashFlowReport, FinancialReports } from '@/components/Financial';
+import { FinancialDashboardNew } from '@/components/Financial/FinancialDashboardNew';
+import { BankAccountsTab } from '@/components/Financial/BankAccountsTab';
+import { useAccountsPayable, type NewAccountPayable, type AccountPayable } from '@/hooks/useAccountsPayable';
+import { useAccountsReceivable, type NewAccountReceivable, type AccountReceivable } from '@/hooks/useAccountsReceivable';
+import { useFinancialTransactions } from '@/hooks/useFinancialTransactions';
+import { useFinancialCategories } from '@/hooks/useFinancialCategories';
 import { AccountPayableDialog } from '@/components/Financial/AccountPayableDialog';
 import { AccountReceivableDialog } from '@/components/Financial/AccountReceivableDialog';
-import { FinancialDashboard } from '@/components/Financial/FinancialDashboard';
-import { DREReport } from '@/components/Financial/DREReport';
-import { CashFlowReport } from '@/components/Financial/CashFlowReport';
-import { FinancialReports } from '@/components/Financial/FinancialReports';
+import { toast } from '@/hooks/use-toast';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 
@@ -293,47 +321,115 @@ function ContasReceber() {
   );
 }
 
-export default function Financeiro() {
+const Financeiro = () => {
   const location = useLocation();
-  
-  const menuItems = [
-    { path: '', label: 'Dashboard', icon: BarChart3 },
-    { path: '/contas-pagar', label: 'Contas a Pagar', icon: TrendingDown },
-    { path: '/contas-receber', label: 'Contas a Receber', icon: TrendingUp },
-    { path: '/dre', label: 'DRE', icon: FileText },
-    { path: '/fluxo-caixa', label: 'Fluxo de Caixa', icon: Activity },
-    { path: '/relatorios', label: 'Relatórios', icon: PieChart },
-  ];
+
+  const getCurrentTab = () => {
+    const path = location.pathname.split('/').pop();
+    switch (path) {
+      case 'dashboard':
+        return 'dashboard';
+      case 'contas-pagar':
+        return 'contas-pagar';
+      case 'contas-receber':
+        return 'contas-receber';
+      case 'contas-bancarias':
+        return 'contas-bancarias';
+      case 'lancamentos':
+        return 'lancamentos';
+      case 'categorias':
+        return 'categorias';
+      case 'conciliacao':
+        return 'conciliacao';
+      case 'relatorios':
+        return 'relatorios';
+      case 'configuracoes':
+        return 'configuracoes';
+      default:
+        return 'dashboard';
+    }
+  };
 
   return (
-    <div className="space-y-6">
-      {/* Menu de navegação */}
-      <div className="border-b">
-        <Tabs value={location.pathname.replace('/financeiro', '') || ''} className="w-full">
-          <TabsList className="grid w-full grid-cols-6">
-            {menuItems.map((item) => (
-              <NavLink
-                key={item.path}
-                to={`/financeiro${item.path}`}
-                className="flex items-center gap-2 px-3 py-2 text-sm font-medium rounded-md transition-colors"
-              >
-                <item.icon className="h-4 w-4" />
-                {item.label}
-              </NavLink>
-            ))}
-          </TabsList>
-        </Tabs>
+    <div className="p-6">
+      <div className="mb-6">
+        <h1 className="text-3xl font-bold mb-2">Financeiro</h1>
+        <p className="text-muted-foreground">Gerencie as finanças da sua empresa de forma eficiente</p>
       </div>
 
-      {/* Conteúdo das rotas */}
-      <Routes>
-        <Route index element={<FinancialDashboard />} />
-        <Route path="contas-pagar" element={<ContasPagar />} />
-        <Route path="contas-receber" element={<ContasReceber />} />
-        <Route path="dre" element={<DREReport />} />
-        <Route path="fluxo-caixa" element={<CashFlowReport />} />
-        <Route path="relatorios" element={<FinancialReports />} />
-      </Routes>
+      <Tabs value={getCurrentTab()} className="space-y-6">
+        <TabsList className="grid w-full grid-cols-9 text-xs">
+          <TabsTrigger value="dashboard" asChild>
+            <NavLink to="/app/financeiro/dashboard" className="flex items-center gap-1">
+              <LayoutDashboard className="w-4 h-4" />
+              <span className="hidden lg:inline">Dashboard</span>
+            </NavLink>
+          </TabsTrigger>
+          <TabsTrigger value="contas-pagar" asChild>
+            <NavLink to="/app/financeiro/contas-pagar" className="flex items-center gap-1">
+              <TrendingDown className="w-4 h-4" />
+              <span className="hidden lg:inline">A Pagar</span>
+            </NavLink>
+          </TabsTrigger>
+          <TabsTrigger value="contas-receber" asChild>
+            <NavLink to="/app/financeiro/contas-receber" className="flex items-center gap-1">
+              <TrendingUp className="w-4 h-4" />
+              <span className="hidden lg:inline">A Receber</span>
+            </NavLink>
+          </TabsTrigger>
+          <TabsTrigger value="contas-bancarias" asChild>
+            <NavLink to="/app/financeiro/contas-bancarias" className="flex items-center gap-1">
+              <Building className="w-4 h-4" />
+              <span className="hidden lg:inline">Bancos</span>
+            </NavLink>
+          </TabsTrigger>
+          <TabsTrigger value="lancamentos" asChild>
+            <NavLink to="/app/financeiro/lancamentos" className="flex items-center gap-1">
+              <Receipt className="w-4 h-4" />
+              <span className="hidden lg:inline">Lançamentos</span>
+            </NavLink>
+          </TabsTrigger>
+          <TabsTrigger value="categorias" asChild>
+            <NavLink to="/app/financeiro/categorias" className="flex items-center gap-1">
+              <Tags className="w-4 h-4" />
+              <span className="hidden lg:inline">Categorias</span>
+            </NavLink>
+          </TabsTrigger>
+          <TabsTrigger value="conciliacao" asChild>
+            <NavLink to="/app/financeiro/conciliacao" className="flex items-center gap-1">
+              <GitBranch className="w-4 h-4" />
+              <span className="hidden lg:inline">Conciliação</span>
+            </NavLink>
+          </TabsTrigger>
+          <TabsTrigger value="relatorios" asChild>
+            <NavLink to="/app/financeiro/relatorios" className="flex items-center gap-1">
+              <FileSpreadsheet className="w-4 h-4" />
+              <span className="hidden lg:inline">Relatórios</span>
+            </NavLink>
+          </TabsTrigger>
+          <TabsTrigger value="configuracoes" asChild>
+            <NavLink to="/app/financeiro/configuracoes" className="flex items-center gap-1">
+              <Settings className="w-4 h-4" />
+              <span className="hidden lg:inline">Config</span>
+            </NavLink>
+          </TabsTrigger>
+        </TabsList>
+
+        <Routes>
+          <Route path="/" element={<Navigate to="/app/financeiro/dashboard" replace />} />
+          <Route path="/dashboard" element={<FinancialDashboardNew />} />
+          <Route path="/contas-pagar" element={<ContasPagar />} />
+          <Route path="/contas-receber" element={<ContasReceber />} />
+          <Route path="/contas-bancarias" element={<BankAccountsTab />} />
+          <Route path="/lancamentos" element={<div className="p-8 text-center text-muted-foreground">Lançamentos financeiros em desenvolvimento</div>} />
+          <Route path="/categorias" element={<div className="p-8 text-center text-muted-foreground">Categorias em desenvolvimento</div>} />
+          <Route path="/conciliacao" element={<div className="p-8 text-center text-muted-foreground">Conciliação bancária em desenvolvimento</div>} />
+          <Route path="/relatorios" element={<FinancialReports />} />
+          <Route path="/configuracoes" element={<div className="p-8 text-center text-muted-foreground">Configurações financeiras em desenvolvimento</div>} />
+        </Routes>
+      </Tabs>
     </div>
   );
-}
+};
+
+export default Financeiro;
