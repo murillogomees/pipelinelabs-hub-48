@@ -129,15 +129,15 @@ export function LandingPage() {
                   <div className="space-y-6">
                     <MockupDashboard className="transform hover:scale-105 transition-transform" />
                     <div className="text-center">
-                      <h4 className="font-semibold text-gray-800">Dashboard Completo</h4>
-                      <p className="text-sm text-gray-600">Visão geral completa do seu negócio em tempo real</p>
+                      
+                      
                     </div>
                   </div>
                   <div className="space-y-6">
                     <MockupNotifications className="transform hover:scale-105 transition-transform" />
                     <div className="text-center">
-                      <h4 className="font-semibold text-gray-800">Notificações de Pedidos</h4>
-                      <p className="text-sm text-gray-600">Acompanhe todos os pedidos em tempo real</p>
+                      
+                      
                     </div>
                   </div>
                 </div>
@@ -147,22 +147,22 @@ export function LandingPage() {
                   <div className="space-y-6">
                     <MockupDailySales className="transform hover:scale-105 transition-transform" />
                     <div className="text-center">
-                      <h4 className="font-semibold text-gray-800">Vendas do Dia</h4>
-                      <p className="text-sm text-gray-600">Controle completo das vendas diárias</p>
+                      
+                      
                     </div>
                   </div>
                   <div className="space-y-6">
                     <MockupPDV className="transform hover:scale-105 transition-transform" />
                     <div className="text-center">
-                      <h4 className="font-semibold text-gray-800">PDV Integrado</h4>
-                      <p className="text-sm text-gray-600">Ponto de venda moderno e eficiente</p>
+                      
+                      
                     </div>
                   </div>
                   <div className="space-y-6">
                     <MockupNFe className="transform hover:scale-105 transition-transform" />
                     <div className="text-center">
-                      <h4 className="font-semibold text-gray-800">Emissão Fiscal</h4>
-                      <p className="text-sm text-gray-600">NFe, NFSe e NFCe automatizadas</p>
+                      
+                      
                     </div>
                   </div>
                 </div>
@@ -172,29 +172,22 @@ export function LandingPage() {
                   <div className="space-y-6">
                     <MockupInventory className="transform hover:scale-105 transition-transform" />
                     <div className="text-center">
-                      <h4 className="font-semibold text-gray-800">Estoque e DRE Visível</h4>
-                      <p className="text-sm text-gray-600">Controle completo de estoque com indicadores visuais</p>
+                      
+                      
                     </div>
                   </div>
                   <div className="space-y-6">
                     <MockupFinancial className="transform hover:scale-105 transition-transform" />
                     <div className="text-center">
-                      <h4 className="font-semibold text-gray-800">Gráfico de Evolução Financeira</h4>
-                      <p className="text-sm text-gray-600">DRE visual e evolução financeira em tempo real</p>
+                      
+                      
                     </div>
                   </div>
                 </div>
 
                 {/* Features destacadas */}
                 {heroSection.content_data?.mockup_features && <div className="grid md:grid-cols-3 gap-4">
-                    {heroSection.content_data.mockup_features.map((feature: string, index: number) => <div key={index} className="bg-background/50 rounded-lg p-4 border border-primary/10 flex items-center gap-3">
-                        <div className="w-8 h-8 bg-primary/10 rounded-full flex items-center justify-center">
-                          {index === 0 && getIcon('bar-chart')}
-                          {index === 1 && getIcon('bell')}
-                          {index === 2 && getIcon('pie-chart')}
-                        </div>
-                        <p className="font-medium text-sm">{feature}</p>
-                      </div>)}
+                    {heroSection.content_data.mockup_features.map((feature: string, index: number) => {})}
                   </div>}
               </div>
             </div>
