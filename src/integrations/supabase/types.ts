@@ -2951,33 +2951,48 @@ export type Database = {
         Row: {
           company_id: string | null
           created_at: string
+          created_by: string | null
           default_currency: string
           id: string
           is_active: boolean | null
           is_live_mode: boolean | null
           publishable_key: string | null
+          stripe_publishable_key: string | null
+          stripe_secret_key_encrypted: string | null
+          stripe_webhook_secret_encrypted: string | null
+          test_mode: boolean
           updated_at: string
           webhook_secret: string | null
         }
         Insert: {
           company_id?: string | null
           created_at?: string
+          created_by?: string | null
           default_currency?: string
           id?: string
           is_active?: boolean | null
           is_live_mode?: boolean | null
           publishable_key?: string | null
+          stripe_publishable_key?: string | null
+          stripe_secret_key_encrypted?: string | null
+          stripe_webhook_secret_encrypted?: string | null
+          test_mode?: boolean
           updated_at?: string
           webhook_secret?: string | null
         }
         Update: {
           company_id?: string | null
           created_at?: string
+          created_by?: string | null
           default_currency?: string
           id?: string
           is_active?: boolean | null
           is_live_mode?: boolean | null
           publishable_key?: string | null
+          stripe_publishable_key?: string | null
+          stripe_secret_key_encrypted?: string | null
+          stripe_webhook_secret_encrypted?: string | null
+          test_mode?: boolean
           updated_at?: string
           webhook_secret?: string | null
         }
