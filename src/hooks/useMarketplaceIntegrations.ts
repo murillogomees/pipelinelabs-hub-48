@@ -55,7 +55,8 @@ export const useMarketplaceIntegrations = () => {
           auth_type: integration.auth_type,
           credentials: integration.credentials,
           config: integration.config || {},
-          status: 'inactive'
+          status: 'inactive',
+          company_id: (await supabase.auth.getUser()).data.user?.user_metadata?.company_id
         })
         .select()
         .single();

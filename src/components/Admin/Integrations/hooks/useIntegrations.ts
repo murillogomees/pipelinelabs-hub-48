@@ -34,7 +34,7 @@ export const useIntegrations = () => {
             available_for_plans: formData.available_for_plans,
             visible_to_companies: formData.visible_to_companies
           },
-          company_id: (await supabase.auth.getUser()).data.user?.user_metadata?.company_id
+          company_id: null // Para integrações admin, company_id pode ser null
         })
         .select()
         .single();
