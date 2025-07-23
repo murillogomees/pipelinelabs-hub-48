@@ -135,6 +135,8 @@ export default function AdminVersions() {
                     <SelectItem value="production">Produção</SelectItem>
                     <SelectItem value="staging">Homologação</SelectItem>
                     <SelectItem value="preview">Preview</SelectItem>
+                    <SelectItem value="dev">Dev</SelectItem>
+                    <SelectItem value="development">Development</SelectItem>
                   </SelectContent>
                 </Select>
               </div>

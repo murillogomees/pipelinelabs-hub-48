@@ -10,7 +10,7 @@ export interface AppVersion {
   version_number: string;
   git_sha: string;
   git_branch: string;
-  environment: 'production' | 'staging' | 'preview';
+  environment: 'production' | 'staging' | 'preview' | 'dev' | 'development';
   deployed_at: string;
   deployed_by?: string;
   status: 'active' | 'rolled_back' | 'failed';
@@ -36,7 +36,7 @@ export interface DeploymentLog {
 
 export interface EnvironmentConfig {
   id: string;
-  environment: 'production' | 'staging' | 'preview';
+  environment: 'production' | 'staging' | 'preview' | 'dev' | 'development';
   config: Record<string, any>;
   is_active: boolean;
   created_at: string;

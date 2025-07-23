@@ -43,22 +43,28 @@ const StatusBadge = ({ status }: { status: AppVersion['status'] }) => {
   );
 };
 
-const EnvironmentBadge = ({ environment }: { environment: AppVersion['environment'] }) => {
+const EnvironmentBadge = ({ environment }: { environment: AppVersion['environment'] | string }) => {
   const variants = {
     production: 'default',
     staging: 'secondary',
-    preview: 'outline'
+    preview: 'outline',
+    dev: 'secondary',  // Adicionar suporte para environment "dev"
+    development: 'secondary'  // Adicionar suporte para environment "development"
   } as const;
 
   const labels = {
     production: 'Produção',
-    staging: 'Homologação',
-    preview: 'Preview'
-  };
+    staging: 'Homologação', 
+    preview: 'Preview',
+    dev: 'Dev',
+    development: 'Dev'
+  } as const;
 
+  const envKey = environment as keyof typeof labels;
+  
   return (
-    <Badge variant={variants[environment]}>
-      {labels[environment]}
+    <Badge variant={variants[envKey] || 'outline'}>
+      {labels[envKey] || environment}
     </Badge>
   );
 };
