@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Plus, CreditCard, Users, Zap, AlertTriangle } from 'lucide-react';
+import { Plus, CreditCard, Users, Zap, AlertTriangle, Shield } from 'lucide-react';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
@@ -459,6 +459,13 @@ export function Admin() {
           <Button variant="outline" className="w-full justify-start h-auto p-4">
             <CreditCard className="w-4 h-4 mr-2" />
             Configurações Stripe
+          </Button>
+        </Link>
+        
+        <Link to="/app/admin/nfe-config">
+          <Button variant="outline" className="w-full justify-start h-auto p-4">
+            <Shield className="w-4 h-4 mr-2" />
+            Configuração NFE.io
           </Button>
         </Link>
       </div>

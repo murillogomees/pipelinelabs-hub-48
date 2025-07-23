@@ -42,8 +42,19 @@ export const useNFeIntegration = () => {
     queryKey: ['nfe-integration-available'],
     queryFn: async () => {
       try {
-        // Return null for now since integrations_available table doesn't exist
-        return null;
+        const { data, error } = await supabase
+          .from('integrations_available')
+          .select('*')
+          .eq('name', 'NFE.io')
+          .eq('type', 'fiscal')
+          .eq('is_active', true)
+          .single();
+
+        if (error && error.code !== 'PGRST116') {
+          throw error;
+        }
+
+        return data;
       } catch (err) {
         console.error('Erro ao carregar integração NFE.io:', err);
         return null;
@@ -400,18 +411,32 @@ export const useNFeIntegration = () => {
     downloadNFePDF,
     
     // Utilitários
-    isConfigured: !!companyNFeConfig?.config && !!companyNFeConfig?.is_active,
-    isActive: !!companyNFeConfig?.is_active,
+    isConfigured: !!(nfeIntegration && nfeIntegration.is_active) || !!(companyNFeConfig?.config && companyNFeConfig?.is_active),
+    isActive: !!(nfeIntegration?.is_active) || !!(companyNFeConfig?.is_active),
     getConfig: (): NFeConfig => {
+      // Primeiro tenta a configuração da empresa, depois a global
       if (companyNFeConfig?.config && typeof companyNFeConfig.config === 'object') {
         return companyNFeConfig.config as NFeConfig;
       }
+      
+      // Se não tem configuração da empresa, usa a global
+      if (nfeIntegration?.config_schema && typeof nfeIntegration.config_schema === 'object') {
+        return nfeIntegration.config_schema as NFeConfig;
+      }
+      
       return {};
     },
     
     hasValidConfig: (): boolean => {
-      const config = companyNFeConfig?.config as NFeConfig;
-      return !!(config?.api_token && config?.company_cnpj && config?.certificate_data);
+      // Verifica configuração da empresa primeiro
+      const companyConfig = companyNFeConfig?.config as NFeConfig;
+      if (companyConfig?.api_token && companyConfig?.company_cnpj && companyConfig?.certificate_data) {
+        return true;
+      }
+      
+      // Se não tem configuração completa da empresa, verifica se tem integração global ativa
+      const globalConfig = nfeIntegration?.config_schema as NFeConfig;
+      return !!(globalConfig?.api_token && nfeIntegration?.is_active);
     },
     
     // Status helpers
