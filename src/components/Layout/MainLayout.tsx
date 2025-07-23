@@ -4,6 +4,7 @@ import { Sidebar } from './Sidebar';
 import { Header } from './Header';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { Sheet, SheetContent } from '@/components/ui/sheet';
+import { EnvironmentBanner } from "@/components/Admin/VersionManagement/EnvironmentBanner";
 
 interface MainLayoutProps {
   children: React.ReactNode;
@@ -55,6 +56,9 @@ export function MainLayout({ children }: MainLayoutProps) {
         
         <main className="flex-1 overflow-y-auto bg-background">
           <div className="p-mobile container-mobile">
+            <div className="mb-4">
+              <EnvironmentBanner />
+            </div>
             {children}
           </div>
         </main>

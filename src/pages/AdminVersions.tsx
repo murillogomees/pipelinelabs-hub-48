@@ -16,6 +16,8 @@ import {
 import { VersionsList } from "@/components/Admin/VersionManagement/VersionsList";
 import { CreateVersionDialog } from "@/components/Admin/VersionManagement/CreateVersionDialog";
 import { EnvironmentConfigs } from "@/components/Admin/VersionManagement/EnvironmentConfigs";
+import { EnvironmentBanner } from "@/components/Admin/VersionManagement/EnvironmentBanner";
+import { SystemHealthDashboard } from "@/components/Admin/HealthCheck/SystemHealthDashboard";
 import { 
   useAppVersions, 
   useCurrentVersion, 
@@ -44,6 +46,9 @@ export default function AdminVersions() {
 
   return (
     <div className="container mx-auto p-6 space-y-6">
+      {/* Environment Banner */}
+      <EnvironmentBanner />
+      
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold">Gerenciamento de Versões</h1>
@@ -103,6 +108,10 @@ export default function AdminVersions() {
             <Package className="h-4 w-4" />
             Versões
           </TabsTrigger>
+          <TabsTrigger value="health" className="flex items-center gap-2">
+            <Activity className="h-4 w-4" />
+            Monitoramento
+          </TabsTrigger>
           <TabsTrigger value="environments" className="flex items-center gap-2">
             <Settings className="h-4 w-4" />
             Ambientes
@@ -135,6 +144,20 @@ export default function AdminVersions() {
                 versions={filteredVersions || []} 
                 isLoading={versionsLoading} 
               />
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="health" className="space-y-4">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Activity className="h-5 w-5" />
+                Monitoramento do Sistema
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <SystemHealthDashboard />
             </CardContent>
           </Card>
         </TabsContent>

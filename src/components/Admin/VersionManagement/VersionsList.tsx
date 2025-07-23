@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -14,7 +15,7 @@ import {
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { AppVersion, useDeploymentLogs } from "@/hooks/useAppVersions";
-import { useState } from "react";
+import { RollbackDialog } from "./RollbackDialog";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 
 interface VersionsListProps {
@@ -214,6 +215,11 @@ export const VersionsList = ({ versions, isLoading }: VersionsListProps) => {
                 </p>
               </div>
             )}
+
+            {/* Action buttons */}
+            <div className="flex items-center gap-2 pt-2">
+              <RollbackDialog version={version} />
+            </div>
 
             <Collapsible open={expandedVersions.has(version.id)}>
               <CollapsibleContent className="space-y-4">
