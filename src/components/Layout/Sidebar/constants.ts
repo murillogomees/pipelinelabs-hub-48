@@ -116,7 +116,9 @@ export const menuItems = [
     title: 'Integrações',
     icon: Zap,
     path: '/app/integracoes',
-    submenu: []
+    submenu: [
+      { title: 'Marketplaces', path: '/app/integracoes/marketplaces' }
+    ]
   },
   {
     title: 'Configurações',
