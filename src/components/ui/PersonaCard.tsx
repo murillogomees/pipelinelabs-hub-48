@@ -11,7 +11,7 @@ interface PersonaCardProps {
 
 export function PersonaCard({ className = '' }: PersonaCardProps) {
   return (
-    <Card className={`overflow-hidden shadow-lg h-[500px] ${className}`}>
+    <Card className={`overflow-hidden shadow-lg h-[600px] ${className}`}>
       <CardContent className="p-0">
         {/* Foto da persona */}
         <div className="relative">
@@ -27,96 +27,84 @@ export function PersonaCard({ className = '' }: PersonaCardProps) {
         </div>
 
         <div className="p-6 space-y-4">
-          {/* Identificação */}
-          <div className="space-y-3">
-            <div className="flex items-center gap-2 text-sm text-muted-foreground">
-              <User className="h-4 w-4" />
-              <span>41 anos</span>
-              <span>•</span>
-              <MapPin className="h-4 w-4" />
-              <span>Belo Horizonte/MG</span>
+          {/* Identificação - Minimalista */}
+          <div className="flex items-center justify-between text-xs text-muted-foreground pb-2 border-b border-muted/30">
+            <div className="flex items-center gap-3">
+              <div className="flex items-center gap-1">
+                <User className="h-3 w-3" />
+                <span>41 anos</span>
+              </div>
+              <div className="flex items-center gap-1">
+                <MapPin className="h-3 w-3" />
+                <span>Belo Horizonte/MG</span>
+              </div>
             </div>
-            
-            <div className="flex flex-wrap gap-2">
-              <Badge variant="secondary" className="text-sm px-3 py-1">
-                <Heart className="h-3 w-3 mr-1" />
-                Mãe solo de 2 filhos
-              </Badge>
-              <Badge variant="outline" className="text-sm px-3 py-1">
-                <Clock className="h-3 w-3 mr-1" />
-                5 anos empreendendo
+            <div className="flex gap-1">
+              <Badge variant="secondary" className="text-xs px-2 py-0.5 h-5">
+                Mãe solo • 5 anos
               </Badge>
             </div>
           </div>
 
-          {/* Situação pessoal */}
-          <div className="bg-muted/30 p-4 rounded-lg">
-            <p className="text-sm text-muted-foreground mb-2">Situação atual:</p>
-            <p className="text-sm leading-relaxed">
-              Divorciada, sustenta a família com sua pequena fábrica de salgados. 
-              Trabalha 12h/dia entre produção e administração do negócio.
-            </p>
-          </div>
 
-
-          {/* Maiores dificuldades */}
-          <div className="space-y-3">
+          {/* Maiores dificuldades - Destacado */}
+          <div className="space-y-4">
             <div className="flex items-center gap-2 text-red-600">
-              <AlertTriangle className="h-4 w-4" />
-              <span className="font-semibold text-sm">Principais Dificuldades</span>
+              <AlertTriangle className="h-5 w-5" />
+              <span className="font-bold text-base">Principais Dificuldades</span>
             </div>
             
-            <div className="space-y-2">
-              <div className="flex items-start gap-2 text-sm">
-                <div className="w-1.5 h-1.5 bg-red-500 rounded-full mt-2 flex-shrink-0"></div>
-                <span>"Não sabia se o negócio realmente dava lucro"</span>
+            <div className="space-y-3">
+              <div className="flex items-start gap-3 text-base">
+                <div className="w-2 h-2 bg-red-500 rounded-full mt-2 flex-shrink-0"></div>
+                <span className="font-medium">"Não sabia se o negócio realmente dava lucro"</span>
               </div>
-              <div className="flex items-start gap-2 text-sm">
-                <div className="w-1.5 h-1.5 bg-red-500 rounded-full mt-2 flex-shrink-0"></div>
-                <span>"Perdia 2 horas por dia organizando planilhas"</span>
+              <div className="flex items-start gap-3 text-base">
+                <div className="w-2 h-2 bg-red-500 rounded-full mt-2 flex-shrink-0"></div>
+                <span className="font-medium">"Perdia 2 horas por dia organizando planilhas"</span>
               </div>
-              <div className="flex items-start gap-2 text-sm">
-                <div className="w-1.5 h-1.5 bg-red-500 rounded-full mt-2 flex-shrink-0"></div>
-                <span>"Emitir notas fiscais era um pesadelo"</span>
+              <div className="flex items-start gap-3 text-base">
+                <div className="w-2 h-2 bg-red-500 rounded-full mt-2 flex-shrink-0"></div>
+                <span className="font-medium">"Emitir notas fiscais era um pesadelo"</span>
               </div>
-              <div className="flex items-start gap-2 text-sm">
-                <div className="w-1.5 h-1.5 bg-red-500 rounded-full mt-2 flex-shrink-0"></div>
-                <span>"Controle de estoque em cadernos"</span>
+              <div className="flex items-start gap-3 text-base">
+                <div className="w-2 h-2 bg-red-500 rounded-full mt-2 flex-shrink-0"></div>
+                <span className="font-medium">"Controle de estoque em cadernos"</span>
               </div>
             </div>
           </div>
 
 
-          {/* Soluções do Pipeline Labs */}
-          <div className="space-y-3">
+          {/* Soluções do Pipeline Labs - Destacado */}
+          <div className="space-y-4">
             <div className="flex items-center gap-2 text-green-600">
-              <CheckCircle className="h-4 w-4" />
-              <span className="font-semibold text-sm">Com o Pipeline Labs</span>
+              <CheckCircle className="h-5 w-5" />
+              <span className="font-bold text-base">Com o Pipeline Labs</span>
             </div>
             
-            <div className="space-y-2">
-              <div className="flex items-start gap-2 text-sm">
-                <CheckCircle className="h-4 w-4 text-green-500 mt-0.5 flex-shrink-0" />
-                <span><strong>Dashboard financeiro</strong> mostra lucros em tempo real</span>
+            <div className="space-y-3">
+              <div className="flex items-start gap-3 text-base">
+                <CheckCircle className="h-5 w-5 text-green-500 mt-0.5 flex-shrink-0" />
+                <span className="font-medium"><strong>Dashboard financeiro</strong> mostra lucros em tempo real</span>
               </div>
-              <div className="flex items-start gap-2 text-sm">
-                <CheckCircle className="h-4 w-4 text-green-500 mt-0.5 flex-shrink-0" />
-                <span><strong>Notas fiscais</strong> emitidas em 3 cliques</span>
+              <div className="flex items-start gap-3 text-base">
+                <CheckCircle className="h-5 w-5 text-green-500 mt-0.5 flex-shrink-0" />
+                <span className="font-medium"><strong>Notas fiscais</strong> emitidas em 3 cliques</span>
               </div>
-              <div className="flex items-start gap-2 text-sm">
-                <CheckCircle className="h-4 w-4 text-green-500 mt-0.5 flex-shrink-0" />
-                <span><strong>Controle automático</strong> de ingredientes e estoque</span>
+              <div className="flex items-start gap-3 text-base">
+                <CheckCircle className="h-5 w-5 text-green-500 mt-0.5 flex-shrink-0" />
+                <span className="font-medium"><strong>Controle automático</strong> de ingredientes e estoque</span>
               </div>
-              <div className="flex items-start gap-2 text-sm">
-                <CheckCircle className="h-4 w-4 text-green-500 mt-0.5 flex-shrink-0" />
-                <span><strong>Ordem de produção</strong> otimizada por demanda</span>
+              <div className="flex items-start gap-3 text-base">
+                <CheckCircle className="h-5 w-5 text-green-500 mt-0.5 flex-shrink-0" />
+                <span className="font-medium"><strong>Ordem de produção</strong> otimizada por demanda</span>
               </div>
             </div>
           </div>
 
           {/* Resultado final */}
           <div className="bg-green-50/50 p-4 rounded-lg border border-green-200">
-            <p className="text-sm text-green-800 font-medium">
+            <p className="text-base text-green-800 font-bold">
               💡 <strong>Resultado:</strong> Carla conseguiu contratar 2 funcionários e dobrar 
               sua produção, mantendo total controle financeiro e operacional.
             </p>
