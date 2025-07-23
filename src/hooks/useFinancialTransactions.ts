@@ -40,6 +40,7 @@ export interface FinancialTransaction {
 }
 
 export interface NewFinancialTransaction {
+  company_id: string;
   type: 'income' | 'expense' | 'transfer';
   category_id?: string;
   cost_center_id?: string;

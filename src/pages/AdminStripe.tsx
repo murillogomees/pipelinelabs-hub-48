@@ -3,36 +3,110 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { ProtectedRoute } from "@/components/ProtectedRoute";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { SuperAdminGuard } from "@/components/PermissionGuard";
 import { StripeConfigDialog } from "@/components/Admin/Stripe/StripeConfigDialog";
 import { BillingPlansManager } from "@/components/Admin/Stripe/BillingPlansManager";
 import { useStripeConfig } from "@/hooks/useStripeConfig";
-import { Settings, CreditCard, Package, Activity } from "lucide-react";
+import { Settings, CreditCard, Package, Activity, Shield, AlertCircle, CheckCircle, Copy } from "lucide-react";
 
 export default function AdminStripe() {
   const { config } = useStripeConfig();
   const [configDialogOpen, setConfigDialogOpen] = useState(false);
 
+  const copyToClipboard = (text: string) => {
+    navigator.clipboard.writeText(text);
+  };
+
   return (
-    <ProtectedRoute>
-      <div className="container mx-auto py-6">
-        <div className="flex justify-between items-center mb-6">
-          <div>
-            <h1 className="text-3xl font-bold">Integração Stripe</h1>
-            <p className="text-muted-foreground">
-              Configure o sistema de pagamentos e gerencie planos de cobrança
-            </p>
+    <SuperAdminGuard>
+      <div className="space-y-6">
+        {/* Header */}
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+          <div className="flex items-center space-x-3">
+            <div className="p-2 rounded-lg bg-primary/10">
+              <CreditCard className="h-6 w-6 text-primary" />
+            </div>
+            <div>
+              <h1 className="text-2xl sm:text-3xl font-bold text-foreground">Configurações Stripe</h1>
+              <p className="text-sm sm:text-base text-muted-foreground">
+                Configure sistema de pagamentos e gerencie planos de cobrança
+              </p>
+            </div>
           </div>
+          
           <div className="flex items-center gap-2">
             <Badge variant={config?.is_active ? "default" : "secondary"}>
               {config?.is_active ? "Ativo" : "Inativo"}
             </Badge>
             {config && (
-              <Badge variant={config.is_live_mode ? "destructive" : "outline"}>
-                {config.is_live_mode ? "Produção" : "Teste"}
+            <Badge variant={!config.is_live_mode ? "outline" : "destructive"}>
+              {!config.is_live_mode ? "Teste" : "Produção"}
               </Badge>
             )}
           </div>
+        </div>
+
+        {/* Status Cards */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
+          <Card>
+            <CardContent className="p-4">
+              <div className="flex items-center space-x-2">
+                {config?.is_active ? (
+                  <CheckCircle className="h-4 w-4 text-green-500" />
+                ) : (
+                  <AlertCircle className="h-4 w-4 text-orange-500" />
+                )}
+                <div>
+                  <p className="text-sm font-medium">Status</p>
+                  <p className="text-2xl font-bold">
+                    {config?.is_active ? "Ativo" : "Inativo"}
+                  </p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+          
+          <Card>
+            <CardContent className="p-4">
+              <div className="flex items-center space-x-2">
+                <Shield className="h-4 w-4 text-primary" />
+                <div>
+                  <p className="text-sm font-medium">Modo</p>
+                  <p className="text-2xl font-bold">
+                    {!config?.is_live_mode ? "Teste" : "Produção"}
+                  </p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+          
+          <Card>
+            <CardContent className="p-4">
+              <div className="flex items-center space-x-2">
+                <Activity className="h-4 w-4 text-primary" />
+                <div>
+                  <p className="text-sm font-medium">Webhook</p>
+                  <p className="text-2xl font-bold">
+                    {config?.webhook_secret ? "OK" : "Pendente"}
+                  </p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+          
+          <Card>
+            <CardContent className="p-4">
+              <div className="flex items-center space-x-2">
+                <Package className="h-4 w-4 text-primary" />
+                <div>
+                  <p className="text-sm font-medium">Moeda</p>
+                  <p className="text-2xl font-bold">BRL</p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
         </div>
 
         <Tabs defaultValue="overview" className="space-y-6">
@@ -144,17 +218,17 @@ export default function AdminStripe() {
                   <div className="space-y-4">
                     <div>
                       <p className="text-sm font-medium">Publishable Key</p>
-                      <p className="text-sm text-muted-foreground font-mono">
-                        {config.publishable_key ? 
-                          `${config.publishable_key.substring(0, 12)}...` : 
-                          "Não configurado"
-                        }
+                       <p className="text-sm text-muted-foreground font-mono">
+                         {config.publishable_key ? 
+                           `${config.publishable_key.substring(0, 12)}...` : 
+                           "Não configurado"
+                         }
                       </p>
                     </div>
                     <div>
                       <p className="text-sm font-medium">Webhook Secret</p>
-                      <p className="text-sm text-muted-foreground">
-                        {config.webhook_secret ? "Configurado" : "Não configurado"}
+                       <p className="text-sm text-muted-foreground">
+                         {config.webhook_secret ? "Configurado" : "Não configurado"}
                       </p>
                     </div>
                     <Button onClick={() => setConfigDialogOpen(true)}>
@@ -201,6 +275,6 @@ export default function AdminStripe() {
           onOpenChange={setConfigDialogOpen}
         />
       </div>
-    </ProtectedRoute>
+    </SuperAdminGuard>
   );
 }
