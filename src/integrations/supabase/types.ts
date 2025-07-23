@@ -426,6 +426,54 @@ export type Database = {
         }
         Relationships: []
       }
+      company_integrations: {
+        Row: {
+          company_id: string
+          config: Json | null
+          created_at: string | null
+          credentials: Json | null
+          id: string
+          integration_id: string
+          status: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          company_id: string
+          config?: Json | null
+          created_at?: string | null
+          credentials?: Json | null
+          id?: string
+          integration_id: string
+          status?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          company_id?: string
+          config?: Json | null
+          created_at?: string | null
+          credentials?: Json | null
+          id?: string
+          integration_id?: string
+          status?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "company_integrations_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "company_integrations_integration_id_fkey"
+            columns: ["integration_id"]
+            isOneToOne: false
+            referencedRelation: "integrations_available"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       company_settings: {
         Row: {
           cdn_cache_settings: Json | null
@@ -723,6 +771,39 @@ export type Database = {
           id?: string
           is_active?: boolean
           updated_at?: string
+        }
+        Relationships: []
+      }
+      integrations_available: {
+        Row: {
+          config_schema: Json | null
+          created_at: string | null
+          description: string | null
+          id: string
+          is_active: boolean | null
+          name: string
+          type: string
+          updated_at: string | null
+        }
+        Insert: {
+          config_schema?: Json | null
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          is_active?: boolean | null
+          name: string
+          type: string
+          updated_at?: string | null
+        }
+        Update: {
+          config_schema?: Json | null
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          is_active?: boolean | null
+          name?: string
+          type?: string
+          updated_at?: string | null
         }
         Relationships: []
       }
@@ -2839,6 +2920,7 @@ export type Database = {
         Row: {
           company_id: string
           created_at: string
+          department: string | null
           id: string
           is_active: boolean
           permissions: Json | null
@@ -2850,6 +2932,7 @@ export type Database = {
         Insert: {
           company_id: string
           created_at?: string
+          department?: string | null
           id?: string
           is_active?: boolean
           permissions?: Json | null
@@ -2861,6 +2944,7 @@ export type Database = {
         Update: {
           company_id?: string
           created_at?: string
+          department?: string | null
           id?: string
           is_active?: boolean
           permissions?: Json | null

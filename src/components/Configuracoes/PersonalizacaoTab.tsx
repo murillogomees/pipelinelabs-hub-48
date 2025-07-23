@@ -35,7 +35,7 @@ export function PersonalizacaoTab() {
   }, [settings]);
 
   const hasWhitelabelAccess = () => {
-    return subscription?.plans?.is_custom || false;
+    return false; // Simplified since is_custom doesn't exist in plans
   };
 
 

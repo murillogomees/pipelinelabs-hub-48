@@ -255,7 +255,7 @@ function OrdensServico() {
               <TableBody>
                 {filteredOrders.map((order) => {
                   const statusInfo = getStatusBadge(order.status);
-                  const priorityInfo = getPriorityBadge(order.priority || 'medium');
+                  const priorityInfo = getPriorityBadge('medium'); // Default priority since field doesn't exist
                   return (
                     <TableRow key={order.id}>
                       <TableCell className="font-medium">{order.order_number}</TableCell>

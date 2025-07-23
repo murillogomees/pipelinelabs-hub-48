@@ -21,8 +21,6 @@ interface Subscription {
     price: number;
     user_limit: number;
     features: string[];
-    is_custom: boolean;
-    is_whitelabel: boolean;
   };
 }
 
@@ -40,9 +38,7 @@ export function useSubscription(companyId?: string) {
             name,
             price,
             user_limit,
-            features,
-            is_custom,
-            is_whitelabel
+            features
           )
         `)
         .eq("status", "active")

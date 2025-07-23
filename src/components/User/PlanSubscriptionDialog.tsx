@@ -102,7 +102,6 @@ export function PlanSubscriptionDialog({ open, onOpenChange }: PlanSubscriptionD
                 <CardHeader>
                   <CardTitle className="flex items-center justify-between">
                     <div className="flex items-center space-x-2">
-                      {subscription.plans?.is_custom && <Crown className="w-4 h-4 text-yellow-500" />}
                       <span>Plano Atual</span>
                     </div>
                     {getStatusBadge(subscription.status)}
@@ -114,11 +113,6 @@ export function PlanSubscriptionDialog({ open, onOpenChange }: PlanSubscriptionD
                       <p className="text-sm text-muted-foreground">Nome do Plano</p>
                       <p className="font-medium flex items-center space-x-2">
                         <span>{subscription.plans?.name || 'Plano Básico'}</span>
-                        {subscription.plans?.is_whitelabel && 
-                          <Badge variant="secondary" className="bg-purple-100 text-purple-800 text-xs">
-                            White Label
-                          </Badge>
-                        }
                       </p>
                     </div>
                     <div>

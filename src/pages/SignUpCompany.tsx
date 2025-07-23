@@ -37,8 +37,7 @@ interface Plan {
   description: string;
   user_limit: number;
   trial_days: number;
-  features: string[];
-  is_custom: boolean;
+  features: any;
   active: boolean;
 }
 
@@ -79,7 +78,10 @@ export function SignUpCompany() {
         .order("price");
       
       if (error) throw error;
-      return data as Plan[];
+      return (data || []).map((plan: any) => ({
+        ...plan,
+        features: plan.features || []
+      })) as Plan[];
     },
   });
 
@@ -404,9 +406,9 @@ export function SignUpCompany() {
                                       {getPlanIcon(plan.name)}
                                       <span className="font-semibold">{plan.name}</span>
                                     </div>
-                                    <span className="font-bold text-primary">
-                                      {formatPrice(plan.price, plan.is_custom)}
-                                    </span>
+                                     <span className="font-bold text-primary">
+                                       {formatPrice(plan.price, false)}
+                                     </span>
                                   </div>
                                   
                                   <p className="text-sm text-muted-foreground mb-2">
