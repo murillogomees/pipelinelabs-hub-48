@@ -105,7 +105,7 @@ export function PersonaCard({ persona = defaultPersona, className = '' }: Person
             </div>
             
             <div className="space-y-2">
-              {currentPersona.problems.map((problem, index) => (
+              {(currentPersona.problems || []).map((problem, index) => (
                 <div key={index} className="flex items-start gap-2 text-sm">
                   <div className="w-1.5 h-1.5 bg-red-500 rounded-full mt-2 flex-shrink-0"></div>
                   <span>"{problem}"</span>
@@ -122,7 +122,7 @@ export function PersonaCard({ persona = defaultPersona, className = '' }: Person
             </div>
             
             <div className="space-y-2">
-              {currentPersona.solutions.map((solution, index) => (
+              {(currentPersona.solutions || []).map((solution, index) => (
                 <div key={index} className="flex items-start gap-2 text-sm">
                   <CheckCircle className="h-4 w-4 text-green-500 mt-0.5 flex-shrink-0" />
                   <span dangerouslySetInnerHTML={{ __html: solution }} />
