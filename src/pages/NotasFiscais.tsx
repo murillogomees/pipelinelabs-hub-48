@@ -6,11 +6,12 @@ import { Badge } from '@/components/ui/badge';
 import { Plus, FileText, Receipt, Building, Send, X, Download } from 'lucide-react';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useNFe } from '@/hooks/useNFe';
-import { NFeDialog } from '@/components/NFe/NFeDialog';
+import { RealNFeDialog } from '@/components/NFe/RealNFeDialog';
 
 // Componente para NFe
 function NFe() {
   const { nfeList, isLoading, sendNFe, cancelNFe } = useNFe();
+  const [dialogOpen, setDialogOpen] = React.useState(false);
 
   const getStatusBadge = (nfe: any) => {
     const status = nfe.nfe_xmls?.[0]?.status || 'draft';
@@ -55,14 +56,10 @@ function NFe() {
           <h2 className="text-2xl font-bold text-foreground">NFe - Nota Fiscal Eletrônica</h2>
           <p className="text-muted-foreground">Emita notas fiscais eletrônicas</p>
         </div>
-        <NFeDialog
-          trigger={
-            <Button className="bg-primary hover:bg-primary/90 text-primary-foreground">
-              <Plus className="w-4 h-4 mr-2" />
-              Nova NFe
-            </Button>
-          }
-        />
+        <Button onClick={() => setDialogOpen(true)}>
+          <Plus className="w-4 h-4 mr-2" />
+          Nova NFe
+        </Button>
       </div>
 
       <Card>
