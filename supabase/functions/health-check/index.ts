@@ -158,7 +158,7 @@ serve(async (req) => {
 
     const healthResponse = {
       status: overallStatus,
-      uptime: process.uptime ? Math.floor(process.uptime()) : null,
+      uptime: null, // Uptime not available in Deno runtime
       services: servicesObj,
       timestamp: new Date().toISOString(),
       response_time_ms: totalTime
