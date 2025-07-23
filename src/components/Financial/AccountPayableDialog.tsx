@@ -8,6 +8,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { AccountPayable, NewAccountPayable } from '@/hooks/useAccountsPayable';
+import { FINANCIAL_CATEGORIES, FINANCIAL_MESSAGES } from './constants';
+import { validateAccountData } from './utils';
 
 interface AccountPayableDialogProps {
   open: boolean;
@@ -80,11 +82,12 @@ export function AccountPayableDialog({
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!formData.description.trim() || formData.amount <= 0 || !formData.due_date) {
+    const validation = validateAccountData(formData);
+    if (!validation.isValid) {
       toast({
         variant: "destructive",
         title: "Campos obrigatórios",
-        description: "Preencha todos os campos obrigatórios.",
+        description: FINANCIAL_MESSAGES.ERROR.REQUIRED_FIELDS,
       });
       return;
     }
@@ -103,19 +106,7 @@ export function AccountPayableDialog({
     onOpenChange(false);
   };
 
-  const categories = [
-    'Fornecedores',
-    'Serviços',
-    'Impostos',
-    'Aluguel',
-    'Energia',
-    'Telefone',
-    'Internet',
-    'Combustível',
-    'Material de Escritório',
-    'Marketing',
-    'Outros'
-  ];
+  const categories = FINANCIAL_CATEGORIES.EXPENSE_CATEGORIES;
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>

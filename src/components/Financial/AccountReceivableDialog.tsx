@@ -8,6 +8,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { AccountReceivable, NewAccountReceivable } from '@/hooks/useAccountsReceivable';
+import { FINANCIAL_CATEGORIES, FINANCIAL_MESSAGES } from './constants';
+import { validateAccountData } from './utils';
 
 interface AccountReceivableDialogProps {
   open: boolean;
@@ -80,11 +82,12 @@ export function AccountReceivableDialog({
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!formData.description.trim() || formData.amount <= 0 || !formData.due_date) {
+    const validation = validateAccountData(formData);
+    if (!validation.isValid) {
       toast({
         variant: "destructive",
         title: "Campos obrigatórios",
-        description: "Preencha todos os campos obrigatórios.",
+        description: FINANCIAL_MESSAGES.ERROR.REQUIRED_FIELDS,
       });
       return;
     }
@@ -104,16 +107,7 @@ export function AccountReceivableDialog({
     onOpenChange(false);
   };
 
-  const paymentMethods = [
-    'Dinheiro',
-    'PIX',
-    'Cartão de Débito',
-    'Cartão de Crédito',
-    'Transferência Bancária',
-    'Boleto',
-    'Cheque',
-    'Outros'
-  ];
+  const paymentMethods = FINANCIAL_CATEGORIES.PAYMENT_METHODS;
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
