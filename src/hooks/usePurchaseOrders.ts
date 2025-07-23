@@ -3,6 +3,16 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 
+export interface PurchaseOrderItem {
+  id: string;
+  product_id: string;
+  product_name: string;
+  quantity: number;
+  unit_price: number;
+  total_price: number;
+  notes?: string;
+}
+
 export interface PurchaseOrder {
   id: string;
   order_number: string;
@@ -11,7 +21,7 @@ export interface PurchaseOrder {
   order_date: string;
   delivery_date: string | null;
   status: 'draft' | 'sent' | 'confirmed' | 'partially_received' | 'received' | 'cancelled';
-  items: any[];
+  items: PurchaseOrderItem[];
   subtotal: number;
   discount: number;
   tax_amount: number;
@@ -26,20 +36,20 @@ export interface PurchaseOrder {
 }
 
 export interface PurchaseOrderFormData {
-  supplier_id: string | null;
+  supplier_id: string;
   supplier_name: string;
   order_date: string;
-  delivery_date: string | null;
+  delivery_date: string;
   status: string;
-  items: any[];
+  items: PurchaseOrderItem[];
   subtotal: number;
   discount: number;
   tax_amount: number;
   shipping_cost: number;
   total_amount: number;
-  notes: string | null;
-  internal_notes: string | null;
-  company_id?: string;
+  notes: string;
+  internal_notes: string;
+  company_id: string;
 }
 
 export function usePurchaseOrders() {
@@ -48,14 +58,20 @@ export function usePurchaseOrders() {
 
   const { data: purchaseOrders, isLoading: loading, error } = useQuery({
     queryKey: ['purchase-orders'],
-    queryFn: async () => {
+    queryFn: async (): Promise<PurchaseOrder[]> => {
       const { data, error } = await supabase
-        .from('purchase_orders' as any)
+        .from('purchase_orders')
         .select('*')
         .order('created_at', { ascending: false });
 
       if (error) throw error;
-      return (data as unknown) as PurchaseOrder[];
+      return (data as any[]).map(item => ({
+        ...item,
+        tax_amount: item.tax_amount || 0,
+        shipping_cost: item.shipping_cost || 0,
+        internal_notes: item.internal_notes || '',
+        items: Array.isArray(item.items) ? item.items : []
+      })) as PurchaseOrder[];
     },
   });
 
@@ -63,16 +79,31 @@ export function usePurchaseOrders() {
     mutationFn: async (data: PurchaseOrderFormData) => {
       // Generate order number using SQL function
       const { data: orderNumberData, error: orderNumberError } = await supabase
-        .rpc('generate_purchase_order_number' as any, { company_uuid: data.company_id || null });
+        .rpc('generate_purchase_order_number', { company_uuid: data.company_id });
 
       if (orderNumberError) throw orderNumberError;
 
+      const insertData = {
+        order_number: orderNumberData,
+        supplier_id: data.supplier_id,
+        supplier_name: data.supplier_name,
+        order_date: data.order_date,
+        delivery_date: data.delivery_date || null,
+        status: data.status,
+        items: JSON.stringify(data.items),
+        subtotal: data.subtotal,
+        discount: data.discount,
+        tax_amount: data.tax_amount,
+        shipping_cost: data.shipping_cost,
+        total_amount: data.total_amount,
+        notes: data.notes || null,
+        internal_notes: data.internal_notes || null,
+        company_id: data.company_id
+      };
+
       const { data: newOrder, error } = await supabase
-        .from('purchase_orders' as any)
-        .insert([{
-          ...data,
-          order_number: orderNumberData
-        }])
+        .from('purchase_orders')
+        .insert([insertData])
         .select()
         .single();
 
@@ -98,9 +129,14 @@ export function usePurchaseOrders() {
 
   const updateMutation = useMutation({
     mutationFn: async ({ id, data }: { id: string; data: Partial<PurchaseOrderFormData> }) => {
+      const updateData = {
+        ...data,
+        items: data.items ? JSON.stringify(data.items) : undefined,
+      };
+
       const { data: updatedOrder, error } = await supabase
-        .from('purchase_orders' as any)
-        .update(data)
+        .from('purchase_orders')
+        .update(updateData)
         .eq('id', id)
         .select()
         .single();
@@ -128,7 +164,7 @@ export function usePurchaseOrders() {
   const deleteMutation = useMutation({
     mutationFn: async (id: string) => {
       const { error } = await supabase
-        .from('purchase_orders' as any)
+        .from('purchase_orders')
         .delete()
         .eq('id', id);
 

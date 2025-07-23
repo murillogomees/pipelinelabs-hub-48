@@ -1,4 +1,6 @@
 import React, { useState, useEffect } from 'react';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -9,57 +11,57 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Plus, Trash2, Search } from 'lucide-react';
 import { useSuppliers } from '@/hooks/useSuppliers';
 import { useProducts } from '@/hooks/useProducts';
 import { SearchableSelect } from '@/components/ui/searchable-select';
 import { formatCurrency } from '@/lib/utils';
+import { purchaseOrderFormSchema, newItemFormSchema, type PurchaseOrderFormData, type OrderItem, type NewItemFormData } from './schema';
 
 interface PurchaseOrderDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onSubmit: (data: any) => void;
-  initialData?: any;
-}
-
-interface OrderItem {
-  id: string;
-  product_id: string;
-  product_name: string;
-  quantity: number;
-  unit_price: number;
-  total_price: number;
-  notes?: string;
+  onSubmit: (data: PurchaseOrderFormData) => void;
+  initialData?: Partial<PurchaseOrderFormData>;
 }
 
 export function PurchaseOrderDialog({ open, onOpenChange, onSubmit, initialData }: PurchaseOrderDialogProps) {
   const { suppliers } = useSuppliers();
   const { data: products } = useProducts();
 
-  const [formData, setFormData] = useState({
-    supplier_id: '',
-    supplier_name: '',
-    order_date: new Date().toISOString().split('T')[0],
-    delivery_date: '',
-    status: 'draft',
-    notes: '',
-    internal_notes: '',
-    discount: 0,
-    tax_amount: 0,
-    shipping_cost: 0
+  const form = useForm<PurchaseOrderFormData>({
+    resolver: zodResolver(purchaseOrderFormSchema),
+    defaultValues: {
+      supplier_id: '',
+      supplier_name: '',
+      order_date: new Date().toISOString().split('T')[0],
+      delivery_date: '',
+      status: 'draft',
+      notes: '',
+      internal_notes: '',
+      discount: 0,
+      tax_amount: 0,
+      shipping_cost: 0,
+      items: [],
+    },
+  });
+
+  const itemForm = useForm<NewItemFormData>({
+    resolver: zodResolver(newItemFormSchema),
+    defaultValues: {
+      product_id: '',
+      quantity: 1,
+      unit_price: 0,
+      notes: '',
+    },
   });
 
   const [items, setItems] = useState<OrderItem[]>([]);
-  const [newItem, setNewItem] = useState({
-    product_id: '',
-    quantity: 1,
-    unit_price: 0,
-    notes: ''
-  });
 
   useEffect(() => {
-    if (initialData) {
-      setFormData({
+    if (initialData && open) {
+      form.reset({
         supplier_id: initialData.supplier_id || '',
         supplier_name: initialData.supplier_name || '',
         order_date: initialData.order_date?.split('T')[0] || new Date().toISOString().split('T')[0],
@@ -69,54 +71,41 @@ export function PurchaseOrderDialog({ open, onOpenChange, onSubmit, initialData 
         internal_notes: initialData.internal_notes || '',
         discount: initialData.discount || 0,
         tax_amount: initialData.tax_amount || 0,
-        shipping_cost: initialData.shipping_cost || 0
+        shipping_cost: initialData.shipping_cost || 0,
+        items: initialData.items || [],
       });
       setItems(initialData.items || []);
-    } else {
-      // Reset form
-      setFormData({
-        supplier_id: '',
-        supplier_name: '',
-        order_date: new Date().toISOString().split('T')[0],
-        delivery_date: '',
-        status: 'draft',
-        notes: '',
-        internal_notes: '',
-        discount: 0,
-        tax_amount: 0,
-        shipping_cost: 0
-      });
+    } else if (!initialData && open) {
+      form.reset();
       setItems([]);
+      itemForm.reset();
     }
-  }, [initialData, open]);
+  }, [initialData, open, form, itemForm]);
 
   const handleSupplierChange = (supplierId: string) => {
     const supplier = suppliers?.find(s => s.id === supplierId);
-    setFormData(prev => ({
-      ...prev,
-      supplier_id: supplierId,
-      supplier_name: supplier?.name || ''
-    }));
+    form.setValue('supplier_id', supplierId);
+    form.setValue('supplier_name', supplier?.name || '');
   };
 
-  const addItem = () => {
-    if (!newItem.product_id) return;
-
-    const product = products?.find(p => p.id === newItem.product_id);
+  const addItem = (data: NewItemFormData) => {
+    const product = products?.find(p => p.id === data.product_id);
     if (!product) return;
 
     const item: OrderItem = {
       id: Date.now().toString(),
-      product_id: newItem.product_id,
+      product_id: data.product_id,
       product_name: product.name,
-      quantity: newItem.quantity,
-      unit_price: newItem.unit_price || product.cost_price || 0,
-      total_price: newItem.quantity * (newItem.unit_price || product.cost_price || 0),
-      notes: newItem.notes
+      quantity: data.quantity,
+      unit_price: data.unit_price || product.cost_price || 0,
+      total_price: data.quantity * (data.unit_price || product.cost_price || 0),
+      notes: data.notes
     };
 
-    setItems(prev => [...prev, item]);
-    setNewItem({
+    const newItems = [...items, item];
+    setItems(newItems);
+    form.setValue('items', newItems);
+    itemForm.reset({
       product_id: '',
       quantity: 1,
       unit_price: 0,
@@ -125,43 +114,49 @@ export function PurchaseOrderDialog({ open, onOpenChange, onSubmit, initialData 
   };
 
   const removeItem = (itemId: string) => {
-    setItems(prev => prev.filter(item => item.id !== itemId));
+    const newItems = items.filter(item => item.id !== itemId);
+    setItems(newItems);
+    form.setValue('items', newItems);
   };
 
   const updateItemQuantity = (itemId: string, quantity: number) => {
-    setItems(prev => prev.map(item => 
+    const newItems = items.map(item => 
       item.id === itemId 
         ? { ...item, quantity, total_price: quantity * item.unit_price }
         : item
-    ));
+    );
+    setItems(newItems);
+    form.setValue('items', newItems);
   };
 
   const updateItemPrice = (itemId: string, unit_price: number) => {
-    setItems(prev => prev.map(item => 
+    const newItems = items.map(item => 
       item.id === itemId 
         ? { ...item, unit_price, total_price: item.quantity * unit_price }
         : item
-    ));
+    );
+    setItems(newItems);
+    form.setValue('items', newItems);
   };
 
   const calculateTotals = () => {
     const subtotal = items.reduce((sum, item) => sum + item.total_price, 0);
-    const total = subtotal - formData.discount + formData.tax_amount + formData.shipping_cost;
+    const discount = form.getValues('discount') || 0;
+    const tax_amount = form.getValues('tax_amount') || 0;
+    const shipping_cost = form.getValues('shipping_cost') || 0;
+    const total = subtotal - discount + tax_amount + shipping_cost;
     return { subtotal, total };
   };
 
   const { subtotal, total } = calculateTotals();
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    
+  const handleFormSubmit = (data: PurchaseOrderFormData) => {
     const orderData = {
-      ...formData,
+      ...data,
       items,
       subtotal,
       total_amount: total
     };
-
     onSubmit(orderData);
   };
 
@@ -183,7 +178,8 @@ export function PurchaseOrderDialog({ open, onOpenChange, onSubmit, initialData 
           </DialogTitle>
         </DialogHeader>
 
-        <form onSubmit={handleSubmit} className="space-y-6">
+        <Form {...form}>
+          <form onSubmit={form.handleSubmit(handleFormSubmit)} className="space-y-6">
           <Tabs defaultValue="dados" className="w-full">
             <TabsList className="grid w-full grid-cols-3">
               <TabsTrigger value="dados">Dados Gerais</TabsTrigger>
@@ -193,80 +189,123 @@ export function PurchaseOrderDialog({ open, onOpenChange, onSubmit, initialData 
 
             <TabsContent value="dados" className="space-y-4">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="supplier">Fornecedor *</Label>
-                  <SearchableSelect
-                    value={formData.supplier_id}
-                    onValueChange={handleSupplierChange}
-                    placeholder="Selecione um fornecedor"
-                    staticOptions={suppliers?.map(supplier => ({
-                      value: supplier.id,
-                      label: supplier.name
-                    })) || []}
-                  />
-                </div>
+                <FormField
+                  control={form.control}
+                  name="supplier_id"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Fornecedor *</FormLabel>
+                      <FormControl>
+                        <SearchableSelect
+                          value={field.value}
+                          onValueChange={handleSupplierChange}
+                          placeholder="Selecione um fornecedor"
+                          staticOptions={suppliers?.map(supplier => ({
+                            value: supplier.id,
+                            label: supplier.name
+                          })) || []}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
 
-                <div className="space-y-2">
-                  <Label htmlFor="status">Status</Label>
-                  <Select value={formData.status} onValueChange={(value) => 
-                    setFormData(prev => ({ ...prev, status: value }))
-                  }>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Selecione o status" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {statusOptions.map(option => (
-                        <SelectItem key={option.value} value={option.value}>
-                          {option.label}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
+                <FormField
+                  control={form.control}
+                  name="status"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Status</FormLabel>
+                      <Select value={field.value} onValueChange={field.onChange}>
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Selecione o status" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          {statusOptions.map(option => (
+                            <SelectItem key={option.value} value={option.value}>
+                              {option.label}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
 
-                <div className="space-y-2">
-                  <Label htmlFor="order_date">Data do Pedido *</Label>
-                  <Input
-                    id="order_date"
-                    type="date"
-                    value={formData.order_date}
-                    onChange={(e) => setFormData(prev => ({ ...prev, order_date: e.target.value }))}
-                    required
-                  />
-                </div>
+                <FormField
+                  control={form.control}
+                  name="order_date"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Data do Pedido *</FormLabel>
+                      <FormControl>
+                        <Input
+                          type="date"
+                          {...field}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
 
-                <div className="space-y-2">
-                  <Label htmlFor="delivery_date">Data de Entrega</Label>
-                  <Input
-                    id="delivery_date"
-                    type="date"
-                    value={formData.delivery_date}
-                    onChange={(e) => setFormData(prev => ({ ...prev, delivery_date: e.target.value }))}
-                  />
-                </div>
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="notes">Observações</Label>
-                <Textarea
-                  id="notes"
-                  value={formData.notes}
-                  onChange={(e) => setFormData(prev => ({ ...prev, notes: e.target.value }))}
-                  placeholder="Observações gerais do pedido"
-                  rows={3}
+                <FormField
+                  control={form.control}
+                  name="delivery_date"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Data de Entrega</FormLabel>
+                      <FormControl>
+                        <Input
+                          type="date"
+                          {...field}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
                 />
               </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="internal_notes">Observações Internas</Label>
-                <Textarea
-                  id="internal_notes"
-                  value={formData.internal_notes}
-                  onChange={(e) => setFormData(prev => ({ ...prev, internal_notes: e.target.value }))}
-                  placeholder="Observações internas (não visíveis ao fornecedor)"
-                  rows={3}
-                />
-              </div>
+              <FormField
+                control={form.control}
+                name="notes"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Observações</FormLabel>
+                    <FormControl>
+                      <Textarea
+                        placeholder="Observações gerais do pedido"
+                        rows={3}
+                        {...field}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="internal_notes"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Observações Internas</FormLabel>
+                    <FormControl>
+                      <Textarea
+                        placeholder="Observações internas (não visíveis ao fornecedor)"
+                        rows={3}
+                        {...field}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
             </TabsContent>
 
             <TabsContent value="itens" className="space-y-4">
@@ -280,14 +319,11 @@ export function PurchaseOrderDialog({ open, onOpenChange, onSubmit, initialData 
                     <div className="space-y-2">
                       <Label>Produto</Label>
                       <SearchableSelect
-                        value={newItem.product_id}
+                        value={itemForm.watch('product_id')}
                         onValueChange={(value) => {
                           const product = products?.find(p => p.id === value);
-                          setNewItem(prev => ({
-                            ...prev,
-                            product_id: value,
-                            unit_price: product?.cost_price || 0
-                          }));
+                          itemForm.setValue('product_id', value);
+                          itemForm.setValue('unit_price', product?.cost_price || 0);
                         }}
                         placeholder="Selecione um produto"
                         staticOptions={products?.map(product => ({
@@ -302,11 +338,8 @@ export function PurchaseOrderDialog({ open, onOpenChange, onSubmit, initialData 
                       <Input
                         type="number"
                         min="1"
-                        value={newItem.quantity}
-                        onChange={(e) => setNewItem(prev => ({ 
-                          ...prev, 
-                          quantity: parseInt(e.target.value) || 1 
-                        }))}
+                        value={itemForm.watch('quantity')}
+                        onChange={(e) => itemForm.setValue('quantity', parseInt(e.target.value) || 1)}
                       />
                     </div>
 
@@ -316,25 +349,26 @@ export function PurchaseOrderDialog({ open, onOpenChange, onSubmit, initialData 
                         type="number"
                         step="0.01"
                         min="0"
-                        value={newItem.unit_price}
-                        onChange={(e) => setNewItem(prev => ({ 
-                          ...prev, 
-                          unit_price: parseFloat(e.target.value) || 0 
-                        }))}
+                        value={itemForm.watch('unit_price')}
+                        onChange={(e) => itemForm.setValue('unit_price', parseFloat(e.target.value) || 0)}
                       />
                     </div>
 
                     <div className="space-y-2">
                       <Label>Observações</Label>
                       <Input
-                        value={newItem.notes}
-                        onChange={(e) => setNewItem(prev => ({ ...prev, notes: e.target.value }))}
+                        value={itemForm.watch('notes')}
+                        onChange={(e) => itemForm.setValue('notes', e.target.value)}
                         placeholder="Observações do item"
                       />
                     </div>
 
                     <div className="flex items-end">
-                      <Button type="button" onClick={addItem} className="w-full">
+                      <Button 
+                        type="button" 
+                        onClick={() => itemForm.handleSubmit(addItem)()} 
+                        className="w-full"
+                      >
                         <Plus className="w-4 h-4 mr-2" />
                         Adicionar
                       </Button>
@@ -413,50 +447,68 @@ export function PurchaseOrderDialog({ open, onOpenChange, onSubmit, initialData 
             <TabsContent value="valores" className="space-y-4">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="space-y-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="discount">Desconto</Label>
-                    <Input
-                      id="discount"
-                      type="number"
-                      step="0.01"
-                      min="0"
-                      value={formData.discount}
-                      onChange={(e) => setFormData(prev => ({ 
-                        ...prev, 
-                        discount: parseFloat(e.target.value) || 0 
-                      }))}
-                    />
-                  </div>
+                  <FormField
+                    control={form.control}
+                    name="discount"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Desconto</FormLabel>
+                        <FormControl>
+                          <Input
+                            type="number"
+                            step="0.01"
+                            min="0"
+                            {...field}
+                            value={field.value}
+                            onChange={(e) => field.onChange(parseFloat(e.target.value) || 0)}
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
 
-                  <div className="space-y-2">
-                    <Label htmlFor="tax_amount">Impostos</Label>
-                    <Input
-                      id="tax_amount"
-                      type="number"
-                      step="0.01"
-                      min="0"
-                      value={formData.tax_amount}
-                      onChange={(e) => setFormData(prev => ({ 
-                        ...prev, 
-                        tax_amount: parseFloat(e.target.value) || 0 
-                      }))}
-                    />
-                  </div>
+                  <FormField
+                    control={form.control}
+                    name="tax_amount"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Impostos</FormLabel>
+                        <FormControl>
+                          <Input
+                            type="number"
+                            step="0.01"
+                            min="0"
+                            {...field}
+                            value={field.value}
+                            onChange={(e) => field.onChange(parseFloat(e.target.value) || 0)}
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
 
-                  <div className="space-y-2">
-                    <Label htmlFor="shipping_cost">Frete</Label>
-                    <Input
-                      id="shipping_cost"
-                      type="number"
-                      step="0.01"
-                      min="0"
-                      value={formData.shipping_cost}
-                      onChange={(e) => setFormData(prev => ({ 
-                        ...prev, 
-                        shipping_cost: parseFloat(e.target.value) || 0 
-                      }))}
-                    />
-                  </div>
+                  <FormField
+                    control={form.control}
+                    name="shipping_cost"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Frete</FormLabel>
+                        <FormControl>
+                          <Input
+                            type="number"
+                            step="0.01"
+                            min="0"
+                            {...field}
+                            value={field.value}
+                            onChange={(e) => field.onChange(parseFloat(e.target.value) || 0)}
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
                 </div>
 
                 <Card>
@@ -470,15 +522,15 @@ export function PurchaseOrderDialog({ open, onOpenChange, onSubmit, initialData 
                     </div>
                     <div className="flex justify-between">
                       <span>Desconto:</span>
-                      <span className="text-red-600">-{formatCurrency(formData.discount)}</span>
+                      <span className="text-red-600">-{formatCurrency(form.watch('discount') || 0)}</span>
                     </div>
                     <div className="flex justify-between">
                       <span>Impostos:</span>
-                      <span>{formatCurrency(formData.tax_amount)}</span>
+                      <span>{formatCurrency(form.watch('tax_amount') || 0)}</span>
                     </div>
                     <div className="flex justify-between">
                       <span>Frete:</span>
-                      <span>{formatCurrency(formData.shipping_cost)}</span>
+                      <span>{formatCurrency(form.watch('shipping_cost') || 0)}</span>
                     </div>
                     <hr />
                     <div className="flex justify-between font-bold text-lg">
@@ -495,11 +547,15 @@ export function PurchaseOrderDialog({ open, onOpenChange, onSubmit, initialData 
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
               Cancelar
             </Button>
-            <Button type="submit" disabled={!formData.supplier_id || items.length === 0}>
+            <Button 
+              type="submit" 
+              disabled={!form.watch('supplier_id') || items.length === 0}
+            >
               {initialData ? 'Atualizar' : 'Criar'} Pedido
             </Button>
           </div>
         </form>
+        </Form>
       </DialogContent>
     </Dialog>
   );
