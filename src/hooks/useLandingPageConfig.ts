@@ -132,21 +132,69 @@ function getDefaultConfig(): LandingPageConfig {
       },
       {
         id: 2,
-        name: "Lucas",
-        age: 28,
-        business: "Vendedor em marketplaces",
-        problem: "Falta de controle multicanal",
-        solution: "Centralização de pedidos e estoque",
-        image: "/placeholder.svg"
+        name: "Ana",
+        age: 34,
+        business: "Loja de roupas femininas",
+        location: "São Paulo/SP",
+        situation: "Empreende há 6 anos",
+        problems: [
+          "Usava planilhas e tinha muitas falhas",
+          "Perdia tempo com controle manual",
+          "Dificuldade com emissão fiscal",
+          "Estoque desorganizado"
+        ],
+        solutions: [
+          "Estoque automatizado e preciso",
+          "Emissão fiscal simplificada",
+          "Relatórios automáticos de vendas",
+          "PDV integrado com e-commerce"
+        ],
+        result: "Reduziu 80% do tempo administrativo e aumentou 40% as vendas com melhor controle.",
+        image: "/src/assets/ana-persona.jpg"
       },
       {
         id: 3,
-        name: "Carla",
-        age: 41,
-        business: "Pequena fábrica de salgados",
-        problem: "Falta de visibilidade financeira",
-        solution: "Ordem de produção e dashboard financeiro",
-        image: "/placeholder.svg"
+        name: "Lucas",
+        age: 28,
+        business: "Vendedor em marketplaces",
+        location: "Rio de Janeiro/RJ",
+        situation: "Vendedor online há 3 anos",
+        problems: [
+          "Falta de controle multicanal",
+          "Pedidos espalhados em planilhas",
+          "Estoque desatualizado",
+          "Perdia vendas por falta de integração"
+        ],
+        solutions: [
+          "Centralização de todos os pedidos",
+          "Estoque unificado e sincronizado",
+          "Integração com marketplaces",
+          "Dashboard de performance em tempo real"
+        ],
+        result: "Triplicou as vendas integrando todos os canais em uma única plataforma.",
+        image: "/src/assets/lucas-persona.jpg"
+      },
+      {
+        id: 4,
+        name: "Eduardo",
+        age: 38,
+        business: "Distribuidor de bebidas",
+        location: "Fortaleza/CE",
+        situation: "Distribui há 8 anos",
+        problems: [
+          "Logística complexa e manual",
+          "Pedidos feitos por telefone",
+          "Controle de estoque em papel",
+          "Dificuldade com separação de pedidos"
+        ],
+        solutions: [
+          "Sistema de pedidos online",
+          "Controle inteligente de estoque",
+          "Separação automática de pedidos",
+          "Integração com transportadoras"
+        ],
+        result: "Automatizou toda operação e aumentou 60% a eficiência logística.",
+        image: "/src/assets/eduardo-persona.jpg"
       }
     ],
     features: [
