@@ -5,6 +5,7 @@ import * as z from 'zod';
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogHeader,
   DialogTitle,
   DialogFooter,
@@ -94,6 +95,9 @@ export const MarketplaceConnectionDialog = ({
       <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Conectar Marketplace</DialogTitle>
+          <DialogDescription>
+            Configure a conexão com um marketplace para sincronizar produtos e pedidos automaticamente.
+          </DialogDescription>
         </DialogHeader>
 
         <Form {...form}>
@@ -155,11 +159,12 @@ export const MarketplaceConnectionDialog = ({
                           </SelectContent>
                         </Select>
                       ) : (
-                        <Input
-                          type={field.type}
-                          placeholder={field.label}
-                          {...form.register(`credentials.${field.name}` as any)}
-                        />
+                         <Input
+                           type={field.type}
+                           placeholder={field.label}
+                           autoComplete={field.type === 'password' ? 'current-password' : 'off'}
+                           {...form.register(`credentials.${field.name}` as any)}
+                         />
                       )}
                     </div>
                   ))}
