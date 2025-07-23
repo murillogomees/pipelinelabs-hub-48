@@ -14,6 +14,15 @@ import { useLandingPageContent } from '@/hooks/useLandingPageContent';
 import { PipelineLabsLogo } from '@/components/Layout/PipelineLabsLogo';
 import { Footer } from '@/components/Layout/Footer';
 
+// Import the advanced mockup components
+import { 
+  MockupDashboard, 
+  MockupPDV, 
+  MockupNFe, 
+  MockupInventory, 
+  MockupFinancial 
+} from '@/components/ui/SystemMockups';
+
 // Icon mapping helper
 const getIcon = (iconName: string) => {
   const iconMap: { [key: string]: React.ReactNode } = {
@@ -45,214 +54,6 @@ const getIcon = (iconName: string) => {
   };
   return iconMap[iconName] || <Star className="h-8 w-8 text-primary" />;
 };
-
-// Mockup components para simular telas do sistema
-const MockupDashboard = () => (
-  <div className="bg-white border rounded-lg p-4 shadow-sm">
-    <div className="flex items-center justify-between mb-4">
-      <h3 className="font-bold text-gray-800">Dashboard Principal</h3>
-      <div className="flex gap-2">
-        {getIcon('bell')}
-        {getIcon('settings')}
-      </div>
-    </div>
-    <div className="grid grid-cols-3 gap-4 mb-4">
-      <div className="bg-green-50 p-3 rounded border border-green-200">
-        <div className="flex items-center gap-2">
-          {getIcon('dollar-sign')}
-          <span className="text-sm font-medium">Vendas Hoje</span>
-        </div>
-        <p className="text-2xl font-bold text-green-700">R$ 2.847</p>
-      </div>
-      <div className="bg-blue-50 p-3 rounded border border-blue-200">
-        <div className="flex items-center gap-2">
-          {getIcon('shopping-cart')}
-          <span className="text-sm font-medium">Pedidos</span>
-        </div>
-        <p className="text-2xl font-bold text-blue-700">23</p>
-      </div>
-      <div className="bg-orange-50 p-3 rounded border border-orange-200">
-        <div className="flex items-center gap-2">
-          {getIcon('package')}
-          <span className="text-sm font-medium">Estoque Baixo</span>
-        </div>
-        <p className="text-2xl font-bold text-orange-700">7</p>
-      </div>
-    </div>
-    <div className="bg-gray-50 h-24 rounded border flex items-center justify-center">
-      <span className="text-gray-500 text-sm">📊 Gráfico de Vendas</span>
-    </div>
-  </div>
-);
-
-const MockupPDV = () => (
-  <div className="bg-white border rounded-lg p-4 shadow-sm">
-    <div className="flex items-center justify-between mb-4">
-      <h3 className="font-bold text-gray-800">PDV - Ponto de Venda</h3>
-      <span className="bg-green-100 text-green-800 px-2 py-1 rounded text-xs">Online</span>
-    </div>
-    <div className="space-y-2 mb-4">
-      <div className="flex justify-between items-center bg-gray-50 p-2 rounded">
-        <span className="text-sm">Camiseta Polo - P</span>
-        <span className="font-medium">R$ 89,90</span>
-      </div>
-      <div className="flex justify-between items-center bg-gray-50 p-2 rounded">
-        <span className="text-sm">Calça Jeans - M</span>
-        <span className="font-medium">R$ 159,90</span>
-      </div>
-    </div>
-    <div className="border-t pt-2">
-      <div className="flex justify-between font-bold">
-        <span>Total:</span>
-        <span className="text-green-600">R$ 249,80</span>
-      </div>
-    </div>
-  </div>
-);
-
-const MockupNFe = () => (
-  <div className="bg-white border rounded-lg p-4 shadow-sm">
-    <div className="flex items-center justify-between mb-4">
-      <h3 className="font-bold text-gray-800">Emissão de NFe</h3>
-      <span className="bg-blue-100 text-blue-800 px-2 py-1 rounded text-xs">Pronto</span>
-    </div>
-    <div className="space-y-3">
-      <div>
-        <label className="text-xs text-gray-600">Cliente</label>
-        <div className="bg-gray-50 p-2 rounded text-sm">João Silva - 123.456.789-00</div>
-      </div>
-      <div>
-        <label className="text-xs text-gray-600">Produtos</label>
-        <div className="bg-gray-50 p-2 rounded text-sm">2 itens selecionados</div>
-      </div>
-      <div className="flex gap-2">
-        <button className="bg-primary text-white px-3 py-1 rounded text-sm">Emitir NFe</button>
-        <button className="border px-3 py-1 rounded text-sm">Preview</button>
-      </div>
-    </div>
-  </div>
-);
-
-// Mockup images
-import dashboardMockup from '@/assets/dashboard-mockup.jpg';
-import inventoryMockup from '@/assets/inventory-mockup.jpg';
-import financialMockup from '@/assets/financial-mockup.jpg';
-import invoiceMockup from '@/assets/invoice-mockup.jpg';
-import frustratedOwner from '@/assets/frustrated-business-owner.jpg';
-import successTeam from '@/assets/success-team.jpg';
-
-const personas = [
-  {
-    name: "Ana, 34 anos",
-    business: "Loja de roupas femininas",
-    pain: "Usa planilhas, tem falhas e perde tempo",
-    solution: "Estoque automatizado e emissão fiscal simplificada",
-    image: frustratedOwner,
-    features: ["Controle de estoque inteligente", "Emissão de NFe automática", "Dashboard financeiro"]
-  },
-  {
-    name: "Lucas, 28 anos", 
-    business: "Vendedor em marketplaces",
-    pain: "Falta de controle multicanal",
-    solution: "Centralização de pedidos e estoque",
-    image: successTeam,
-    features: ["Integração com marketplaces", "Gestão multicanal", "Sincronização automática"]
-  },
-  {
-    name: "Carla, 41 anos",
-    business: "Pequena fábrica de salgados", 
-    pain: "Falta de visibilidade financeira",
-    solution: "Ordem de produção e dashboard financeiro",
-    image: dashboardMockup,
-    features: ["Ordem de produção", "DRE automatizado", "Controle de custos"]
-  },
-  {
-    name: "Eduardo, 38 anos",
-    business: "Distribuidor de bebidas",
-    pain: "Logística e pedidos manuais", 
-    solution: "Controle de estoque + separação de pedidos + envios",
-    image: inventoryMockup,
-    features: ["Separação de pedidos", "Controle logístico", "Etiquetas automáticas"]
-  },
-  {
-    name: "Patrícia, 32 anos",
-    business: "Prestadora de serviço",
-    pain: "Emissão de NFSe e finanças",
-    solution: "Nota fiscal de serviço automatizada + gestão financeira", 
-    image: invoiceMockup,
-    features: ["NFSe automática", "Gestão de serviços", "Controle financeiro"]
-  }
-];
-
-const features = [
-  {
-    icon: <TrendingUp className="h-8 w-8 text-primary" />,
-    title: "Emissão Fiscal Completa",
-    description: "NFe, NFSe, NFCe com certificado digital A1 integrado"
-  },
-  {
-    icon: <Users className="h-8 w-8 text-primary" />,
-    title: "Controle de Vendas + PDV",
-    description: "Sistema de vendas completo com ponto de venda integrado"
-  },
-  {
-    icon: <Shield className="h-8 w-8 text-primary" />,
-    title: "Estoque Inteligente",
-    description: "Automação e relatórios detalhados de movimentação"
-  },
-  {
-    icon: <Zap className="h-8 w-8 text-primary" />,
-    title: "Dashboard Financeiro",
-    description: "DRE automatizado e visão completa das finanças"
-  }
-];
-
-const plans = [
-  {
-    name: "Starter",
-    price: "R$ 97",
-    period: "/mês", 
-    description: "Para pequenos negócios",
-    features: [
-      "Até 3 usuários",
-      "NFe e NFCe ilimitadas",
-      "Controle básico de estoque",
-      "Dashboard financeiro",
-      "Suporte por email"
-    ],
-    highlighted: false
-  },
-  {
-    name: "Professional", 
-    price: "R$ 197",
-    period: "/mês",
-    description: "Para negócios em crescimento",
-    features: [
-      "Até 10 usuários",
-      "Todas as funcionalidades",
-      "Integrações com marketplaces",
-      "Relatórios avançados",
-      "API personalizada",
-      "Suporte prioritário"
-    ],
-    highlighted: true
-  },
-  {
-    name: "Enterprise",
-    price: "R$ 397", 
-    period: "/mês",
-    description: "Para grandes operações",
-    features: [
-      "Usuários ilimitados",
-      "Whitelabel completo",
-      "Múltiplos depósitos",
-      "Integração bancária",
-      "Consultor dedicado",
-      "SLA garantido"
-    ],
-    highlighted: false
-  }
-];
 
 export function LandingPage() {
   const navigate = useNavigate();
@@ -325,46 +126,78 @@ export function LandingPage() {
               </Button>
             </div>
             
-            {/* Mockup Features com telas simuladas */}
-            {heroSection.content_data?.mockup_features && (
-              <div className="max-w-6xl mx-auto">
-                <div className="bg-gradient-to-br from-primary/5 to-primary/10 rounded-2xl p-8 border border-primary/20">
-                  <div className="text-center mb-6">
-                    <h3 className="text-lg font-semibold mb-4">Veja o sistema em ação:</h3>
-                    
-                    {/* Grid de mockups */}
-                    <div className="grid md:grid-cols-3 gap-6 mb-6">
-                      <div className="space-y-2">
-                        <MockupDashboard />
-                        <p className="text-sm text-muted-foreground">Dashboard completo</p>
-                      </div>
-                      <div className="space-y-2">
-                        <MockupPDV />
-                        <p className="text-sm text-muted-foreground">PDV integrado</p>
-                      </div>
-                      <div className="space-y-2">
-                        <MockupNFe />
-                        <p className="text-sm text-muted-foreground">Emissão de NFe</p>
-                      </div>
+            {/* Demonstração do Sistema */}
+            <div className="max-w-7xl mx-auto mt-16">
+              <div className="bg-gradient-to-br from-primary/5 via-primary/10 to-blue-50 rounded-3xl p-8 border border-primary/20 shadow-2xl">
+                <div className="text-center mb-8">
+                  <div className="inline-flex items-center gap-2 bg-white/80 px-4 py-2 rounded-full text-sm font-medium mb-4">
+                    <div className="w-3 h-3 bg-green-500 rounded-full animate-pulse"></div>
+                    Sistema em funcionamento
+                  </div>
+                  <h3 className="text-2xl font-bold mb-2">Veja o sistema em ação:</h3>
+                  <p className="text-muted-foreground">Interface real do Pipeline Labs funcionando</p>
+                </div>
+                     
+                {/* Grid de mockups - Sistema completo */}
+                <div className="grid lg:grid-cols-3 gap-8 mb-8">
+                  <div className="space-y-3">
+                    <MockupDashboard className="transform hover:scale-105 transition-transform" />
+                    <div className="text-center">
+                      <h4 className="font-medium text-gray-800">Dashboard Inteligente</h4>
+                      <p className="text-sm text-muted-foreground">Visão completa do seu negócio em tempo real</p>
                     </div>
-
-                    {/* Features destacadas */}
-                    <div className="grid md:grid-cols-3 gap-4">
-                      {heroSection.content_data.mockup_features.map((feature: string, index: number) => (
-                        <div key={index} className="bg-background/50 rounded-lg p-4 border border-primary/10 flex items-center gap-3">
-                          <div className="w-8 h-8 bg-primary/10 rounded-full flex items-center justify-center">
-                            {index === 0 && getIcon('bar-chart')}
-                            {index === 1 && getIcon('bell')}
-                            {index === 2 && getIcon('pie-chart')}
-                          </div>
-                          <p className="font-medium text-sm">{feature}</p>
-                        </div>
-                      ))}
+                  </div>
+                  <div className="space-y-3">
+                    <MockupPDV className="transform hover:scale-105 transition-transform" />
+                    <div className="text-center">
+                      <h4 className="font-medium text-gray-800">PDV Integrado</h4>
+                      <p className="text-sm text-muted-foreground">Vendas rápidas e sincronizadas automaticamente</p>
+                    </div>
+                  </div>
+                  <div className="space-y-3">
+                    <MockupNFe className="transform hover:scale-105 transition-transform" />
+                    <div className="text-center">
+                      <h4 className="font-medium text-gray-800">Emissão Fiscal</h4>
+                      <p className="text-sm text-muted-foreground">NFe, NFCe e NFSe com certificado digital</p>
                     </div>
                   </div>
                 </div>
+
+                {/* Segunda linha de mockups */}
+                <div className="grid md:grid-cols-2 gap-8 mb-6">
+                  <div className="space-y-3">
+                    <MockupInventory className="transform hover:scale-105 transition-transform" />
+                    <div className="text-center">
+                      <h4 className="font-medium text-gray-800">Controle de Estoque</h4>
+                      <p className="text-sm text-muted-foreground">Gestão inteligente com alertas automáticos</p>
+                    </div>
+                  </div>
+                  <div className="space-y-3">
+                    <MockupFinancial className="transform hover:scale-105 transition-transform" />
+                    <div className="text-center">
+                      <h4 className="font-medium text-gray-800">Financeiro Completo</h4>
+                      <p className="text-sm text-muted-foreground">DRE automático e análise de performance</p>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Features destacadas */}
+                {heroSection.content_data?.mockup_features && (
+                  <div className="grid md:grid-cols-3 gap-4">
+                    {heroSection.content_data.mockup_features.map((feature: string, index: number) => (
+                      <div key={index} className="bg-background/50 rounded-lg p-4 border border-primary/10 flex items-center gap-3">
+                        <div className="w-8 h-8 bg-primary/10 rounded-full flex items-center justify-center">
+                          {index === 0 && getIcon('bar-chart')}
+                          {index === 1 && getIcon('bell')}
+                          {index === 2 && getIcon('pie-chart')}
+                        </div>
+                        <p className="font-medium text-sm">{feature}</p>
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
-            )}
+            </div>
           </div>
         </section>
       )}
