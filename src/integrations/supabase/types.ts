@@ -4149,6 +4149,10 @@ export type Database = {
         Args: { p_user_id: string; p_company_id: string }
         Returns: boolean
       }
+      validate_document: {
+        Args: { doc: string; doc_type: string }
+        Returns: boolean
+      }
       validate_password: {
         Args: { password: string }
         Returns: boolean
