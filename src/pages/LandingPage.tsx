@@ -8,7 +8,7 @@ import { useLandingPageContent } from '@/hooks/useLandingPageContent';
 import { PipelineLabsLogo } from '@/components/Layout/PipelineLabsLogo';
 import { Footer } from '@/components/Layout/Footer';
 
-// Import the advanced mockup components
+// Import the advanced mockup components (mantido para seção hero)
 import { MockupDashboard, MockupPDV, MockupNFe, MockupInventory, MockupFinancial, MockupNotifications, MockupDailySales } from '@/components/ui/SystemMockups';
 import { PersonaCard } from '@/components/ui/PersonaCard';
 
@@ -63,7 +63,6 @@ export function LandingPage() {
   const heroSection = getSection('hero');
   const personasSection = getSection('personas');
   const featuresSection = getSection('features');
-  const mockupsSection = getSection('mockups');
   const testimonialsSection = getSection('testimonials');
   const securitySection = getSection('security');
   const howItWorksSection = getSection('how_it_works');
@@ -251,86 +250,6 @@ export function LandingPage() {
           </div>
         </section>}
 
-      {/* Mockups Section */}
-      {mockupsSection && <section className="py-20 px-4 bg-muted/50">
-          <div className="container mx-auto">
-            <div className="text-center mb-16">
-              <h2 className="text-3xl md:text-4xl font-bold mb-4">
-                {mockupsSection.title}
-              </h2>
-              <p className="text-xl text-muted-foreground">
-                {mockupsSection.subtitle}
-              </p>
-            </div>
-
-            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8 max-w-6xl mx-auto">
-              {mockupsSection.content_data?.mockups?.map((mockup: any, index: number) => <Card key={index} className="overflow-hidden hover:shadow-lg transition-shadow">
-                  <div className="bg-gradient-to-br from-primary/5 to-primary/10 p-6">
-                    {/* Simulação da tela */}
-                    {index === 0 && <div className="bg-white rounded border p-3 space-y-2">
-                        <div className="flex items-center gap-2 text-xs">
-                          {getIcon('monitor')} <span>PDV Sistema</span>
-                        </div>
-                        <div className="bg-gray-100 h-2 rounded"></div>
-                        <div className="bg-green-100 h-6 rounded flex items-center px-2 text-xs">
-                          R$ 1.247,80 - Venda Finalizada
-                        </div>
-                      </div>}
-                    {index === 1 && <div className="bg-white rounded border p-3 space-y-2">
-                        <div className="flex items-center gap-2 text-xs">
-                          {getIcon('file-text')} <span>NFe #001234</span>
-                        </div>
-                        <div className="bg-blue-100 h-2 rounded"></div>
-                        <div className="text-xs">Status: Emitida ✓</div>
-                      </div>}
-                    {index === 2 && <div className="bg-white rounded border p-3 space-y-2">
-                        <div className="flex items-center gap-2 text-xs">
-                          {getIcon('pie-chart')} <span>Dashboard</span>
-                        </div>
-                        <div className="grid grid-cols-2 gap-1">
-                          <div className="bg-green-100 h-4 rounded"></div>
-                          <div className="bg-blue-100 h-4 rounded"></div>
-                        </div>
-                        <div className="text-xs">Meta: 85% atingida</div>
-                      </div>}
-                    {index === 3 && <div className="bg-white rounded border p-3 space-y-2">
-                        <div className="flex items-center gap-2 text-xs">
-                          {getIcon('package')} <span>Estoque</span>
-                        </div>
-                        <div className="space-y-1">
-                          <div className="bg-red-100 h-2 rounded"></div>
-                          <div className="bg-yellow-100 h-2 rounded"></div>
-                          <div className="bg-green-100 h-2 rounded"></div>
-                        </div>
-                        <div className="text-xs text-red-600">7 itens baixos</div>
-                      </div>}
-                    {index === 4 && <div className="bg-white rounded border p-3 space-y-2">
-                        <div className="flex items-center gap-2 text-xs">
-                          {getIcon('clipboard-check')} <span>Ordem #OS-001</span>
-                        </div>
-                        <div className="space-y-1">
-                          <div className="flex items-center gap-2 text-xs">
-                            <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-                            <span>Iniciado</span>
-                          </div>
-                          <div className="flex items-center gap-2 text-xs">
-                            <div className="w-2 h-2 bg-yellow-500 rounded-full"></div>
-                            <span>Em andamento</span>
-                          </div>
-                        </div>
-                      </div>}
-                  </div>
-                  <CardContent className="p-4">
-                    <h3 className="font-semibold mb-2 flex items-center gap-2">
-                      {getIcon('monitor')}
-                      {mockup.title}
-                    </h3>
-                    <p className="text-sm text-muted-foreground">{mockup.description}</p>
-                  </CardContent>
-                </Card>)}
-            </div>
-          </div>
-        </section>}
 
       {/* Testimonials Section */}
       {testimonialsSection && <section className="py-20 px-4">
