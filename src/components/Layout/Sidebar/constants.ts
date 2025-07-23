@@ -20,7 +20,8 @@ import {
   Type,
   Shield,
   Palette,
-  Activity
+  Activity,
+  GitBranch
 } from 'lucide-react';
 
 export const menuItems = [
@@ -140,6 +141,7 @@ export const menuItems = [
       { title: 'Cache', path: '/app/admin/cache' },
       { title: 'Compressão', path: '/app/admin/compressao' },
       { title: 'Monitoramento', path: '/app/admin/monitoramento' },
+      { title: 'Versões', path: '/app/admin/versions', icon: GitBranch },
       { title: 'Logs de Auditoria', path: '/app/admin/audit-logs' },
       { title: 'Landing Page', path: '/app/admin/landing-page' }
     ]

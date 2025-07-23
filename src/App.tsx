@@ -47,6 +47,7 @@ const AdminCache = React.lazy(() => import('@/pages/AdminCache').then(module => 
 const AdminLandingPage = React.lazy(() => import('@/pages/AdminLandingPage').then(module => ({ default: module.AdminLandingPage })));
 const AdminCompressao = React.lazy(() => import('@/pages/AdminCompressao').then(module => ({ default: module.AdminCompressao })));
 const AdminMonitoramento = React.lazy(() => import('@/pages/AdminMonitoramento'));
+const AdminVersions = React.lazy(() => import('@/pages/AdminVersions'));
 const Analytics = React.lazy(() => import('@/pages/Analytics'));
 
 // LGPD pages
@@ -210,6 +211,7 @@ function RouteHandler() {
         <Route path="admin/landing-page" element={<ProtectedRoute requireSuperAdmin><AdminLandingPage /></ProtectedRoute>} />
         <Route path="admin/compressao" element={<ProtectedRoute requireSuperAdmin><AdminCompressao /></ProtectedRoute>} />
         <Route path="admin/monitoramento" element={<ProtectedRoute requireSuperAdmin><AdminMonitoramento /></ProtectedRoute>} />
+        <Route path="admin/versions" element={<ProtectedRoute requireSuperAdmin><AdminVersions /></ProtectedRoute>} />
         <Route path="analytics" element={<Analytics />} />
         
         {/* User LGPD routes */}
