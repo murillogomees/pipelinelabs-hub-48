@@ -120,27 +120,30 @@ export function usePlans() {
 
   const deletePlanMutation = useMutation({
     mutationFn: async (planId: string) => {
-      // Verificar se o plano existe antes de tentar excluir
-      const { data: planExists, error: checkError } = await supabase
-        .from("plans")
+      // Verificar se há assinaturas ativas usando este plano
+      const { data: subscriptions, error: checkError } = await supabase
+        .from("subscriptions")
         .select("id")
-        .eq("id", planId)
-        .single();
+        .eq("plan_id", planId)
+        .limit(1);
 
-      if (checkError || !planExists) {
-        throw new Error('Plano não encontrado');
+      if (checkError) throw checkError;
+
+      if (subscriptions && subscriptions.length > 0) {
+        throw new Error('Não é possível excluir este plano pois há assinaturas ativas vinculadas a ele. Desative o plano ao invés de excluí-lo.');
       }
 
+      // Se não há assinaturas, desativar o plano ao invés de excluir
       const { error } = await supabase
         .from("plans")
-        .delete()
+        .update({ active: false })
         .eq("id", planId);
       
       if (error) throw error;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["plans"] });
-      toast.success("Plano excluído com sucesso!");
+      toast.success("Plano desativado com sucesso!");
     },
     onError: (error: any) => {
       console.error("Erro ao excluir plano:", error);
