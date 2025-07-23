@@ -19,7 +19,6 @@ export const AnalyticsProvider = ({ children }: AnalyticsProviderProps) => {
 
   const trackEvent = async (event: { event_name: string; meta?: Record<string, any> }) => {
     try {
-      // Detect device type
       const deviceType = window.innerWidth <= 768 ? 'mobile' : 'desktop';
       
       await supabase.rpc('create_analytics_event' as any, {

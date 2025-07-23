@@ -6,7 +6,7 @@ import { MainLayout } from '@/components/Layout/MainLayout';
 import { ProtectedRoute } from '@/components/ProtectedRoute';
 import { ErrorBoundary } from '@/components/ErrorBoundary';
 import { AuthProvider, useAuth } from '@/components/Auth/AuthProvider';
-import { AnalyticsProvider } from '@/components/Analytics/AnalyticsProvider';
+import { AnalyticsProvider } from '@/components/Analytics';
 import { PrivacyConsentProvider } from '@/components/LGPD/PrivacyConsentProvider';
 import { TermsProvider } from '@/components/Terms/TermsProvider';
 import { Auth } from '@/pages/Auth';

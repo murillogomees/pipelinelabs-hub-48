@@ -1,4 +1,4 @@
-import { AnalyticsDashboard } from '@/components/Analytics/AnalyticsDashboard';
+import { AnalyticsDashboard } from '@/components/Analytics';
 import { usePermissions } from '@/hooks/usePermissions';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Shield } from 'lucide-react';

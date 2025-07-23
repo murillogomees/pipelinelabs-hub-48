@@ -11,7 +11,7 @@ import { ProductImagesForm } from './forms/ProductImagesForm';
 import { useCreateProduct, useUpdateProduct } from './hooks/useProducts';
 import { Product } from './types';
 import { ProductFormData } from './schema';
-import { useAutoTrack } from '@/components/Analytics/useAutoTrack';
+import { useAutoTrack } from '@/components/Analytics';
 
 interface ProductDialogProps {
   open: boolean;
