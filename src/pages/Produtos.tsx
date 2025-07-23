@@ -264,11 +264,17 @@ export function Produtos() {
       </div>
 
       <Tabs value={getActiveTab()} className="space-y-6">
-        <TabsList className="grid w-full grid-cols-1 h-auto">
+        <TabsList className="grid w-full grid-cols-2">
           <TabsTrigger value="estoque" asChild>
-            <NavLink to="/produtos/estoque" className="flex items-center justify-center space-x-2 py-2">
+            <NavLink to="/produtos/estoque" className="flex items-center justify-center space-x-2">
               <Archive className="w-4 h-4" />
-              <span className="hidden sm:inline">Estoque</span>
+              <span>Estoque</span>
+            </NavLink>
+          </TabsTrigger>
+          <TabsTrigger value="categorias" asChild>
+            <NavLink to="/produtos/categorias" className="flex items-center justify-center space-x-2">
+              <Tag className="w-4 h-4" />
+              <span>Categorias</span>
             </NavLink>
           </TabsTrigger>
         </TabsList>
