@@ -3,10 +3,16 @@ import * as Sentry from '@sentry/react';
 // Initialize Sentry configuration
 export const initSentry = () => {
   const isDevelopment = import.meta.env.DEV;
-  const isProduction = import.meta.env.PROD;
+  const sentryDsn = import.meta.env.VITE_SENTRY_DSN;
+  
+  // Não inicializar Sentry se não tiver DSN válido em desenvolvimento
+  if (isDevelopment && (!sentryDsn || sentryDsn.includes('your-sentry-dsn'))) {
+    console.log('[Sentry] Skipping initialization in development (no valid DSN)');
+    return;
+  }
 
   Sentry.init({
-    dsn: import.meta.env.VITE_SENTRY_DSN || 'https://your-sentry-dsn.ingest.sentry.io/project-id',
+    dsn: sentryDsn,
     environment: isDevelopment ? 'development' : 'production',
     debug: isDevelopment,
     

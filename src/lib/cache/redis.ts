@@ -7,9 +7,15 @@ const cacheLogger = createLogger('cache');
 let redisClient: Redis | null = null;
 
 export const getRedisClient = (): Redis | null => {
+  // Redis não deve ser usado no client-side
+  if (typeof window !== 'undefined') {
+    cacheLogger.warn('Redis não disponível no client-side. Usando fallback em memória.');
+    return null;
+  }
+
   if (!redisClient) {
     try {
-      // Configuração do Redis usando variáveis de ambiente
+      // Configuração do Redis usando variáveis de ambiente (apenas server-side)
       const redisUrl = process.env.UPSTASH_REDIS_REST_URL;
       const redisToken = process.env.UPSTASH_REDIS_REST_TOKEN;
       
@@ -225,5 +231,14 @@ export class CacheManager {
   }
 }
 
-// Instância global do cache manager
-export const cacheManager = new CacheManager();
+// Instância global do cache manager (lazy initialization)
+let _cacheManager: CacheManager | null = null;
+
+export const cacheManager = new Proxy({} as CacheManager, {
+  get(target, prop) {
+    if (!_cacheManager) {
+      _cacheManager = new CacheManager();
+    }
+    return (_cacheManager as any)[prop];
+  }
+});
