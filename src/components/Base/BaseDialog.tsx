@@ -1,8 +1,8 @@
 import React from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
-import { DialogSuspenseBoundary } from '@/components/Common/SuspenseBoundary';
 import { X } from 'lucide-react';
+import { cn } from '@/lib/utils';
 
 interface BaseDialogProps {
   open: boolean;
@@ -17,12 +17,12 @@ interface BaseDialogProps {
 
 const maxWidthClasses = {
   sm: 'sm:max-w-[425px]',
-  md: 'sm:max-w-[600px]',
+  md: 'sm:max-w-[600px]', 
   lg: 'sm:max-w-[800px]',
   xl: 'sm:max-w-[1000px]',
   '2xl': 'sm:max-w-[1200px]',
   full: 'sm:max-w-[95vw]'
-};
+} as const;
 
 export const BaseDialog: React.FC<BaseDialogProps> = ({
   open,
@@ -36,7 +36,7 @@ export const BaseDialog: React.FC<BaseDialogProps> = ({
 }) => {
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className={`${maxWidthClasses[maxWidth]} ${className}`}>
+      <DialogContent className={cn(maxWidthClasses[maxWidth], className)}>
         <DialogHeader>
           <div className="flex items-center justify-between">
             <div className="flex-1">
@@ -60,9 +60,7 @@ export const BaseDialog: React.FC<BaseDialogProps> = ({
           </div>
         </DialogHeader>
         
-        <DialogSuspenseBoundary>
-          {children}
-        </DialogSuspenseBoundary>
+        {children}
       </DialogContent>
     </Dialog>
   );

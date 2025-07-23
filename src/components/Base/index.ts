@@ -1,13 +1,13 @@
-// Base Components
-export { BaseDialog, useDialog } from './BaseDialog';
-export { BaseTable } from './BaseTable';
-export { BaseForm } from './BaseForm';
+// Centralized exports for Base components
+
 export { BaseCard, BaseStatsCard, BaseListCard } from './BaseCard';
+export type { BaseCardAction } from './BaseCard';
+
+export { BaseDialog, useDialog } from './BaseDialog';
+export { BaseForm } from './BaseForm';
 export { BaseLayout, BaseListLayout, BaseConfigLayout } from './BaseLayout';
+export { BaseTable } from './BaseTable';
 
-// Base Hooks
-export { useBaseTable } from '../../hooks/useBaseTable';
-export { useBaseForm } from '../../hooks/useBaseForm';
-
-// Types
-export type { BaseFormField } from './BaseForm';
+// Re-export composed components for convenience  
+export { EnhancedCard, StatsCard, ListCard } from '@/components/ui/composed';
+export type { UIAction } from '@/components/ui/composed';
