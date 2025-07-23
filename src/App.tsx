@@ -57,6 +57,9 @@ const UserDadosPessoais = React.lazy(() => import('@/pages/UserDadosPessoais'));
 const TermosDeUso = React.lazy(() => import('@/pages/TermosDeUso'));
 const UserTermosAceitos = React.lazy(() => import('@/pages/UserTermosAceitos'));
 
+// SLA page
+const SLA = React.lazy(() => import('@/pages/SLA'));
+
 // Landing Page
 const LandingPage = React.lazy(() => import('@/pages/LandingPage').then(module => ({ default: module.LandingPage })));
 
@@ -234,6 +237,16 @@ function RouteHandler() {
         element={
           <PageSuspenseBoundary>
             <TermosDeUso />
+          </PageSuspenseBoundary>
+        } 
+      />
+      
+      {/* Public SLA route */}
+      <Route 
+        path="/sla" 
+        element={
+          <PageSuspenseBoundary>
+            <SLA />
           </PageSuspenseBoundary>
         } 
       />

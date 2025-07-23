@@ -23,6 +23,12 @@ export function Footer() {
               Termos de Uso
             </Link>
             <Link 
+              to="/sla" 
+              className="text-sm text-muted-foreground hover:text-primary transition-colors"
+            >
+              SLA
+            </Link>
+            <Link 
               to="/app/user/dados-pessoais" 
               className="text-sm text-muted-foreground hover:text-primary transition-colors"
             >
