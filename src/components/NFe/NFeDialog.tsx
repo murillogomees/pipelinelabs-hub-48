@@ -23,6 +23,7 @@ import { Plus, Trash2 } from 'lucide-react';
 import { useCustomers } from '@/hooks/useCustomers';
 import { useProducts } from '@/components/Products/hooks/useProducts';
 import { useNFe, CreateNFeData } from '@/hooks/useNFe';
+import { TermsProtectedAction } from '@/components/Terms';
 import {
   Select,
   SelectContent,
@@ -135,7 +136,8 @@ export function NFeDialog({ trigger }: NFeDialogProps) {
           <DialogTitle>Nova NFe</DialogTitle>
         </DialogHeader>
 
-        <Form {...form}>
+        <TermsProtectedAction action="emitir notas fiscais">
+          <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <FormField
@@ -361,6 +363,7 @@ export function NFeDialog({ trigger }: NFeDialogProps) {
             </div>
           </form>
         </Form>
+        </TermsProtectedAction>
       </DialogContent>
     </Dialog>
   );

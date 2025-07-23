@@ -9,7 +9,7 @@ export function Footer() {
           <div className="text-sm text-muted-foreground">
             © 2024 Pipeline Labs. Todos os direitos reservados.
           </div>
-          <div className="flex space-x-6">
+          <div className="flex flex-wrap gap-x-6 gap-y-2 justify-center md:justify-end">
             <Link 
               to="/privacidade" 
               className="text-sm text-muted-foreground hover:text-primary transition-colors"
@@ -17,10 +17,22 @@ export function Footer() {
               Política de Privacidade
             </Link>
             <Link 
+              to="/termos-de-uso" 
+              className="text-sm text-muted-foreground hover:text-primary transition-colors"
+            >
+              Termos de Uso
+            </Link>
+            <Link 
               to="/app/user/dados-pessoais" 
               className="text-sm text-muted-foreground hover:text-primary transition-colors"
             >
               Meus Dados (LGPD)
+            </Link>
+            <Link 
+              to="/app/user/termos-aceitos" 
+              className="text-sm text-muted-foreground hover:text-primary transition-colors"
+            >
+              Termos Aceitos
             </Link>
           </div>
         </div>

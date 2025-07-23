@@ -8,6 +8,7 @@ import { ErrorBoundary } from '@/components/ErrorBoundary';
 import { AuthProvider, useAuth } from '@/components/Auth/AuthProvider';
 import { AnalyticsProvider } from '@/components/Analytics/AnalyticsProvider';
 import { PrivacyConsentProvider } from '@/components/LGPD/PrivacyConsentProvider';
+import { TermsProvider } from '@/components/Terms/TermsProvider';
 import { Auth } from '@/pages/Auth';
 import React, { Suspense, useEffect } from 'react';
 import { Outlet, useLocation } from 'react-router-dom';
@@ -51,6 +52,10 @@ const Analytics = React.lazy(() => import('@/pages/Analytics'));
 // LGPD pages
 const Privacidade = React.lazy(() => import('@/pages/Privacidade'));
 const UserDadosPessoais = React.lazy(() => import('@/pages/UserDadosPessoais'));
+
+// Terms pages
+const TermosDeUso = React.lazy(() => import('@/pages/TermosDeUso'));
+const UserTermosAceitos = React.lazy(() => import('@/pages/UserTermosAceitos'));
 
 // Landing Page
 const LandingPage = React.lazy(() => import('@/pages/LandingPage').then(module => ({ default: module.LandingPage })));
@@ -132,7 +137,8 @@ function RouteHandler() {
   return (
     <AnalyticsProvider>
       <PrivacyConsentProvider>
-        <Routes>
+        <TermsProvider>
+          <Routes>
       {/* Landing page - accessible for everyone */}
       <Route 
         path="/" 
@@ -206,6 +212,9 @@ function RouteHandler() {
         {/* User LGPD routes */}
         <Route path="user/dados-pessoais" element={<UserDadosPessoais />} />
         
+        {/* User Terms routes */}
+        <Route path="user/termos-aceitos" element={<UserTermosAceitos />} />
+        
         <Route path="*" element={<NotFound />} />
       </Route>
       
@@ -218,9 +227,20 @@ function RouteHandler() {
           </PageSuspenseBoundary>
         } 
       />
+      
+      {/* Public Terms routes */}
+      <Route 
+        path="/termos-de-uso" 
+        element={
+          <PageSuspenseBoundary>
+            <TermosDeUso />
+          </PageSuspenseBoundary>
+        } 
+      />
 
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
+        </TermsProvider>
       </PrivacyConsentProvider>
     </AnalyticsProvider>
   );
