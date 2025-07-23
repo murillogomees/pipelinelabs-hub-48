@@ -1,6 +1,7 @@
 import { describe, it, expect, vi } from 'vitest';
+import { screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { render, screen } from '@/test/utils';
+import { render } from '@/test/utils';
 import { AuthForm } from './AuthForm';
 
 // Mock the auth hook
