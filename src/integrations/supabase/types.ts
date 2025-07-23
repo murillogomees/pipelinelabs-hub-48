@@ -2951,6 +2951,7 @@ export type Database = {
         Row: {
           company_id: string | null
           created_at: string
+          default_currency: string
           id: string
           is_active: boolean | null
           is_live_mode: boolean | null
@@ -2961,6 +2962,7 @@ export type Database = {
         Insert: {
           company_id?: string | null
           created_at?: string
+          default_currency?: string
           id?: string
           is_active?: boolean | null
           is_live_mode?: boolean | null
@@ -2971,6 +2973,7 @@ export type Database = {
         Update: {
           company_id?: string | null
           created_at?: string
+          default_currency?: string
           id?: string
           is_active?: boolean | null
           is_live_mode?: boolean | null
