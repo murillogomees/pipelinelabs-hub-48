@@ -17,7 +17,7 @@ export function PrivacyConsentBanner({ open, onOpenChange }: PrivacyConsentBanne
   const { terms } = usePrivacyTermsSimple();
   
   const [consents, setConsents] = useState({
-    personal_data: false,
+    personal_data: true, // Obrigatório, então começa marcado
     analytics: false,
     marketing: false,
     cookies: false,
@@ -111,7 +111,7 @@ export function PrivacyConsentBanner({ open, onOpenChange }: PrivacyConsentBanne
                         onCheckedChange={(checked) => 
                           handleConsentChange(option.key, checked as boolean)
                         }
-                        disabled={option.required && option.key === 'personal_data'}
+                        disabled={option.required}
                       />
                     </div>
                     <div className="flex-1">
