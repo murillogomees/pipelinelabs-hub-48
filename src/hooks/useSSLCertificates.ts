@@ -27,7 +27,7 @@ export function useSSLCertificates() {
         .order('created_at', { ascending: false });
       
       if (error) throw error;
-      return (data as SSLCertificate[]) || [];
+      return (data as unknown as SSLCertificate[]) || [];
     },
   });
 
@@ -72,7 +72,7 @@ export function useSSLCertificates() {
         .single();
       
       if (error) throw error;
-      return data as SSLCertificate;
+      return data as unknown as SSLCertificate;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['ssl-certificates'] });
@@ -107,7 +107,7 @@ export function useSSLCertificates() {
         .single();
       
       if (error) throw error;
-      return data as SSLCertificate;
+      return data as unknown as SSLCertificate;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['ssl-certificates'] });

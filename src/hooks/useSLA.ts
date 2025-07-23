@@ -30,7 +30,7 @@ export function useSLA() {
         .maybeSingle();
       
       if (error) throw error;
-      return data as SLAData | null;
+      return data as unknown as SLAData | null;
     },
   });
 
