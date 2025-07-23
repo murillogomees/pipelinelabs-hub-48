@@ -40,44 +40,51 @@ export const AnalyticsFilters = ({
   };
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          <Calendar className="h-5 w-5" />
+    <Card className="transition-all duration-300 hover:shadow-lg border-0 bg-gradient-to-br from-card to-card/80 backdrop-blur-sm">
+      <CardHeader className="pb-4">
+        <CardTitle className="text-lg font-semibold flex items-center gap-2">
+          <Calendar className="h-5 w-5 text-primary" />
           Filtros
         </CardTitle>
       </CardHeader>
-      <CardContent className="space-y-4">
-        <div className="flex gap-4">
-          <div className="flex-1">
-            <Label htmlFor="start-date">Data Inicial</Label>
-            <Input
-              id="start-date"
-              type="date"
-              value={startDate}
-              onChange={(e) => onStartDateChange(e.target.value)}
-            />
-          </div>
-          <div className="flex-1">
-            <Label htmlFor="end-date">Data Final</Label>
-            <Input
-              id="end-date"
-              type="date"
-              value={endDate}
-              onChange={(e) => onEndDateChange(e.target.value)}
-            />
+      <CardContent className="space-y-6">
+        {/* Date Range */}
+        <div className="space-y-4">
+          <div className="space-y-3">
+            <div>
+              <Label htmlFor="start-date" className="text-sm font-medium">Data Inicial</Label>
+              <Input
+                id="start-date"
+                type="date"
+                value={startDate}
+                onChange={(e) => onStartDateChange(e.target.value)}
+                className="mt-1"
+              />
+            </div>
+            <div>
+              <Label htmlFor="end-date" className="text-sm font-medium">Data Final</Label>
+              <Input
+                id="end-date"
+                type="date"
+                value={endDate}
+                onChange={(e) => onEndDateChange(e.target.value)}
+                className="mt-1"
+              />
+            </div>
           </div>
         </div>
 
-        <div>
-          <Label>Períodos Rápidos</Label>
-          <div className="flex gap-2 mt-2">
+        {/* Quick Ranges */}
+        <div className="space-y-3">
+          <Label className="text-sm font-medium">Períodos Rápidos</Label>
+          <div className="grid grid-cols-1 gap-2">
             {presetRanges.map((range) => (
               <Button
                 key={range.days}
                 variant="outline"
                 size="sm"
                 onClick={() => handlePresetRange(range.days)}
+                className="justify-start text-left hover-scale"
               >
                 {range.label}
               </Button>
@@ -85,18 +92,25 @@ export const AnalyticsFilters = ({
           </div>
         </div>
 
-        <div>
-          <Label htmlFor="event-filter">Filtrar por Evento</Label>
+        {/* Event Filter */}
+        <div className="space-y-2">
+          <Label htmlFor="event-filter" className="text-sm font-medium">Filtrar por Evento</Label>
           <Input
             id="event-filter"
             placeholder="Digite o nome do evento..."
             value={eventFilter}
             onChange={(e) => onEventFilterChange(e.target.value)}
+            className="mt-1"
           />
         </div>
 
+        {/* Export Button */}
         {onExport && (
-          <Button onClick={onExport} variant="outline" className="w-full">
+          <Button 
+            onClick={onExport} 
+            variant="default" 
+            className="w-full hover-scale bg-gradient-to-r from-primary to-primary/80"
+          >
             <Download className="h-4 w-4 mr-2" />
             Exportar Dados
           </Button>

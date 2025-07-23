@@ -74,17 +74,25 @@ export const QuickStatsCard = ({
   };
 
   return (
-    <Card>
-      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-        <CardTitle className="text-sm font-medium">{title}</CardTitle>
-        {icon}
+    <Card className="hover-scale transition-all duration-300 hover:shadow-lg border-0 bg-gradient-to-br from-card to-card/80 backdrop-blur-sm">
+      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-3">
+        <CardTitle className="text-xs sm:text-sm font-medium text-muted-foreground truncate">
+          {title}
+        </CardTitle>
+        <div className="p-2 rounded-full bg-secondary/10">
+          {icon}
+        </div>
       </CardHeader>
-      <CardContent>
-        <div className="text-2xl font-bold">{formatValue(value)}</div>
+      <CardContent className="pt-0">
+        <div className="text-xl sm:text-2xl lg:text-3xl font-bold tracking-tight">
+          {formatValue(value)}
+        </div>
         {trend && (
-          <div className={`flex items-center space-x-1 text-xs ${getTrendColor()}`}>
+          <div className={`flex items-center space-x-2 text-xs mt-3 p-2 rounded-lg bg-muted/30 ${getTrendColor()}`}>
             {getTrendIcon()}
-            <span>{trend.value.toFixed(1)}% vs período anterior</span>
+            <span className="font-medium">
+              {trend.value.toFixed(1)}% vs período anterior
+            </span>
           </div>
         )}
       </CardContent>

@@ -23,16 +23,22 @@ export const AnalyticsCard = ({
   };
 
   return (
-    <Card>
-      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-        <CardTitle className="text-sm font-medium">{title}</CardTitle>
-        <Icon className="h-4 w-4 text-muted-foreground" />
+    <Card className="hover-scale transition-all duration-300 hover:shadow-lg border-0 bg-gradient-to-br from-card to-card/80 backdrop-blur-sm">
+      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-3">
+        <CardTitle className="text-xs sm:text-sm font-medium text-muted-foreground truncate">
+          {title}
+        </CardTitle>
+        <div className="p-2 rounded-full bg-primary/10">
+          <Icon className="h-4 w-4 sm:h-5 sm:w-5 text-primary" />
+        </div>
       </CardHeader>
-      <CardContent>
-        <div className="text-2xl font-bold">{value}</div>
+      <CardContent className="pt-0">
+        <div className="text-xl sm:text-2xl lg:text-3xl font-bold tracking-tight">
+          {typeof value === 'number' ? value.toLocaleString('pt-BR') : value}
+        </div>
         {change && (
-          <p className={`text-xs ${changeColors[changeType]}`}>
-            {change}
+          <p className={`text-xs mt-2 flex items-center gap-1 ${changeColors[changeType]}`}>
+            <span className="font-medium">{change}</span>
           </p>
         )}
       </CardContent>
