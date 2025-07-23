@@ -8,7 +8,6 @@ interface BasicInfoFieldsProps {
   formData: {
     display_name: string;
     email: string;
-    phone: string;
     user_type: string;
     is_active: boolean;
   };
@@ -45,31 +44,19 @@ export function BasicInfoFields({ formData, onChange, isEditing = false }: Basic
         </div>
       </div>
 
-      <div className="grid grid-cols-2 gap-4">
-        <div className="space-y-2">
-          <Label htmlFor="phone">Telefone</Label>
-          <Input
-            id="phone"
-            value={formData.phone}
-            onChange={(e) => onChange('phone', e.target.value)}
-            placeholder="(11) 99999-9999"
-          />
-        </div>
-
-        <div className="space-y-2">
-          <Label htmlFor="user_type">Tipo de Usuário</Label>
-          <SearchableSelect
-            value={formData.user_type}
-            onValueChange={(value) => onChange('user_type', value)}
-            placeholder="Selecione o tipo..."
-            searchPlaceholder="Buscar tipo..."
-            staticOptions={[
-              { value: "operador", label: "Operador" },
-              { value: "contratante", label: "Contratante" }
-            ]}
-            emptyMessage="Nenhum tipo encontrado"
-          />
-        </div>
+      <div className="space-y-2">
+        <Label htmlFor="user_type">Tipo de Usuário</Label>
+        <SearchableSelect
+          value={formData.user_type}
+          onValueChange={(value) => onChange('user_type', value)}
+          placeholder="Selecione o tipo..."
+          searchPlaceholder="Buscar tipo..."
+          staticOptions={[
+            { value: "operador", label: "Operador" },
+            { value: "contratante", label: "Contratante" }
+          ]}
+          emptyMessage="Nenhum tipo encontrado"
+        />
       </div>
 
       <div className="flex items-center space-x-2">

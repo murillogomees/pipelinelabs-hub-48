@@ -22,7 +22,6 @@ export function UserProfileDialog({ open, onOpenChange }: UserProfileDialogProps
   const [formData, setFormData] = useState({
     display_name: profile?.display_name || '',
     email: profile?.email || '',
-    phone: profile?.phone || '',
   });
 
   const [passwordData, setPasswordData] = useState({
@@ -97,16 +96,6 @@ export function UserProfileDialog({ open, onOpenChange }: UserProfileDialogProps
                     placeholder="seu@email.com"
                   />
                 </div>
-              </div>
-
-              <div>
-                <Label htmlFor="phone">Telefone</Label>
-                <Input
-                  id="phone"
-                  value={formData.phone}
-                  onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                  placeholder="(11) 99999-9999"
-                />
               </div>
 
               <Button type="submit" disabled={updateProfile.isPending}>

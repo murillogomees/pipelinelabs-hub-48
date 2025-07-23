@@ -212,11 +212,6 @@ export const LazyUserProfileDialog = createLazyComponent(
   'default'
 );
 
-export const LazyTeamManagementDialog = createLazyComponent(
-  () => import('@/components/User/TeamManagementDialog'),
-  'TeamManagementDialog',
-  'large'
-);
 
 export const LazyPlanSubscriptionDialog = createLazyComponent(
   () => import('@/components/User/PlanSubscriptionDialog'),

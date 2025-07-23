@@ -7,7 +7,7 @@ import { usePermissions } from '@/hooks/usePermissions';
 import { NotificationBell } from '@/components/Notifications/NotificationBell';
 import { GlobalSearchTrigger } from '@/components/Search/GlobalSearchTrigger';
 import { UserProfileDialog } from '@/components/User/UserProfileDialog';
-import { TeamManagementDialog } from '@/components/User/TeamManagementDialog';
+
 import { PlanSubscriptionDialog } from '@/components/User/PlanSubscriptionDialog';
 import { cleanupAuthState } from '@/utils/security';
 import { supabase } from '@/integrations/supabase/client';
@@ -27,7 +27,6 @@ export function Header({ onToggleSidebar }: HeaderProps) {
   const { user, signOut } = useAuth();
   const { isSuperAdmin, email } = usePermissions();
   const [profileOpen, setProfileOpen] = useState(false);
-  const [teamOpen, setTeamOpen] = useState(false);
   const [planOpen, setPlanOpen] = useState(false);
 
   const handleSecureSignOut = async () => {
@@ -90,10 +89,6 @@ export function Header({ onToggleSidebar }: HeaderProps) {
                 Plano e Assinatura
               </DropdownMenuItem>
               
-              <DropdownMenuItem onClick={() => setTeamOpen(true)}>
-                <Users className="w-4 h-4 mr-2" />
-                Minha Equipe
-              </DropdownMenuItem>
               
               <DropdownMenuSeparator />
               
@@ -108,7 +103,7 @@ export function Header({ onToggleSidebar }: HeaderProps) {
 
       {/* Dialogs */}
       <UserProfileDialog open={profileOpen} onOpenChange={setProfileOpen} />
-      <TeamManagementDialog open={teamOpen} onOpenChange={setTeamOpen} />
+      
       <PlanSubscriptionDialog open={planOpen} onOpenChange={setPlanOpen} />
     </header>
   );

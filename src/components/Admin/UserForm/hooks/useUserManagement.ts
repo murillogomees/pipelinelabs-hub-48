@@ -45,7 +45,6 @@ export function useUserManagement(onSave: () => void, onClose: () => void) {
       .from('profiles')
       .update({
         display_name: formData.display_name,
-        phone: formData.phone,
         is_active: formData.is_active
       })
       .eq('user_id', authData.user.id);
@@ -103,7 +102,6 @@ export function useUserManagement(onSave: () => void, onClose: () => void) {
       .from('profiles')
       .update({
         display_name: formData.display_name,
-        phone: formData.phone,
         is_active: formData.is_active
       })
       .eq('user_id', user.user_id);

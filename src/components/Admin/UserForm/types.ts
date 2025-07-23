@@ -1,10 +1,9 @@
 export interface UserFormData {
   display_name: string;
   email: string;
-  phone: string;
   is_active: boolean;
   user_type: 'contratante' | 'operador';
-  password: string;
+  password?: string;
   company_id: string;
   permissions: {
     dashboard: boolean;
@@ -28,7 +27,6 @@ export interface User {
   user_id: string;
   display_name: string;
   email: string;
-  phone: string;
   is_active: boolean;
   user_companies: Array<{
     id: string;

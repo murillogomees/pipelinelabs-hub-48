@@ -15,7 +15,6 @@ interface UserFormProps {
 const defaultFormData: UserFormData = {
   display_name: '',
   email: '',
-  phone: '',
   is_active: true,
   user_type: 'operador',
   password: '',
@@ -67,7 +66,6 @@ export function UserForm({ user, onSubmit, loading }: UserFormProps) {
       setFormData({
         display_name: user.display_name || '',
         email: user.email || '',
-        phone: user.phone || '',
         is_active: user.is_active,
         user_type: user.user_companies[0]?.user_type || 'operador',
         password: '',
