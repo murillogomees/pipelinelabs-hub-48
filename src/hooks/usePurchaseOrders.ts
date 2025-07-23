@@ -79,9 +79,9 @@ export function usePurchaseOrders() {
     mutationFn: async (data: PurchaseOrderFormData) => {
       // Generate order number using SQL function
       const { data: orderNumberData, error: orderNumberError } = await supabase
-        .rpc('generate_purchase_order_number', { 
+        .rpc('generate_purchase_order_number' as any, { 
           company_uuid: data.company_id 
-        } as any);
+        });
 
       if (orderNumberError) throw orderNumberError;
 
