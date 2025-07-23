@@ -110,91 +110,123 @@ function getDefaultConfig(): LandingPageConfig {
     personas: [
       {
         id: 1,
-        name: "Carla",
+        name: "Carla Santos",
         age: 41,
-        business: "Fábrica de salgados artesanais",
+        business: "Fábrica de Salgados Artesanais",
         location: "Belo Horizonte/MG",
-        situation: "Mãe solo de 2 filhos, empreende há 5 anos",
+        situation: "Divorciada • 2 filhos",
         problems: [
-          "Não sabia se o negócio realmente dava lucro",
-          "Perdia 2 horas por dia organizando planilhas", 
-          "Emitir notas fiscais era um pesadelo",
-          "Controle de estoque em cadernos"
+          "Sem visão financeira clara do negócio",
+          "Pedidos de produção confusos e manuais",
+          "Planilhas desorganizadas tomavam muito tempo"
         ],
         solutions: [
-          "<strong>Dashboard financeiro</strong> mostra lucros em tempo real",
-          "<strong>Notas fiscais</strong> emitidas em 3 cliques",
-          "<strong>Controle automático</strong> de ingredientes e estoque",
-          "<strong>Ordem de produção</strong> otimizada por demanda"
+          "<strong>DRE automático</strong> com metas e lucros reais",
+          "<strong>Controle de produção</strong> otimizado por demanda",
+          "<strong>Integração completa</strong> estoque + vendas + financeiro"
         ],
-        result: "Conseguiu contratar 2 funcionários e dobrar sua produção, mantendo total controle financeiro e operacional.",
+        result: "Carla conseguiu contratar 2 funcionários e dobrar sua produção, mantendo total controle financeiro e operacional.",
         image: "/src/assets/carla-persona.jpg"
       },
       {
         id: 2,
-        name: "Lucas",
+        name: "Lucas Silva",
         age: 28,
-        business: "Vendedor online em marketplaces",
+        business: "Vendedor de Marketplaces",
         location: "Salvador/BA",
-        situation: "Solteiro, 2 anos vendendo online",
+        situation: "Solteiro • E-commerce",
         problems: [
-          "Vendas espalhadas entre Shopee, Mercado Livre e Amazon",
-          "Falta de controle de estoque, erros frequentes",
-          "Perdia tempo copiando pedidos manualmente",
-          "Confusão com envios e separação de produtos"
+          "Vendas espalhadas em múltiplas plataformas",
+          "Pedidos controlados manualmente",
+          "Controle de estoque ruim e desatualizado"
         ],
         solutions: [
-          "<strong>Centralização de todos os pedidos</strong> em um único painel",
-          "<strong>Estoque automatizado</strong> entre canais",
-          "<strong>Impressão de etiquetas</strong> e separação com logística integrada",
-          "<strong>Dashboard com visão</strong> das vendas diárias"
+          "<strong>Centralização de pedidos</strong> de todos marketplaces",
+          "<strong>Estoque sincronizado</strong> automaticamente",
+          "<strong>Etiquetas automáticas</strong> integradas com envios"
         ],
-        result: "Ganhou tempo, segurança e agora foca no crescimento da loja com visão unificada.",
+        result: "Lucas aumentou suas vendas em 40% e reduziu o tempo de gestão de 6h para 1h por dia.",
         image: "/src/assets/lucas-persona-card.jpg"
       },
       {
         id: 3,
-        name: "Ana",
+        name: "Ana Costa",
         age: 34,
-        business: "Loja de roupas femininas",
-        location: "São Paulo/SP",
-        situation: "Empreende há 6 anos",
+        business: "Loja de Roupas Femininas",
+        location: "Campinas/SP",
+        situation: "Casada • 1 filho",
         problems: [
-          "Usava planilhas e tinha muitas falhas",
-          "Perdia tempo com controle manual",
-          "Dificuldade com emissão fiscal",
-          "Estoque desorganizado"
+          "Estoque desorganizado sem controle",
+          "Notas fiscais emitidas manualmente",
+          "Falta de tempo para gestão estratégica"
         ],
         solutions: [
-          "<strong>Estoque automatizado</strong> e preciso",
-          "<strong>Emissão fiscal</strong> simplificada",
-          "<strong>Relatórios automáticos</strong> de vendas",
-          "<strong>PDV integrado</strong> com e-commerce"
+          "<strong>Emissão automática</strong> de notas fiscais",
+          "<strong>Estoque em tempo real</strong> com alertas",
+          "<strong>Painel de vendas</strong> visual e simplificado"
         ],
-        result: "Reduziu 80% do tempo administrativo e aumentou 40% as vendas com melhor controle.",
+        result: "Ana organizou completamente sua loja e conseguiu focar mais na escolha de produtos e atendimento ao cliente.",
         image: "/src/assets/ana-persona.jpg"
       },
       {
         id: 4,
-        name: "Eduardo",
+        name: "Eduardo Martins",
         age: 38,
-        business: "Distribuidor de bebidas",
-        location: "Fortaleza/CE",
-        situation: "Distribui há 8 anos",
+        business: "Distribuidor de Bebidas",
+        location: "Porto Alegre/RS",
+        situation: "Casado • 2 filhos",
         problems: [
-          "Logística complexa e manual",
-          "Pedidos feitos por telefone",
-          "Controle de estoque em papel",
-          "Dificuldade com separação de pedidos"
+          "Separação de pedidos bagunçada e lenta",
+          "Logística de entrega sem planejamento",
+          "Falhas no controle de estoque"
         ],
         solutions: [
-          "<strong>Sistema de pedidos</strong> online",
-          "<strong>Controle inteligente</strong> de estoque",
-          "<strong>Separação automática</strong> de pedidos",
-          "<strong>Integração com transportadoras</strong>"
+          "<strong>Roteirização inteligente</strong> com etiquetas",
+          "<strong>Controle integrado</strong> de estoque e envios",
+          "<strong>Separação otimizada</strong> de pedidos por rota"
         ],
-        result: "Automatizou toda operação e aumentou 60% a eficiência logística.",
+        result: "Eduardo reduziu o tempo de separação em 60% e melhorou drasticamente a pontualidade das entregas.",
         image: "/src/assets/eduardo-persona.jpg"
+      },
+      {
+        id: 5,
+        name: "Patrícia Lima",
+        age: 32,
+        business: "Prestadora de Serviços (Designer)",
+        location: "Fortaleza/CE",
+        situation: "Solteira • Freelancer",
+        problems: [
+          "Emissão de NFSe era lenta e complicada",
+          "Sem gestão financeira organizada",
+          "Controle de projetos manual e confuso"
+        ],
+        solutions: [
+          "<strong>NFSe automática</strong> em poucos cliques",
+          "<strong>Painel financeiro</strong> com entradas e saídas",
+          "<strong>Fluxo de caixa</strong> visual e em tempo real"
+        ],
+        result: "Patrícia triplicou o número de clientes atendidos e organizou completamente suas finanças pessoais e profissionais.",
+        image: "/src/assets/patricia-persona.jpg"
+      },
+      {
+        id: 6,
+        name: "João Santos",
+        age: 45,
+        business: "Loja de Autopeças (Física + Online)",
+        location: "Ribeirão Preto/SP",
+        situation: "Casado • 1 filho adulto",
+        problems: [
+          "Estoque físico e digital não batiam",
+          "Vendas duplicadas entre canais",
+          "Controle manual gerava erros constantes"
+        ],
+        solutions: [
+          "<strong>Estoque unificado</strong> físico + online",
+          "<strong>PDV integrado</strong> com emissão de notas",
+          "<strong>Painel multicanal</strong> centralizado"
+        ],
+        result: "João eliminou completamente as divergências de estoque e aumentou a confiança dos clientes na disponibilidade dos produtos.",
+        image: "/src/assets/joao-persona.jpg"
       }
     ],
     features: [

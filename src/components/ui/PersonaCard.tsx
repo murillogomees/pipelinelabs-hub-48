@@ -2,7 +2,7 @@ import React from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { AlertTriangle, CheckCircle, MapPin, User, Heart, Clock } from 'lucide-react';
-import { carlaPersona, lucasPersonaCard, anaPersona, eduardoPersona } from '@/assets';
+import { carlaPersona, lucasPersonaCard, anaPersona, eduardoPersona, patriciaPersona, joaoPersona } from '@/assets';
 
 interface PersonaData {
   id: number;
@@ -53,6 +53,8 @@ const getPersonaImage = (personaId: number) => {
     case 2: return lucasPersonaCard;
     case 3: return anaPersona;
     case 4: return eduardoPersona;
+    case 5: return patriciaPersona;
+    case 6: return joaoPersona;
     default: return carlaPersona;
   }
 };
