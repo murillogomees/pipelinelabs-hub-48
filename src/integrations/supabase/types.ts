@@ -1653,72 +1653,165 @@ export type Database = {
       products: {
         Row: {
           barcode: string | null
+          brand: string | null
           category_id: string | null
+          cest_code: string | null
           code: string
+          cofins_fixed: number | null
           company_id: string
+          condition: string | null
           cost_price: number | null
           created_at: string
+          crossdocking_days: number | null
+          depth: number | null
           description: string | null
           dimensions: string | null
+          estimated_tax_percentage: number | null
+          expiry_date: string | null
+          external_link: string | null
+          format: string | null
+          free_shipping: boolean | null
+          gross_weight: number | null
+          height: number | null
+          icms_base: number | null
+          icms_retention: number | null
           id: string
           is_active: boolean
+          item_type: string | null
           max_stock: number | null
           min_stock: number | null
           name: string
           ncm_code: string | null
+          observations: string | null
+          pis_fixed: number | null
           price: number
+          product_group: string | null
+          product_type: string | null
+          production_type: string | null
+          promotional_price: number | null
+          short_description: string | null
           stock_location: string | null
+          stock_notes: string | null
           stock_quantity: number
           tax_origin: string | null
           tax_situation: string | null
+          tipi_exception: string | null
+          unit: string | null
+          unit_measure: string | null
           updated_at: string
+          video_link: string | null
+          volumes: number | null
+          warehouse: string | null
           weight: number | null
+          width: number | null
         }
         Insert: {
           barcode?: string | null
+          brand?: string | null
           category_id?: string | null
+          cest_code?: string | null
           code: string
+          cofins_fixed?: number | null
           company_id: string
+          condition?: string | null
           cost_price?: number | null
           created_at?: string
+          crossdocking_days?: number | null
+          depth?: number | null
           description?: string | null
           dimensions?: string | null
+          estimated_tax_percentage?: number | null
+          expiry_date?: string | null
+          external_link?: string | null
+          format?: string | null
+          free_shipping?: boolean | null
+          gross_weight?: number | null
+          height?: number | null
+          icms_base?: number | null
+          icms_retention?: number | null
           id?: string
           is_active?: boolean
+          item_type?: string | null
           max_stock?: number | null
           min_stock?: number | null
           name: string
           ncm_code?: string | null
+          observations?: string | null
+          pis_fixed?: number | null
           price?: number
+          product_group?: string | null
+          product_type?: string | null
+          production_type?: string | null
+          promotional_price?: number | null
+          short_description?: string | null
           stock_location?: string | null
+          stock_notes?: string | null
           stock_quantity?: number
           tax_origin?: string | null
           tax_situation?: string | null
+          tipi_exception?: string | null
+          unit?: string | null
+          unit_measure?: string | null
           updated_at?: string
+          video_link?: string | null
+          volumes?: number | null
+          warehouse?: string | null
           weight?: number | null
+          width?: number | null
         }
         Update: {
           barcode?: string | null
+          brand?: string | null
           category_id?: string | null
+          cest_code?: string | null
           code?: string
+          cofins_fixed?: number | null
           company_id?: string
+          condition?: string | null
           cost_price?: number | null
           created_at?: string
+          crossdocking_days?: number | null
+          depth?: number | null
           description?: string | null
           dimensions?: string | null
+          estimated_tax_percentage?: number | null
+          expiry_date?: string | null
+          external_link?: string | null
+          format?: string | null
+          free_shipping?: boolean | null
+          gross_weight?: number | null
+          height?: number | null
+          icms_base?: number | null
+          icms_retention?: number | null
           id?: string
           is_active?: boolean
+          item_type?: string | null
           max_stock?: number | null
           min_stock?: number | null
           name?: string
           ncm_code?: string | null
+          observations?: string | null
+          pis_fixed?: number | null
           price?: number
+          product_group?: string | null
+          product_type?: string | null
+          production_type?: string | null
+          promotional_price?: number | null
+          short_description?: string | null
           stock_location?: string | null
+          stock_notes?: string | null
           stock_quantity?: number
           tax_origin?: string | null
           tax_situation?: string | null
+          tipi_exception?: string | null
+          unit?: string | null
+          unit_measure?: string | null
           updated_at?: string
+          video_link?: string | null
+          volumes?: number | null
+          warehouse?: string | null
           weight?: number | null
+          width?: number | null
         }
         Relationships: [
           {
