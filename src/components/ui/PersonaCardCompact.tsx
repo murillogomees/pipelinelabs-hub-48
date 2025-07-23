@@ -71,7 +71,7 @@ export function PersonaCardCompact({ persona, className = '' }: PersonaCardCompa
             </div>
             
             <div className="space-y-1">
-              {persona.problems.slice(0, 2).map((problem, index) => (
+              {(persona.problems || []).slice(0, 2).map((problem, index) => (
                 <div key={index} className="flex items-start gap-2 text-xs">
                   <div className="w-1 h-1 bg-red-500 rounded-full mt-1.5 flex-shrink-0"></div>
                   <span className="leading-tight">{problem}</span>
@@ -88,7 +88,7 @@ export function PersonaCardCompact({ persona, className = '' }: PersonaCardCompa
             </div>
             
             <div className="space-y-1">
-              {persona.solutions.slice(0, 2).map((solution, index) => (
+              {(persona.solutions || []).slice(0, 2).map((solution, index) => (
                 <div key={index} className="flex items-start gap-2 text-xs">
                   <CheckCircle className="h-3 w-3 text-green-500 mt-0.5 flex-shrink-0" />
                   <span className="leading-tight">{solution}</span>
