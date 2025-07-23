@@ -10,9 +10,13 @@ import { RealNFeDialog } from '@/components/NFe/RealNFeDialog';
 
 // Componente para NFe
 function NFe() {
-  const { nfeList, isLoading, sendNFe, cancelNFe } = useNFe();
+  const {
+    nfeList,
+    isLoading,
+    sendNFe,
+    cancelNFe
+  } = useNFe();
   const [dialogOpen, setDialogOpen] = React.useState(false);
-
   const getStatusBadge = (nfe: any) => {
     const status = nfe.nfe_xmls?.[0]?.status || 'draft';
     const variants = {
@@ -20,50 +24,39 @@ function NFe() {
       sent: 'outline',
       authorized: 'default',
       canceled: 'destructive',
-      rejected: 'destructive',
+      rejected: 'destructive'
     } as const;
-
     const labels = {
       draft: 'Rascunho',
       sent: 'Enviada',
       authorized: 'Autorizada',
       canceled: 'Cancelada',
-      rejected: 'Rejeitada',
+      rejected: 'Rejeitada'
     };
-
-    return (
-      <Badge variant={variants[status as keyof typeof variants] || 'secondary'}>
+    return <Badge variant={variants[status as keyof typeof variants] || 'secondary'}>
         {labels[status as keyof typeof labels] || status}
-      </Badge>
-    );
+      </Badge>;
   };
-
   const formatCurrency = (value: number) => {
     return new Intl.NumberFormat('pt-BR', {
       style: 'currency',
-      currency: 'BRL',
+      currency: 'BRL'
     }).format(value);
   };
-
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString('pt-BR');
   };
-
-  return (
-    <div className="space-y-6">
+  return <div className="space-y-6">
       <div className="flex justify-between items-center">
         <div>
-          <h2 className="text-2xl font-bold text-foreground">NFe - Nota Fiscal Eletrônica</h2>
-          <p className="text-muted-foreground">Emita notas fiscais eletrônicas</p>
+          
+          <p className="text-muted-foreground">
+        </p>
         </div>
-        <RealNFeDialog 
-          trigger={
-            <Button>
+        <RealNFeDialog trigger={<Button>
               <Plus className="w-4 h-4 mr-2" />
               Nova NFe
-            </Button>
-          }
-        />
+            </Button>} />
       </div>
 
       <Card>
@@ -71,18 +64,12 @@ function NFe() {
           <CardTitle>Notas Fiscais</CardTitle>
         </CardHeader>
         <CardContent>
-          {isLoading ? (
-            <div className="flex items-center justify-center h-40">
+          {isLoading ? <div className="flex items-center justify-center h-40">
               <p className="text-muted-foreground">Carregando...</p>
-            </div>
-          ) : nfeList.length === 0 ? (
-            <div className="flex items-center justify-center h-40">
+            </div> : nfeList.length === 0 ? <div className="flex items-center justify-center h-40">
               <p className="text-muted-foreground">Nenhuma NFe encontrada</p>
-            </div>
-          ) : (
-            <div className="space-y-4">
-              {nfeList.map((nfe: any) => (
-                <div key={nfe.id} className="border rounded-lg p-4 space-y-3">
+            </div> : <div className="space-y-4">
+              {nfeList.map((nfe: any) => <div key={nfe.id} className="border rounded-lg p-4 space-y-3">
                   <div className="flex items-start justify-between">
                     <div className="space-y-1">
                       <div className="flex items-center gap-2">
@@ -92,77 +79,47 @@ function NFe() {
                       <p className="text-sm text-muted-foreground">
                         Série: {nfe.series} | Data: {formatDate(nfe.issue_date)}
                       </p>
-                      {nfe.customers && (
-                        <p className="text-sm">
+                      {nfe.customers && <p className="text-sm">
                           Cliente: {nfe.customers.name}
-                        </p>
-                      )}
+                        </p>}
                     </div>
                     <div className="text-right space-y-1">
                       <p className="font-medium">{formatCurrency(nfe.total_amount)}</p>
                       <div className="flex gap-2">
-                        {nfe.nfe_xmls?.[0]?.status === 'draft' && (
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            onClick={() => sendNFe.mutate(nfe.id)}
-                            disabled={sendNFe.isPending}
-                          >
+                        {nfe.nfe_xmls?.[0]?.status === 'draft' && <Button size="sm" variant="outline" onClick={() => sendNFe.mutate(nfe.id)} disabled={sendNFe.isPending}>
                             <Send className="h-4 w-4 mr-1" />
                             Enviar
-                          </Button>
-                        )}
-                        {(nfe.nfe_xmls?.[0]?.status === 'authorized' || nfe.nfe_xmls?.[0]?.status === 'sent') && (
-                          <Button
-                            size="sm"
-                            variant="destructive"
-                            onClick={() => cancelNFe.mutate(nfe.id)}
-                            disabled={cancelNFe.isPending}
-                          >
+                          </Button>}
+                        {(nfe.nfe_xmls?.[0]?.status === 'authorized' || nfe.nfe_xmls?.[0]?.status === 'sent') && <Button size="sm" variant="destructive" onClick={() => cancelNFe.mutate(nfe.id)} disabled={cancelNFe.isPending}>
                             <X className="h-4 w-4 mr-1" />
                             Cancelar
-                          </Button>
-                        )}
-                        {nfe.nfe_xmls?.[0]?.pdf_url && (
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            onClick={() => window.open(nfe.nfe_xmls[0].pdf_url, '_blank')}
-                          >
+                          </Button>}
+                        {nfe.nfe_xmls?.[0]?.pdf_url && <Button size="sm" variant="outline" onClick={() => window.open(nfe.nfe_xmls[0].pdf_url, '_blank')}>
                             <Download className="h-4 w-4 mr-1" />
                             PDF
-                          </Button>
-                        )}
+                          </Button>}
                       </div>
                     </div>
                   </div>
                   
-                  {nfe.nfe_xmls?.[0]?.access_key && (
-                    <div className="text-xs text-muted-foreground">
+                  {nfe.nfe_xmls?.[0]?.access_key && <div className="text-xs text-muted-foreground">
                       Chave: {nfe.nfe_xmls[0].access_key}
-                    </div>
-                  )}
+                    </div>}
                   
-                  {nfe.nfe_xmls?.[0]?.rejection_reason && (
-                    <div className="text-sm text-destructive bg-destructive/10 p-2 rounded">
+                  {nfe.nfe_xmls?.[0]?.rejection_reason && <div className="text-sm text-destructive bg-destructive/10 p-2 rounded">
                       Motivo da rejeição: {nfe.nfe_xmls[0].rejection_reason}
-                    </div>
-                  )}
-                </div>
-              ))}
-            </div>
-          )}
+                    </div>}
+                </div>)}
+            </div>}
         </CardContent>
       </Card>
 
-    </div>
-  );
+    </div>;
 }
 
 // Componente para NFCe
 function NFCe() {
-  return (
-    <div className="space-y-6">
+  return <div className="space-y-6">
       <div className="flex justify-between items-center">
         <div>
           <h2 className="text-2xl font-bold text-foreground">NFCe - Nota Fiscal do Consumidor</h2>
@@ -185,14 +142,12 @@ function NFCe() {
           </div>
         </CardContent>
       </Card>
-    </div>
-  );
+    </div>;
 }
 
 // Componente para NFSe
 function NFSe() {
-  return (
-    <div className="space-y-6">
+  return <div className="space-y-6">
       <div className="flex justify-between items-center">
         <div>
           <h2 className="text-2xl font-bold text-foreground">NFSe - Nota Fiscal de Serviços</h2>
@@ -215,14 +170,13 @@ function NFSe() {
           </div>
         </CardContent>
       </Card>
-    </div>
-  );
+    </div>;
 }
 
 // Componente principal Notas Fiscais
 export function NotasFiscais() {
   const location = useLocation();
-  
+
   // Determina a aba ativa baseada na URL
   const getActiveTab = () => {
     const path = location.pathname;
@@ -231,9 +185,7 @@ export function NotasFiscais() {
     if (path.includes('/nfse')) return 'nfse';
     return 'nfe'; // padrão
   };
-
-  return (
-    <div className="space-y-6">
+  return <div className="space-y-6">
       <div>
         <h1 className="text-3xl font-bold text-foreground">Notas Fiscais</h1>
         <p className="text-muted-foreground">Emita e gerencie notas fiscais</p>
@@ -246,6 +198,5 @@ export function NotasFiscais() {
         <Route path="nfce" element={<NFCe />} />
         <Route path="nfse" element={<NFSe />} />
       </Routes>
-    </div>
-  );
+    </div>;
 }
