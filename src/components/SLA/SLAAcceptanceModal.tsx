@@ -43,7 +43,7 @@ export function SLAAcceptanceModal({ open, onOpenChange }: SLAAcceptanceModalPro
         <ScrollArea className="h-96 w-full rounded-md border p-4">
           <div 
             className="prose prose-sm max-w-none"
-            dangerouslySetInnerHTML={{ __html: currentSLA.content }}
+            dangerouslySetInnerHTML={{ __html: currentSLA.content || 'Conteúdo do SLA em carregamento...' }}
           />
         </ScrollArea>
 

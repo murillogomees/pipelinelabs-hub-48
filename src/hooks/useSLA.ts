@@ -2,6 +2,17 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 
+interface SLAData {
+  id: string;
+  title: string;
+  version: string;
+  content: string;
+  effective_date: string;
+  is_active: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
 export function useSLA() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -9,7 +20,7 @@ export function useSLA() {
   // Fetch current active SLA
   const { data: currentSLA, isLoading } = useQuery({
     queryKey: ['current-sla'],
-    queryFn: async () => {
+    queryFn: async (): Promise<SLAData | null> => {
       const { data, error } = await supabase
         .from('sla_agreements' as any)
         .select('*')
@@ -19,7 +30,7 @@ export function useSLA() {
         .maybeSingle();
       
       if (error) throw error;
-      return data;
+      return data as SLAData | null;
     },
   });
 
@@ -27,7 +38,7 @@ export function useSLA() {
   const { data: hasAcceptedSLA } = useQuery({
     queryKey: ['sla-acceptance-status'],
     queryFn: async () => {
-      if (!currentSLA) return true;
+      if (!currentSLA?.version) return true;
       
       const { data, error } = await supabase
         .from('sla_acceptance' as any)
