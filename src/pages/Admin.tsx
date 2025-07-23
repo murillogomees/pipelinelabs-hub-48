@@ -454,6 +454,13 @@ export function Admin() {
             Monitoramento de Erros
           </Button>
         </Link>
+        
+        <Link to="/app/admin/stripe">
+          <Button variant="outline" className="w-full justify-start h-auto p-4">
+            <CreditCard className="w-4 h-4 mr-2" />
+            Configurações Stripe
+          </Button>
+        </Link>
       </div>
 
       <CompressionMonitor />
