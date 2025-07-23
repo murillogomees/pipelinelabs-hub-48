@@ -13,6 +13,8 @@ import { PurchaseOrderDialog } from '@/components/Purchases/PurchaseOrderDialog'
 import { formatCurrency } from '@/lib/utils';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
+import { supabase } from '@/integrations/supabase/client';
+import { useUserCompany } from '@/hooks/useUserCompany';
 
 export default function Compras() {
   const navigate = useNavigate();
@@ -20,10 +22,11 @@ export default function Compras() {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedStatus, setSelectedStatus] = useState<string>('all');
   const [showCreateDialog, setShowCreateDialog] = useState(false);
-  const [selectedOrder, setSelectedOrder] = useState(null);
+  const [selectedOrder, setSelectedOrder] = useState<any>(null);
   const [deleteOrderId, setDeleteOrderId] = useState<string | null>(null);
 
   const { purchaseOrders, loading, createPurchaseOrder, updatePurchaseOrder, deletePurchaseOrder } = usePurchaseOrders();
+  const { data: companyId } = useUserCompany();
 
   const statusColors = {
     draft: 'bg-gray-100 text-gray-800',
@@ -63,10 +66,17 @@ export default function Compras() {
   };
 
   const handleSubmit = async (data: any) => {
+    if (!companyId) return;
+
+    const orderData = {
+      ...data,
+      company_id: companyId
+    };
+
     if (selectedOrder) {
-      await updatePurchaseOrder(selectedOrder.id, data);
+      await updatePurchaseOrder(selectedOrder.id, orderData);
     } else {
-      await createPurchaseOrder(data);
+      await createPurchaseOrder(orderData);
     }
     setShowCreateDialog(false);
     setSelectedOrder(null);

@@ -70,7 +70,7 @@ export function usePurchaseOrders() {
         tax_amount: item.tax_amount || 0,
         shipping_cost: item.shipping_cost || 0,
         internal_notes: item.internal_notes || '',
-        items: Array.isArray(item.items) ? item.items : []
+        items: typeof item.items === 'string' ? JSON.parse(item.items) : (Array.isArray(item.items) ? item.items : [])
       })) as PurchaseOrder[];
     },
   });
@@ -79,12 +79,14 @@ export function usePurchaseOrders() {
     mutationFn: async (data: PurchaseOrderFormData) => {
       // Generate order number using SQL function
       const { data: orderNumberData, error: orderNumberError } = await supabase
-        .rpc('generate_purchase_order_number', { company_uuid: data.company_id });
+        .rpc('generate_purchase_order_number', { 
+          company_uuid: data.company_id 
+        } as any);
 
       if (orderNumberError) throw orderNumberError;
 
       const insertData = {
-        order_number: orderNumberData,
+        order_number: orderNumberData as string,
         supplier_id: data.supplier_id,
         supplier_name: data.supplier_name,
         order_date: data.order_date,
@@ -103,7 +105,7 @@ export function usePurchaseOrders() {
 
       const { data: newOrder, error } = await supabase
         .from('purchase_orders')
-        .insert([insertData])
+        .insert(insertData)
         .select()
         .single();
 
