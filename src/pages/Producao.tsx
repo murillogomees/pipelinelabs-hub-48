@@ -338,27 +338,11 @@ export function Producao() {
         <p className="text-muted-foreground">Gerencie produção e ordens de serviço</p>
       </div>
 
-      <Tabs value={getActiveTab()} className="space-y-6">
-        <TabsList className="grid w-full grid-cols-2">
-          <TabsTrigger value="producao" asChild>
-            <NavLink to="/producao" className="flex items-center space-x-2">
-              <Wrench className="w-4 h-4" />
-              <span>Produção</span>
-            </NavLink>
-          </TabsTrigger>
-          <TabsTrigger value="os" asChild>
-            <NavLink to="/producao/os" className="flex items-center space-x-2">
-              <ClipboardList className="w-4 h-4" />
-              <span>Ordens de Serviço</span>
-            </NavLink>
-          </TabsTrigger>
-        </TabsList>
-
-        <Routes>
-          <Route index element={<OrdensProducao />} />
-          <Route path="os" element={<OrdensServico />} />
-        </Routes>
-      </Tabs>
+      {/* Removed unused tabs */}
+      <Routes>
+        <Route index element={<OrdensProducao />} />
+        <Route path="os" element={<OrdensServico />} />
+      </Routes>
     </div>
   );
 }

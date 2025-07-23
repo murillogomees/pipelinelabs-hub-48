@@ -239,35 +239,13 @@ export function NotasFiscais() {
         <p className="text-muted-foreground">Emita e gerencie notas fiscais</p>
       </div>
 
-      <Tabs value={getActiveTab()} className="space-y-6">
-        <TabsList className="grid w-full grid-cols-3">
-          <TabsTrigger value="nfe" asChild>
-            <NavLink to="/notas-fiscais/nfe" className="flex items-center space-x-2">
-              <FileText className="w-4 h-4" />
-              <span>NFe</span>
-            </NavLink>
-          </TabsTrigger>
-          <TabsTrigger value="nfce" asChild>
-            <NavLink to="/notas-fiscais/nfce" className="flex items-center space-x-2">
-              <Receipt className="w-4 h-4" />
-              <span>NFCe</span>
-            </NavLink>
-          </TabsTrigger>
-          <TabsTrigger value="nfse" asChild>
-            <NavLink to="/notas-fiscais/nfse" className="flex items-center space-x-2">
-              <Building className="w-4 h-4" />
-              <span>NFSe</span>
-            </NavLink>
-          </TabsTrigger>
-        </TabsList>
-
-        <Routes>
-          <Route index element={<NFe />} />
-          <Route path="nfe" element={<NFe />} />
-          <Route path="nfce" element={<NFCe />} />
-          <Route path="nfse" element={<NFSe />} />
-        </Routes>
-      </Tabs>
+      {/* Removed unused tabs */}
+      <Routes>
+        <Route index element={<NFe />} />
+        <Route path="nfe" element={<NFe />} />
+        <Route path="nfce" element={<NFCe />} />
+        <Route path="nfse" element={<NFSe />} />
+      </Routes>
     </div>
   );
 }

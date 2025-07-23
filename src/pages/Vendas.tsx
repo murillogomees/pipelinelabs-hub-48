@@ -227,35 +227,14 @@ export function Vendas() {
         <p className="text-mobile text-muted-foreground">Gerencie todos os seus pedidos e vendas</p>
       </div>
 
-      <Tabs value={getActiveTab()} className="space-mobile">
-        <TabsList className="grid w-full grid-cols-3 h-auto">
-          <TabsTrigger value="pedidos" asChild>
-            <NavLink to="/vendas/pedidos" className="flex items-center justify-center space-x-2 py-2">
-              <ShoppingCart className="w-4 h-4" />
-              <span className="hidden sm:inline">Pedidos</span>
-            </NavLink>
-          </TabsTrigger>
-          <TabsTrigger value="pdv" asChild>
-            <NavLink to="/vendas/pdv" className="flex items-center justify-center space-x-2 py-2">
-              <CreditCard className="w-4 h-4" />
-              <span className="hidden sm:inline">PDV</span>
-            </NavLink>
-          </TabsTrigger>
-          <TabsTrigger value="propostas" asChild>
-            <NavLink to="/vendas/propostas" className="flex items-center justify-center space-x-2 py-2">
-              <FileText className="w-4 h-4" />
-              <span className="hidden sm:inline">Propostas</span>
-            </NavLink>
-          </TabsTrigger>
-        </TabsList>
+      {/* Removed unused tabs */}
 
-        <Routes>
-          <Route index element={<Pedidos />} />
-          <Route path="pedidos" element={<Pedidos />} />
-          <Route path="pdv" element={<PDV />} />
-          <Route path="propostas" element={<Propostas />} />
-        </Routes>
-      </Tabs>
+      <Routes>
+        <Route index element={<Pedidos />} />
+        <Route path="pedidos" element={<Pedidos />} />
+        <Route path="pdv" element={<PDV />} />
+        <Route path="propostas" element={<Propostas />} />
+      </Routes>
     </div>
   );
 }

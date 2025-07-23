@@ -35,64 +35,45 @@ export const menuItems = [
     title: 'Vendas',
     icon: ShoppingCart,
     path: '/app/vendas',
-    submenu: [
-      { title: 'Pedidos', path: '/app/vendas/pedidos' },
-      { title: 'PDV', path: '/app/vendas/pdv' },
-      { title: 'Propostas', path: '/app/vendas/propostas' }
-    ]
+    submenu: []
   },
   {
     title: 'Produtos',
     icon: Package,
     path: '/app/produtos',
     submenu: [
-      { title: 'Estoque', path: '/app/produtos/estoque' },
-      { title: 'Categorias', path: '/app/produtos/categorias' }
+      { title: 'Estoque', path: '/app/produtos/estoque' }
     ]
   },
   {
     title: 'Compras',
     icon: ShoppingBag,
     path: '/app/compras',
-    submenu: [
-      { title: 'Cotações', path: '/app/compras/cotacoes' }
-    ]
+    submenu: []
   },
   {
     title: 'Clientes',
     icon: Users,
     path: '/app/clientes',
-    submenu: [
-      { title: 'Fornecedores', path: '/app/clientes/fornecedores' }
-    ]
+    submenu: []
   },
   {
     title: 'Financeiro',
     icon: DollarSign,
     path: '/app/financeiro',
-    submenu: [
-      { title: 'Contas a Pagar', path: '/app/financeiro/pagar' },
-      { title: 'Contas a Receber', path: '/app/financeiro/receber' },
-      { title: 'Conciliação', path: '/app/financeiro/conciliacao' }
-    ]
+    submenu: []
   },
   {
     title: 'Notas Fiscais',
     icon: FileText,
     path: '/app/notas-fiscais',
-    submenu: [
-      { title: 'NFe', path: '/app/notas-fiscais/nfe' },
-      { title: 'NFCe', path: '/app/notas-fiscais/nfce' },
-      { title: 'NFSe', path: '/app/notas-fiscais/nfse' }
-    ]
+    submenu: []
   },
   {
     title: 'Produção',
     icon: Settings2,
     path: '/app/producao',
-    submenu: [
-      { title: 'Ordens de Serviço', path: '/app/producao/os' }
-    ]
+    submenu: []
   },
   {
     title: 'Relatórios',

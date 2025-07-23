@@ -457,27 +457,11 @@ export function Clientes() {
         <p className="text-muted-foreground">Gerencie clientes e fornecedores</p>
       </div>
 
-      <Tabs value={getActiveTab()} className="space-y-6">
-        <TabsList className="grid w-full grid-cols-2">
-          <TabsTrigger value="clientes" asChild>
-            <NavLink to="/clientes" className="flex items-center space-x-2">
-              <Users className="w-4 h-4" />
-              <span>Clientes</span>
-            </NavLink>
-          </TabsTrigger>
-          <TabsTrigger value="fornecedores" asChild>
-            <NavLink to="/clientes/fornecedores" className="flex items-center space-x-2">
-              <Building2 className="w-4 h-4" />
-              <span>Fornecedores</span>
-            </NavLink>
-          </TabsTrigger>
-        </TabsList>
-
-        <Routes>
-          <Route index element={<ClientesLista />} />
-          <Route path="fornecedores" element={<Fornecedores />} />
-        </Routes>
-      </Tabs>
+      {/* Removed unused tabs */}
+      <Routes>
+        <Route index element={<ClientesLista />} />
+        <Route path="fornecedores" element={<Fornecedores />} />
+      </Routes>
     </div>
   );
 }

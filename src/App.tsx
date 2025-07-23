@@ -172,24 +172,13 @@ function RouteHandler() {
         <Route index element={<Navigate to="/app/dashboard" replace />} />
         <Route path="dashboard" element={<Dashboard />} />
         <Route path="vendas" element={<Vendas />} />
-        <Route path="vendas/pedidos" element={<div>Pedidos</div>} />
-        <Route path="vendas/pdv" element={<div>PDV</div>} />
-        <Route path="vendas/propostas" element={<div>Propostas</div>} />
         <Route path="produtos" element={<Produtos />} />
         <Route path="produtos/estoque" element={<Estoque />} />
-        <Route path="produtos/categorias" element={<div>Categorias</div>} />
         <Route path="compras" element={<Compras />} />
-        <Route path="compras/cotacoes" element={<div>Cotações</div>} />
         <Route path="clientes" element={<Clientes />} />
-        <Route path="clientes/fornecedores" element={<div>Fornecedores</div>} />
         <Route path="financeiro" element={<Financeiro />} />
-        <Route path="financeiro/pagar" element={<div>Contas a Pagar</div>} />
-        <Route path="financeiro/receber" element={<div>Contas a Receber</div>} />
-        <Route path="financeiro/conciliacao" element={<div>Conciliação</div>} />
         <Route path="notas-fiscais/*" element={<NotasFiscais />} />
-        
         <Route path="producao" element={<Producao />} />
-        <Route path="producao/os" element={<div>Ordens de Serviço</div>} />
         <Route path="relatorios" element={<Relatorios />} />
         <Route path="integracoes" element={<Integracoes />} />
         <Route path="configuracoes" element={<Configuracoes />} />
