@@ -77,6 +77,9 @@ pg_remote_backup = false
 [functions.compression-proxy]
 verify_jwt = false
 
+[functions.sentry-metrics]
+verify_jwt = true
+
 [functions.sync-stripe-products]
 verify_jwt = true
 

@@ -5,12 +5,14 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Plus, CreditCard, Users, Zap } from 'lucide-react';
+import { Plus, CreditCard, Users, Zap, AlertTriangle } from 'lucide-react';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { UserDialog } from '@/components/Admin/UserDialog';
 import { CompressionMonitor } from '@/components/Admin/CompressionMonitor';
+import { ErrorMonitoringDashboard } from '@/components/Admin/ErrorMonitoring/ErrorMonitoringDashboard';
+import { Link } from 'react-router-dom';
 
 
 // Componente para Planos
@@ -419,8 +421,56 @@ export function Admin() {
     if (path.includes('/planos')) return 'planos';
     if (path.includes('/usuarios')) return 'usuarios';
     
-    return 'planos'; // padrão
+    return 'overview'; // padrão
   };
+
+  const AdminOverview = () => (
+    <div className="space-y-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        <Link to="/app/admin/usuarios">
+          <Button variant="outline" className="w-full justify-start h-auto p-4">
+            <Users className="w-4 h-4 mr-2" />
+            Gerenciar Usuários
+          </Button>
+        </Link>
+        
+        <Link to="/app/admin/planos">
+          <Button variant="outline" className="w-full justify-start h-auto p-4">
+            <CreditCard className="w-4 h-4 mr-2" />
+            Gerenciar Planos
+          </Button>
+        </Link>
+        
+        <Link to="/app/admin/compressao">
+          <Button variant="outline" className="w-full justify-start h-auto p-4">
+            <Zap className="w-4 h-4 mr-2" />
+            Compressão HTTP
+          </Button>
+        </Link>
+        
+        <Link to="/app/admin/monitoramento">
+          <Button variant="outline" className="w-full justify-start h-auto p-4">
+            <AlertTriangle className="w-4 h-4 mr-2" />
+            Monitoramento de Erros
+          </Button>
+        </Link>
+      </div>
+
+      <CompressionMonitor />
+      
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <AlertTriangle className="w-5 h-5" />
+            Resumo de Erros
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <ErrorMonitoringDashboard />
+        </CardContent>
+      </Card>
+    </div>
+  );
 
   return (
     <div className="space-y-6">
@@ -430,15 +480,20 @@ export function Admin() {
       </div>
 
       <Tabs value={getActiveTab()} className="space-y-6">
-        <TabsList className="grid w-full grid-cols-2">
+        <TabsList className="grid w-full grid-cols-3">
+          <TabsTrigger value="overview" asChild>
+            <NavLink to="/app/admin" className="flex items-center space-x-2">
+              <span>Visão Geral</span>
+            </NavLink>
+          </TabsTrigger>
           <TabsTrigger value="planos" asChild>
-            <NavLink to="/admin/planos" className="flex items-center space-x-2">
+            <NavLink to="/app/admin/planos" className="flex items-center space-x-2">
               <CreditCard className="w-4 h-4" />
               <span>Planos</span>
             </NavLink>
           </TabsTrigger>
           <TabsTrigger value="usuarios" asChild>
-            <NavLink to="/admin/usuarios" className="flex items-center space-x-2">
+            <NavLink to="/app/admin/usuarios" className="flex items-center space-x-2">
               <Users className="w-4 h-4" />
               <span>Usuários</span>
             </NavLink>
@@ -446,7 +501,7 @@ export function Admin() {
         </TabsList>
 
         <Routes>
-          <Route index element={<Planos />} />
+          <Route index element={<AdminOverview />} />
           <Route path="planos" element={<Planos />} />
           <Route path="usuarios" element={<Usuarios />} />
         </Routes>

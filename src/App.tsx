@@ -11,6 +11,8 @@ import React, { Suspense, useEffect } from 'react';
 import { Outlet, useLocation } from 'react-router-dom';
 import { PageSuspenseBoundary } from '@/components/Common/SuspenseBoundary';
 import { ComponentPreloader } from '@/utils/preloader';
+import { initSentry } from '@/lib/sentry';
+import { SentryErrorBoundary } from '@/components/ErrorBoundary/SentryErrorBoundary';
 
 // Lazy loading das páginas para melhor performance
 const Dashboard = React.lazy(() => import('@/pages/Dashboard').then(module => ({ default: module.Dashboard })));
@@ -41,6 +43,7 @@ const AdminAuditLogs = React.lazy(() => import('@/pages/AdminAuditLogs'));
 const AdminCache = React.lazy(() => import('@/pages/AdminCache').then(module => ({ default: module.AdminCache })));
 const AdminLandingPage = React.lazy(() => import('@/pages/AdminLandingPage').then(module => ({ default: module.AdminLandingPage })));
 const AdminCompressao = React.lazy(() => import('@/pages/AdminCompressao').then(module => ({ default: module.AdminCompressao })));
+const AdminMonitoramento = React.lazy(() => import('@/pages/AdminMonitoramento'));
 
 // Landing Page
 const LandingPage = React.lazy(() => import('@/pages/LandingPage').then(module => ({ default: module.LandingPage })));
@@ -77,6 +80,9 @@ const queryClient = new QueryClient({
     },
   },
 });
+
+// Initialize Sentry
+initSentry();
 
 function AppRoutes() {
   const { user, loading } = useAuth();
@@ -184,6 +190,8 @@ function RouteHandler() {
         <Route path="admin/cache" element={<ProtectedRoute requireSuperAdmin><AdminCache /></ProtectedRoute>} />
         <Route path="admin/audit-logs" element={<ProtectedRoute requireAdmin><AdminAuditLogs /></ProtectedRoute>} />
         <Route path="admin/landing-page" element={<ProtectedRoute requireSuperAdmin><AdminLandingPage /></ProtectedRoute>} />
+        <Route path="admin/compressao" element={<ProtectedRoute requireSuperAdmin><AdminCompressao /></ProtectedRoute>} />
+        <Route path="admin/monitoramento" element={<ProtectedRoute requireSuperAdmin><AdminMonitoramento /></ProtectedRoute>} />
         
         <Route path="*" element={<NotFound />} />
       </Route>
@@ -197,10 +205,12 @@ function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
-        <ErrorBoundary>
-          <AppRoutes />
-          <Toaster />
-        </ErrorBoundary>
+        <SentryErrorBoundary>
+          <ErrorBoundary>
+            <AppRoutes />
+            <Toaster />
+          </ErrorBoundary>
+        </SentryErrorBoundary>
       </AuthProvider>
     </QueryClientProvider>
   );

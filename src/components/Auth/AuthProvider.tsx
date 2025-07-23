@@ -3,6 +3,7 @@ import React, { createContext, useContext, useEffect, useState } from 'react';
 import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
 import { createLogger } from '@/utils/logger';
+import { setUserContext } from '@/lib/sentry';
 
 interface AuthContextType {
   user: User | null;
@@ -60,12 +61,19 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           setTimeout(() => {
             if (mounted) {
               authLogger.info('User signed in successfully');
+              // Set Sentry user context
+              setUserContext({
+                id: session.user.id,
+                email: session.user.email,
+              });
             }
           }, 0);
         }
 
         if (event === 'SIGNED_OUT') {
           cleanupAuthState();
+          // Clear Sentry user context
+          setUserContext({ id: '' });
         }
       }
     );
@@ -89,6 +97,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           setSession(session);
           setUser(session?.user ?? null);
           setLoading(false);
+          
+          // Set Sentry user context if session exists
+          if (session?.user) {
+            setUserContext({
+              id: session.user.id,
+              email: session.user.email,
+            });
+          }
         }
       } catch (error) {
         authLogger.error('Error in getInitialSession', error);
