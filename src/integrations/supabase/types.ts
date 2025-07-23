@@ -568,9 +568,16 @@ export type Database = {
           created_at: string
           document: string
           email: string | null
+          fiscal_email: string | null
           id: string
+          legal_name: string | null
+          legal_representative: string | null
+          municipal_registration: string | null
           name: string
           phone: string | null
+          state_registration: string | null
+          tax_regime: string | null
+          trade_name: string | null
           updated_at: string
           zipcode: string | null
         }
@@ -580,9 +587,16 @@ export type Database = {
           created_at?: string
           document: string
           email?: string | null
+          fiscal_email?: string | null
           id?: string
+          legal_name?: string | null
+          legal_representative?: string | null
+          municipal_registration?: string | null
           name: string
           phone?: string | null
+          state_registration?: string | null
+          tax_regime?: string | null
+          trade_name?: string | null
           updated_at?: string
           zipcode?: string | null
         }
@@ -592,9 +606,16 @@ export type Database = {
           created_at?: string
           document?: string
           email?: string | null
+          fiscal_email?: string | null
           id?: string
+          legal_name?: string | null
+          legal_representative?: string | null
+          municipal_registration?: string | null
           name?: string
           phone?: string | null
+          state_registration?: string | null
+          tax_regime?: string | null
+          trade_name?: string | null
           updated_at?: string
           zipcode?: string | null
         }
@@ -3857,6 +3878,10 @@ export type Database = {
         Args: { company_uuid: string }
         Returns: boolean
       }
+      check_document_uniqueness: {
+        Args: { doc: string }
+        Returns: boolean
+      }
       check_request: {
         Args: Record<PropertyKey, never>
         Returns: boolean
@@ -4100,6 +4125,15 @@ export type Database = {
         Args: Record<PropertyKey, never>
         Returns: boolean
       }
+      log_duplicate_document_attempt: {
+        Args: {
+          p_user_id: string
+          p_document: string
+          p_email: string
+          p_ip_address?: unknown
+        }
+        Returns: string
+      }
       log_health_check: {
         Args: {
           p_service_name: string
@@ -4147,6 +4181,10 @@ export type Database = {
       }
       user_has_accepted_current_terms: {
         Args: { p_user_id: string; p_company_id: string }
+        Returns: boolean
+      }
+      validate_cnpj: {
+        Args: { cnpj_input: string }
         Returns: boolean
       }
       validate_document: {
