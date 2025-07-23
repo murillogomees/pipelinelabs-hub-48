@@ -149,7 +149,7 @@ export class CompressionManager {
   // Testar compressão do servidor
   async testCompression(): Promise<CompressionMetrics | null> {
     try {
-      console.log('Testando compressão HTTP...');
+      console.log('Testing HTTP compression...');
       
       const response = await supabase.functions.invoke('compression-proxy', {
         body: { test: true },
