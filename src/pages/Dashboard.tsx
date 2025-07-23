@@ -51,19 +51,19 @@ export function Dashboard() {
           id: 'default-sales',
           type: 'sales_monthly',
           title: WIDGET_TYPES.SALES_MONTHLY.title,
-          position: { x: 0, y: 0, w: 2, h: 2 },
+          position: { x: 0, y: 0, w: 3, h: 2 },
         },
         {
           id: 'default-orders',
           type: 'pending_orders',
           title: WIDGET_TYPES.PENDING_ORDERS.title,
-          position: { x: 2, y: 0, w: 2, h: 2 },
+          position: { x: 3, y: 0, w: 3, h: 2 },
         },
         {
           id: 'default-stock',
           type: 'low_stock',
           title: WIDGET_TYPES.LOW_STOCK.title,
-          position: { x: 4, y: 0, w: 2, h: 2 },
+          position: { x: 0, y: 2, w: 3, h: 2 },
         },
       ];
       setWidgets(defaultWidgets);
@@ -95,9 +95,9 @@ export function Dashboard() {
       type: widgetType,
       title: widgetConfig.title,
       position: {
-        x: 0,
-        y: Math.max(...widgets.map(w => w.position.y + w.position.h), 0),
-        w: widgetConfig.defaultSize.w,
+        x: (widgets.length * 3) % 6, // Posiciona em múltiplos de 3 para ocupar col-6
+        y: Math.floor((widgets.length * 3) / 6) * 2, // Nova linha a cada 2 widgets
+        w: 3, // Cada widget ocupa 3 colunas (col-6 em grid de 6)
         h: widgetConfig.defaultSize.h,
       },
     };
