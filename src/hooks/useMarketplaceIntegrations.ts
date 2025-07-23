@@ -48,6 +48,19 @@ export const useMarketplaceIntegrations = () => {
       credentials: Record<string, string>;
       config?: Record<string, any>;
     }) => {
+      // Obter company_id do usuário
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error('Usuário não autenticado');
+      
+      const { data: userCompany } = await supabase
+        .from('user_companies')
+        .select('company_id')
+        .eq('user_id', user.id)
+        .eq('is_active', true)
+        .single();
+      
+      if (!userCompany) throw new Error('Usuário não possui empresa associada');
+
       const { data, error } = await (supabase as any)
         .from('marketplace_integrations')
         .insert({
@@ -56,7 +69,7 @@ export const useMarketplaceIntegrations = () => {
           credentials: integration.credentials,
           config: integration.config || {},
           status: 'inactive',
-          company_id: (await supabase.auth.getUser()).data.user?.user_metadata?.company_id
+          company_id: userCompany.company_id
         })
         .select()
         .single();

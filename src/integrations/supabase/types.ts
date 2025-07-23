@@ -1615,7 +1615,7 @@ export type Database = {
         Row: {
           auth_type: string
           auto_sync_enabled: boolean | null
-          company_id: string
+          company_id: string | null
           config: Json | null
           created_at: string
           credentials: Json | null
@@ -1631,7 +1631,7 @@ export type Database = {
         Insert: {
           auth_type?: string
           auto_sync_enabled?: boolean | null
-          company_id: string
+          company_id?: string | null
           config?: Json | null
           created_at?: string
           credentials?: Json | null
@@ -1647,7 +1647,7 @@ export type Database = {
         Update: {
           auth_type?: string
           auto_sync_enabled?: boolean | null
-          company_id?: string
+          company_id?: string | null
           config?: Json | null
           created_at?: string
           credentials?: Json | null
