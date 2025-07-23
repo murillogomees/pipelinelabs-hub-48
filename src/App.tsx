@@ -176,7 +176,7 @@ function RouteHandler() {
         <Route path="produtos/estoque" element={<Estoque />} />
         <Route path="compras" element={<Compras />} />
         <Route path="clientes" element={<Clientes />} />
-        <Route path="financeiro" element={<Financeiro />} />
+        <Route path="financeiro/*" element={<Financeiro />} />
         <Route path="notas-fiscais/*" element={<NotasFiscais />} />
         <Route path="producao" element={<Producao />} />
         <Route path="relatorios" element={<Relatorios />} />

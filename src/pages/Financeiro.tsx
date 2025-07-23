@@ -325,29 +325,19 @@ const Financeiro = () => {
   const location = useLocation();
 
   const getCurrentTab = () => {
-    const path = location.pathname.split('/').pop();
-    switch (path) {
-      case 'dashboard':
-        return 'dashboard';
-      case 'contas-pagar':
-        return 'contas-pagar';
-      case 'contas-receber':
-        return 'contas-receber';
-      case 'contas-bancarias':
-        return 'contas-bancarias';
-      case 'lancamentos':
-        return 'lancamentos';
-      case 'categorias':
-        return 'categorias';
-      case 'conciliacao':
-        return 'conciliacao';
-      case 'relatorios':
-        return 'relatorios';
-      case 'configuracoes':
-        return 'configuracoes';
-      default:
-        return 'dashboard';
-    }
+    const path = location.pathname;
+    if (path.includes('/dashboard')) return 'dashboard';
+    if (path.includes('/contas-pagar')) return 'contas-pagar';
+    if (path.includes('/contas-receber')) return 'contas-receber';
+    if (path.includes('/contas-bancarias')) return 'contas-bancarias';
+    if (path.includes('/lancamentos')) return 'lancamentos';
+    if (path.includes('/categorias')) return 'categorias';
+    if (path.includes('/conciliacao')) return 'conciliacao';
+    if (path.includes('/relatorios')) return 'relatorios';
+    if (path.includes('/configuracoes')) return 'configuracoes';
+    // Se estiver em /app/financeiro sem subrota, redirecionar para dashboard
+    if (path === '/app/financeiro' || path === '/app/financeiro/') return 'dashboard';
+    return 'dashboard';
   };
 
   return (
@@ -416,16 +406,16 @@ const Financeiro = () => {
         </TabsList>
 
         <Routes>
-          <Route path="/" element={<Navigate to="/app/financeiro/dashboard" replace />} />
-          <Route path="/dashboard" element={<FinancialDashboardNew />} />
-          <Route path="/contas-pagar" element={<ContasPagar />} />
-          <Route path="/contas-receber" element={<ContasReceber />} />
-          <Route path="/contas-bancarias" element={<BankAccountsTab />} />
-          <Route path="/lancamentos" element={<div className="p-8 text-center text-muted-foreground">Lançamentos financeiros em desenvolvimento</div>} />
-          <Route path="/categorias" element={<div className="p-8 text-center text-muted-foreground">Categorias em desenvolvimento</div>} />
-          <Route path="/conciliacao" element={<div className="p-8 text-center text-muted-foreground">Conciliação bancária em desenvolvimento</div>} />
-          <Route path="/relatorios" element={<FinancialReports />} />
-          <Route path="/configuracoes" element={<div className="p-8 text-center text-muted-foreground">Configurações financeiras em desenvolvimento</div>} />
+          <Route path="/" element={<Navigate to="dashboard" replace />} />
+          <Route path="dashboard" element={<FinancialDashboardNew />} />
+          <Route path="contas-pagar" element={<ContasPagar />} />
+          <Route path="contas-receber" element={<ContasReceber />} />
+          <Route path="contas-bancarias" element={<BankAccountsTab />} />
+          <Route path="lancamentos" element={<div className="p-8 text-center text-muted-foreground">Lançamentos financeiros em desenvolvimento</div>} />
+          <Route path="categorias" element={<div className="p-8 text-center text-muted-foreground">Categorias em desenvolvimento</div>} />
+          <Route path="conciliacao" element={<div className="p-8 text-center text-muted-foreground">Conciliação bancária em desenvolvimento</div>} />
+          <Route path="relatorios" element={<FinancialReports />} />
+          <Route path="configuracoes" element={<div className="p-8 text-center text-muted-foreground">Configurações financeiras em desenvolvimento</div>} />
         </Routes>
       </Tabs>
     </div>
