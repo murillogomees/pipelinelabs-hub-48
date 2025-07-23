@@ -54,6 +54,7 @@ const Analytics = React.lazy(() => import('@/pages/Analytics'));
 
 // LGPD pages
 const Privacidade = React.lazy(() => import('@/pages/Privacidade'));
+const UserDadosPessoais = React.lazy(() => import('@/pages/UserDadosPessoais'));
 
 // Terms pages  
 const TermosDeUso = React.lazy(() => import('@/pages/TermosDeUso'));
@@ -202,6 +203,9 @@ function RouteHandler() {
         <Route path="admin/nfe-config" element={<ProtectedRoute requireSuperAdmin><AdminNFeConfig /></ProtectedRoute>} />
         <Route path="admin/versions" element={<ProtectedRoute requireSuperAdmin><AdminVersions /></ProtectedRoute>} />
         <Route path="analytics" element={<Analytics />} />
+        
+        {/* User routes */}
+        <Route path="user/dados-pessoais" element={<UserDadosPessoais />} />
         
         <Route path="*" element={<NotFound />} />
       </Route>

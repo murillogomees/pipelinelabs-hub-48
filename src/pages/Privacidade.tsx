@@ -1,4 +1,5 @@
 import React from 'react';
+import { Link } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -211,9 +212,9 @@ export default function Privacidade() {
         {/* Ações */}
         <div className="flex justify-center gap-4 mt-8">
           <Button asChild>
-            <a href="/app/user/dados-pessoais">
+            <Link to="/app/user/dados-pessoais">
               Gerenciar Meus Dados
-            </a>
+            </Link>
           </Button>
           <Button variant="outline" asChild>
             <a href="mailto:privacidade@pipelinelabs.app">
