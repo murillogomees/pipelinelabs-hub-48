@@ -173,7 +173,7 @@ function RouteHandler() {
         <Route index element={<Navigate to="/app/dashboard" replace />} />
         <Route path="dashboard" element={<Dashboard />} />
         <Route path="vendas" element={<Vendas />} />
-        <Route path="produtos" element={<Produtos />} />
+        <Route path="produtos/*" element={<Produtos />} />
         <Route path="produtos/estoque" element={<Estoque />} />
         <Route path="compras" element={<Compras />} />
         <Route path="clientes" element={<Clientes />} />
