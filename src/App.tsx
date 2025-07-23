@@ -125,7 +125,8 @@ function RouteHandler() {
   }, [isAuthenticated]);
 
   return (
-    <Routes>
+    <AnalyticsProvider>
+      <Routes>
       {/* Landing page - accessible for everyone */}
       <Route 
         path="/" 
@@ -201,6 +202,7 @@ function RouteHandler() {
 
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
+    </AnalyticsProvider>
   );
 }
 
@@ -208,14 +210,12 @@ function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
-        <AnalyticsProvider>
-          <SentryErrorBoundary>
+        <SentryErrorBoundary>
           <ErrorBoundary>
             <AppRoutes />
             <Toaster />
           </ErrorBoundary>
         </SentryErrorBoundary>
-        </AnalyticsProvider>
       </AuthProvider>
     </QueryClientProvider>
   );
