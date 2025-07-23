@@ -2,30 +2,20 @@ import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { 
-  Check, Star, ArrowRight, Users, TrendingUp, Shield, Zap, 
-  FileText, Package, Truck, ClipboardCheck, Building, Globe, 
-  Lock, Database, Cloud, Rocket, BarChart3, Calculator,
-  CreditCard, ShoppingCart, Bell, Settings, Calendar,
-  PieChart, Monitor, Smartphone, Tablet, DollarSign
-} from 'lucide-react';
+import { Check, Star, ArrowRight, Users, TrendingUp, Shield, Zap, FileText, Package, Truck, ClipboardCheck, Building, Globe, Lock, Database, Cloud, Rocket, BarChart3, Calculator, CreditCard, ShoppingCart, Bell, Settings, Calendar, PieChart, Monitor, Smartphone, Tablet, DollarSign } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useLandingPageContent } from '@/hooks/useLandingPageContent';
 import { PipelineLabsLogo } from '@/components/Layout/PipelineLabsLogo';
 import { Footer } from '@/components/Layout/Footer';
 
 // Import the advanced mockup components
-import { 
-  MockupDashboard, 
-  MockupPDV, 
-  MockupNFe, 
-  MockupInventory, 
-  MockupFinancial 
-} from '@/components/ui/SystemMockups';
+import { MockupDashboard, MockupPDV, MockupNFe, MockupInventory, MockupFinancial } from '@/components/ui/SystemMockups';
 
 // Icon mapping helper
 const getIcon = (iconName: string) => {
-  const iconMap: { [key: string]: React.ReactNode } = {
+  const iconMap: {
+    [key: string]: React.ReactNode;
+  } = {
     'file-text': <FileText className="h-8 w-8 text-primary" />,
     'trending-up': <TrendingUp className="h-8 w-8 text-primary" />,
     'package': <Package className="h-8 w-8 text-primary" />,
@@ -50,26 +40,25 @@ const getIcon = (iconName: string) => {
     'calendar': <Calendar className="h-4 w-4 text-purple-600" />,
     'monitor': <Monitor className="h-6 w-6 text-primary" />,
     'smartphone': <Smartphone className="h-6 w-6 text-primary" />,
-    'tablet': <Tablet className="h-6 w-6 text-primary" />,
+    'tablet': <Tablet className="h-6 w-6 text-primary" />
   };
   return iconMap[iconName] || <Star className="h-8 w-8 text-primary" />;
 };
-
 export function LandingPage() {
   const navigate = useNavigate();
-  const { sections, isLoading, getSection } = useLandingPageContent();
-
+  const {
+    sections,
+    isLoading,
+    getSection
+  } = useLandingPageContent();
   if (isLoading) {
-    return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
+    return <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-primary mx-auto"></div>
           <p className="mt-4 text-muted-foreground">Carregando página...</p>
         </div>
-      </div>
-    );
+      </div>;
   }
-
   const heroSection = getSection('hero');
   const painSection = getSection('pain_section');
   const featuresSection = getSection('features');
@@ -79,9 +68,7 @@ export function LandingPage() {
   const howItWorksSection = getSection('how_it_works');
   const finalCtaSection = getSection('final_cta');
   const pricingSection = getSection('pricing');
-
-  return (
-    <div className="min-h-screen bg-background">
+  return <div className="min-h-screen bg-background">
       {/* Header */}
       <header className="border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
         <div className="container mx-auto px-4 py-4 flex items-center justify-between">
@@ -100,8 +87,7 @@ export function LandingPage() {
       </header>
 
       {/* Hero Section */}
-      {heroSection && (
-        <section className="py-20 px-4">
+      {heroSection && <section className="py-20 px-4">
           <div className="container mx-auto text-center">
             <Badge variant="secondary" className="mb-4 flex items-center gap-2 w-fit mx-auto">
               {getIcon('rocket')}
@@ -143,22 +129,22 @@ export function LandingPage() {
                   <div className="space-y-3">
                     <MockupDashboard className="transform hover:scale-105 transition-transform" />
                     <div className="text-center">
-                      <h4 className="font-medium text-gray-800">Dashboard Inteligente</h4>
-                      <p className="text-sm text-muted-foreground">Visão completa do seu negócio em tempo real</p>
+                      
+                      
                     </div>
                   </div>
                   <div className="space-y-3">
                     <MockupPDV className="transform hover:scale-105 transition-transform" />
                     <div className="text-center">
-                      <h4 className="font-medium text-gray-800">PDV Integrado</h4>
-                      <p className="text-sm text-muted-foreground">Vendas rápidas e sincronizadas automaticamente</p>
+                      
+                      
                     </div>
                   </div>
                   <div className="space-y-3">
                     <MockupNFe className="transform hover:scale-105 transition-transform" />
                     <div className="text-center">
-                      <h4 className="font-medium text-gray-800">Emissão Fiscal</h4>
-                      <p className="text-sm text-muted-foreground">NFe, NFCe e NFSe com certificado digital</p>
+                      
+                      
                     </div>
                   </div>
                 </div>
@@ -168,43 +154,37 @@ export function LandingPage() {
                   <div className="space-y-3">
                     <MockupInventory className="transform hover:scale-105 transition-transform" />
                     <div className="text-center">
-                      <h4 className="font-medium text-gray-800">Controle de Estoque</h4>
-                      <p className="text-sm text-muted-foreground">Gestão inteligente com alertas automáticos</p>
+                      
+                      
                     </div>
                   </div>
                   <div className="space-y-3">
                     <MockupFinancial className="transform hover:scale-105 transition-transform" />
                     <div className="text-center">
-                      <h4 className="font-medium text-gray-800">Financeiro Completo</h4>
-                      <p className="text-sm text-muted-foreground">DRE automático e análise de performance</p>
+                      
+                      
                     </div>
                   </div>
                 </div>
 
                 {/* Features destacadas */}
-                {heroSection.content_data?.mockup_features && (
-                  <div className="grid md:grid-cols-3 gap-4">
-                    {heroSection.content_data.mockup_features.map((feature: string, index: number) => (
-                      <div key={index} className="bg-background/50 rounded-lg p-4 border border-primary/10 flex items-center gap-3">
+                {heroSection.content_data?.mockup_features && <div className="grid md:grid-cols-3 gap-4">
+                    {heroSection.content_data.mockup_features.map((feature: string, index: number) => <div key={index} className="bg-background/50 rounded-lg p-4 border border-primary/10 flex items-center gap-3">
                         <div className="w-8 h-8 bg-primary/10 rounded-full flex items-center justify-center">
                           {index === 0 && getIcon('bar-chart')}
                           {index === 1 && getIcon('bell')}
                           {index === 2 && getIcon('pie-chart')}
                         </div>
                         <p className="font-medium text-sm">{feature}</p>
-                      </div>
-                    ))}
-                  </div>
-                )}
+                      </div>)}
+                  </div>}
               </div>
             </div>
           </div>
-        </section>
-      )}
+        </section>}
 
       {/* Pain Section - Personas */}
-      {painSection && (
-        <section className="py-20 px-4 bg-muted/50">
+      {painSection && <section className="py-20 px-4 bg-muted/50">
           <div className="container mx-auto">
             <div className="text-center mb-16">
               <h2 className="text-3xl md:text-4xl font-bold mb-4">
@@ -216,8 +196,7 @@ export function LandingPage() {
             </div>
 
             <div className="grid lg:grid-cols-2 xl:grid-cols-3 gap-8">
-              {painSection.content_data?.personas?.map((persona: any, index: number) => (
-                <Card key={index} className="overflow-hidden">
+              {painSection.content_data?.personas?.map((persona: any, index: number) => <Card key={index} className="overflow-hidden">
                   <CardHeader>
                     <CardTitle className="text-xl">{persona.name}</CardTitle>
                   </CardHeader>
@@ -233,16 +212,13 @@ export function LandingPage() {
                       </div>
                     </div>
                   </CardContent>
-                </Card>
-              ))}
+                </Card>)}
             </div>
           </div>
-        </section>
-      )}
+        </section>}
 
       {/* Features Section */}
-      {featuresSection && (
-        <section className="py-20 px-4">
+      {featuresSection && <section className="py-20 px-4">
           <div className="container mx-auto">
             <div className="text-center mb-16">
               <h2 className="text-3xl md:text-4xl font-bold mb-4">
@@ -254,36 +230,30 @@ export function LandingPage() {
             </div>
 
             <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8 mb-12">
-              {featuresSection.content_data?.features?.map((feature: any, index: number) => (
-                <Card key={index} className="text-center hover:shadow-lg transition-shadow">
+              {featuresSection.content_data?.features?.map((feature: any, index: number) => <Card key={index} className="text-center hover:shadow-lg transition-shadow">
                   <CardContent className="p-6">
                     <div className="mb-4 flex justify-center">
                       {getIcon(feature.icon)}
                     </div>
-                    <CardTitle className="mb-2">{feature.title}</CardTitle>
+                    
                     <CardDescription>{feature.description}</CardDescription>
                   </CardContent>
-                </Card>
-              ))}
+                </Card>)}
             </div>
 
             {/* Call to Action */}
-            {featuresSection.content_data?.cta_text && (
-              <div className="text-center bg-gradient-to-r from-primary/5 to-primary/10 rounded-2xl p-8 border border-primary/20">
+            {featuresSection.content_data?.cta_text && <div className="text-center bg-gradient-to-r from-primary/5 to-primary/10 rounded-2xl p-8 border border-primary/20">
                 <p className="text-lg mb-4">{featuresSection.content_data.cta_text}</p>
                 <Button size="lg" onClick={() => navigate('/auth')}>
                   {featuresSection.content_data.cta_button || 'Começar Agora'}
                   <ArrowRight className="ml-2 h-5 w-5" />
                 </Button>
-              </div>
-            )}
+              </div>}
           </div>
-        </section>
-      )}
+        </section>}
 
       {/* Mockups Section */}
-      {mockupsSection && (
-        <section className="py-20 px-4 bg-muted/50">
+      {mockupsSection && <section className="py-20 px-4 bg-muted/50">
           <div className="container mx-auto">
             <div className="text-center mb-16">
               <h2 className="text-3xl md:text-4xl font-bold mb-4">
@@ -295,12 +265,10 @@ export function LandingPage() {
             </div>
 
             <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8 max-w-6xl mx-auto">
-              {mockupsSection.content_data?.mockups?.map((mockup: any, index: number) => (
-                <Card key={index} className="overflow-hidden hover:shadow-lg transition-shadow">
+              {mockupsSection.content_data?.mockups?.map((mockup: any, index: number) => <Card key={index} className="overflow-hidden hover:shadow-lg transition-shadow">
                   <div className="bg-gradient-to-br from-primary/5 to-primary/10 p-6">
                     {/* Simulação da tela */}
-                    {index === 0 && (
-                      <div className="bg-white rounded border p-3 space-y-2">
+                    {index === 0 && <div className="bg-white rounded border p-3 space-y-2">
                         <div className="flex items-center gap-2 text-xs">
                           {getIcon('monitor')} <span>PDV Sistema</span>
                         </div>
@@ -308,19 +276,15 @@ export function LandingPage() {
                         <div className="bg-green-100 h-6 rounded flex items-center px-2 text-xs">
                           R$ 1.247,80 - Venda Finalizada
                         </div>
-                      </div>
-                    )}
-                    {index === 1 && (
-                      <div className="bg-white rounded border p-3 space-y-2">
+                      </div>}
+                    {index === 1 && <div className="bg-white rounded border p-3 space-y-2">
                         <div className="flex items-center gap-2 text-xs">
                           {getIcon('file-text')} <span>NFe #001234</span>
                         </div>
                         <div className="bg-blue-100 h-2 rounded"></div>
                         <div className="text-xs">Status: Emitida ✓</div>
-                      </div>
-                    )}
-                    {index === 2 && (
-                      <div className="bg-white rounded border p-3 space-y-2">
+                      </div>}
+                    {index === 2 && <div className="bg-white rounded border p-3 space-y-2">
                         <div className="flex items-center gap-2 text-xs">
                           {getIcon('pie-chart')} <span>Dashboard</span>
                         </div>
@@ -329,10 +293,8 @@ export function LandingPage() {
                           <div className="bg-blue-100 h-4 rounded"></div>
                         </div>
                         <div className="text-xs">Meta: 85% atingida</div>
-                      </div>
-                    )}
-                    {index === 3 && (
-                      <div className="bg-white rounded border p-3 space-y-2">
+                      </div>}
+                    {index === 3 && <div className="bg-white rounded border p-3 space-y-2">
                         <div className="flex items-center gap-2 text-xs">
                           {getIcon('package')} <span>Estoque</span>
                         </div>
@@ -342,10 +304,8 @@ export function LandingPage() {
                           <div className="bg-green-100 h-2 rounded"></div>
                         </div>
                         <div className="text-xs text-red-600">7 itens baixos</div>
-                      </div>
-                    )}
-                    {index === 4 && (
-                      <div className="bg-white rounded border p-3 space-y-2">
+                      </div>}
+                    {index === 4 && <div className="bg-white rounded border p-3 space-y-2">
                         <div className="flex items-center gap-2 text-xs">
                           {getIcon('clipboard-check')} <span>Ordem #OS-001</span>
                         </div>
@@ -359,8 +319,7 @@ export function LandingPage() {
                             <span>Em andamento</span>
                           </div>
                         </div>
-                      </div>
-                    )}
+                      </div>}
                   </div>
                   <CardContent className="p-4">
                     <h3 className="font-semibold mb-2 flex items-center gap-2">
@@ -369,16 +328,13 @@ export function LandingPage() {
                     </h3>
                     <p className="text-sm text-muted-foreground">{mockup.description}</p>
                   </CardContent>
-                </Card>
-              ))}
+                </Card>)}
             </div>
           </div>
-        </section>
-      )}
+        </section>}
 
       {/* Testimonials Section */}
-      {testimonialsSection && (
-        <section className="py-20 px-4">
+      {testimonialsSection && <section className="py-20 px-4">
           <div className="container mx-auto">
             <div className="text-center mb-16">
               <h2 className="text-3xl md:text-4xl font-bold mb-4">
@@ -390,8 +346,7 @@ export function LandingPage() {
             </div>
 
             <div className="grid md:grid-cols-3 gap-8 max-w-6xl mx-auto">
-              {testimonialsSection.content_data?.testimonials?.map((testimonial: any, index: number) => (
-                <Card key={index} className="text-center">
+              {testimonialsSection.content_data?.testimonials?.map((testimonial: any, index: number) => <Card key={index} className="text-center">
                   <CardContent className="p-6">
                     <div className="w-16 h-16 bg-gradient-to-br from-primary/20 to-primary/40 rounded-full mx-auto mb-4 flex items-center justify-center">
                       <span className="text-2xl font-bold text-primary">
@@ -406,16 +361,13 @@ export function LandingPage() {
                       <p className="text-sm text-muted-foreground">{testimonial.business}</p>
                     </div>
                   </CardContent>
-                </Card>
-              ))}
+                </Card>)}
             </div>
           </div>
-        </section>
-      )}
+        </section>}
 
       {/* Security Section */}
-      {securitySection && (
-        <section className="py-20 px-4 bg-muted/50">
+      {securitySection && <section className="py-20 px-4 bg-muted/50">
           <div className="container mx-auto">
             <div className="text-center mb-16">
               <h2 className="text-3xl md:text-4xl font-bold mb-4">
@@ -427,20 +379,16 @@ export function LandingPage() {
             </div>
 
             <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6 max-w-4xl mx-auto">
-              {securitySection.content_data?.security_items?.map((item: any, index: number) => (
-                <div key={index} className="flex items-center gap-3 bg-background/50 p-4 rounded-lg border">
+              {securitySection.content_data?.security_items?.map((item: any, index: number) => <div key={index} className="flex items-center gap-3 bg-background/50 p-4 rounded-lg border">
                   {getIcon(item.icon)}
                   <span className="text-sm font-medium">{item.title}</span>
-                </div>
-              ))}
+                </div>)}
             </div>
           </div>
-        </section>
-      )}
+        </section>}
 
       {/* How It Works Section */}
-      {howItWorksSection && (
-        <section className="py-20 px-4">
+      {howItWorksSection && <section className="py-20 px-4">
           <div className="container mx-auto">
             <div className="text-center mb-16">
               <h2 className="text-3xl md:text-4xl font-bold mb-4">
@@ -452,8 +400,7 @@ export function LandingPage() {
             </div>
 
             <div className="grid md:grid-cols-3 gap-8 max-w-4xl mx-auto">
-              {howItWorksSection.content_data?.steps?.map((step: any, index: number) => (
-                <Card key={index} className="text-center">
+              {howItWorksSection.content_data?.steps?.map((step: any, index: number) => <Card key={index} className="text-center">
                   <CardContent className="p-6">
                     <div className="w-16 h-16 bg-primary rounded-full mx-auto mb-4 flex items-center justify-center">
                       <span className="text-2xl font-bold text-primary-foreground">
@@ -463,16 +410,13 @@ export function LandingPage() {
                     <h3 className="text-xl font-semibold mb-2">{step.title}</h3>
                     <p className="text-muted-foreground">{step.description}</p>
                   </CardContent>
-                </Card>
-              ))}
+                </Card>)}
             </div>
           </div>
-        </section>
-      )}
+        </section>}
 
       {/* Pricing Section */}
-      {pricingSection && (
-        <section className="py-20 px-4 bg-muted/50">
+      {pricingSection && <section className="py-20 px-4 bg-muted/50">
           <div className="container mx-auto">
             <div className="text-center mb-16">
               <h2 className="text-3xl md:text-4xl font-bold mb-4">
@@ -484,15 +428,12 @@ export function LandingPage() {
             </div>
 
             <div className="grid md:grid-cols-3 gap-8 max-w-6xl mx-auto">
-              {pricingSection.content_data?.plans?.map((plan: any, index: number) => (
-                <Card key={index} className={`relative ${plan.highlighted ? 'border-primary scale-105' : ''}`}>
-                  {plan.highlighted && (
-                    <div className="absolute -top-4 left-1/2 transform -translate-x-1/2">
+              {pricingSection.content_data?.plans?.map((plan: any, index: number) => <Card key={index} className={`relative ${plan.highlighted ? 'border-primary scale-105' : ''}`}>
+                  {plan.highlighted && <div className="absolute -top-4 left-1/2 transform -translate-x-1/2">
                       <Badge className="bg-primary text-primary-foreground">
                         Mais Popular
                       </Badge>
-                    </div>
-                  )}
+                    </div>}
                   <CardHeader>
                     <CardTitle>{plan.name}</CardTitle>
                     <div className="text-3xl font-bold">
@@ -504,34 +445,24 @@ export function LandingPage() {
                   </CardHeader>
                   <CardContent>
                     <ul className="space-y-3 mb-6">
-                      {plan.features.map((feature: string, idx: number) => (
-                        <li key={idx} className="flex items-center">
+                      {plan.features.map((feature: string, idx: number) => <li key={idx} className="flex items-center">
                           <Check className="h-4 w-4 text-green-500 mr-2 flex-shrink-0" />
                           <span className="text-sm">{feature}</span>
-                        </li>
-                      ))}
+                        </li>)}
                     </ul>
-                    <Button 
-                      className="w-full"
-                      variant={plan.highlighted ? "default" : "outline"}
-                      onClick={() => navigate('/auth')}
-                    >
+                    <Button className="w-full" variant={plan.highlighted ? "default" : "outline"} onClick={() => navigate('/auth')}>
                       Começar Agora
                     </Button>
                   </CardContent>
-                </Card>
-              ))}
+                </Card>)}
             </div>
           </div>
-        </section>
-      )}
+        </section>}
 
       {/* Final CTA Section */}
-      {finalCtaSection && (
-        <section 
-          className="py-20 px-4 text-white"
-          style={{ backgroundColor: finalCtaSection.content_data?.background_color || '#0f172a' }}
-        >
+      {finalCtaSection && <section className="py-20 px-4 text-white" style={{
+      backgroundColor: finalCtaSection.content_data?.background_color || '#0f172a'
+    }}>
           <div className="container mx-auto text-center">
             <h2 className="text-3xl md:text-4xl font-bold mb-4">
               {finalCtaSection.title}
@@ -540,21 +471,14 @@ export function LandingPage() {
               {finalCtaSection.subtitle}
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <Button 
-                size="lg" 
-                variant="secondary"
-                onClick={() => navigate('/auth')}
-                className="text-lg px-8 py-6"
-              >
+              <Button size="lg" variant="secondary" onClick={() => navigate('/auth')} className="text-lg px-8 py-6">
                 {finalCtaSection.content_data?.primary_button || 'Começar Agora'}
                 <ArrowRight className="ml-2 h-5 w-5" />
               </Button>
             </div>
           </div>
-        </section>
-      )}
+        </section>}
 
       <Footer />
-    </div>
-  );
+    </div>;
 }
