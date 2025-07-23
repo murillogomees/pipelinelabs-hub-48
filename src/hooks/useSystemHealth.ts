@@ -32,13 +32,37 @@ export const useSystemHealth = () => {
     queryFn: async (): Promise<SystemHealthData | null> => {
       if (!user) return null;
 
-      const { data, error } = await supabase.functions.invoke('health-check');
+      try {
+        const { data, error } = await supabase.functions.invoke('health-check');
 
-      if (error) throw error;
-      return data || null;
+        // Handle both success and error responses from health-check
+        // The function returns 503 for 'down' status, but still provides data
+        if (data) {
+          return data;
+        }
+        
+        // If there's an error but it contains health data, use it
+        if (error && typeof error === 'object' && 'status' in error) {
+          return error as SystemHealthData;
+        }
+        
+        // Only throw if there's a real connection error
+        if (error) throw error;
+        return null;
+      } catch (fetchError) {
+        // Handle network errors or function unavailable
+        console.warn('Health check failed:', fetchError);
+        return {
+          status: 'down',
+          services: {},
+          timestamp: new Date().toISOString(),
+          uptime: '0 hours'
+        };
+      }
     },
     enabled: !!user,
     refetchInterval: 30000, // Refresh every 30 seconds
+    retry: 2, // Retry failed requests
   });
 };
 
