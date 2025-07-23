@@ -31,7 +31,6 @@ export function ProductCategoryForm({ data, onChange }: ProductCategoryFormProps
                 <SelectValue placeholder={isLoading ? "Carregando..." : "Selecione uma categoria"} />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">Sem categoria</SelectItem>
                 {categories?.map((category) => (
                   <SelectItem key={category.id} value={category.id}>
                     {category.name}
