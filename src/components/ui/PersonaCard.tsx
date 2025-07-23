@@ -11,22 +11,22 @@ interface PersonaCardProps {
 
 export function PersonaCard({ className = '' }: PersonaCardProps) {
   return (
-    <Card className={`overflow-hidden shadow-lg h-[600px] ${className}`}>
+    <Card className={`overflow-hidden shadow-lg h-auto min-h-[700px] ${className}`}>
       <CardContent className="p-0">
         {/* Foto da persona */}
         <div className="relative">
           <img 
             src={carlaPersona} 
             alt="Carla - Empreendedora de salgados artesanais" 
-            className="w-full h-40 object-cover"
+            className="w-full h-48 object-cover"
           />
           <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/60 to-transparent p-4">
-            <h3 className="text-white font-bold text-xl">Carla Santos</h3>
-            <p className="text-white/90 text-sm">Fábrica de Salgados Artesanais</p>
+            <h3 className="text-white font-bold text-2xl">Carla Santos</h3>
+            <p className="text-white/90 text-base">Fábrica de Salgados Artesanais</p>
           </div>
         </div>
 
-        <div className="p-6 space-y-4">
+        <div className="p-8 space-y-6">
           {/* Identificação - Minimalista */}
           <div className="flex items-center justify-between text-xs text-muted-foreground pb-2 border-b border-muted/30">
             <div className="flex items-center gap-3">
