@@ -112,24 +112,41 @@ export default function AdminStripe() {
         </div>
 
         <Tabs defaultValue="overview" className="space-y-6">
-          <TabsList>
-            <TabsTrigger value="overview" className="flex items-center gap-2">
-              <Activity className="h-4 w-4" />
-              Visão Geral
-            </TabsTrigger>
-            <TabsTrigger value="config" className="flex items-center gap-2">
-              <Settings className="h-4 w-4" />
-              Configuração
-            </TabsTrigger>
-            <TabsTrigger value="plans" className="flex items-center gap-2">
-              <Package className="h-4 w-4" />
-              Planos
-            </TabsTrigger>
-            <TabsTrigger value="logs" className="flex items-center gap-2">
-              <CreditCard className="h-4 w-4" />
-              Logs de Cobrança
-            </TabsTrigger>
-          </TabsList>
+          <div className="relative">
+            <TabsList className="w-full justify-start overflow-x-auto scrollbar-hide flex-nowrap gap-1 p-1 md:flex-wrap md:justify-center">
+              <TabsTrigger 
+                value="overview" 
+                className="flex items-center gap-2 whitespace-nowrap min-w-fit px-3 py-2 text-sm"
+              >
+                <Activity className="h-4 w-4" />
+                <span className="hidden sm:inline">Visão Geral</span>
+                <span className="sm:hidden">Visão</span>
+              </TabsTrigger>
+              <TabsTrigger 
+                value="config" 
+                className="flex items-center gap-2 whitespace-nowrap min-w-fit px-3 py-2 text-sm"
+              >
+                <Settings className="h-4 w-4" />
+                <span className="hidden sm:inline">Configuração</span>
+                <span className="sm:hidden">Config</span>
+              </TabsTrigger>
+              <TabsTrigger 
+                value="plans" 
+                className="flex items-center gap-2 whitespace-nowrap min-w-fit px-3 py-2 text-sm"
+              >
+                <Package className="h-4 w-4" />
+                Planos
+              </TabsTrigger>
+              <TabsTrigger 
+                value="logs" 
+                className="flex items-center gap-2 whitespace-nowrap min-w-fit px-3 py-2 text-sm"
+              >
+                <CreditCard className="h-4 w-4" />
+                <span className="hidden sm:inline">Logs de Cobrança</span>
+                <span className="sm:hidden">Logs</span>
+              </TabsTrigger>
+            </TabsList>
+          </div>
 
           <TabsContent value="overview">
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
