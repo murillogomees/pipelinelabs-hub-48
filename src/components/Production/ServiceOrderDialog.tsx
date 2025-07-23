@@ -47,13 +47,13 @@ export function ServiceOrderDialog({ open, onOpenChange, order }: ServiceOrderDi
         order_number: order.order_number,
         customer_id: order.customer_id || '',
         description: order.description,
-        service_type: order.service_type || '',
-        priority: order.priority || 'medium',
+        service_type: '', // Default value - field doesn't exist in database
+        priority: 'medium', // Default value - field doesn't exist in database  
         status: order.status,
         start_date: order.start_date || '',
         completion_date: order.completion_date || '',
         estimated_hours: order.estimated_hours?.toString() || '',
-        actual_hours: order.actual_hours?.toString() || '',
+        actual_hours: '', // Default value - field doesn't exist in database
         price: order.price?.toString() || '',
         cost: order.cost?.toString() || '',
         notes: order.notes || '',

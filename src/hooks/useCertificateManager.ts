@@ -37,13 +37,13 @@ export function useCertificateManager() {
       // Encrypt certificate and password
       const encryptionResult = await CertificateEncryption.encryptCertificate(arrayBuffer, password);
       
-      // Use only existing database fields
+      // Use correct database field names  
       const updateData = {
-        certificado_base64: encryptionResult.encryptedCertificate,
-        certificado_senha: encryptionResult.encryptedPassword, // This will store encrypted password
-        certificado_nome: file.name,
-        certificado_validade: metadata.expirationDate.toISOString().split('T')[0], // Date only
-        certificado_status: 'active'
+        certificate_data: encryptionResult.encryptedCertificate,
+        certificate_password: encryptionResult.encryptedPassword,
+        certificate_cn: file.name,
+        certificate_expires_at: metadata.expirationDate.toISOString(),
+        certificate_fingerprint: fingerprint
       };
       
       const success = await updateSettings(updateData);
@@ -120,9 +120,9 @@ export function useCertificateManager() {
   };
 
   const getCertificateStatus = (): 'none' | 'valid' | 'expired' | 'expiring' => {
-    if (!settings?.certificado_validade) return 'none';
+    if (!settings?.certificate_expires_at) return 'none';
     
-    const expirationDate = new Date(settings.certificado_validade);
+    const expirationDate = new Date(settings.certificate_expires_at);
     const now = new Date();
     const daysUntilExpiration = Math.ceil((expirationDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
     
@@ -132,9 +132,9 @@ export function useCertificateManager() {
   };
 
   const getDaysUntilExpiration = (): number | null => {
-    if (!settings?.certificado_validade) return null;
+    if (!settings?.certificate_expires_at) return null;
     
-    const expirationDate = new Date(settings.certificado_validade);
+    const expirationDate = new Date(settings.certificate_expires_at);
     const now = new Date();
     return Math.ceil((expirationDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
   };
