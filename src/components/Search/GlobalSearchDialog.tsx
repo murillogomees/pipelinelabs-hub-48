@@ -70,7 +70,8 @@ export function GlobalSearchDialog({ open, onOpenChange }: GlobalSearchDialogPro
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl p-0 overflow-hidden">
+      <DialogContent className="max-w-4xl w-[90vw] max-h-[85vh] p-0 overflow-hidden">
+        <div className="flex flex-col h-full min-h-[60vh]">
         <div className="border-b">
           <div className="flex items-center px-4 py-3">
             <Search className="w-4 h-4 text-muted-foreground mr-3" />
@@ -89,7 +90,7 @@ export function GlobalSearchDialog({ open, onOpenChange }: GlobalSearchDialogPro
           </div>
         </div>
 
-        <div className="max-h-[400px] overflow-y-auto">
+        <div className="flex-1 overflow-y-auto min-h-0">
           {query.length < 2 && (
             <div className="p-6 text-center">
               <Search className="w-8 h-8 text-muted-foreground mx-auto mb-3" />
@@ -182,14 +183,15 @@ export function GlobalSearchDialog({ open, onOpenChange }: GlobalSearchDialogPro
             </div>
           )}
         </div>
-
+        
         {results.length > 0 && (
-          <div className="border-t px-4 py-2 bg-muted/30">
+          <div className="border-t px-4 py-2 bg-muted/30 flex-shrink-0">
             <p className="text-xs text-muted-foreground text-center">
               Use ↑↓ para navegar • Enter para selecionar • ESC para fechar
             </p>
           </div>
         )}
+        </div>
       </DialogContent>
     </Dialog>
   );
