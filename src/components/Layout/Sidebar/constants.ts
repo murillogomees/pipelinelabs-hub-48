@@ -137,7 +137,8 @@ export const menuItems = [
       { title: 'Notificações', path: '/app/admin/notificacoes' },
       { title: 'Backup', path: '/app/admin/backup' },
       { title: 'Cache', path: '/app/admin/cache' },
-      { title: 'Integração ERP', path: '/app/admin/integracao-erp' },
+      { title: 'Compressão', path: '/app/admin/compressao' },
+      { title: 'Monitoramento', path: '/app/admin/monitoramento' },
       { title: 'Logs de Auditoria', path: '/app/admin/audit-logs' },
       { title: 'Landing Page', path: '/app/admin/landing-page' }
     ]
