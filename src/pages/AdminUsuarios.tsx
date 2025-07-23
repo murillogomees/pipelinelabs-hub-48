@@ -153,20 +153,6 @@ export default function AdminUsuarios() {
     return variants[userType];
   };
 
-  if (!isSuperAdmin) {
-    return (
-      <MainLayout>
-        <div className="flex items-center justify-center h-full">
-          <div className="text-center">
-            <Settings className="mx-auto h-12 w-12 text-muted-foreground mb-4" />
-            <h3 className="text-lg font-semibold text-foreground">Acesso Negado</h3>
-            <p className="text-muted-foreground">Apenas super administradores podem acessar esta funcionalidade.</p>
-          </div>
-        </div>
-      </MainLayout>
-    );
-  }
-
   return (
     <MainLayout>
       <SuperAdminGuard>
