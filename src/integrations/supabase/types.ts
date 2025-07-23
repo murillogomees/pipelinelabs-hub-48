@@ -3597,21 +3597,24 @@ export type Database = {
       }
       user_roles: {
         Row: {
-          created_at: string | null
+          created_at: string
           id: number
           role: string
+          updated_at: string
           user_id: string
         }
         Insert: {
-          created_at?: string | null
+          created_at?: string
           id?: never
           role: string
+          updated_at?: string
           user_id: string
         }
         Update: {
-          created_at?: string | null
+          created_at?: string
           id?: never
           role?: string
+          updated_at?: string
           user_id?: string
         }
         Relationships: []
@@ -3654,9 +3657,39 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      potential_duplicate_policies: {
+        Row: {
+          cmd: string | null
+          policy_count: number | null
+          policy_names: unknown[] | null
+          schemaname: unknown | null
+          status: string | null
+          tablename: unknown | null
+        }
+        Relationships: []
+      }
+      unused_indexes: {
+        Row: {
+          idx_scan: number | null
+          idx_tup_fetch: number | null
+          idx_tup_read: number | null
+          indexname: unknown | null
+          schemaname: unknown | null
+          tablename: unknown | null
+        }
+        Relationships: []
+      }
     }
     Functions: {
+      analyze_database_performance: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          category: string
+          item: string
+          status: string
+          recommendation: string
+        }[]
+      }
       can_access_company_data: {
         Args: { company_uuid: string }
         Returns: boolean
@@ -3796,7 +3829,7 @@ export type Database = {
         Returns: string
       }
       generate_proposal_number: {
-        Args: { company_uuid: string }
+        Args: Record<PropertyKey, never> | { company_uuid: string }
         Returns: string
       }
       generate_purchase_order_number: {
@@ -3869,7 +3902,7 @@ export type Database = {
       }
       get_default_company_id: {
         Args: Record<PropertyKey, never>
-        Returns: string
+        Returns: number
       }
       get_system_health: {
         Args: Record<PropertyKey, never>
