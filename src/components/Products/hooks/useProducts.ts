@@ -136,6 +136,56 @@ export function useDeleteProduct() {
   });
 }
 
+export function useDuplicateProduct() {
+  const queryClient = useQueryClient();
+  const { toast } = useToast();
+
+  return useMutation({
+    mutationFn: async (productId: string) => {
+      // Buscar o produto original
+      const { data: originalProduct, error: fetchError } = await supabase
+        .from('products')
+        .select('*')
+        .eq('id', productId)
+        .single();
+      
+      if (fetchError) throw fetchError;
+
+      // Criar novo produto com dados duplicados
+      const { company_id, id, created_at, updated_at, ...productData } = originalProduct;
+      
+      const duplicatedProduct = {
+        ...productData,
+        name: `${productData.name} (Cópia)`,
+        code: `${productData.code}_COPY_${Date.now()}`,
+      };
+
+      const { data, error } = await supabase
+        .from('products')
+        .insert(duplicatedProduct as TablesInsert<'products'>)
+        .select()
+        .single();
+      
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: ['products'] });
+      toast({
+        title: 'Produto duplicado',
+        description: `O produto "${data.name}" foi criado com sucesso.`,
+      });
+    },
+    onError: (error: any) => {
+      toast({
+        title: 'Erro ao duplicar produto',
+        description: error.message,
+        variant: 'destructive',
+      });
+    },
+  });
+}
+
 export function useProductCategories() {
   return useQuery({
     queryKey: ['product-categories'],
