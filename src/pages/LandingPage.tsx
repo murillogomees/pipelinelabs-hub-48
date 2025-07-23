@@ -5,7 +5,9 @@ import { Badge } from '@/components/ui/badge';
 import { 
   Check, Star, ArrowRight, Users, TrendingUp, Shield, Zap, 
   FileText, Package, Truck, ClipboardCheck, Building, Globe, 
-  Lock, Database, Cloud, Rocket 
+  Lock, Database, Cloud, Rocket, BarChart3, Calculator,
+  CreditCard, ShoppingCart, Bell, Settings, Calendar,
+  PieChart, Monitor, Smartphone, Tablet, DollarSign
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useLandingPageContent } from '@/hooks/useLandingPageContent';
@@ -24,13 +26,112 @@ const getIcon = (iconName: string) => {
     'globe': <Globe className="h-8 w-8 text-primary" />,
     'users': <Users className="h-8 w-8 text-primary" />,
     'shield': <Shield className="h-8 w-8 text-primary" />,
+    'bar-chart': <BarChart3 className="h-8 w-8 text-primary" />,
+    'calculator': <Calculator className="h-8 w-8 text-primary" />,
+    'credit-card': <CreditCard className="h-8 w-8 text-primary" />,
+    'shopping-cart': <ShoppingCart className="h-8 w-8 text-primary" />,
+    'pie-chart': <PieChart className="h-8 w-8 text-primary" />,
+    'dollar-sign': <DollarSign className="h-8 w-8 text-primary" />,
     'lock': <Lock className="h-4 w-4 text-green-600" />,
     'database': <Database className="h-4 w-4 text-green-600" />,
     'cloud': <Cloud className="h-4 w-4 text-green-600" />,
     'rocket': <Rocket className="h-5 w-5" />,
+    'bell': <Bell className="h-4 w-4 text-blue-600" />,
+    'settings': <Settings className="h-4 w-4 text-gray-600" />,
+    'calendar': <Calendar className="h-4 w-4 text-purple-600" />,
+    'monitor': <Monitor className="h-6 w-6 text-primary" />,
+    'smartphone': <Smartphone className="h-6 w-6 text-primary" />,
+    'tablet': <Tablet className="h-6 w-6 text-primary" />,
   };
   return iconMap[iconName] || <Star className="h-8 w-8 text-primary" />;
 };
+
+// Mockup components para simular telas do sistema
+const MockupDashboard = () => (
+  <div className="bg-white border rounded-lg p-4 shadow-sm">
+    <div className="flex items-center justify-between mb-4">
+      <h3 className="font-bold text-gray-800">Dashboard Principal</h3>
+      <div className="flex gap-2">
+        {getIcon('bell')}
+        {getIcon('settings')}
+      </div>
+    </div>
+    <div className="grid grid-cols-3 gap-4 mb-4">
+      <div className="bg-green-50 p-3 rounded border border-green-200">
+        <div className="flex items-center gap-2">
+          {getIcon('dollar-sign')}
+          <span className="text-sm font-medium">Vendas Hoje</span>
+        </div>
+        <p className="text-2xl font-bold text-green-700">R$ 2.847</p>
+      </div>
+      <div className="bg-blue-50 p-3 rounded border border-blue-200">
+        <div className="flex items-center gap-2">
+          {getIcon('shopping-cart')}
+          <span className="text-sm font-medium">Pedidos</span>
+        </div>
+        <p className="text-2xl font-bold text-blue-700">23</p>
+      </div>
+      <div className="bg-orange-50 p-3 rounded border border-orange-200">
+        <div className="flex items-center gap-2">
+          {getIcon('package')}
+          <span className="text-sm font-medium">Estoque Baixo</span>
+        </div>
+        <p className="text-2xl font-bold text-orange-700">7</p>
+      </div>
+    </div>
+    <div className="bg-gray-50 h-24 rounded border flex items-center justify-center">
+      <span className="text-gray-500 text-sm">📊 Gráfico de Vendas</span>
+    </div>
+  </div>
+);
+
+const MockupPDV = () => (
+  <div className="bg-white border rounded-lg p-4 shadow-sm">
+    <div className="flex items-center justify-between mb-4">
+      <h3 className="font-bold text-gray-800">PDV - Ponto de Venda</h3>
+      <span className="bg-green-100 text-green-800 px-2 py-1 rounded text-xs">Online</span>
+    </div>
+    <div className="space-y-2 mb-4">
+      <div className="flex justify-between items-center bg-gray-50 p-2 rounded">
+        <span className="text-sm">Camiseta Polo - P</span>
+        <span className="font-medium">R$ 89,90</span>
+      </div>
+      <div className="flex justify-between items-center bg-gray-50 p-2 rounded">
+        <span className="text-sm">Calça Jeans - M</span>
+        <span className="font-medium">R$ 159,90</span>
+      </div>
+    </div>
+    <div className="border-t pt-2">
+      <div className="flex justify-between font-bold">
+        <span>Total:</span>
+        <span className="text-green-600">R$ 249,80</span>
+      </div>
+    </div>
+  </div>
+);
+
+const MockupNFe = () => (
+  <div className="bg-white border rounded-lg p-4 shadow-sm">
+    <div className="flex items-center justify-between mb-4">
+      <h3 className="font-bold text-gray-800">Emissão de NFe</h3>
+      <span className="bg-blue-100 text-blue-800 px-2 py-1 rounded text-xs">Pronto</span>
+    </div>
+    <div className="space-y-3">
+      <div>
+        <label className="text-xs text-gray-600">Cliente</label>
+        <div className="bg-gray-50 p-2 rounded text-sm">João Silva - 123.456.789-00</div>
+      </div>
+      <div>
+        <label className="text-xs text-gray-600">Produtos</label>
+        <div className="bg-gray-50 p-2 rounded text-sm">2 itens selecionados</div>
+      </div>
+      <div className="flex gap-2">
+        <button className="bg-primary text-white px-3 py-1 rounded text-sm">Emitir NFe</button>
+        <button className="border px-3 py-1 rounded text-sm">Preview</button>
+      </div>
+    </div>
+  </div>
+);
 
 // Mockup images
 import dashboardMockup from '@/assets/dashboard-mockup.jpg';
@@ -224,22 +325,42 @@ export function LandingPage() {
               </Button>
             </div>
             
-            {/* Mockup Features */}
+            {/* Mockup Features com telas simuladas */}
             {heroSection.content_data?.mockup_features && (
-              <div className="max-w-4xl mx-auto">
+              <div className="max-w-6xl mx-auto">
                 <div className="bg-gradient-to-br from-primary/5 to-primary/10 rounded-2xl p-8 border border-primary/20">
                   <div className="text-center mb-6">
-                    <h3 className="text-lg font-semibold mb-4">Mockup real de dashboard com:</h3>
+                    <h3 className="text-lg font-semibold mb-4">Veja o sistema em ação:</h3>
+                    
+                    {/* Grid de mockups */}
+                    <div className="grid md:grid-cols-3 gap-6 mb-6">
+                      <div className="space-y-2">
+                        <MockupDashboard />
+                        <p className="text-sm text-muted-foreground">Dashboard completo</p>
+                      </div>
+                      <div className="space-y-2">
+                        <MockupPDV />
+                        <p className="text-sm text-muted-foreground">PDV integrado</p>
+                      </div>
+                      <div className="space-y-2">
+                        <MockupNFe />
+                        <p className="text-sm text-muted-foreground">Emissão de NFe</p>
+                      </div>
+                    </div>
+
+                    {/* Features destacadas */}
                     <div className="grid md:grid-cols-3 gap-4">
                       {heroSection.content_data.mockup_features.map((feature: string, index: number) => (
-                        <div key={index} className="bg-background/50 rounded-lg p-4 border border-primary/10">
+                        <div key={index} className="bg-background/50 rounded-lg p-4 border border-primary/10 flex items-center gap-3">
+                          <div className="w-8 h-8 bg-primary/10 rounded-full flex items-center justify-center">
+                            {index === 0 && getIcon('bar-chart')}
+                            {index === 1 && getIcon('bell')}
+                            {index === 2 && getIcon('pie-chart')}
+                          </div>
                           <p className="font-medium text-sm">{feature}</p>
                         </div>
                       ))}
                     </div>
-                  </div>
-                  <div className="bg-muted/50 rounded-lg h-64 flex items-center justify-center">
-                    <p className="text-muted-foreground">Dashboard Mockup Placeholder</p>
                   </div>
                 </div>
               </div>
@@ -340,14 +461,79 @@ export function LandingPage() {
               </p>
             </div>
 
-            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8 max-w-6xl mx-auto">
               {mockupsSection.content_data?.mockups?.map((mockup: any, index: number) => (
-                <Card key={index} className="overflow-hidden">
-                  <div className="bg-gradient-to-br from-primary/5 to-primary/10 h-48 flex items-center justify-center">
-                    <p className="text-muted-foreground">{mockup.title}</p>
+                <Card key={index} className="overflow-hidden hover:shadow-lg transition-shadow">
+                  <div className="bg-gradient-to-br from-primary/5 to-primary/10 p-6">
+                    {/* Simulação da tela */}
+                    {index === 0 && (
+                      <div className="bg-white rounded border p-3 space-y-2">
+                        <div className="flex items-center gap-2 text-xs">
+                          {getIcon('monitor')} <span>PDV Sistema</span>
+                        </div>
+                        <div className="bg-gray-100 h-2 rounded"></div>
+                        <div className="bg-green-100 h-6 rounded flex items-center px-2 text-xs">
+                          R$ 1.247,80 - Venda Finalizada
+                        </div>
+                      </div>
+                    )}
+                    {index === 1 && (
+                      <div className="bg-white rounded border p-3 space-y-2">
+                        <div className="flex items-center gap-2 text-xs">
+                          {getIcon('file-text')} <span>NFe #001234</span>
+                        </div>
+                        <div className="bg-blue-100 h-2 rounded"></div>
+                        <div className="text-xs">Status: Emitida ✓</div>
+                      </div>
+                    )}
+                    {index === 2 && (
+                      <div className="bg-white rounded border p-3 space-y-2">
+                        <div className="flex items-center gap-2 text-xs">
+                          {getIcon('pie-chart')} <span>Dashboard</span>
+                        </div>
+                        <div className="grid grid-cols-2 gap-1">
+                          <div className="bg-green-100 h-4 rounded"></div>
+                          <div className="bg-blue-100 h-4 rounded"></div>
+                        </div>
+                        <div className="text-xs">Meta: 85% atingida</div>
+                      </div>
+                    )}
+                    {index === 3 && (
+                      <div className="bg-white rounded border p-3 space-y-2">
+                        <div className="flex items-center gap-2 text-xs">
+                          {getIcon('package')} <span>Estoque</span>
+                        </div>
+                        <div className="space-y-1">
+                          <div className="bg-red-100 h-2 rounded"></div>
+                          <div className="bg-yellow-100 h-2 rounded"></div>
+                          <div className="bg-green-100 h-2 rounded"></div>
+                        </div>
+                        <div className="text-xs text-red-600">7 itens baixos</div>
+                      </div>
+                    )}
+                    {index === 4 && (
+                      <div className="bg-white rounded border p-3 space-y-2">
+                        <div className="flex items-center gap-2 text-xs">
+                          {getIcon('clipboard-check')} <span>Ordem #OS-001</span>
+                        </div>
+                        <div className="space-y-1">
+                          <div className="flex items-center gap-2 text-xs">
+                            <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                            <span>Iniciado</span>
+                          </div>
+                          <div className="flex items-center gap-2 text-xs">
+                            <div className="w-2 h-2 bg-yellow-500 rounded-full"></div>
+                            <span>Em andamento</span>
+                          </div>
+                        </div>
+                      </div>
+                    )}
                   </div>
                   <CardContent className="p-4">
-                    <h3 className="font-semibold mb-2">{mockup.title}</h3>
+                    <h3 className="font-semibold mb-2 flex items-center gap-2">
+                      {getIcon('monitor')}
+                      {mockup.title}
+                    </h3>
                     <p className="text-sm text-muted-foreground">{mockup.description}</p>
                   </CardContent>
                 </Card>
