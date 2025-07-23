@@ -11,7 +11,7 @@ export const useIntegrations = () => {
     queryKey: ['admin-integrations'],
     queryFn: async () => {
       const { data, error } = await supabase
-        .from('integrations_available')
+        .from('marketplace_integrations')
         .select('*')
         .order('created_at', { ascending: false });
       
@@ -23,15 +23,18 @@ export const useIntegrations = () => {
   const createIntegration = useMutation({
     mutationFn: async (formData: IntegrationFormData) => {
       const { data, error } = await supabase
-        .from('integrations_available')
+        .from('marketplace_integrations')
         .insert({
-          name: formData.name,
-          type: formData.type,
-          description: formData.description || null,
-          logo_url: formData.logo_url || null,
-          config_schema: formData.config_fields,
-          available_for_plans: formData.available_for_plans,
-          visible_to_companies: formData.visible_to_companies
+          marketplace: formData.name,
+          auth_type: formData.type || 'apikey',
+          credentials: {
+            description: formData.description || null,
+            logo_url: formData.logo_url || null,
+            config_fields: formData.config_fields,
+            available_for_plans: formData.available_for_plans,
+            visible_to_companies: formData.visible_to_companies
+          },
+          company_id: (await supabase.auth.getUser()).data.user?.user_metadata?.company_id
         })
         .select()
         .single();
@@ -58,15 +61,17 @@ export const useIntegrations = () => {
   const updateIntegration = useMutation({
     mutationFn: async ({ id, formData }: { id: string, formData: IntegrationFormData }) => {
       const { data, error } = await supabase
-        .from('integrations_available')
+        .from('marketplace_integrations')
         .update({
-          name: formData.name,
-          type: formData.type,
-          description: formData.description || null,
-          logo_url: formData.logo_url || null,
-          config_schema: formData.config_fields,
-          available_for_plans: formData.available_for_plans,
-          visible_to_companies: formData.visible_to_companies
+          marketplace: formData.name,
+          auth_type: formData.type || 'apikey',
+          credentials: {
+            description: formData.description || null,
+            logo_url: formData.logo_url || null,
+            config_fields: formData.config_fields,
+            available_for_plans: formData.available_for_plans,
+            visible_to_companies: formData.visible_to_companies
+          }
         })
         .eq('id', id)
         .select()
@@ -94,7 +99,7 @@ export const useIntegrations = () => {
   const deleteIntegration = useMutation({
     mutationFn: async (id: string) => {
       const { error } = await supabase
-        .from('integrations_available')
+        .from('marketplace_integrations')
         .delete()
         .eq('id', id);
       

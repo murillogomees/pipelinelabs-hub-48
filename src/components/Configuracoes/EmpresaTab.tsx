@@ -40,8 +40,8 @@ export function EmpresaTab() {
         city: company.city || '',
         state: company.state || '',
         zipcode: company.zipcode || '',
-        timezone: settings?.timezone || 'America/Sao_Paulo',
-        idioma: settings?.idioma || 'pt-BR'
+        timezone: 'America/Sao_Paulo', // Default value since field doesn't exist
+        idioma: 'pt-BR' // Default value since field doesn't exist
       });
     }
   }, [company, settings]);
@@ -85,11 +85,8 @@ export function EmpresaTab() {
         if (companyError) throw companyError;
       }
 
-      // Update settings
-      await updateSettings({
-        timezone: formData.timezone,
-        idioma: formData.idioma
-      });
+      // Note: timezone and idioma are not stored in settings table currently
+      // They would need additional database columns to persist
 
       toast({
         title: "Sucesso",

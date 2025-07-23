@@ -82,7 +82,7 @@ export function useCertificateManager() {
   };
 
   const validateCertificate = async () => {
-    if (!settings?.certificado_base64 || !settings?.certificado_senha) {
+    if (!settings?.certificate_data || !settings?.certificate_password) {
       toast({
         title: 'Nenhum certificado encontrado',
         description: 'Faça upload de um certificado primeiro.',
@@ -142,17 +142,18 @@ export function useCertificateManager() {
   const removeCertificate = async () => {
     try {
       const success = await updateSettings({
-        certificado_base64: null,
-        certificado_senha: null,
-        certificado_nome: null,
-        certificado_validade: null,
-        certificado_status: 'inactive'
+        certificate_data: null,
+        certificate_password: null,
+        certificate_password_iv: null,
+        certificate_cn: null,
+        certificate_expires_at: null,
+        certificate_fingerprint: null
       });
       
       if (success) {
         // Create audit log
         await createAuditLog('certificate_removal', {
-          previousCertificate: settings?.certificado_nome || 'unknown'
+          previousCertificate: settings?.certificate_cn || 'unknown'
         });
         
         toast({

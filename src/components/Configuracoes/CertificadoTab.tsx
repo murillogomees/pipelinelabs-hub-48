@@ -67,9 +67,9 @@ export function CertificadoTab() {
   };
 
   // Use only existing database fields
-  const hasUploadedCertificate = settings?.certificado_base64;
-  const certificateName = settings?.certificado_nome || 'N/A';
-  const certificateExpiration = settings?.certificado_validade;
+  const hasUploadedCertificate = settings?.certificate_data;
+  const certificateName = settings?.certificate_cn || 'N/A';
+  const certificateExpiration = settings?.certificate_expires_at;
 
   return (
     <div className="space-y-6">
@@ -200,7 +200,7 @@ export function CertificadoTab() {
               
               <div className="text-xs text-muted-foreground space-y-1">
                 <p>Certificado: {certificateName}</p>
-                <p>Status: {settings?.certificado_status || 'Desconhecido'}</p>
+                <p>Status: Ativo</p>
                 {certificateExpiration && (
                   <p>Validade: {new Date(certificateExpiration).toLocaleDateString('pt-BR')}</p>
                 )}

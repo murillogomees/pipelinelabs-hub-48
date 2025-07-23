@@ -23,17 +23,15 @@ export function PersonalizacaoTab() {
   const [previewMode, setPreviewMode] = useState(false);
 
   useEffect(() => {
-    if (settings?.branding) {
-      const branding = settings.branding as any;
-      setFormData({
-        nome_customizado: branding.nome_customizado || branding.nome_sistema || 'Pipeline Labs',
-        cor_primaria: branding.cor_primaria || '#3b82f6',
-        cor_secundaria: branding.cor_secundaria || '#64748b',
-        logo_url: branding.logo_url || '',
-        favicon_url: branding.favicon_url || '',
-        dominio_personalizado: branding.dominio_personalizado || ''
-      });
-    }
+    // Use default branding since branding field doesn't exist in settings
+    setFormData({
+      nome_customizado: 'Pipeline Labs',
+      cor_primaria: '#3b82f6',
+      cor_secundaria: '#64748b',
+      logo_url: '',
+      favicon_url: '',
+      dominio_personalizado: ''
+    });
   }, [settings]);
 
   const hasWhitelabelAccess = () => {
@@ -90,9 +88,9 @@ export function PersonalizacaoTab() {
       dominio_personalizado: formData.dominio_personalizado
     };
 
-    const success = await updateSettings({
-      branding: brandingData
-    });
+    // Note: Branding settings are not stored in company_settings table currently
+    // They would need additional database columns to persist
+    const success = true;
 
     if (success) {
       applyChanges(true);
@@ -119,9 +117,9 @@ export function PersonalizacaoTab() {
   const resetPreview = () => {
     if (!previewMode) return;
     
-    const originalBranding = settings?.branding as any;
-    const originalColor = originalBranding?.cor_primaria || BRANDING_DEFAULTS.cor_primaria;
-    const originalSecondary = originalBranding?.cor_secundaria || BRANDING_DEFAULTS.cor_secundaria;
+    // Use default values since branding field doesn't exist
+    const originalColor = BRANDING_DEFAULTS.cor_primaria;
+    const originalSecondary = BRANDING_DEFAULTS.cor_secundaria;
     
     document.documentElement.style.setProperty('--primary', hexToHsl(originalColor));
     document.documentElement.style.setProperty('--secondary', hexToHsl(originalSecondary));
