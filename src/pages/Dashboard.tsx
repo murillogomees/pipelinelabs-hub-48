@@ -10,6 +10,9 @@ import { useAuth } from '@/components/Auth/AuthProvider';
 import { useAnalyticsTracker } from '@/hooks/useAnalyticsTracker';
 import { supabase } from '@/integrations/supabase/client';
 import { Responsive, WidthProvider } from 'react-grid-layout';
+import { useResponsiveGrid } from '@/hooks/use-responsive-grid';
+import { ResponsiveWidgetContainer } from '@/components/Dashboard/ResponsiveWidgetContainer';
+import { MobileWidgetList } from '@/components/Dashboard/MobileWidgetList';
 
 const ResponsiveGridLayout = WidthProvider(Responsive);
 
@@ -21,6 +24,9 @@ export function Dashboard() {
   const [showWidgetSelector, setShowWidgetSelector] = useState(false);
   const [widgets, setWidgets] = useState<Widget[]>([]);
   const [layouts, setLayouts] = useState({});
+  
+  // Responsive grid configuration
+  const { gridConfig, isMobile, isTablet, currentBreakpoint } = useResponsiveGrid();
 
   // Initialize widgets from saved config
   useEffect(() => {
@@ -166,56 +172,86 @@ export function Dashboard() {
     <div className="space-y-6">
       <AnalyticsTracker />
       {/* Header */}
-      <div className="flex justify-between items-center">
-        <div>
-          <h1 className="text-3xl font-bold text-foreground">Dashboard</h1>
-          <p className="text-muted-foreground">Personalize sua visão do negócio</p>
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+        <div className="min-w-0 flex-1">
+          <h1 className="text-2xl sm:text-3xl font-bold text-foreground truncate">
+            Dashboard
+          </h1>
+          <p className="text-sm sm:text-base text-muted-foreground">
+            Personalize sua visão do negócio
+          </p>
         </div>
         
-        <div className="flex space-x-2">
+        <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
           <Button
             variant="outline"
             onClick={() => setShowWidgetSelector(true)}
-            className="flex items-center space-x-2"
+            className="flex items-center justify-center space-x-2 w-full sm:w-auto"
           >
-            <Plus className="w-4 h-4" />
-            <span>Adicionar Widget</span>
+            <Plus className="w-4 h-4 flex-shrink-0" />
+            <span className="truncate">Adicionar Widget</span>
           </Button>
         </div>
       </div>
 
       {/* Grid Layout */}
       {widgets.length > 0 ? (
-        <ResponsiveGridLayout
-          className="layout"
-          layouts={{ lg: gridLayout }}
-          onLayoutChange={handleLayoutChange}
-          breakpoints={{ lg: 1200, md: 996, sm: 768, xs: 480, xxs: 0 }}
-          cols={{ lg: 6, md: 4, sm: 3, xs: 2, xxs: 1 }}
-          rowHeight={120}
-          margin={[16, 16]}
-          containerPadding={[0, 0]}
-          isDraggable={true}
-          isResizable={true}
-        >
-          {widgets.map((widget) => (
-            <div key={widget.id}>
-              <DashboardWidget
-                widget={widget}
-                onRemove={handleRemoveWidget}
-                isDragHandle={true}
-              />
-            </div>
-          ))}
-        </ResponsiveGridLayout>
+        isMobile && widgets.length > 4 ? (
+          // Para mobile com muitos widgets, usar lista simples
+          <MobileWidgetList 
+            widgets={widgets} 
+            onRemove={handleRemoveWidget} 
+          />
+        ) : (
+          // Grid responsivo normal
+          <ResponsiveGridLayout
+            className="layout"
+            layouts={{ lg: gridLayout }}
+            onLayoutChange={handleLayoutChange}
+            breakpoints={gridConfig.breakpoints}
+            cols={gridConfig.cols}
+            rowHeight={gridConfig.rowHeight}
+            margin={gridConfig.margin}
+            containerPadding={gridConfig.containerPadding}
+            isDraggable={!isMobile}
+            isResizable={!isMobile}
+            useCSSTransforms={true}
+            preventCollision={false}
+            compactType="vertical"
+            autoSize={true}
+          >
+            {widgets.map((widget) => (
+              <div key={widget.id} className="h-full">
+                <ResponsiveWidgetContainer compact={isMobile}>
+                  <DashboardWidget
+                    widget={widget}
+                    onRemove={handleRemoveWidget}
+                    isDragHandle={!isMobile}
+                    className={isMobile ? "text-sm" : ""}
+                  />
+                </ResponsiveWidgetContainer>
+              </div>
+            ))}
+          </ResponsiveGridLayout>
+        )
       ) : (
-        <div className="flex flex-col items-center justify-center py-12 space-y-4">
-          <LayoutGrid className="w-12 h-12 text-muted-foreground" />
-          <div className="text-center">
-            <h3 className="text-lg font-medium text-foreground">Seu dashboard está vazio</h3>
-            <p className="text-muted-foreground">Adicione widgets para monitorar seu negócio</p>
+        <div className="flex flex-col items-center justify-center py-12 px-4 space-y-6">
+          <div className="w-20 h-20 rounded-full bg-muted/50 flex items-center justify-center">
+            <LayoutGrid className="w-10 h-10 text-muted-foreground" />
           </div>
-          <Button onClick={() => setShowWidgetSelector(true)}>
+          <div className="text-center max-w-md">
+            <h3 className="text-lg sm:text-xl font-medium text-foreground mb-2">
+              Seu dashboard está vazio
+            </h3>
+            <p className="text-sm sm:text-base text-muted-foreground">
+              Adicione widgets para monitorar as principais métricas do seu negócio em tempo real
+            </p>
+          </div>
+          <Button 
+            onClick={() => setShowWidgetSelector(true)}
+            size="lg"
+            className="w-full sm:w-auto"
+          >
             <Plus className="w-4 h-4 mr-2" />
             Adicionar Primeiro Widget
           </Button>
