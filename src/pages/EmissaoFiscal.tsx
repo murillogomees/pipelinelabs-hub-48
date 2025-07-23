@@ -17,7 +17,7 @@ import {
 } from 'lucide-react';
 import { NFeDialog } from '@/components/NFe/NFeDialog';
 import { useNFe } from '@/hooks/useNFe';
-import { useAuth } from '@/hooks/useAuth';
+import { useAuth } from '@/components/Auth/AuthProvider';
 import { usePermissions } from '@/hooks/usePermissions';
 import { useNFeIntegration } from '@/hooks/useNFeIntegration';
 import { 

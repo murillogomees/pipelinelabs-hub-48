@@ -6,7 +6,7 @@ import { DashboardWidget } from '@/components/Dashboard/DashboardWidget';
 import { WidgetSelector } from '@/components/Dashboard/WidgetSelector';
 import { AnalyticsTracker } from '@/components/Dashboard/AnalyticsTracker';
 import { useDashboard, useUpdateDashboard, WIDGET_TYPES, Widget } from '@/hooks/useDashboard';
-import { useAuth } from '@/hooks/useAuth';
+import { useAuth } from '@/components/Auth/AuthProvider';
 import { useAnalyticsTracker } from '@/hooks/useAnalyticsTracker';
 import { supabase } from '@/integrations/supabase/client';
 import { Responsive, WidthProvider } from 'react-grid-layout';
