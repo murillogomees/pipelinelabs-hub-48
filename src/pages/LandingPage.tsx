@@ -2,10 +2,35 @@ import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Check, Star, ArrowRight, Users, TrendingUp, Shield, Zap } from 'lucide-react';
+import { 
+  Check, Star, ArrowRight, Users, TrendingUp, Shield, Zap, 
+  FileText, Package, Truck, ClipboardCheck, Building, Globe, 
+  Lock, Database, Cloud, Rocket 
+} from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-import { useLandingPageConfig } from '@/hooks/useLandingPageConfig';
+import { useLandingPageContent } from '@/hooks/useLandingPageContent';
 import { PipelineLabsLogo } from '@/components/Layout/PipelineLabsLogo';
+import { Footer } from '@/components/Layout/Footer';
+
+// Icon mapping helper
+const getIcon = (iconName: string) => {
+  const iconMap: { [key: string]: React.ReactNode } = {
+    'file-text': <FileText className="h-8 w-8 text-primary" />,
+    'trending-up': <TrendingUp className="h-8 w-8 text-primary" />,
+    'package': <Package className="h-8 w-8 text-primary" />,
+    'truck': <Truck className="h-8 w-8 text-primary" />,
+    'clipboard-check': <ClipboardCheck className="h-8 w-8 text-primary" />,
+    'building': <Building className="h-8 w-8 text-primary" />,
+    'globe': <Globe className="h-8 w-8 text-primary" />,
+    'users': <Users className="h-8 w-8 text-primary" />,
+    'shield': <Shield className="h-8 w-8 text-primary" />,
+    'lock': <Lock className="h-4 w-4 text-green-600" />,
+    'database': <Database className="h-4 w-4 text-green-600" />,
+    'cloud': <Cloud className="h-4 w-4 text-green-600" />,
+    'rocket': <Rocket className="h-5 w-5" />,
+  };
+  return iconMap[iconName] || <Star className="h-8 w-8 text-primary" />;
+};
 
 // Mockup images
 import dashboardMockup from '@/assets/dashboard-mockup.jpg';
@@ -130,7 +155,28 @@ const plans = [
 
 export function LandingPage() {
   const navigate = useNavigate();
-  const { config } = useLandingPageConfig();
+  const { sections, isLoading, getSection } = useLandingPageContent();
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-primary mx-auto"></div>
+          <p className="mt-4 text-muted-foreground">Carregando página...</p>
+        </div>
+      </div>
+    );
+  }
+
+  const heroSection = getSection('hero');
+  const painSection = getSection('pain_section');
+  const featuresSection = getSection('features');
+  const mockupsSection = getSection('mockups');
+  const testimonialsSection = getSection('testimonials');
+  const securitySection = getSection('security');
+  const howItWorksSection = getSection('how_it_works');
+  const finalCtaSection = getSection('final_cta');
+  const pricingSection = getSection('pricing');
 
   return (
     <div className="min-h-screen bg-background">
@@ -152,301 +198,344 @@ export function LandingPage() {
       </header>
 
       {/* Hero Section */}
-      <section className="py-20 px-4">
-        <div className="container mx-auto text-center">
-          <Badge variant="secondary" className="mb-4">
-            {config.hero_badge}
-          </Badge>
-          <h1 className="text-4xl md:text-6xl font-bold mb-6 bg-gradient-to-r from-primary to-primary/60 bg-clip-text text-transparent">
-            {config.hero_title}
-          </h1>
-          <p className="text-xl text-muted-foreground mb-8 max-w-3xl mx-auto">
-            {config.hero_subtitle}
-          </p>
-          <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Button size="lg" onClick={() => navigate('/auth')} className="text-lg px-8 py-6">
-              {config.hero_cta_button}
-              <ArrowRight className="ml-2 h-5 w-5" />
-            </Button>
-            <Button size="lg" variant="outline" className="text-lg px-8 py-6">
-              {config.hero_secondary_button}
-            </Button>
-          </div>
-        </div>
-      </section>
-
-      {/* Problem Section */}
-      <section className="py-20 px-4 bg-muted/50">
-        <div className="container mx-auto">
-          <div className="text-center mb-16">
-            <h2 className="text-3xl md:text-4xl font-bold mb-4">
-              Você reconhece esses problemas?
-            </h2>
-            <p className="text-xl text-muted-foreground">
-              Milhares de empreendedores enfrentam os mesmos desafios diariamente
+      {heroSection && (
+        <section className="py-20 px-4">
+          <div className="container mx-auto text-center">
+            <Badge variant="secondary" className="mb-4 flex items-center gap-2 w-fit mx-auto">
+              {getIcon('rocket')}
+              {heroSection.content_data?.trust_badge || heroSection.title}
+            </Badge>
+            <h1 className="text-4xl md:text-6xl font-bold mb-6 bg-gradient-to-r from-primary to-primary/60 bg-clip-text text-transparent">
+              {heroSection.title}
+            </h1>
+            <p className="text-xl text-muted-foreground mb-4 max-w-3xl mx-auto">
+              {heroSection.subtitle}
             </p>
-          </div>
-
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {[
-              "Planilhas desorganizadas e sujeitas a erros",
-              "Falta de controle sobre vendas multicanais", 
-              "Dificuldade na emissão de notas fiscais",
-              "Visibilidade limitada das finanças",
-              "Processos manuais que consomem tempo",
-              "Falta de integração entre sistemas"
-            ].map((problem, index) => (
-              <Card key={index} className="border-red-200 bg-red-50/50">
-                <CardContent className="p-6">
-                  <p className="text-red-800 font-medium">{problem}</p>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* Personas Section */}
-      <section className="py-20 px-4">
-        <div className="container mx-auto">
-          <div className="text-center mb-16">
-            <h2 className="text-3xl md:text-4xl font-bold mb-4">
-              Conheça quem já transformou seu negócio
-            </h2>
-            <p className="text-xl text-muted-foreground">
-              Veja como diferentes empreendedores usam o Pipeline Labs
+            <p className="text-lg text-muted-foreground mb-8 max-w-2xl mx-auto">
+              {heroSection.description}
             </p>
-          </div>
-
-          <div className="grid lg:grid-cols-2 gap-12">
-            {personas.map((persona, index) => (
-              <Card key={index} className="overflow-hidden">
-                <div className="md:flex">
-                  <div className="md:w-1/3">
-                    <img 
-                      src={persona.image} 
-                      alt={persona.name}
-                      className="w-full h-48 md:h-full object-cover"
-                    />
-                  </div>
-                  <div className="md:w-2/3 p-6">
-                    <CardHeader className="p-0 mb-4">
-                      <CardTitle className="text-xl">{persona.name}</CardTitle>
-                      <CardDescription className="text-primary font-medium">
-                        {persona.business}
-                      </CardDescription>
-                    </CardHeader>
-                    <CardContent className="p-0">
-                      <div className="mb-4">
-                        <p className="text-sm text-muted-foreground mb-2">Problema:</p>
-                        <p className="text-red-600 font-medium">{persona.pain}</p>
-                      </div>
-                      <div className="mb-4">
-                        <p className="text-sm text-muted-foreground mb-2">Solução:</p>
-                        <p className="text-green-600 font-medium">{persona.solution}</p>
-                      </div>
-                      <div>
-                        <p className="text-sm text-muted-foreground mb-2">Funcionalidades usadas:</p>
-                        <div className="flex flex-wrap gap-2">
-                          {persona.features.map((feature, idx) => (
-                            <Badge key={idx} variant="secondary">
-                              {feature}
-                            </Badge>
-                          ))}
+            <div className="flex flex-col sm:flex-row gap-4 justify-center mb-8">
+              <Button size="lg" onClick={() => navigate('/auth')} className="text-lg px-8 py-6">
+                {getIcon('rocket')}
+                {heroSection.content_data?.button_text || 'Começar Agora'}
+              </Button>
+              <Button size="lg" variant="outline" className="text-lg px-8 py-6">
+                {heroSection.content_data?.secondary_button || 'Ver Demo'}
+              </Button>
+            </div>
+            
+            {/* Mockup Features */}
+            {heroSection.content_data?.mockup_features && (
+              <div className="max-w-4xl mx-auto">
+                <div className="bg-gradient-to-br from-primary/5 to-primary/10 rounded-2xl p-8 border border-primary/20">
+                  <div className="text-center mb-6">
+                    <h3 className="text-lg font-semibold mb-4">Mockup real de dashboard com:</h3>
+                    <div className="grid md:grid-cols-3 gap-4">
+                      {heroSection.content_data.mockup_features.map((feature: string, index: number) => (
+                        <div key={index} className="bg-background/50 rounded-lg p-4 border border-primary/10">
+                          <p className="font-medium text-sm">{feature}</p>
                         </div>
-                      </div>
-                    </CardContent>
+                      ))}
+                    </div>
+                  </div>
+                  <div className="bg-muted/50 rounded-lg h-64 flex items-center justify-center">
+                    <p className="text-muted-foreground">Dashboard Mockup Placeholder</p>
                   </div>
                 </div>
-              </Card>
-            ))}
+              </div>
+            )}
           </div>
-        </div>
-      </section>
+        </section>
+      )}
+
+      {/* Pain Section - Personas */}
+      {painSection && (
+        <section className="py-20 px-4 bg-muted/50">
+          <div className="container mx-auto">
+            <div className="text-center mb-16">
+              <h2 className="text-3xl md:text-4xl font-bold mb-4">
+                {painSection.title}
+              </h2>
+              <p className="text-xl text-muted-foreground">
+                {painSection.subtitle}
+              </p>
+            </div>
+
+            <div className="grid lg:grid-cols-2 xl:grid-cols-3 gap-8">
+              {painSection.content_data?.personas?.map((persona: any, index: number) => (
+                <Card key={index} className="overflow-hidden">
+                  <CardHeader>
+                    <CardTitle className="text-xl">{persona.name}</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-4">
+                      <div className="bg-red-50/50 p-4 rounded-lg border border-red-200">
+                        <p className="text-sm text-muted-foreground mb-2">Antes:</p>
+                        <p className="text-red-800 font-medium">{persona.before}</p>
+                      </div>
+                      <div className="bg-green-50/50 p-4 rounded-lg border border-green-200">
+                        <p className="text-sm text-muted-foreground mb-2">Depois:</p>
+                        <p className="text-green-800 font-medium">{persona.after}</p>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          </div>
+        </section>
+      )}
 
       {/* Features Section */}
-      <section className="py-20 px-4 bg-muted/50">
-        <div className="container mx-auto">
-          <div className="text-center mb-16">
-            <h2 className="text-3xl md:text-4xl font-bold mb-4">
-              Funcionalidades que fazem a diferença
-            </h2>
-            <p className="text-xl text-muted-foreground">
-              Tudo que você precisa para gerenciar seu negócio em um só lugar
-            </p>
-          </div>
+      {featuresSection && (
+        <section className="py-20 px-4">
+          <div className="container mx-auto">
+            <div className="text-center mb-16">
+              <h2 className="text-3xl md:text-4xl font-bold mb-4">
+                {featuresSection.title}
+              </h2>
+              <p className="text-xl text-muted-foreground">
+                {featuresSection.subtitle}
+              </p>
+            </div>
 
-          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8 mb-16">
-            {features.map((feature, index) => (
-              <Card key={index} className="text-center">
-                <CardContent className="p-6">
-                  <div className="mb-4 flex justify-center">
-                    {feature.icon}
+            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8 mb-12">
+              {featuresSection.content_data?.features?.map((feature: any, index: number) => (
+                <Card key={index} className="text-center hover:shadow-lg transition-shadow">
+                  <CardContent className="p-6">
+                    <div className="mb-4 flex justify-center">
+                      {getIcon(feature.icon)}
+                    </div>
+                    <CardTitle className="mb-2">{feature.title}</CardTitle>
+                    <CardDescription>{feature.description}</CardDescription>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+
+            {/* Call to Action */}
+            {featuresSection.content_data?.cta_text && (
+              <div className="text-center bg-gradient-to-r from-primary/5 to-primary/10 rounded-2xl p-8 border border-primary/20">
+                <p className="text-lg mb-4">{featuresSection.content_data.cta_text}</p>
+                <Button size="lg" onClick={() => navigate('/auth')}>
+                  {featuresSection.content_data.cta_button || 'Começar Agora'}
+                  <ArrowRight className="ml-2 h-5 w-5" />
+                </Button>
+              </div>
+            )}
+          </div>
+        </section>
+      )}
+
+      {/* Mockups Section */}
+      {mockupsSection && (
+        <section className="py-20 px-4 bg-muted/50">
+          <div className="container mx-auto">
+            <div className="text-center mb-16">
+              <h2 className="text-3xl md:text-4xl font-bold mb-4">
+                {mockupsSection.title}
+              </h2>
+              <p className="text-xl text-muted-foreground">
+                {mockupsSection.subtitle}
+              </p>
+            </div>
+
+            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+              {mockupsSection.content_data?.mockups?.map((mockup: any, index: number) => (
+                <Card key={index} className="overflow-hidden">
+                  <div className="bg-gradient-to-br from-primary/5 to-primary/10 h-48 flex items-center justify-center">
+                    <p className="text-muted-foreground">{mockup.title}</p>
                   </div>
-                  <CardTitle className="mb-2">{feature.title}</CardTitle>
-                  <CardDescription>{feature.description}</CardDescription>
-                </CardContent>
-              </Card>
-            ))}
+                  <CardContent className="p-4">
+                    <h3 className="font-semibold mb-2">{mockup.title}</h3>
+                    <p className="text-sm text-muted-foreground">{mockup.description}</p>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
           </div>
+        </section>
+      )}
 
-          {/* Mockups Grid */}
-          <div className="grid md:grid-cols-2 gap-8">
-            <div className="space-y-4">
-              <img 
-                src={dashboardMockup} 
-                alt="Dashboard do Pipeline Labs"
-                className="rounded-lg shadow-lg w-full"
-              />
-              <p className="text-center text-muted-foreground">
-                Dashboard com visão completa do negócio
+      {/* Testimonials Section */}
+      {testimonialsSection && (
+        <section className="py-20 px-4">
+          <div className="container mx-auto">
+            <div className="text-center mb-16">
+              <h2 className="text-3xl md:text-4xl font-bold mb-4">
+                {testimonialsSection.title}
+              </h2>
+              <p className="text-xl text-muted-foreground">
+                {testimonialsSection.subtitle}
               </p>
             </div>
-            <div className="space-y-4">
-              <img 
-                src={financialMockup} 
-                alt="Relatórios Financeiros"
-                className="rounded-lg shadow-lg w-full"
-              />
-              <p className="text-center text-muted-foreground">
-                Relatórios financeiros em tempo real
-              </p>
+
+            <div className="grid md:grid-cols-3 gap-8 max-w-6xl mx-auto">
+              {testimonialsSection.content_data?.testimonials?.map((testimonial: any, index: number) => (
+                <Card key={index} className="text-center">
+                  <CardContent className="p-6">
+                    <div className="w-16 h-16 bg-gradient-to-br from-primary/20 to-primary/40 rounded-full mx-auto mb-4 flex items-center justify-center">
+                      <span className="text-2xl font-bold text-primary">
+                        {testimonial.name.charAt(0)}
+                      </span>
+                    </div>
+                    <blockquote className="text-lg mb-4 italic">
+                      "{testimonial.testimonial}"
+                    </blockquote>
+                    <div>
+                      <p className="font-semibold">{testimonial.name}</p>
+                      <p className="text-sm text-muted-foreground">{testimonial.business}</p>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
             </div>
           </div>
-        </div>
-      </section>
+        </section>
+      )}
+
+      {/* Security Section */}
+      {securitySection && (
+        <section className="py-20 px-4 bg-muted/50">
+          <div className="container mx-auto">
+            <div className="text-center mb-16">
+              <h2 className="text-3xl md:text-4xl font-bold mb-4">
+                {securitySection.title}
+              </h2>
+              <p className="text-xl text-muted-foreground">
+                {securitySection.subtitle}
+              </p>
+            </div>
+
+            <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6 max-w-4xl mx-auto">
+              {securitySection.content_data?.security_items?.map((item: any, index: number) => (
+                <div key={index} className="flex items-center gap-3 bg-background/50 p-4 rounded-lg border">
+                  {getIcon(item.icon)}
+                  <span className="text-sm font-medium">{item.title}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+      )}
+
+      {/* How It Works Section */}
+      {howItWorksSection && (
+        <section className="py-20 px-4">
+          <div className="container mx-auto">
+            <div className="text-center mb-16">
+              <h2 className="text-3xl md:text-4xl font-bold mb-4">
+                {howItWorksSection.title}
+              </h2>
+              <p className="text-xl text-muted-foreground">
+                {howItWorksSection.subtitle}
+              </p>
+            </div>
+
+            <div className="grid md:grid-cols-3 gap-8 max-w-4xl mx-auto">
+              {howItWorksSection.content_data?.steps?.map((step: any, index: number) => (
+                <Card key={index} className="text-center">
+                  <CardContent className="p-6">
+                    <div className="w-16 h-16 bg-primary rounded-full mx-auto mb-4 flex items-center justify-center">
+                      <span className="text-2xl font-bold text-primary-foreground">
+                        {step.number}
+                      </span>
+                    </div>
+                    <h3 className="text-xl font-semibold mb-2">{step.title}</h3>
+                    <p className="text-muted-foreground">{step.description}</p>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          </div>
+        </section>
+      )}
 
       {/* Pricing Section */}
-      <section className="py-20 px-4">
-        <div className="container mx-auto">
-          <div className="text-center mb-16">
-            <h2 className="text-3xl md:text-4xl font-bold mb-4">
-              Planos que crescem com seu negócio
-            </h2>
-            <p className="text-xl text-muted-foreground">
-              Escolha o plano ideal para sua empresa
-            </p>
-          </div>
-
-          <div className="grid md:grid-cols-3 gap-8 max-w-6xl mx-auto">
-            {plans.map((plan, index) => (
-              <Card key={index} className={`relative ${plan.highlighted ? 'border-primary scale-105' : ''}`}>
-                {plan.highlighted && (
-                  <div className="absolute -top-4 left-1/2 transform -translate-x-1/2">
-                    <Badge className="bg-primary text-primary-foreground">
-                      Mais Popular
-                    </Badge>
-                  </div>
-                )}
-                <CardHeader>
-                  <CardTitle>{plan.name}</CardTitle>
-                  <CardDescription>{plan.description}</CardDescription>
-                  <div className="text-3xl font-bold">
-                    {plan.price}
-                    <span className="text-base font-normal text-muted-foreground">
-                      {plan.period}
-                    </span>
-                  </div>
-                </CardHeader>
-                <CardContent>
-                  <ul className="space-y-3 mb-6">
-                    {plan.features.map((feature, idx) => (
-                      <li key={idx} className="flex items-center">
-                        <Check className="h-4 w-4 text-green-500 mr-2 flex-shrink-0" />
-                        <span className="text-sm">{feature}</span>
-                      </li>
-                    ))}
-                  </ul>
-                  <Button 
-                    className="w-full"
-                    variant={plan.highlighted ? "default" : "outline"}
-                    onClick={() => navigate('/auth')}
-                  >
-                    Começar Agora
-                  </Button>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* CTA Section */}
-      <section className="py-20 px-4 bg-primary text-primary-foreground">
-        <div className="container mx-auto text-center">
-          <h2 className="text-3xl md:text-4xl font-bold mb-4">
-            Pronto para transformar seu negócio?
-          </h2>
-          <p className="text-xl opacity-90 mb-8 max-w-2xl mx-auto">
-            Junte-se a milhares de empreendedores que já automatizaram 
-            seus processos e aumentaram seus resultados.
-          </p>
-          <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Button 
-              size="lg" 
-              variant="secondary"
-              onClick={() => navigate('/auth')}
-              className="text-lg px-8 py-6"
-            >
-              Teste Grátis por 14 Dias
-              <ArrowRight className="ml-2 h-5 w-5" />
-            </Button>
-            <Button 
-              size="lg" 
-              variant="outline"
-              className="text-lg px-8 py-6 bg-transparent border-white text-white hover:bg-white hover:text-primary"
-            >
-              Falar com Consultor
-            </Button>
-          </div>
-        </div>
-      </section>
-
-      {/* Footer */}
-      <footer className="py-12 px-4 bg-muted">
-        <div className="container mx-auto">
-          <div className="grid md:grid-cols-4 gap-8">
-            <div>
-              <div className="mb-4">
-                <PipelineLabsLogo size="sm" showText={true} />
-              </div>
-              <p className="text-muted-foreground text-sm">
-                ERP inteligente, dinâmico e escalável para pequenos empreendedores.
+      {pricingSection && (
+        <section className="py-20 px-4 bg-muted/50">
+          <div className="container mx-auto">
+            <div className="text-center mb-16">
+              <h2 className="text-3xl md:text-4xl font-bold mb-4">
+                {pricingSection.title}
+              </h2>
+              <p className="text-xl text-muted-foreground">
+                {pricingSection.subtitle}
               </p>
             </div>
-            <div>
-              <h4 className="font-semibold mb-4">Produto</h4>
-              <ul className="space-y-2 text-sm text-muted-foreground">
-                <li>Funcionalidades</li>
-                <li>Integrações</li>
-                <li>Preços</li>
-                <li>API</li>
-              </ul>
-            </div>
-            <div>
-              <h4 className="font-semibold mb-4">Suporte</h4>
-              <ul className="space-y-2 text-sm text-muted-foreground">
-                <li>Central de Ajuda</li>
-                <li>Documentação</li>
-                <li>Contato</li>
-                <li>Status</li>
-              </ul>
-            </div>
-            <div>
-              <h4 className="font-semibold mb-4">Empresa</h4>
-              <ul className="space-y-2 text-sm text-muted-foreground">
-                <li>Sobre</li>
-                <li>Blog</li>
-                <li>Carreiras</li>
-                <li>Privacidade</li>
-              </ul>
+
+            <div className="grid md:grid-cols-3 gap-8 max-w-6xl mx-auto">
+              {pricingSection.content_data?.plans?.map((plan: any, index: number) => (
+                <Card key={index} className={`relative ${plan.highlighted ? 'border-primary scale-105' : ''}`}>
+                  {plan.highlighted && (
+                    <div className="absolute -top-4 left-1/2 transform -translate-x-1/2">
+                      <Badge className="bg-primary text-primary-foreground">
+                        Mais Popular
+                      </Badge>
+                    </div>
+                  )}
+                  <CardHeader>
+                    <CardTitle>{plan.name}</CardTitle>
+                    <div className="text-3xl font-bold">
+                      R$ {plan.price}
+                      <span className="text-base font-normal text-muted-foreground">
+                        {plan.period}
+                      </span>
+                    </div>
+                  </CardHeader>
+                  <CardContent>
+                    <ul className="space-y-3 mb-6">
+                      {plan.features.map((feature: string, idx: number) => (
+                        <li key={idx} className="flex items-center">
+                          <Check className="h-4 w-4 text-green-500 mr-2 flex-shrink-0" />
+                          <span className="text-sm">{feature}</span>
+                        </li>
+                      ))}
+                    </ul>
+                    <Button 
+                      className="w-full"
+                      variant={plan.highlighted ? "default" : "outline"}
+                      onClick={() => navigate('/auth')}
+                    >
+                      Começar Agora
+                    </Button>
+                  </CardContent>
+                </Card>
+              ))}
             </div>
           </div>
-          <div className="border-t pt-8 mt-8 text-center text-sm text-muted-foreground">
-            © 2024 Pipeline Labs. Todos os direitos reservados.
+        </section>
+      )}
+
+      {/* Final CTA Section */}
+      {finalCtaSection && (
+        <section 
+          className="py-20 px-4 text-white"
+          style={{ backgroundColor: finalCtaSection.content_data?.background_color || '#0f172a' }}
+        >
+          <div className="container mx-auto text-center">
+            <h2 className="text-3xl md:text-4xl font-bold mb-4">
+              {finalCtaSection.title}
+            </h2>
+            <p className="text-xl opacity-90 mb-8 max-w-3xl mx-auto">
+              {finalCtaSection.subtitle}
+            </p>
+            <div className="flex flex-col sm:flex-row gap-4 justify-center">
+              <Button 
+                size="lg" 
+                variant="secondary"
+                onClick={() => navigate('/auth')}
+                className="text-lg px-8 py-6"
+              >
+                {finalCtaSection.content_data?.primary_button || 'Começar Agora'}
+                <ArrowRight className="ml-2 h-5 w-5" />
+              </Button>
+            </div>
           </div>
-        </div>
-      </footer>
+        </section>
+      )}
+
+      <Footer />
     </div>
   );
 }

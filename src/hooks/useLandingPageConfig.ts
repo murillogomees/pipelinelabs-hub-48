@@ -2,6 +2,9 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 
+// DEPRECATED: Use useLandingPageContent instead
+// This hook is kept for backward compatibility only
+
 export interface LandingPageConfig {
   id?: string;
   company_id?: string;

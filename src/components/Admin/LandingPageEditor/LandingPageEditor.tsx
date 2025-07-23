@@ -6,32 +6,196 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Switch } from '@/components/ui/switch';
+import { Badge } from '@/components/ui/badge';
 import { 
   Save, 
   Eye, 
   Layout, 
   Palette,
+  Edit2,
+  Plus,
+  Trash2,
+  ArrowUp,
+  ArrowDown
 } from 'lucide-react';
-import { useLandingPageConfig } from '@/hooks/useLandingPageConfig';
+import { useLandingPageContent } from '@/hooks/useLandingPageContent';
 
 export function LandingPageEditor() {
-  const { config, updateConfig, isUpdating } = useLandingPageConfig();
+  const { sections, isLoading, updateSection, isUpdating, getSection } = useLandingPageContent();
   const [activeTab, setActiveTab] = useState("hero");
-
-  const handleSave = async () => {
-    await updateConfig(config);
-  };
+  const [editingSection, setEditingSection] = useState<string | null>(null);
 
   const handlePreview = () => {
     window.open('/', '_blank');
   };
 
-  const updateConfigField = (field: string, value: any) => {
-    updateConfig({
-      ...config,
-      [field]: value
-    });
+  const handleSectionUpdate = (sectionId: string, updates: any) => {
+    updateSection({ id: sectionId, updates });
+    setEditingSection(null);
   };
+
+  const renderSectionEditor = (sectionKey: string, sectionTitle: string) => {
+    const section = getSection(sectionKey);
+    
+    if (!section) {
+      return (
+        <Card>
+          <CardHeader>
+            <CardTitle>{sectionTitle}</CardTitle>
+            <CardDescription>Seção não encontrada</CardDescription>
+          </CardHeader>
+        </Card>
+      );
+    }
+
+    const isEditing = editingSection === section.id;
+
+    return (
+      <Card key={section.id}>
+        <CardHeader>
+          <div className="flex items-center justify-between">
+            <div>
+              <CardTitle className="flex items-center gap-2">
+                {sectionTitle}
+                <Badge variant={section.is_active ? "default" : "secondary"}>
+                  {section.is_active ? "Ativo" : "Inativo"}
+                </Badge>
+              </CardTitle>
+              <CardDescription>
+                Edite o conteúdo da seção {sectionKey}
+              </CardDescription>
+            </div>
+            <div className="flex gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setEditingSection(isEditing ? null : section.id)}
+              >
+                <Edit2 className="h-4 w-4" />
+                {isEditing ? 'Cancelar' : 'Editar'}
+              </Button>
+            </div>
+          </div>
+        </CardHeader>
+        
+        {isEditing && (
+          <CardContent className="space-y-4">
+            <div>
+              <Label htmlFor={`title-${section.id}`}>Título</Label>
+              <Input
+                id={`title-${section.id}`}
+                defaultValue={section.title || ''}
+                onBlur={(e) => {
+                  if (e.target.value !== section.title) {
+                    handleSectionUpdate(section.id, { title: e.target.value });
+                  }
+                }}
+              />
+            </div>
+            
+            <div>
+              <Label htmlFor={`subtitle-${section.id}`}>Subtítulo</Label>
+              <Input
+                id={`subtitle-${section.id}`}
+                defaultValue={section.subtitle || ''}
+                onBlur={(e) => {
+                  if (e.target.value !== section.subtitle) {
+                    handleSectionUpdate(section.id, { subtitle: e.target.value });
+                  }
+                }}
+              />
+            </div>
+            
+            <div>
+              <Label htmlFor={`description-${section.id}`}>Descrição</Label>
+              <Textarea
+                id={`description-${section.id}`}
+                defaultValue={section.description || ''}
+                rows={3}
+                onBlur={(e) => {
+                  if (e.target.value !== section.description) {
+                    handleSectionUpdate(section.id, { description: e.target.value });
+                  }
+                }}
+              />
+            </div>
+
+            {/* Content Data Editor */}
+            <div>
+              <Label htmlFor={`content-data-${section.id}`}>Dados de Conteúdo (JSON)</Label>
+              <Textarea
+                id={`content-data-${section.id}`}
+                defaultValue={JSON.stringify(section.content_data, null, 2)}
+                rows={6}
+                className="font-mono text-sm"
+                onBlur={(e) => {
+                  try {
+                    const parsedData = JSON.parse(e.target.value);
+                    handleSectionUpdate(section.id, { content_data: parsedData });
+                  } catch (error) {
+                    console.error('Invalid JSON:', error);
+                  }
+                }}
+              />
+            </div>
+
+            <div className="flex items-center justify-between">
+              <div className="flex items-center space-x-2">
+                <Switch
+                  id={`active-${section.id}`}
+                  checked={section.is_active}
+                  onCheckedChange={(checked) => {
+                    handleSectionUpdate(section.id, { is_active: checked });
+                  }}
+                />
+                <Label htmlFor={`active-${section.id}`}>Seção Ativa</Label>
+              </div>
+              
+              <div className="flex items-center gap-2">
+                <Label htmlFor={`order-${section.id}`}>Ordem:</Label>
+                <Input
+                  id={`order-${section.id}`}
+                  type="number"
+                  defaultValue={section.display_order}
+                  className="w-20"
+                  onBlur={(e) => {
+                    const newOrder = parseInt(e.target.value);
+                    if (!isNaN(newOrder) && newOrder !== section.display_order) {
+                      handleSectionUpdate(section.id, { display_order: newOrder });
+                    }
+                  }}
+                />
+              </div>
+            </div>
+          </CardContent>
+        )}
+
+        {!isEditing && (
+          <CardContent>
+            <div className="space-y-2 text-sm">
+              <p><strong>Título:</strong> {section.title}</p>
+              <p><strong>Subtítulo:</strong> {section.subtitle}</p>
+              <p><strong>Descrição:</strong> {section.description}</p>
+              <p><strong>Ordem:</strong> {section.display_order}</p>
+            </div>
+          </CardContent>
+        )}
+      </Card>
+    );
+  };
+
+  if (isLoading) {
+    return (
+      <div className="p-6 max-w-6xl mx-auto">
+        <div className="flex items-center justify-center h-64">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto"></div>
+            <p className="mt-4 text-muted-foreground">Carregando editor...</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="p-6 max-w-6xl mx-auto">
@@ -39,7 +203,7 @@ export function LandingPageEditor() {
         <div>
           <h1 className="text-3xl font-bold">Editor da Landing Page</h1>
           <p className="text-muted-foreground">
-            Personalize completamente sua página de vendas
+            Gerencie o conteúdo de todas as seções da landing page
           </p>
         </div>
         <div className="flex gap-2">
@@ -47,227 +211,55 @@ export function LandingPageEditor() {
             <Eye className="h-4 w-4 mr-2" />
             Preview
           </Button>
-          <Button onClick={handleSave} disabled={isUpdating}>
-            <Save className="h-4 w-4 mr-2" />
-            {isUpdating ? 'Salvando...' : 'Salvar'}
-          </Button>
         </div>
       </div>
 
       <Tabs value={activeTab} onValueChange={setActiveTab}>
-        <TabsList className="grid w-full grid-cols-3">
-          <TabsTrigger value="hero" className="flex items-center gap-2">
-            <Layout className="h-4 w-4" />
-            Hero
-          </TabsTrigger>
-          <TabsTrigger value="branding" className="flex items-center gap-2">
-            <Palette className="h-4 w-4" />
-            Branding
-          </TabsTrigger>
-          <TabsTrigger value="sections" className="flex items-center gap-2">
-            <Layout className="h-4 w-4" />
-            Seções
-          </TabsTrigger>
+        <TabsList className="grid w-full grid-cols-4 lg:grid-cols-6">
+          <TabsTrigger value="hero">Hero</TabsTrigger>
+          <TabsTrigger value="personas">Personas</TabsTrigger>
+          <TabsTrigger value="features">Recursos</TabsTrigger>
+          <TabsTrigger value="mockups">Mockups</TabsTrigger>
+          <TabsTrigger value="testimonials">Depoimentos</TabsTrigger>
+          <TabsTrigger value="pricing">Preços</TabsTrigger>
         </TabsList>
 
-        {/* Hero Section */}
         <TabsContent value="hero" className="space-y-6">
-          <Card>
-            <CardHeader>
-              <CardTitle>Seção Principal (Hero)</CardTitle>
-              <CardDescription>
-                Configure o título, subtítulo e botões da seção principal
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div>
-                <Label htmlFor="hero-badge">Badge</Label>
-                <Input
-                  id="hero-badge"
-                  value={config.hero_badge}
-                  onChange={(e) => updateConfigField('hero_badge', e.target.value)}
-                  placeholder="🚀 ERP Inteligente e Dinâmico"
-                />
-              </div>
-              <div>
-                <Label htmlFor="hero-title">Título Principal</Label>
-                <Textarea
-                  id="hero-title"
-                  value={config.hero_title}
-                  onChange={(e) => updateConfigField('hero_title', e.target.value)}
-                  placeholder="Sistema Completo de Gestão..."
-                  rows={3}
-                />
-              </div>
-              <div>
-                <Label htmlFor="hero-subtitle">Subtítulo</Label>
-                <Textarea
-                  id="hero-subtitle"
-                  value={config.hero_subtitle}
-                  onChange={(e) => updateConfigField('hero_subtitle', e.target.value)}
-                  placeholder="Automatize processos, facilite gestões..."
-                  rows={3}
-                />
-              </div>
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <Label htmlFor="cta-button">Botão Principal</Label>
-                  <Input
-                    id="cta-button"
-                    value={config.hero_cta_button}
-                    onChange={(e) => updateConfigField('hero_cta_button', e.target.value)}
-                    placeholder="Começar Teste Grátis"
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="secondary-button">Botão Secundário</Label>
-                  <Input
-                    id="secondary-button"
-                    value={config.hero_secondary_button}
-                    onChange={(e) => updateConfigField('hero_secondary_button', e.target.value)}
-                    placeholder="Ver Demo"
-                  />
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+          {renderSectionEditor('hero', 'Seção Principal (Hero)')}
+          {renderSectionEditor('final_cta', 'CTA Final')}
         </TabsContent>
 
-        {/* Branding Section */}
-        <TabsContent value="branding" className="space-y-6">
-          <Card>
-            <CardHeader>
-              <CardTitle>Identidade Visual</CardTitle>
-              <CardDescription>
-                Configure cores, fontes e logotipo da sua marca
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div>
-                <Label htmlFor="company-name">Nome da Empresa</Label>
-                <Input
-                  id="company-name"
-                  value={config.company_name}
-                  onChange={(e) => updateConfigField('company_name', e.target.value)}
-                />
-              </div>
-              <div>
-                <Label htmlFor="logo-url">URL do Logo</Label>
-                <Input
-                  id="logo-url"
-                  value={config.logo_url || ''}
-                  onChange={(e) => updateConfigField('logo_url', e.target.value)}
-                  placeholder="https://example.com/logo.png"
-                />
-              </div>
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <Label htmlFor="primary-color">Cor Principal</Label>
-                  <div className="flex items-center gap-2">
-                    <Input
-                      id="primary-color"
-                      type="color"
-                      value={config.primary_color}
-                      onChange={(e) => updateConfigField('primary_color', e.target.value)}
-                      className="w-12 h-10 p-1"
-                    />
-                    <Input
-                      value={config.primary_color}
-                      onChange={(e) => updateConfigField('primary_color', e.target.value)}
-                      placeholder="#0f172a"
-                    />
-                  </div>
-                </div>
-                <div>
-                  <Label htmlFor="secondary-color">Cor Secundária</Label>
-                  <div className="flex items-center gap-2">
-                    <Input
-                      id="secondary-color"
-                      type="color"
-                      value={config.secondary_color}
-                      onChange={(e) => updateConfigField('secondary_color', e.target.value)}
-                      className="w-12 h-10 p-1"
-                    />
-                    <Input
-                      value={config.secondary_color}
-                      onChange={(e) => updateConfigField('secondary_color', e.target.value)}
-                      placeholder="#64748b"
-                    />
-                  </div>
-                </div>
-              </div>
-              <div>
-                <Label htmlFor="font-family">Fonte</Label>
-                <select 
-                  id="font-family"
-                  value={config.font_family}
-                  onChange={(e) => updateConfigField('font_family', e.target.value)}
-                  className="w-full p-2 border rounded-md"
-                >
-                  <option value="Inter">Inter</option>
-                  <option value="Roboto">Roboto</option>
-                  <option value="Poppins">Poppins</option>
-                  <option value="Open Sans">Open Sans</option>
-                </select>
-              </div>
-            </CardContent>
-          </Card>
+        <TabsContent value="personas" className="space-y-6">
+          {renderSectionEditor('pain_section', 'Dores e Transformações')}
         </TabsContent>
 
-        {/* Sections Section */}
-        <TabsContent value="sections" className="space-y-6">
-          <Card>
-            <CardHeader>
-              <CardTitle>Gerenciar Seções</CardTitle>
-              <CardDescription>
-                Escolha quais seções exibir na landing page
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="flex items-center justify-between">
-                <Label htmlFor="show-problems">Mostrar Problemas</Label>
-                <Switch
-                  id="show-problems"
-                  checked={config.show_problems}
-                  onCheckedChange={(checked) => updateConfigField('show_problems', checked)}
-                />
-              </div>
-              <div className="flex items-center justify-between">
-                <Label htmlFor="show-personas">Mostrar Personas</Label>
-                <Switch
-                  id="show-personas"
-                  checked={config.show_personas}
-                  onCheckedChange={(checked) => updateConfigField('show_personas', checked)}
-                />
-              </div>
-              <div className="flex items-center justify-between">
-                <Label htmlFor="show-features">Mostrar Funcionalidades</Label>
-                <Switch
-                  id="show-features"
-                  checked={config.show_features}
-                  onCheckedChange={(checked) => updateConfigField('show_features', checked)}
-                />
-              </div>
-              <div className="flex items-center justify-between">
-                <Label htmlFor="show-pricing">Mostrar Preços</Label>
-                <Switch
-                  id="show-pricing"
-                  checked={config.show_pricing}
-                  onCheckedChange={(checked) => updateConfigField('show_pricing', checked)}
-                />
-              </div>
-              <div className="flex items-center justify-between">
-                <Label htmlFor="show-mockups">Mostrar Mockups</Label>
-                <Switch
-                  id="show-mockups"
-                  checked={config.show_mockups}
-                  onCheckedChange={(checked) => updateConfigField('show_mockups', checked)}
-                />
-              </div>
-            </CardContent>
-          </Card>
+        <TabsContent value="features" className="space-y-6">
+          {renderSectionEditor('features', 'Recursos Principais')}
+          {renderSectionEditor('security', 'Segurança e Confiança')}
+        </TabsContent>
+
+        <TabsContent value="mockups" className="space-y-6">
+          {renderSectionEditor('mockups', 'Visualização do Sistema')}
+          {renderSectionEditor('how_it_works', 'Como Funciona')}
+        </TabsContent>
+
+        <TabsContent value="testimonials" className="space-y-6">
+          {renderSectionEditor('testimonials', 'Depoimentos de Clientes')}
+        </TabsContent>
+
+        <TabsContent value="pricing" className="space-y-6">
+          {renderSectionEditor('pricing', 'Planos e Preços')}
         </TabsContent>
       </Tabs>
+
+      {isUpdating && (
+        <div className="fixed bottom-4 right-4 bg-primary text-primary-foreground px-4 py-2 rounded-lg shadow-lg">
+          <div className="flex items-center gap-2">
+            <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-primary-foreground"></div>
+            Salvando alterações...
+          </div>
+        </div>
+      )}
     </div>
   );
 }
