@@ -41,9 +41,7 @@ export const menuItems = [
     title: 'Produtos',
     icon: Package,
     path: '/app/produtos',
-    submenu: [
-      { title: 'Estoque', path: '/app/produtos/estoque' }
-    ]
+    submenu: []
   },
   {
     title: 'Compras',
