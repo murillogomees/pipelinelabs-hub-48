@@ -7,38 +7,47 @@ const corsHeaders = {
 };
 
 serve(async (req) => {
+  console.log('Edge function iniciada');
+  
   if (req.method === "OPTIONS") {
+    console.log('Handling OPTIONS request');
     return new Response(null, { headers: corsHeaders });
   }
 
-  // Apply rate limiting: 20 requests per minute for connection tests
-  const rateLimitResponse = await checkRateLimit(req, {
-    maxRequests: 20,
-    windowMs: 60000,
-    message: 'Muitas tentativas de conexão. Tente novamente em alguns instantes.'
-  });
-
-  if (rateLimitResponse) {
-    return rateLimitResponse;
-  }
+  console.log('Método da requisição:', req.method);
 
   try {
-    const { api_token, environment } = await req.json();
+    console.log('Tentando ler o body da requisição...');
+    const body = await req.text();
+    console.log('Body recebido:', body);
+    
+    if (!body) {
+      throw new Error("Body da requisição está vazio");
+    }
+
+    let parsedBody;
+    try {
+      parsedBody = JSON.parse(body);
+      console.log('Body parseado:', parsedBody);
+    } catch (parseError) {
+      console.error('Erro ao fazer parse do JSON:', parseError);
+      throw new Error(`Erro ao fazer parse do JSON: ${parseError.message}`);
+    }
+
+    const { api_token, environment } = parsedBody;
     
     if (!api_token) {
       throw new Error("Token da API NFE.io é obrigatório");
     }
 
-    console.log(`Testando conexão NFE.io - Environment: ${environment}, Token: ${api_token.substring(0, 10)}...`);
-
-    // Teste simples primeiro - apenas retornar sucesso para verificar se a edge function funciona
-    console.log('Teste básico da edge function funcionando');
+    console.log(`Dados recebidos - Environment: ${environment}, Token length: ${api_token.length}`);
 
     return new Response(
       JSON.stringify({ 
         success: true, 
-        message: "Edge function funcionando - teste básico",
+        message: "Edge function funcionando perfeitamente",
         environment,
+        tokenLength: api_token.length,
         test: true
       }),
       { 
@@ -48,13 +57,16 @@ serve(async (req) => {
     );
     
   } catch (error) {
-    console.error(`Erro na edge function test-nfe-connection: ${error.message}`, error);
+    console.error(`Erro na edge function: ${error.message}`, error);
     
     return new Response(
-      JSON.stringify({ error: error.message }),
+      JSON.stringify({ 
+        error: error.message,
+        details: error.stack 
+      }),
       { 
         headers: { ...corsHeaders, "Content-Type": "application/json" },
-        status: 400 
+        status: 500 
       }
     );
   }
