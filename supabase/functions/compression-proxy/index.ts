@@ -284,9 +284,26 @@ Deno.serve(async (req) => {
   }
   
   try {
-    // Roteamento baseado no path
-    const path = url.pathname;
+    // Check if this is a request from Supabase invoke with body
+    let path = url.pathname;
     
+    if (req.method === 'POST' || req.method === 'GET') {
+      try {
+        const requestBody = await req.text();
+        if (requestBody) {
+          const parsed = JSON.parse(requestBody);
+          if (parsed.path) {
+            path = parsed.path;
+            console.log('Using path from body:', path);
+          }
+        }
+      } catch (e) {
+        // Body parsing failed, continue with URL path
+        console.log('No body to parse, using URL path');
+      }
+    }
+    
+    // Roteamento baseado no path
     if (path.startsWith('/api/')) {
       // Requisições de API
       return await handleApiRequest(req);
