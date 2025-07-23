@@ -146,27 +146,42 @@ export class CompressionManager {
     };
   }
 
-  // Testar compressão do servidor
+  // Test server compression
   async testCompression(): Promise<CompressionMetrics | null> {
     try {
       console.log('Testing HTTP compression...');
       
-      const response = await supabase.functions.invoke('compression-proxy', {
-        body: { test: true },
+      // Create a test URL that points to the test-compression endpoint
+      const testUrl = 'https://ycqinuwrlhuxotypqlfh.supabase.co/functions/v1/compression-proxy/test-compression';
+      
+      const response = await this.fetchWithCompression(testUrl, {
+        method: 'GET',
         headers: {
-          'Accept-Encoding': 'br, gzip, deflate'
+          'Authorization': 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InljcWludXdybGh1eG90eXBxbGZoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTIwODg2MjIsImV4cCI6MjA2NzY2NDYyMn0.p8AcfnfR44BVF0T28sIgL9Qtnu1uwyGywc-p7Uh0wKQ',
         }
       });
 
-      if (response.error) {
-        console.error('Erro no teste de compressão:', response.error);
+      if (!response.ok) {
+        console.error('Compression test failed:', response.status, response.statusText);
         return null;
       }
 
+      // The metrics should have been collected by fetchWithCompression
       const metrics = this.getMetrics();
-      return metrics[metrics.length - 1] || null;
+      const latestMetric = metrics[metrics.length - 1];
+      
+      if (latestMetric) {
+        console.log('Compression test successful:', {
+          ratio: latestMetric.compressionRatio.toFixed(1) + '%',
+          type: latestMetric.compressionType,
+          original: latestMetric.originalSize,
+          compressed: latestMetric.compressedSize
+        });
+      }
+      
+      return latestMetric || null;
     } catch (error) {
-      console.error('Erro ao testar compressão:', error);
+      console.error('Error testing compression:', error);
       return null;
     }
   }
@@ -188,15 +203,15 @@ export class CompressionManager {
     return response.json();
   }
 
-  // Log de performance para debugging
+  // Performance logging for debugging
   logPerformanceMetrics(): void {
     const stats = this.getCompressionStats();
     
-    console.group('🗜️ Métricas de Compressão HTTP');
-    console.log('Total de requisições:', stats.totalRequests);
-    console.log('Taxa média de compressão:', stats.averageCompressionRatio.toFixed(1) + '%');
-    console.log('Bytes economizados:', (stats.totalBytesSaved / 1024).toFixed(1) + 'KB');
-    console.log('Distribuição por tipo:', stats.compressionTypeDistribution);
+    console.group('🗜️ HTTP Compression Metrics');
+    console.log('Total requests:', stats.totalRequests);
+    console.log('Average compression ratio:', stats.averageCompressionRatio.toFixed(1) + '%');
+    console.log('Bytes saved:', (stats.totalBytesSaved / 1024).toFixed(1) + 'KB');
+    console.log('Distribution by type:', stats.compressionTypeDistribution);
     console.groupEnd();
   }
 }
