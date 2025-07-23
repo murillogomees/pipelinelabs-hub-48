@@ -7,6 +7,7 @@ import { ProtectedRoute } from '@/components/ProtectedRoute';
 import { ErrorBoundary } from '@/components/ErrorBoundary';
 import { AuthProvider, useAuth } from '@/components/Auth/AuthProvider';
 import { AnalyticsProvider } from '@/components/Analytics/AnalyticsProvider';
+import { PrivacyConsentProvider } from '@/components/LGPD/PrivacyConsentProvider';
 import { Auth } from '@/pages/Auth';
 import React, { Suspense, useEffect } from 'react';
 import { Outlet, useLocation } from 'react-router-dom';
@@ -46,6 +47,10 @@ const AdminLandingPage = React.lazy(() => import('@/pages/AdminLandingPage').the
 const AdminCompressao = React.lazy(() => import('@/pages/AdminCompressao').then(module => ({ default: module.AdminCompressao })));
 const AdminMonitoramento = React.lazy(() => import('@/pages/AdminMonitoramento'));
 const Analytics = React.lazy(() => import('@/pages/Analytics'));
+
+// LGPD pages
+const Privacidade = React.lazy(() => import('@/pages/Privacidade'));
+const UserDadosPessoais = React.lazy(() => import('@/pages/UserDadosPessoais'));
 
 // Landing Page
 const LandingPage = React.lazy(() => import('@/pages/LandingPage').then(module => ({ default: module.LandingPage })));
@@ -126,7 +131,8 @@ function RouteHandler() {
 
   return (
     <AnalyticsProvider>
-      <Routes>
+      <PrivacyConsentProvider>
+        <Routes>
       {/* Landing page - accessible for everyone */}
       <Route 
         path="/" 
@@ -197,11 +203,25 @@ function RouteHandler() {
         <Route path="admin/monitoramento" element={<ProtectedRoute requireSuperAdmin><AdminMonitoramento /></ProtectedRoute>} />
         <Route path="analytics" element={<Analytics />} />
         
+        {/* User LGPD routes */}
+        <Route path="user/dados-pessoais" element={<UserDadosPessoais />} />
+        
         <Route path="*" element={<NotFound />} />
       </Route>
+      
+      {/* Public LGPD routes */}
+      <Route 
+        path="/privacidade" 
+        element={
+          <PageSuspenseBoundary>
+            <Privacidade />
+          </PageSuspenseBoundary>
+        } 
+      />
 
-      <Route path="*" element={<Navigate to="/" replace />} />
-    </Routes>
+        <Route path="*" element={<Navigate to="/" replace />} />
+      </Routes>
+      </PrivacyConsentProvider>
     </AnalyticsProvider>
   );
 }

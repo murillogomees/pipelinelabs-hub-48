@@ -122,7 +122,8 @@ export const menuItems = [
     icon: Settings,
     path: '/app/configuracoes',
     submenu: [
-      { title: 'Configuração NFE.io', path: '/app/configuracoes/nfe' }
+      { title: 'Configuração NFE.io', path: '/app/configuracoes/nfe' },
+      { title: 'Meus Dados (LGPD)', path: '/app/user/dados-pessoais' }
     ]
   },
   {
