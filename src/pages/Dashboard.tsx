@@ -10,8 +10,6 @@ import { useAuth } from '@/components/Auth/AuthProvider';
 import { useAnalyticsTracker } from '@/hooks/useAnalyticsTracker';
 import { supabase } from '@/integrations/supabase/client';
 import { Responsive, WidthProvider } from 'react-grid-layout';
-import 'react-grid-layout/css/styles.css';
-import 'react-resizable/css/styles.css';
 
 const ResponsiveGridLayout = WidthProvider(Responsive);
 
