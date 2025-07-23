@@ -45,18 +45,21 @@ export function useCompanyData(): UseCompanyDataReturn {
     try {
       setIsLoading(true);
 
-      // Primeiro, obter a empresa do usuário
-      const { data: userCompany, error: userCompanyError } = await supabase
+      // Primeiro, obter a empresa do usuário (pegar o primeiro registro ativo)
+      const { data: userCompanyData, error: userCompanyError } = await supabase
         .from('user_companies')
         .select('company_id, user_type')
         .eq('user_id', user.id)
         .eq('is_active', true)
-        .single();
+        .order('created_at', { ascending: false })
+        .limit(1);
 
       if (userCompanyError) {
         console.error('Erro ao buscar empresa do usuário:', userCompanyError);
         return;
       }
+
+      const userCompany = userCompanyData?.[0];
 
       if (!userCompany) {
         toast.error('Usuário não possui empresa associada');

@@ -14,9 +14,26 @@ export function useCompanySettings() {
   const fetchSettings = async () => {
     try {
       setLoading(true);
+      
+      // Primeiro obter a empresa do usuário
+      const { data: userCompanyData } = await supabase
+        .from('user_companies')
+        .select('company_id')
+        .eq('user_id', (await supabase.auth.getUser()).data.user?.id)
+        .eq('is_active', true)
+        .order('created_at', { ascending: false })
+        .limit(1);
+
+      const companyId = userCompanyData?.[0]?.company_id;
+      
+      if (!companyId) {
+        throw new Error('Usuário não possui empresa associada');
+      }
+
       const { data, error } = await supabase
         .from('company_settings')
         .select('*')
+        .eq('company_id', companyId)
         .maybeSingle();
 
       if (error) throw error;
@@ -25,27 +42,16 @@ export function useCompanySettings() {
         setSettings(data);
       } else {
         // Create default settings if none exist
-        const { data: userCompany } = await supabase.rpc('get_user_company_id');
-        if (userCompany) {
-          const { data: newSettings, error: insertError } = await supabase
-            .from('company_settings')
-            .insert({
-              company_id: userCompany,
-              moeda: 'BRL',
-              idioma: 'pt-BR',
-              timezone: 'America/Sao_Paulo',
-              formas_pagamento_ativas: ['pix', 'cartao', 'boleto'],
-              funcionalidades_ativas: {},
-              impostos_padrao: {},
-              notificacoes: { email: true, whatsapp: false },
-              branding: { nome_sistema: 'Pipeline Labs' }
-            })
-            .select()
-            .single();
+        const { data: newSettings, error: insertError } = await supabase
+          .from('company_settings')
+          .insert({
+            company_id: companyId
+          })
+          .select()
+          .single();
 
-          if (insertError) throw insertError;
-          setSettings(newSettings);
-        }
+        if (insertError) throw insertError;
+        setSettings(newSettings);
       }
     } catch (error) {
       console.error('Erro ao carregar configurações:', error);
