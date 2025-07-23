@@ -4,7 +4,7 @@ import { User, Menu, LogOut, Settings, Crown, Users } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/components/Auth/AuthProvider';
 import { usePermissions } from '@/hooks/usePermissions';
-import { NotificationBell } from '@/components/Notifications/NotificationBell';
+
 import { GlobalSearchTrigger } from '@/components/Search/GlobalSearchTrigger';
 import { UserProfileDialog } from '@/components/User/UserProfileDialog';
 
@@ -62,7 +62,6 @@ export function Header({ onToggleSidebar }: HeaderProps) {
         </div>
 
         <div className="flex items-center space-x-4">
-          <NotificationBell />
           
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
