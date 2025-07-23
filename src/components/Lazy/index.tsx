@@ -89,11 +89,6 @@ export const LazySupplierDialog = createLazyComponent(
   'default'
 );
 
-export const LazyNFeDialog = createLazyComponent(
-  () => import('@/components/NFe/NFeDialog'),
-  'NFeDialog',
-  'large'
-);
 
 export const LazyRealNFeDialog = createLazyComponent(
   () => import('@/components/NFe/RealNFeDialog'),

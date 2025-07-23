@@ -10,7 +10,7 @@ import {
   Settings, 
   BarChart3, 
   Zap, 
-  FileSpreadsheet,
+  
   Settings2,
   UserCheck,
   CreditCard,
@@ -85,12 +85,6 @@ export const menuItems = [
       { title: 'NFCe', path: '/app/notas-fiscais/nfce' },
       { title: 'NFSe', path: '/app/notas-fiscais/nfse' }
     ]
-  },
-  {
-    title: 'Emissão Fiscal',
-    icon: FileSpreadsheet,
-    path: '/app/emissao-fiscal',
-    submenu: []
   },
   {
     title: 'Produção',

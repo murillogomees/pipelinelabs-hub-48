@@ -9,7 +9,7 @@ export class ComponentPreloader {
   private static criticalComponents = [
     'ProductDialog',
     'CustomerDialog',
-    'NFeDialog',
+    
     'Dashboard',
     'Vendas',
     'Produtos'
@@ -28,7 +28,7 @@ export class ComponentPreloader {
       // Dialogs mais usados
       this.preloadComponent('ProductDialog', () => import('@/components/Products/ProductDialog')),
       this.preloadComponent('CustomerDialog', () => import('@/components/Customers/CustomerDialog')),
-      this.preloadComponent('NFeDialog', () => import('@/components/NFe/NFeDialog')),
+      
     ];
 
     await Promise.allSettled(preloadPromises);
@@ -64,7 +64,7 @@ export class ComponentPreloader {
       '/produtos': ['ProductDialog', 'ProductTable'],
       '/clientes': ['CustomerDialog', 'CustomerTable'],
       '/financeiro': ['AccountPayableDialog', 'AccountReceivableDialog'],
-      '/notas-fiscais': ['NFeDialog', 'RealNFeDialog'],
+      '/notas-fiscais': ['RealNFeDialog'],
       '/producao': ['ProductionOrderDialog', 'ServiceOrderDialog'],
       '/estoque': ['StockMovementDialog', 'WarehouseDialog'],
       '/compras': ['PurchaseOrderDialog'],
@@ -82,7 +82,7 @@ export class ComponentPreloader {
       const importMap = {
         ProductDialog: () => import('@/components/Products/ProductDialog'),
         CustomerDialog: () => import('@/components/Customers/CustomerDialog'),
-        NFeDialog: () => import('@/components/NFe/NFeDialog'),
+        
         RealNFeDialog: () => import('@/components/NFe/RealNFeDialog'),
         PurchaseOrderDialog: () => import('@/components/Purchases/PurchaseOrderDialog'),
         AccountPayableDialog: () => import('@/components/Financial/AccountPayableDialog'),

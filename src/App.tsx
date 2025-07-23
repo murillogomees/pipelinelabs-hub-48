@@ -30,7 +30,7 @@ const Relatorios = React.lazy(() => import('@/pages/Relatorios').then(module => 
 const Configuracoes = React.lazy(() => import('@/pages/Configuracoes'));
 const Integracoes = React.lazy(() => import('@/pages/Integracoes').then(module => ({ default: module.Integracoes })));
 const Estoque = React.lazy(() => import('@/pages/Estoque'));
-const EmissaoFiscal = React.lazy(() => import('@/pages/EmissaoFiscal').then(module => ({ default: module.EmissaoFiscal })));
+
 const ConfiguracaoNFe = React.lazy(() => import('@/pages/ConfiguracaoNFe'));
 const ConfiguracoesIntegracoes = React.lazy(() => import('@/pages/ConfiguracoesIntegracoes').then(module => ({ default: module.ConfiguracoesIntegracoes })));
 const NotFound = React.lazy(() => import('@/pages/NotFound'));
@@ -186,7 +186,7 @@ function RouteHandler() {
         <Route path="financeiro/receber" element={<div>Contas a Receber</div>} />
         <Route path="financeiro/conciliacao" element={<div>Conciliação</div>} />
         <Route path="notas-fiscais/*" element={<NotasFiscais />} />
-        <Route path="emissao-fiscal" element={<EmissaoFiscal />} />
+        
         <Route path="producao" element={<Producao />} />
         <Route path="producao/os" element={<div>Ordens de Serviço</div>} />
         <Route path="relatorios" element={<Relatorios />} />
