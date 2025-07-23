@@ -12,7 +12,7 @@ export function Sidebar({ collapsed, onNavigate }: SidebarProps) {
 
   return (
     <div className={cn(
-      "bg-sidebar text-sidebar-foreground transition-all duration-300 flex flex-col min-h-screen sticky top-0",
+      "bg-sidebar text-sidebar-foreground transition-all duration-300 flex flex-col h-full border-r",
       collapsed ? "w-16" : "w-64"
     )}>
       <SidebarHeader collapsed={collapsed} />
