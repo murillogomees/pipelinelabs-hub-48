@@ -63,13 +63,17 @@ export function UserForm({ user, onSubmit, loading }: UserFormProps) {
 
   useEffect(() => {
     if (user) {
+      const userCompany = user.user_companies && user.user_companies.length > 0 
+        ? user.user_companies[0] 
+        : null;
+        
       setFormData({
         display_name: user.display_name || '',
         email: user.email || '',
         is_active: user.is_active,
-        user_type: user.user_companies[0]?.user_type || 'operador',
+        user_type: userCompany?.user_type || 'operador',
         password: '',
-        company_id: user.user_companies[0]?.company_id || '',
+        company_id: userCompany?.company_id || '',
         permissions: {
           dashboard: true,
           vendas: false,
@@ -79,7 +83,7 @@ export function UserForm({ user, onSubmit, loading }: UserFormProps) {
           notas_fiscais: false,
           producao: false,
           contratos: false,
-          ...user.user_companies[0]?.permissions
+          ...(userCompany?.permissions || {})
         }
       });
     } else if (defaultCompanyId) {
