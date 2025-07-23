@@ -65,7 +65,7 @@ export function LandingPage() {
   const featuresSection = getSection('features');
   const testimonialsSection = getSection('testimonials');
   const securitySection = getSection('security');
-  const howItWorksSection = getSection('how_it_works');
+  
   const pricingSection = getSection('pricing');
   const finalCtaSection = getSection('final_cta');
   return <div className="min-h-screen bg-background">
@@ -250,6 +250,26 @@ export function LandingPage() {
           </div>
         </section>}
 
+      {/* Security Section - Movida para logo após Features */}
+      {securitySection && <section className="py-20 px-4 bg-muted/50">
+          <div className="container mx-auto">
+            <div className="text-center mb-16">
+              <h2 className="text-3xl md:text-4xl font-bold mb-4">
+                {securitySection.title}
+              </h2>
+              <p className="text-xl text-muted-foreground">
+                {securitySection.subtitle}
+              </p>
+            </div>
+
+            <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6 max-w-4xl mx-auto">
+              {securitySection.content_data?.security_items?.map((item: any, index: number) => <div key={index} className="flex items-center gap-3 bg-background/50 p-4 rounded-lg border">
+                  {getIcon(item.icon)}
+                  <span className="text-sm font-medium">{item.title}</span>
+                </div>)}
+            </div>
+          </div>
+        </section>}
 
       {/* Testimonials Section */}
       {testimonialsSection && <section className="py-20 px-4">
@@ -284,54 +304,7 @@ export function LandingPage() {
           </div>
         </section>}
 
-      {/* Security Section */}
-      {securitySection && <section className="py-20 px-4 bg-muted/50">
-          <div className="container mx-auto">
-            <div className="text-center mb-16">
-              <h2 className="text-3xl md:text-4xl font-bold mb-4">
-                {securitySection.title}
-              </h2>
-              <p className="text-xl text-muted-foreground">
-                {securitySection.subtitle}
-              </p>
-            </div>
 
-            <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6 max-w-4xl mx-auto">
-              {securitySection.content_data?.security_items?.map((item: any, index: number) => <div key={index} className="flex items-center gap-3 bg-background/50 p-4 rounded-lg border">
-                  {getIcon(item.icon)}
-                  <span className="text-sm font-medium">{item.title}</span>
-                </div>)}
-            </div>
-          </div>
-        </section>}
-
-      {/* How It Works Section */}
-      {howItWorksSection && <section className="py-20 px-4">
-          <div className="container mx-auto">
-            <div className="text-center mb-16">
-              <h2 className="text-3xl md:text-4xl font-bold mb-4">
-                {howItWorksSection.title}
-              </h2>
-              <p className="text-xl text-muted-foreground">
-                {howItWorksSection.subtitle}
-              </p>
-            </div>
-
-            <div className="grid md:grid-cols-3 gap-8 max-w-4xl mx-auto">
-              {howItWorksSection.content_data?.steps?.map((step: any, index: number) => <Card key={index} className="text-center">
-                  <CardContent className="p-6">
-                    <div className="w-16 h-16 bg-primary rounded-full mx-auto mb-4 flex items-center justify-center">
-                      <span className="text-2xl font-bold text-primary-foreground">
-                        {step.number}
-                      </span>
-                    </div>
-                    <h3 className="text-xl font-semibold mb-2">{step.title}</h3>
-                    <p className="text-muted-foreground">{step.description}</p>
-                  </CardContent>
-                </Card>)}
-            </div>
-          </div>
-        </section>}
 
       {/* Pricing Section */}
       {pricingSection && <section className="py-20 px-4 bg-muted/50">
