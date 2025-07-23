@@ -86,7 +86,7 @@ export const menuItems = [
     submenu: []
   },
   {
-    title: 'Integrações',
+    title: 'Market Places',
     icon: Zap,
     path: '/app/integracoes',
     submenu: [
