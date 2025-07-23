@@ -122,10 +122,10 @@ function getDefaultConfig(): LandingPageConfig {
           "Controle de estoque em cadernos"
         ],
         solutions: [
-          "**Dashboard financeiro** mostra lucros em tempo real",
-          "**Notas fiscais** emitidas em 3 cliques",
-          "**Controle automático** de ingredientes e estoque",
-          "**Ordem de produção** otimizada por demanda"
+          "Dashboard financeiro mostra lucros em tempo real",
+          "Notas fiscais emitidas em 3 cliques",
+          "Controle automático de ingredientes e estoque",
+          "Ordem de produção otimizada por demanda"
         ],
         result: "Conseguiu contratar 2 funcionários e dobrar sua produção, mantendo total controle financeiro e operacional.",
         image: "/src/assets/carla-persona.jpg"
@@ -144,10 +144,10 @@ function getDefaultConfig(): LandingPageConfig {
           "Confusão com envios e separação de produtos"
         ],
         solutions: [
-          "**Centralização de pedidos** em um único painel unificado",
-          "**Estoque automatizado** sincronizado entre todos os canais",
-          "**Impressão de etiquetas** e separação com logística integrada",
-          "**Dashboard de vendas** com visão diária e relatórios"
+          "Centralização de todos os pedidos em um único painel",
+          "Estoque automatizado entre canais",
+          "Impressão de etiquetas e separação com logística integrada",
+          "Dashboard com visão das vendas diárias"
         ],
         result: "Ganhou tempo, segurança e agora foca no crescimento da loja com visão unificada.",
         image: "/src/assets/lucas-persona-card.jpg"
@@ -166,10 +166,10 @@ function getDefaultConfig(): LandingPageConfig {
           "Estoque desorganizado"
         ],
         solutions: [
-          "**Estoque automatizado** e preciso em tempo real",
-          "**Emissão fiscal simplificada** em poucos cliques",
-          "**Relatórios automáticos** de vendas e performance",
-          "**PDV integrado** com e-commerce unificado"
+          "Estoque automatizado e preciso",
+          "Emissão fiscal simplificada",
+          "Relatórios automáticos de vendas",
+          "PDV integrado com e-commerce"
         ],
         result: "Reduziu 80% do tempo administrativo e aumentou 40% as vendas com melhor controle.",
         image: "/src/assets/ana-persona.jpg"
@@ -188,10 +188,10 @@ function getDefaultConfig(): LandingPageConfig {
           "Dificuldade com separação de pedidos"
         ],
         solutions: [
-          "**Sistema de pedidos online** centralizado e eficiente",
-          "**Controle inteligente** de estoque em múltiplos depósitos",
-          "**Separação automática** de pedidos com otimização de rotas",
-          "**Integração com transportadoras** e rastreamento completo"
+          "Sistema de pedidos online",
+          "Controle inteligente de estoque",
+          "Separação automática de pedidos",
+          "Integração com transportadoras"
         ],
         result: "Automatizou toda operação e aumentou 60% a eficiência logística.",
         image: "/src/assets/eduardo-persona.jpg"
