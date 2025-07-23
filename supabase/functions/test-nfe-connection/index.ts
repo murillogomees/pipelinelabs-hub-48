@@ -31,103 +31,25 @@ serve(async (req) => {
 
     console.log(`Testando conexão NFE.io - Environment: ${environment}, Token: ${api_token.substring(0, 10)}...`);
 
-    // URLs da NFE.io - vamos tentar com endpoints diferentes
-    const baseUrl = environment === "prod" 
-      ? "https://api.nfe.io" 
-      : "https://api.nfe.io"; // Usar produção primeiro para testar
-
-    console.log(`URL base: ${baseUrl}, Environment: ${environment}`);
-
-    // Primeiro, vamos testar a conectividade básica com um endpoint simples
-    let response;
-    try {
-      // Testar endpoint mais simples primeiro
-      console.log('Testando endpoint básico...');
-      response = await fetch(`${baseUrl}/v1/companies`, {
-        method: 'GET',
-        headers: {
-          "Authorization": `Token token=${api_token}`,
-          "Content-Type": "application/json",
-          "Accept": "application/json",
-          "User-Agent": "Pipeline-Labs-ERP/1.0"
-        },
-        // Adicionar timeout de 15 segundos
-        signal: AbortSignal.timeout(15000)
-      });
-    } catch (fetchError) {
-      console.error('Erro no fetch:', fetchError);
-      
-      // Se falhar, tentar com endpoint alternativo
-      console.log('Tentando endpoint alternativo...');
-      try {
-        response = await fetch(`https://nfe.io/v1/companies`, {
-          method: 'GET',
-          headers: {
-            "Authorization": `Token token=${api_token}`,
-            "Content-Type": "application/json",
-            "Accept": "application/json"
-          },
-          signal: AbortSignal.timeout(15000)
-        });
-      } catch (secondError) {
-        console.error('Segundo erro:', secondError);
-        throw new Error(`Não foi possível conectar com NFE.io: ${fetchError.message}`);
-      }
-    }
-
-    console.log(`Resposta NFE.io: Status ${response.status}, Headers: ${JSON.stringify(Object.fromEntries(response.headers))}`);
-
-    if (!response.ok) {
-      const errorText = await response.text();
-      console.error(`Erro na API NFE.io: ${response.status} - ${errorText}`);
-      throw new Error(`Erro na conexão com NFE.io: ${response.status} ${response.statusText} - ${errorText}`);
-    }
-
-    const data = await response.json();
-    console.log(`Dados recebidos: ${JSON.stringify(data)}`);
+    // Teste simples primeiro - apenas retornar sucesso para verificar se a edge function funciona
+    console.log('Teste básico da edge function funcionando');
 
     return new Response(
       JSON.stringify({ 
         success: true, 
-        message: "Conexão estabelecida com sucesso",
+        message: "Edge function funcionando - teste básico",
         environment,
-        companies: data?.companies?.length || 0,
-        data: data
+        test: true
       }),
       { 
         headers: { ...corsHeaders, "Content-Type": "application/json" },
         status: 200 
       }
     );
+    
   } catch (error) {
     console.error(`Erro na edge function test-nfe-connection: ${error.message}`, error);
     
-    // Verificar se é um erro de timeout
-    if (error.name === 'TimeoutError') {
-      return new Response(
-        JSON.stringify({ 
-          error: "Timeout na conexão com NFE.io. Verifique sua conexão de internet ou tente novamente." 
-        }),
-        { 
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
-          status: 408 
-        }
-      );
-    }
-
-    // Verificar se é um erro de rede
-    if (error.message.includes('error sending request')) {
-      return new Response(
-        JSON.stringify({ 
-          error: "Erro de rede ao conectar com NFE.io. Verifique se o token está correto e se o serviço está disponível." 
-        }),
-        { 
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
-          status: 503 
-        }
-      );
-    }
-
     return new Response(
       JSON.stringify({ error: error.message }),
       { 
