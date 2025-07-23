@@ -27,10 +27,11 @@ export const useStripeConfig = () => {
         .from("stripe_config")
         .select("*")
         .is("company_id", null)
-        .single();
+        .order("created_at", { ascending: false })
+        .limit(1);
 
-      if (error && error.code !== "PGRST116") throw error;
-      return data;
+      if (error) throw error;
+      return data?.[0] || null;
     },
   });
 
