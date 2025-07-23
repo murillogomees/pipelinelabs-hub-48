@@ -7,15 +7,15 @@ interface SidebarHeaderProps {
 export function SidebarHeader({ collapsed }: SidebarHeaderProps) {
 
   return (
-    <div className="p-4 border-b border-sidebar-border">
+    <div className="p-4 border-b border-border">
       <div className="flex items-center space-x-3">
-        <div className="w-8 h-8 bg-sidebar-primary rounded-lg flex items-center justify-center">
-          <Building2 className="w-5 h-5 text-sidebar-primary-foreground" />
+        <div className="p-2 rounded-lg bg-primary/10">
+          <Building2 className="h-6 w-6 text-primary" />
         </div>
         {!collapsed && (
           <div>
-            <h1 className="text-lg font-bold text-sidebar-foreground">Pipeline Labs</h1>
-            <p className="text-xs text-sidebar-foreground/60">ERP Inteligente</p>
+            <h1 className="text-lg font-bold text-foreground">Pipeline Labs</h1>
+            <p className="text-xs text-muted-foreground">ERP Inteligente</p>
           </div>
         )}
       </div>
