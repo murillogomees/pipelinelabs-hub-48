@@ -563,7 +563,7 @@ export function Clientes() {
         <p className="text-muted-foreground">Gerencie clientes e fornecedores</p>
       </div>
 
-      {/* Removed unused tabs */}
+      
       <Routes>
         <Route index element={<ClientesLista />} />
         <Route path="fornecedores" element={<Fornecedores />} />

@@ -93,9 +93,9 @@ export function useErrorHandler() {
   return (error: Error, errorInfo?: any) => {
     logger.error('Error handled by hook', { error, errorInfo }, 'ErrorHandler');
     
-    // Em produção, poderia enviar para serviço de monitoramento
+    // Em produção, erros são automaticamente capturados pelo Sentry
     if (import.meta.env.MODE === 'production') {
-      // TODO: Enviar para Sentry, LogRocket, etc.
+      console.error('Error boundary triggered:', error);
     }
   };
 }

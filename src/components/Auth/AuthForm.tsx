@@ -3,7 +3,6 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { useAuthForm } from './hooks/useAuthForm';
 import { useDocumentValidation } from './hooks/useDocumentValidation';
-import { useRateLimit } from './hooks/useRateLimit';
 import { AuthFormFields } from './components/AuthFormFields';
 
 export function AuthForm() {
@@ -19,8 +18,7 @@ export function AuthForm() {
     phone: '',
   });
 
-  const { loading, handleAuth } = useAuthForm();
-  const { rateLimited, rateLimitTime } = useRateLimit();
+  const { loading, handleAuth, rateLimited, rateLimitTime } = useAuthForm();
   const { handleDocumentChange, validateDocument } = useDocumentValidation();
 
   const onFormDataChange = (updates: Partial<typeof formData>) => {

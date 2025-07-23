@@ -338,7 +338,7 @@ export function Producao() {
         <p className="text-muted-foreground">Gerencie produção e ordens de serviço</p>
       </div>
 
-      {/* Removed unused tabs */}
+      
       <Routes>
         <Route index element={<OrdensProducao />} />
         <Route path="os" element={<OrdensServico />} />

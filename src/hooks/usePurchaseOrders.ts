@@ -1,56 +1,7 @@
-import { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
-
-export interface PurchaseOrderItem {
-  id: string;
-  product_id: string;
-  product_name: string;
-  quantity: number;
-  unit_price: number;
-  total_price: number;
-  notes?: string;
-}
-
-export interface PurchaseOrder {
-  id: string;
-  order_number: string;
-  supplier_id: string | null;
-  supplier_name: string | null;
-  order_date: string;
-  delivery_date: string | null;
-  status: 'draft' | 'sent' | 'confirmed' | 'partially_received' | 'received' | 'cancelled';
-  items: PurchaseOrderItem[];
-  subtotal: number;
-  discount: number;
-  tax_amount: number;
-  shipping_cost: number;
-  total_amount: number;
-  notes: string | null;
-  internal_notes: string | null;
-  created_by: string | null;
-  company_id: string;
-  created_at: string;
-  updated_at: string;
-}
-
-export interface PurchaseOrderFormData {
-  supplier_id: string;
-  supplier_name: string;
-  order_date: string;
-  delivery_date: string;
-  status: string;
-  items: PurchaseOrderItem[];
-  subtotal: number;
-  discount: number;
-  tax_amount: number;
-  shipping_cost: number;
-  total_amount: number;
-  notes: string;
-  internal_notes: string;
-  company_id: string;
-}
+import type { PurchaseOrder, PurchaseOrderFormData, OrderItem } from '@/components/Purchases/types';
 
 export function usePurchaseOrders() {
   const { toast } = useToast();

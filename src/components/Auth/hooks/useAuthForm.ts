@@ -239,8 +239,6 @@ export function useAuthForm({ onSuccess }: UseAuthFormProps = {}) {
     loading,
     rateLimited,
     rateLimitTime,
-    setRateLimited,
-    setRateLimitTime,
     handleAuth,
   };
 }

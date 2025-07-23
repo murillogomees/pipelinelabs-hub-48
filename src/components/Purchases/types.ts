@@ -22,6 +22,7 @@ export interface PurchaseOrderFormData {
   items: OrderItem[];
   subtotal: number;
   total_amount: number;
+  company_id?: string;
 }
 
 export interface PurchaseOrder extends PurchaseOrderFormData {

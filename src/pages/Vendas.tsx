@@ -227,7 +227,7 @@ export function Vendas() {
         <p className="text-mobile text-muted-foreground">Gerencie todos os seus pedidos e vendas</p>
       </div>
 
-      {/* Removed unused tabs */}
+      
 
       <Routes>
         <Route index element={<Pedidos />} />

@@ -11,9 +11,10 @@ import { Plus, Search, Filter, Eye, Edit, Trash2, Package, Calendar, DollarSign 
 import { usePurchaseOrders } from '@/hooks/usePurchaseOrders';
 import { PurchaseOrderDialog } from '@/components/Purchases/PurchaseOrderDialog';
 import { formatCurrency } from '@/lib/utils';
+import type { PurchaseOrder } from '@/components/Purchases/types';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
-import { supabase } from '@/integrations/supabase/client';
+
 import { useUserCompany } from '@/hooks/useUserCompany';
 
 export default function Compras() {
@@ -22,7 +23,7 @@ export default function Compras() {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedStatus, setSelectedStatus] = useState<string>('all');
   const [showCreateDialog, setShowCreateDialog] = useState(false);
-  const [selectedOrder, setSelectedOrder] = useState<any>(null);
+  const [selectedOrder, setSelectedOrder] = useState<PurchaseOrder | null>(null);
   const [deleteOrderId, setDeleteOrderId] = useState<string | null>(null);
 
   const { purchaseOrders, loading, createPurchaseOrder, updatePurchaseOrder, deletePurchaseOrder } = usePurchaseOrders();

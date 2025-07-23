@@ -17,7 +17,8 @@ import { useSuppliers } from '@/hooks/useSuppliers';
 import { useProducts } from '@/hooks/useProducts';
 import { SearchableSelect } from '@/components/ui/searchable-select';
 import { formatCurrency } from '@/lib/utils';
-import { purchaseOrderFormSchema, newItemFormSchema, type PurchaseOrderFormData, type OrderItem, type NewItemFormData } from './schema';
+import { purchaseOrderFormSchema, newItemFormSchema, type NewItemFormData } from './schema';
+import type { PurchaseOrderFormData, OrderItem } from './types';
 
 interface PurchaseOrderDialogProps {
   open: boolean;

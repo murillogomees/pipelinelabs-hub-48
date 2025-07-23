@@ -239,7 +239,7 @@ export function NotasFiscais() {
         <p className="text-muted-foreground">Emita e gerencie notas fiscais</p>
       </div>
 
-      {/* Removed unused tabs */}
+      
       <Routes>
         <Route index element={<NFe />} />
         <Route path="nfe" element={<NFe />} />
