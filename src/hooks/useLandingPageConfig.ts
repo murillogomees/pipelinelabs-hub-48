@@ -132,6 +132,28 @@ function getDefaultConfig(): LandingPageConfig {
       },
       {
         id: 2,
+        name: "Lucas",
+        age: 28,
+        business: "Vendedor online em marketplaces",
+        location: "Salvador/BA",
+        situation: "Solteiro, 2 anos vendendo online",
+        problems: [
+          "Vendas espalhadas entre Shopee, Mercado Livre e Amazon",
+          "Falta de controle de estoque, erros frequentes",
+          "Perdia tempo copiando pedidos manualmente",
+          "Confusão com envios e separação de produtos"
+        ],
+        solutions: [
+          "Centralização de todos os pedidos em um único painel",
+          "Estoque automatizado entre canais",
+          "Impressão de etiquetas e separação com logística integrada",
+          "Dashboard com visão das vendas diárias"
+        ],
+        result: "Ganhou tempo, segurança e agora foca no crescimento da loja com visão unificada.",
+        image: "/src/assets/lucas-persona-updated.jpg"
+      },
+      {
+        id: 3,
         name: "Ana",
         age: 34,
         business: "Loja de roupas femininas",
@@ -151,28 +173,6 @@ function getDefaultConfig(): LandingPageConfig {
         ],
         result: "Reduziu 80% do tempo administrativo e aumentou 40% as vendas com melhor controle.",
         image: "/src/assets/ana-persona.jpg"
-      },
-      {
-        id: 3,
-        name: "Lucas",
-        age: 28,
-        business: "Vendedor em marketplaces",
-        location: "Rio de Janeiro/RJ",
-        situation: "Vendedor online há 3 anos",
-        problems: [
-          "Falta de controle multicanal",
-          "Pedidos espalhados em planilhas",
-          "Estoque desatualizado",
-          "Perdia vendas por falta de integração"
-        ],
-        solutions: [
-          "Centralização de todos os pedidos",
-          "Estoque unificado e sincronizado",
-          "Integração com marketplaces",
-          "Dashboard de performance em tempo real"
-        ],
-        result: "Triplicou as vendas integrando todos os canais em uma única plataforma.",
-        image: "/src/assets/lucas-persona.jpg"
       },
       {
         id: 4,
