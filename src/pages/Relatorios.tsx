@@ -1,5 +1,4 @@
 import { useState } from "react";
-import { MainLayout } from "@/components/Layout/MainLayout";
 import { ReportsHeader } from "@/components/Reports/ReportsHeader";
 import { ReportsList } from "@/components/Reports/ReportsList";
 import { ReportBuilder } from "@/components/Reports/ReportBuilder";
@@ -30,37 +29,35 @@ export function Relatorios() {
   };
 
   return (
-    <MainLayout>
-      <div className="space-y-6">
-        <ReportsHeader 
-          currentView={currentView}
-          onCreateReport={handleCreateReport}
-          onBackToList={handleBackToList}
+    <div className="space-y-6">
+      <ReportsHeader 
+        currentView={currentView}
+        onCreateReport={handleCreateReport}
+        onBackToList={handleBackToList}
+      />
+      
+      {currentView === 'list' && (
+        <ReportsList 
+          onEditReport={handleEditReport}
+          onViewReport={handleViewReport}
         />
-        
-        {currentView === 'list' && (
-          <ReportsList 
-            onEditReport={handleEditReport}
-            onViewReport={handleViewReport}
-          />
-        )}
-        
-        {currentView === 'builder' && (
-          <ReportBuilder 
-            reportId={selectedReportId}
-            onSave={handleBackToList}
-            onCancel={handleBackToList}
-          />
-        )}
-        
-        {currentView === 'viewer' && selectedReportId && (
-          <ReportViewer 
-            reportId={selectedReportId}
-            onEdit={() => handleEditReport(selectedReportId)}
-            onBack={handleBackToList}
-          />
-        )}
-      </div>
-    </MainLayout>
+      )}
+      
+      {currentView === 'builder' && (
+        <ReportBuilder 
+          reportId={selectedReportId}
+          onSave={handleBackToList}
+          onCancel={handleBackToList}
+        />
+      )}
+      
+      {currentView === 'viewer' && selectedReportId && (
+        <ReportViewer 
+          reportId={selectedReportId}
+          onEdit={() => handleEditReport(selectedReportId)}
+          onBack={handleBackToList}
+        />
+      )}
+    </div>
   );
 }
