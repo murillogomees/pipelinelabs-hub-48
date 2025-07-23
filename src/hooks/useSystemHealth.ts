@@ -46,8 +46,22 @@ export const useSystemHealth = () => {
           return error as SystemHealthData;
         }
         
-        // Only throw if there's a real connection error
-        if (error) throw error;
+        // For 503 errors from health-check function, the data might be in the error context
+        if (error && (error as any).context?.body) {
+          try {
+            const healthData = JSON.parse((error as any).context.body);
+            if (healthData && healthData.status) {
+              return healthData as SystemHealthData;
+            }
+          } catch (parseError) {
+            console.warn('Failed to parse health data from error context:', parseError);
+          }
+        }
+        
+        // Only throw if there's a real connection error and no health data
+        if (error) {
+          console.warn('Health check returned error, falling back to degraded status:', error);
+        }
         return null;
       } catch (fetchError) {
         // Handle network errors or function unavailable
