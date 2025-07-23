@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -6,6 +6,8 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
 import { Customer, NewCustomer } from '@/hooks/useCustomers';
+import { Badge } from '@/components/ui/badge';
+import { AlertCircle, CheckCircle2 } from 'lucide-react';
 
 interface CustomerDialogProps {
   open: boolean;
@@ -33,7 +35,44 @@ export function CustomerDialog({
     zipcode: '',
     customer_type: 'individual'
   });
+  const [validationErrors, setValidationErrors] = useState<{[key: string]: string}>({});
   const { toast } = useToast();
+
+  // Máscaras para formatação
+  const formatCPF = useCallback((value: string) => {
+    return value
+      .replace(/\D/g, '')
+      .replace(/(\d{3})(\d)/, '$1.$2')
+      .replace(/(\d{3})(\d)/, '$1.$2')
+      .replace(/(\d{3})(\d{1,2})/, '$1-$2')
+      .replace(/(-\d{2})\d+?$/, '$1');
+  }, []);
+
+  const formatCNPJ = useCallback((value: string) => {
+    return value
+      .replace(/\D/g, '')
+      .replace(/(\d{2})(\d)/, '$1.$2')
+      .replace(/(\d{3})(\d)/, '$1.$2')
+      .replace(/(\d{3})(\d)/, '$1/$2')
+      .replace(/(\d{4})(\d{1,2})/, '$1-$2')
+      .replace(/(-\d{2})\d+?$/, '$1');
+  }, []);
+
+  const formatPhone = useCallback((value: string) => {
+    return value
+      .replace(/\D/g, '')
+      .replace(/(\d{2})(\d)/, '($1) $2')
+      .replace(/(\d{4})(\d)/, '$1-$2')
+      .replace(/(\d{4})-(\d)(\d{4})/, '$1$2-$3')
+      .replace(/(-\d{4})\d+?$/, '$1');
+  }, []);
+
+  const formatCEP = useCallback((value: string) => {
+    return value
+      .replace(/\D/g, '')
+      .replace(/(\d{5})(\d)/, '$1-$2')
+      .replace(/(-\d{3})\d+?$/, '$1');
+  }, []);
 
   useEffect(() => {
     if (customer) {
@@ -63,14 +102,65 @@ export function CustomerDialog({
     }
   }, [customer]);
 
+  const validateForm = useCallback(() => {
+    const errors: {[key: string]: string} = {};
+    
+    if (!formData.name.trim()) {
+      errors.name = 'Nome é obrigatório';
+    }
+    
+    if (formData.document) {
+      const cleanDoc = formData.document.replace(/\D/g, '');
+      if (formData.customer_type === 'individual' && cleanDoc.length !== 11) {
+        errors.document = 'CPF deve ter 11 dígitos';
+      }
+      if (formData.customer_type === 'company' && cleanDoc.length !== 14) {
+        errors.document = 'CNPJ deve ter 14 dígitos';
+      }
+    }
+    
+    if (formData.email && formData.email.trim() && !formData.email.includes('@')) {
+      errors.email = 'E-mail inválido';
+    }
+    
+    setValidationErrors(errors);
+    return Object.keys(errors).length === 0;
+  }, [formData]);
+
+  const handleInputChange = useCallback((field: keyof NewCustomer, value: string) => {
+    let formattedValue = value;
+    
+    // Aplicar máscaras conforme o campo
+    if (field === 'document') {
+      formattedValue = formData.customer_type === 'individual' 
+        ? formatCPF(value) 
+        : formatCNPJ(value);
+    } else if (field === 'phone') {
+      formattedValue = formatPhone(value);
+    } else if (field === 'zipcode') {
+      formattedValue = formatCEP(value);
+    }
+    
+    setFormData(prev => ({ ...prev, [field]: formattedValue }));
+    
+    // Limpar erro do campo quando usuário digita
+    if (validationErrors[field]) {
+      setValidationErrors(prev => {
+        const newErrors = { ...prev };
+        delete newErrors[field];
+        return newErrors;
+      });
+    }
+  }, [formData.customer_type, formatCPF, formatCNPJ, formatPhone, formatCEP, validationErrors]);
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!formData.name.trim()) {
+    if (!validateForm()) {
       toast({
         variant: "destructive",
-        title: "Nome obrigatório",
-        description: "O nome do cliente é obrigatório.",
+        title: "Dados inválidos",
+        description: "Verifique os campos destacados em vermelho.",
       });
       return;
     }
@@ -102,28 +192,53 @@ export function CustomerDialog({
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label htmlFor="name">Nome *</Label>
+              <Label htmlFor="name" className="flex items-center gap-2">
+                Nome *
+                {validationErrors.name && <AlertCircle className="h-4 w-4 text-destructive" />}
+              </Label>
               <Input
                 id="name"
                 value={formData.name}
-                onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
+                onChange={(e) => handleInputChange('name', e.target.value)}
                 placeholder="Nome do cliente"
+                className={validationErrors.name ? 'border-destructive' : ''}
                 required
+                autoFocus
               />
+              {validationErrors.name && (
+                <p className="text-sm text-destructive">{validationErrors.name}</p>
+              )}
             </div>
 
             <div className="space-y-2">
               <Label htmlFor="customer_type">Tipo de Cliente</Label>
               <Select
                 value={formData.customer_type}
-                onValueChange={(value: 'individual' | 'company') => setFormData(prev => ({ ...prev, customer_type: value }))}
+                onValueChange={(value: 'individual' | 'company') => {
+                  setFormData(prev => ({ ...prev, customer_type: value, document: '' }));
+                  setValidationErrors(prev => {
+                    const newErrors = { ...prev };
+                    delete newErrors.document;
+                    return newErrors;
+                  });
+                }}
               >
                 <SelectTrigger>
                   <SelectValue placeholder="Tipo de cliente" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="individual">Pessoa Física</SelectItem>
-                  <SelectItem value="company">Pessoa Jurídica</SelectItem>
+                  <SelectItem value="individual">
+                    <div className="flex items-center gap-2">
+                      Pessoa Física
+                      <Badge variant="outline" className="text-xs">CPF</Badge>
+                    </div>
+                  </SelectItem>
+                  <SelectItem value="company">
+                    <div className="flex items-center gap-2">
+                      Pessoa Jurídica
+                      <Badge variant="outline" className="text-xs">CNPJ</Badge>
+                    </div>
+                  </SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -131,15 +246,20 @@ export function CustomerDialog({
 
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label htmlFor="document">
+              <Label htmlFor="document" className="flex items-center gap-2">
                 {formData.customer_type === 'individual' ? 'CPF' : 'CNPJ'}
+                {validationErrors.document && <AlertCircle className="h-4 w-4 text-destructive" />}
               </Label>
               <Input
                 id="document"
                 value={formData.document}
-                onChange={(e) => setFormData(prev => ({ ...prev, document: e.target.value }))}
+                onChange={(e) => handleInputChange('document', e.target.value)}
                 placeholder={formData.customer_type === 'individual' ? '000.000.000-00' : '00.000.000/0000-00'}
+                className={validationErrors.document ? 'border-destructive' : ''}
               />
+              {validationErrors.document && (
+                <p className="text-sm text-destructive">{validationErrors.document}</p>
+              )}
             </div>
 
             <div className="space-y-2">
@@ -147,21 +267,28 @@ export function CustomerDialog({
               <Input
                 id="phone"
                 value={formData.phone}
-                onChange={(e) => setFormData(prev => ({ ...prev, phone: e.target.value }))}
+                onChange={(e) => handleInputChange('phone', e.target.value)}
                 placeholder="(00) 00000-0000"
               />
             </div>
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="email">E-mail</Label>
+            <Label htmlFor="email" className="flex items-center gap-2">
+              E-mail
+              {validationErrors.email && <AlertCircle className="h-4 w-4 text-destructive" />}
+            </Label>
             <Input
               id="email"
               type="email"
               value={formData.email}
-              onChange={(e) => setFormData(prev => ({ ...prev, email: e.target.value }))}
+              onChange={(e) => handleInputChange('email', e.target.value)}
               placeholder="cliente@email.com"
+              className={validationErrors.email ? 'border-destructive' : ''}
             />
+            {validationErrors.email && (
+              <p className="text-sm text-destructive">{validationErrors.email}</p>
+            )}
           </div>
 
           <div className="space-y-2">
@@ -169,7 +296,7 @@ export function CustomerDialog({
             <Input
               id="address"
               value={formData.address}
-              onChange={(e) => setFormData(prev => ({ ...prev, address: e.target.value }))}
+              onChange={(e) => handleInputChange('address', e.target.value)}
               placeholder="Rua, número, complemento"
             />
           </div>
@@ -180,7 +307,7 @@ export function CustomerDialog({
               <Input
                 id="city"
                 value={formData.city}
-                onChange={(e) => setFormData(prev => ({ ...prev, city: e.target.value }))}
+                onChange={(e) => handleInputChange('city', e.target.value)}
                 placeholder="Cidade"
               />
             </div>
@@ -189,7 +316,7 @@ export function CustomerDialog({
               <Label htmlFor="state">Estado</Label>
               <Select
                 value={formData.state}
-                onValueChange={(value) => setFormData(prev => ({ ...prev, state: value }))}
+                onValueChange={(value) => handleInputChange('state', value)}
               >
                 <SelectTrigger>
                   <SelectValue placeholder="UF" />
@@ -209,7 +336,7 @@ export function CustomerDialog({
               <Input
                 id="zipcode"
                 value={formData.zipcode}
-                onChange={(e) => setFormData(prev => ({ ...prev, zipcode: e.target.value }))}
+                onChange={(e) => handleInputChange('zipcode', e.target.value)}
                 placeholder="00000-000"
               />
             </div>

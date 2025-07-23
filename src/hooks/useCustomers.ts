@@ -84,8 +84,78 @@ export function useCustomers() {
     }
   };
 
+  const validateCustomer = (customer: NewCustomer): string | null => {
+    if (!customer.name.trim()) {
+      return 'Nome é obrigatório';
+    }
+    
+    if (customer.document) {
+      // Validação básica de CPF/CNPJ
+      const cleanDoc = customer.document.replace(/\D/g, '');
+      if (customer.customer_type === 'individual' && cleanDoc.length !== 11) {
+        return 'CPF deve ter 11 dígitos';
+      }
+      if (customer.customer_type === 'company' && cleanDoc.length !== 14) {
+        return 'CNPJ deve ter 14 dígitos';
+      }
+    }
+    
+    if (customer.email && !customer.email.includes('@')) {
+      return 'E-mail inválido';
+    }
+    
+    return null;
+  };
+
+  const checkDuplicateDocument = async (document: string, excludeId?: string): Promise<boolean> => {
+    if (!document) return false;
+    
+    try {
+      let query = supabase
+        .from('customers')
+        .select('id')
+        .eq('document', document);
+      
+      if (excludeId) {
+        query = query.neq('id', excludeId);
+      }
+      
+      const { data, error } = await query;
+      if (error) throw error;
+      
+      return (data?.length || 0) > 0;
+    } catch (error) {
+      console.error('Error checking duplicate document:', error);
+      return false;
+    }
+  };
+
   const createCustomer = async (newCustomer: NewCustomer) => {
     try {
+      // Validação
+      const validationError = validateCustomer(newCustomer);
+      if (validationError) {
+        toast({
+          variant: "destructive",
+          title: "Dados inválidos",
+          description: validationError,
+        });
+        return;
+      }
+
+      // Verificar duplicidade por documento
+      if (newCustomer.document) {
+        const isDuplicate = await checkDuplicateDocument(newCustomer.document);
+        if (isDuplicate) {
+          toast({
+            variant: "destructive",
+            title: "Cliente já existe",
+            description: "Já existe um cliente com este CPF/CNPJ.",
+          });
+          return;
+        }
+      }
+
       const { error } = await supabase
         .from('customers')
         .insert([{ ...newCustomer, company_id: '' }]); // company_id será preenchido automaticamente pela RLS
@@ -110,6 +180,32 @@ export function useCustomers() {
 
   const updateCustomer = async (id: string, updates: Partial<NewCustomer>) => {
     try {
+      // Validação
+      if (updates.name !== undefined) {
+        const validationError = validateCustomer(updates as NewCustomer);
+        if (validationError) {
+          toast({
+            variant: "destructive",
+            title: "Dados inválidos",
+            description: validationError,
+          });
+          return;
+        }
+      }
+
+      // Verificar duplicidade por documento (excluindo o próprio registro)
+      if (updates.document) {
+        const isDuplicate = await checkDuplicateDocument(updates.document, id);
+        if (isDuplicate) {
+          toast({
+            variant: "destructive",
+            title: "Cliente já existe",
+            description: "Já existe outro cliente com este CPF/CNPJ.",
+          });
+          return;
+        }
+      }
+
       const { error } = await supabase
         .from('customers')
         .update(updates)
@@ -195,5 +291,7 @@ export function useCustomers() {
     toggleCustomerStatus,
     deleteCustomer,
     refetch: fetchCustomers,
+    validateCustomer,
+    checkDuplicateDocument,
   };
 }

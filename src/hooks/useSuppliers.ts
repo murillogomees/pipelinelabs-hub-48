@@ -58,8 +58,75 @@ export function useSuppliers() {
     }
   };
 
+  const validateSupplier = (supplier: NewSupplier): string | null => {
+    if (!supplier.name.trim()) {
+      return 'Nome é obrigatório';
+    }
+    
+    if (supplier.document) {
+      // Validação básica de CNPJ
+      const cleanDoc = supplier.document.replace(/\D/g, '');
+      if (cleanDoc.length !== 14) {
+        return 'CNPJ deve ter 14 dígitos';
+      }
+    }
+    
+    if (supplier.email && !supplier.email.includes('@')) {
+      return 'E-mail inválido';
+    }
+    
+    return null;
+  };
+
+  const checkDuplicateDocument = async (document: string, excludeId?: string): Promise<boolean> => {
+    if (!document) return false;
+    
+    try {
+      let query = supabase
+        .from('suppliers')
+        .select('id')
+        .eq('document', document);
+      
+      if (excludeId) {
+        query = query.neq('id', excludeId);
+      }
+      
+      const { data, error } = await query;
+      if (error) throw error;
+      
+      return (data?.length || 0) > 0;
+    } catch (error) {
+      console.error('Error checking duplicate document:', error);
+      return false;
+    }
+  };
+
   const createSupplier = async (newSupplier: NewSupplier) => {
     try {
+      // Validação
+      const validationError = validateSupplier(newSupplier);
+      if (validationError) {
+        toast({
+          variant: "destructive",
+          title: "Dados inválidos",
+          description: validationError,
+        });
+        return;
+      }
+
+      // Verificar duplicidade por documento
+      if (newSupplier.document) {
+        const isDuplicate = await checkDuplicateDocument(newSupplier.document);
+        if (isDuplicate) {
+          toast({
+            variant: "destructive",
+            title: "Fornecedor já existe",
+            description: "Já existe um fornecedor com este CNPJ.",
+          });
+          return;
+        }
+      }
+
       const { error } = await supabase
         .from('suppliers')
         .insert([{ ...newSupplier, company_id: '' }]); // company_id será preenchido automaticamente pela RLS
@@ -84,6 +151,32 @@ export function useSuppliers() {
 
   const updateSupplier = async (id: string, updates: Partial<NewSupplier>) => {
     try {
+      // Validação
+      if (updates.name !== undefined) {
+        const validationError = validateSupplier(updates as NewSupplier);
+        if (validationError) {
+          toast({
+            variant: "destructive",
+            title: "Dados inválidos",
+            description: validationError,
+          });
+          return;
+        }
+      }
+
+      // Verificar duplicidade por documento (excluindo o próprio registro)
+      if (updates.document) {
+        const isDuplicate = await checkDuplicateDocument(updates.document, id);
+        if (isDuplicate) {
+          toast({
+            variant: "destructive",
+            title: "Fornecedor já existe",
+            description: "Já existe outro fornecedor com este CNPJ.",
+          });
+          return;
+        }
+      }
+
       const { error } = await supabase
         .from('suppliers')
         .update(updates)
@@ -169,5 +262,7 @@ export function useSuppliers() {
     toggleSupplierStatus,
     deleteSupplier,
     refetch: fetchSuppliers,
+    validateSupplier,
+    checkDuplicateDocument,
   };
 }

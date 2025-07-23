@@ -1,26 +1,55 @@
 import React, { useState } from 'react';
-import { Routes, Route, NavLink, useLocation } from 'react-router-dom';
+import { Routes, Route, useLocation } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Plus, Users, Building2, Search, Edit, Trash2, UserCheck, UserX, Mail, Phone, MapPin } from 'lucide-react';
-import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Plus, Users, Building2, Search, Edit, Trash2, UserCheck, UserX, Mail, Phone, MapPin, AlertCircle } from 'lucide-react';
 import { useCustomers } from '@/hooks/useCustomers';
 import { useSuppliers } from '@/hooks/useSuppliers';
 import { CustomerDialog } from '@/components/Customers/CustomerDialog';
 import { SupplierDialog } from '@/components/Suppliers/SupplierDialog';
+import { useToast } from '@/hooks/use-toast';
+import { 
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle
+} from "@/components/ui/alert-dialog";
 
 // Componente para Clientes
 function ClientesLista() {
   const { customers, loading, createCustomer, updateCustomer, toggleCustomerStatus, deleteCustomer } = useCustomers();
+  const { toast } = useToast();
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
   const [typeFilter, setTypeFilter] = useState('all');
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingCustomer, setEditingCustomer] = useState(null);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [customerToDelete, setCustomerToDelete] = useState(null);
+
+  const handleDeleteCustomer = async () => {
+    if (customerToDelete) {
+      try {
+        await deleteCustomer(customerToDelete.id);
+        setDeleteDialogOpen(false);
+        setCustomerToDelete(null);
+      } catch (error) {
+        toast({
+          variant: "destructive",
+          title: "Erro ao excluir",
+          description: "Não foi possível excluir o cliente. Verifique se não há vendas associadas.",
+        });
+      }
+    }
+  };
 
   const filteredCustomers = customers.filter(customer => {
     const matchesSearch = customer.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -210,7 +239,10 @@ function ClientesLista() {
                         <Button
                           size="sm"
                           variant="outline"
-                          onClick={() => deleteCustomer(customer.id)}
+                          onClick={() => {
+                            setCustomerToDelete(customer);
+                            setDeleteDialogOpen(true);
+                          }}
                         >
                           <Trash2 className="w-4 h-4" />
                         </Button>
@@ -234,6 +266,32 @@ function ClientesLista() {
         onUpdate={updateCustomer}
         customer={editingCustomer}
       />
+
+      <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle className="flex items-center gap-2">
+              <AlertCircle className="h-5 w-5 text-destructive" />
+              Confirmar Exclusão
+            </AlertDialogTitle>
+            <AlertDialogDescription>
+              Tem certeza que deseja excluir o cliente <strong>{customerToDelete?.name}</strong>?
+              Esta ação não pode ser desfeita e pode afetar vendas e propostas associadas.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={() => setCustomerToDelete(null)}>
+              Cancelar
+            </AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleDeleteCustomer}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              Excluir Cliente
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
@@ -241,10 +299,29 @@ function ClientesLista() {
 // Componente para Fornecedores
 function Fornecedores() {
   const { suppliers, loading, createSupplier, updateSupplier, toggleSupplierStatus, deleteSupplier } = useSuppliers();
+  const { toast } = useToast();
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingSupplier, setEditingSupplier] = useState(null);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [supplierToDelete, setSupplierToDelete] = useState(null);
+
+  const handleDeleteSupplier = async () => {
+    if (supplierToDelete) {
+      try {
+        await deleteSupplier(supplierToDelete.id);
+        setDeleteDialogOpen(false);
+        setSupplierToDelete(null);
+      } catch (error) {
+        toast({
+          variant: "destructive",
+          title: "Erro ao excluir",
+          description: "Não foi possível excluir o fornecedor. Verifique se não há compras associadas.",
+        });
+      }
+    }
+  };
 
   const filteredSuppliers = suppliers.filter(supplier => {
     const matchesSearch = supplier.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -411,7 +488,10 @@ function Fornecedores() {
                         <Button
                           size="sm"
                           variant="outline"
-                          onClick={() => deleteSupplier(supplier.id)}
+                          onClick={() => {
+                            setSupplierToDelete(supplier);
+                            setDeleteDialogOpen(true);
+                          }}
                         >
                           <Trash2 className="w-4 h-4" />
                         </Button>
@@ -435,6 +515,32 @@ function Fornecedores() {
         onUpdate={updateSupplier}
         supplier={editingSupplier}
       />
+
+      <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle className="flex items-center gap-2">
+              <AlertCircle className="h-5 w-5 text-destructive" />
+              Confirmar Exclusão
+            </AlertDialogTitle>
+            <AlertDialogDescription>
+              Tem certeza que deseja excluir o fornecedor <strong>{supplierToDelete?.name}</strong>?
+              Esta ação não pode ser desfeita e pode afetar compras e contratos associados.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={() => setSupplierToDelete(null)}>
+              Cancelar
+            </AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleDeleteSupplier}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              Excluir Fornecedor
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
