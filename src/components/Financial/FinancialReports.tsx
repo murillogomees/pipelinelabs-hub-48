@@ -61,7 +61,7 @@ export function FinancialReports() {
       const monthEnd = endOfMonth(monthDate);
       
       // Vendas do mês
-      const monthSales = sales?.filter(sale => {
+      const monthSales = sales?.data?.filter(sale => {
         const saleDate = new Date(sale.sale_date);
         return saleDate >= monthStart && saleDate <= monthEnd && sale.status !== 'cancelled';
       }) || [];

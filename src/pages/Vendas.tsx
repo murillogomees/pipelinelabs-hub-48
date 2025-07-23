@@ -101,14 +101,14 @@ function Pedidos() {
                       <TableCell className="hidden sm:table-cell"><Skeleton className="h-8 w-20" /></TableCell>
                     </TableRow>
                   ))
-                ) : sales?.length === 0 ? (
+                ) : sales?.data?.length === 0 ? (
                   <TableRow>
                     <TableCell colSpan={6} className="text-center py-8 text-muted-foreground">
                       Nenhuma venda encontrada. Clique em "Nova Venda" para criar sua primeira venda.
                     </TableCell>
                   </TableRow>
                 ) : (
-                  sales?.map((venda) => (
+                  sales?.data?.map((venda) => (
                     <TableRow key={venda.id} className="hover:bg-muted/50">
                       <TableCell className="font-medium">{venda.sale_number}</TableCell>
                       <TableCell className="hidden sm:table-cell">{venda.customers?.name || 'Cliente não informado'}</TableCell>

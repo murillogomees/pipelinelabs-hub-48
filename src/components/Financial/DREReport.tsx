@@ -41,7 +41,7 @@ export function DREReport() {
   const { start, end, label } = getPeriodDates();
 
   // Receitas
-  const periodSales = sales?.filter(sale => {
+  const periodSales = sales?.data?.filter(sale => {
     const saleDate = new Date(sale.sale_date);
     return saleDate >= start && saleDate <= end && sale.status !== 'cancelled';
   }) || [];

@@ -25,23 +25,72 @@ export interface Sale {
   };
 }
 
-export function useSales() {
+export function useSales(options?: {
+  status?: string;
+  page?: number;
+  pageSize?: number;
+  dateFrom?: string;
+  dateTo?: string;
+}) {
+  const { status, page = 1, pageSize = 50, dateFrom, dateTo } = options || {};
+  
   return useQuery({
-    queryKey: ['sales'],
+    queryKey: ['sales', { status, page, pageSize, dateFrom, dateTo }],
     queryFn: async () => {
-      const { data, error } = await (supabase as any)
+      let query = supabase
         .from('sales')
         .select(`
-          *,
+          id,
+          company_id,
+          customer_id,
+          sale_number,
+          sale_date,
+          status,
+          subtotal,
+          discount,
+          total_amount,
+          payment_method,
+          payment_terms,
+          notes,
+          created_at,
+          updated_at,
           customers (
             name
           )
-        `)
-        .order('created_at', { ascending: false });
+        `, { count: 'exact' });
+
+      // Usar índices otimizados para filtros
+      if (status) {
+        query = query.eq('status', status);
+      }
+      
+      if (dateFrom) {
+        query = query.gte('created_at', dateFrom);
+      }
+      
+      if (dateTo) {
+        query = query.lte('created_at', dateTo);
+      }
+
+      // Paginação
+      const from = (page - 1) * pageSize;
+      const to = from + pageSize - 1;
+      query = query.range(from, to);
+
+      // Ordenação usando índice idx_sales_created_at
+      query = query.order('created_at', { ascending: false });
+      
+      const { data, error, count } = await query;
       
       if (error) throw error;
-      return data as Sale[];
+      return { 
+        data: data as Sale[], 
+        count: count || 0,
+        hasMore: (count || 0) > to + 1
+      };
     },
+    staleTime: 30000, // Cache por 30 segundos
+    gcTime: 300000, // 5 minutos
   });
 }
 

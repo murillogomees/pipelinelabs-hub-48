@@ -36,14 +36,40 @@ export function useCustomers() {
   const [loading, setLoading] = useState(true);
   const { toast } = useToast();
 
-  const fetchCustomers = async () => {
+  const fetchCustomers = async (options?: {
+    search?: string;
+    status?: boolean;
+    page?: number;
+    pageSize?: number;
+  }) => {
     try {
       setLoading(true);
-      const { data, error } = await supabase
+      const { search, status, page = 1, pageSize = 100 } = options || {};
+      
+      let query = supabase
         .from('customers')
-        .select('*')
-        .order('name', { ascending: true });
+        .select('*', { count: 'exact' });
 
+      // Usar índices otimizados para filtros
+      if (search) {
+        // Usar índice idx_customers_name_search para busca por nome
+        query = query.or(`name.ilike.%${search}%, document.ilike.%${search}%`);
+      }
+      
+      if (status !== undefined) {
+        // Usar índice idx_customers_company_active
+        query = query.eq('is_active', status);
+      }
+
+      // Paginação
+      const from = (page - 1) * pageSize;
+      const to = from + pageSize - 1;
+      query = query.range(from, to);
+
+      // Ordenação usando índice idx_customers_name
+      query = query.order('name', { ascending: true });
+      
+      const { data, error } = await query;
       if (error) throw error;
       setCustomers((data || []) as Customer[]);
     } catch (error) {

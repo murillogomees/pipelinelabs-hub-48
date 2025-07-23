@@ -54,8 +54,8 @@ export function DashboardWidget({ widget, onRemove, isDragHandle = false }: Dash
   const renderWidgetContent = () => {
     switch (widget.type) {
       case 'sales_monthly': {
-        const totalSales = sales?.reduce((sum, sale) => sum + sale.total_amount, 0) || 0;
-        const salesCount = sales?.length || 0;
+        const totalSales = sales?.data?.reduce((sum, sale) => sum + sale.total_amount, 0) || 0;
+        const salesCount = sales?.data?.length || 0;
         
         return (
           <div className="space-y-2">
@@ -74,7 +74,7 @@ export function DashboardWidget({ widget, onRemove, isDragHandle = false }: Dash
       }
       
       case 'pending_orders': {
-        const pendingSales = sales?.filter(sale => sale.status === 'pending') || [];
+        const pendingSales = sales?.data?.filter(sale => sale.status === 'pending') || [];
         
         return (
           <div className="space-y-2">
