@@ -6,6 +6,7 @@ import { Badge } from '@/components/ui/badge';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Input } from '@/components/ui/input';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import { Plus, Search, Filter, Eye, Edit, Trash2, Package, Calendar, DollarSign } from 'lucide-react';
 import { usePurchaseOrders } from '@/hooks/usePurchaseOrders';
 import { PurchaseOrderDialog } from '@/components/Purchases/PurchaseOrderDialog';
@@ -20,6 +21,7 @@ export default function Compras() {
   const [selectedStatus, setSelectedStatus] = useState<string>('all');
   const [showCreateDialog, setShowCreateDialog] = useState(false);
   const [selectedOrder, setSelectedOrder] = useState(null);
+  const [deleteOrderId, setDeleteOrderId] = useState<string | null>(null);
 
   const { purchaseOrders, loading, createPurchaseOrder, updatePurchaseOrder, deletePurchaseOrder } = usePurchaseOrders();
 
@@ -53,9 +55,10 @@ export default function Compras() {
     setShowCreateDialog(true);
   };
 
-  const handleDelete = async (orderId: string) => {
-    if (window.confirm('Tem certeza que deseja excluir este pedido de compra?')) {
-      await deletePurchaseOrder(orderId);
+  const handleDelete = async () => {
+    if (deleteOrderId) {
+      await deletePurchaseOrder(deleteOrderId);
+      setDeleteOrderId(null);
     }
   };
 
@@ -231,14 +234,37 @@ export default function Compras() {
                           >
                             <Edit className="w-4 h-4" />
                           </Button>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => handleDelete(order.id)}
-                            className="text-destructive hover:text-destructive"
-                          >
-                            <Trash2 className="w-4 h-4" />
-                          </Button>
+                          <AlertDialog>
+                            <AlertDialogTrigger asChild>
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                className="text-destructive hover:text-destructive"
+                              >
+                                <Trash2 className="w-4 h-4" />
+                              </Button>
+                            </AlertDialogTrigger>
+                            <AlertDialogContent>
+                              <AlertDialogHeader>
+                                <AlertDialogTitle>Confirmar exclusão</AlertDialogTitle>
+                                <AlertDialogDescription>
+                                  Tem certeza que deseja excluir este pedido de compra? Esta ação não pode ser desfeita.
+                                </AlertDialogDescription>
+                              </AlertDialogHeader>
+                              <AlertDialogFooter>
+                                <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                                <AlertDialogAction 
+                                  onClick={() => {
+                                    setDeleteOrderId(order.id);
+                                    handleDelete();
+                                  }}
+                                  className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                                >
+                                  Excluir
+                                </AlertDialogAction>
+                              </AlertDialogFooter>
+                            </AlertDialogContent>
+                          </AlertDialog>
                         </div>
                       </TableCell>
                     </TableRow>
