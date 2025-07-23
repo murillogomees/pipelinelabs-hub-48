@@ -2281,6 +2281,7 @@ export type Database = {
           email: string | null
           id: string
           is_active: boolean
+          is_admin: boolean
           phone: string | null
           updated_at: string
           user_id: string
@@ -2292,6 +2293,7 @@ export type Database = {
           email?: string | null
           id?: string
           is_active?: boolean
+          is_admin?: boolean
           phone?: string | null
           updated_at?: string
           user_id: string
@@ -2303,6 +2305,7 @@ export type Database = {
           email?: string | null
           id?: string
           is_active?: boolean
+          is_admin?: boolean
           phone?: string | null
           updated_at?: string
           user_id?: string
@@ -3659,23 +3662,17 @@ export type Database = {
     Views: {
       potential_duplicate_policies: {
         Row: {
-          cmd: string | null
-          policy_count: number | null
-          policy_names: unknown[] | null
+          policyname: unknown | null
+          roles: unknown[] | null
           schemaname: unknown | null
-          status: string | null
-          tablename: unknown | null
         }
         Relationships: []
       }
       unused_indexes: {
         Row: {
-          idx_scan: number | null
-          idx_tup_fetch: number | null
-          idx_tup_read: number | null
-          indexname: unknown | null
+          indexrelname: unknown | null
+          relname: unknown | null
           schemaname: unknown | null
-          tablename: unknown | null
         }
         Relationships: []
       }
@@ -3988,6 +3985,10 @@ export type Database = {
       }
       user_has_accepted_current_terms: {
         Args: { p_user_id: string; p_company_id: string }
+        Returns: boolean
+      }
+      validate_password: {
+        Args: { password: string }
         Returns: boolean
       }
     }
