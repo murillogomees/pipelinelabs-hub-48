@@ -58,7 +58,6 @@ export * from './utils';
 
 // Custom components
 export { PersonaCard } from './PersonaCard';
-export { PersonaCardCompact } from './PersonaCardCompact';
 
 // Common component patterns
 export type { UIAction } from './composed';

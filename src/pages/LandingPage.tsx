@@ -11,7 +11,6 @@ import { Footer } from '@/components/Layout/Footer';
 // Import the advanced mockup components
 import { MockupDashboard, MockupPDV, MockupNFe, MockupInventory, MockupFinancial, MockupNotifications, MockupDailySales } from '@/components/ui/SystemMockups';
 import { PersonaCard } from '@/components/ui/PersonaCard';
-import { PersonaCardCompact } from '@/components/ui/PersonaCardCompact';
 
 // Icon mapping helper
 const getIcon = (iconName: string) => {
@@ -62,14 +61,14 @@ export function LandingPage() {
       </div>;
   }
   const heroSection = getSection('hero');
-  const painSection = getSection('pain_section');
+  const personasSection = getSection('personas');
   const featuresSection = getSection('features');
   const mockupsSection = getSection('mockups');
   const testimonialsSection = getSection('testimonials');
   const securitySection = getSection('security');
   const howItWorksSection = getSection('how_it_works');
-  const finalCtaSection = getSection('final_cta');
   const pricingSection = getSection('pricing');
+  const finalCtaSection = getSection('final_cta');
   return <div className="min-h-screen bg-background">
       {/* Header */}
       <header className="border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
@@ -194,26 +193,28 @@ export function LandingPage() {
           </div>
         </section>}
 
-      {/* Pain Section - Personas */}
-      {painSection && <section className="py-20 px-4 bg-muted/50">
+      {/* Pain/Personas Section - Busca agora diretamente do Supabase */}
+      {personasSection && (
+        <section className="py-20 px-4 bg-muted/50">
           <div className="container mx-auto">
             <div className="text-center mb-16">
               <h2 className="text-3xl md:text-4xl font-bold mb-4">
-                {painSection.title}
+                {personasSection.title}
               </h2>
               <p className="text-xl text-muted-foreground">
-                {painSection.subtitle}
+                {personasSection.subtitle}
               </p>
             </div>
 
             {/* Grid responsivo para cards de persona */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 max-w-7xl mx-auto">
-              {painSection.content_data?.personas?.map((persona: any, index: number) => (
+              {personasSection.content_data?.personas?.map((persona: any, index: number) => (
                 <PersonaCard key={index} persona={persona} />
               ))}
             </div>
           </div>
-        </section>}
+        </section>
+      )}
 
       {/* Features Section */}
       {featuresSection && <section className="py-20 px-4">

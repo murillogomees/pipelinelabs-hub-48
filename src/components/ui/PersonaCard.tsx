@@ -29,18 +29,16 @@ const defaultPersona: PersonaData = {
   age: 41,
   business: "Fábrica de Salgados Artesanais",
   location: "Belo Horizonte/MG",
-  situation: "Mãe solo • 5 anos",
+  situation: "Divorciada • 2 filhos",
   problems: [
-    "Não sabia se o negócio realmente dava lucro",
-    "Perdia 2 horas por dia organizando planilhas", 
-    "Emitir notas fiscais era um pesadelo",
-    "Controle de estoque em cadernos"
+    "Sem visão financeira clara do negócio",
+    "Pedidos de produção confusos e manuais",
+    "Planilhas desorganizadas tomavam muito tempo"
   ],
   solutions: [
-    "<strong>Dashboard financeiro</strong> mostra lucros em tempo real",
-    "<strong>Notas fiscais</strong> emitidas em 3 cliques",
-    "<strong>Controle automático</strong> de ingredientes e estoque",
-    "<strong>Ordem de produção</strong> otimizada por demanda"
+    "<strong>DRE automático</strong> com metas e lucros reais",
+    "<strong>Controle de produção</strong> otimizado por demanda",
+    "<strong>Integração completa</strong> estoque + vendas + financeiro"
   ],
   result: "Carla conseguiu contratar 2 funcionários e dobrar sua produção, mantendo total controle financeiro e operacional.",
   image: "/src/assets/carla-persona.jpg"

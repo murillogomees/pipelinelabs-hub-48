@@ -230,7 +230,7 @@ export function LandingPageEditor() {
         </TabsContent>
 
         <TabsContent value="personas" className="space-y-6">
-          {renderSectionEditor('pain_section', 'Dores e Transformações')}
+          {renderSectionEditor('personas', 'Personas e Histórias')}
         </TabsContent>
 
         <TabsContent value="features" className="space-y-6">
