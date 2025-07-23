@@ -41,8 +41,8 @@ export default function AdminStripe() {
               {config?.is_active ? "Ativo" : "Inativo"}
             </Badge>
             {config && (
-            <Badge variant={!config.is_live_mode ? "outline" : "destructive"}>
-              {!config.is_live_mode ? "Teste" : "Produção"}
+            <Badge variant={config.test_mode ? "outline" : "destructive"}>
+              {config.test_mode ? "Teste" : "Produção"}
               </Badge>
             )}
           </div>
@@ -75,7 +75,7 @@ export default function AdminStripe() {
                 <div>
                   <p className="text-sm font-medium">Modo</p>
                   <p className="text-2xl font-bold">
-                    {!config?.is_live_mode ? "Teste" : "Produção"}
+                    {config?.test_mode ? "Teste" : "Produção"}
                   </p>
                 </div>
               </div>
@@ -89,7 +89,7 @@ export default function AdminStripe() {
                 <div>
                   <p className="text-sm font-medium">Webhook</p>
                   <p className="text-2xl font-bold">
-                    {config?.webhook_secret ? "OK" : "Pendente"}
+                    {config?.stripe_webhook_secret_encrypted ? "OK" : "Pendente"}
                   </p>
                 </div>
               </div>
@@ -102,7 +102,9 @@ export default function AdminStripe() {
                 <Package className="h-4 w-4 text-primary" />
                 <div>
                   <p className="text-sm font-medium">Moeda</p>
-                  <p className="text-2xl font-bold">BRL</p>
+                  <p className="text-2xl font-bold">
+                    {config?.default_currency?.toUpperCase() || "BRL"}
+                  </p>
                 </div>
               </div>
             </CardContent>
@@ -156,12 +158,12 @@ export default function AdminStripe() {
                 </CardHeader>
                 <CardContent>
                   <div className="text-2xl font-bold">
-                    {config?.is_live_mode ? "Produção" : "Teste"}
+                    {config?.test_mode ? "Teste" : "Produção"}
                   </div>
                   <p className="text-xs text-muted-foreground">
-                    {config?.is_live_mode 
-                      ? "Processando pagamentos reais"
-                      : "Modo de desenvolvimento"
+                    {config?.test_mode 
+                      ? "Modo de desenvolvimento"
+                      : "Processando pagamentos reais"
                     }
                   </p>
                 </CardContent>
@@ -174,10 +176,10 @@ export default function AdminStripe() {
                 </CardHeader>
                 <CardContent>
                   <div className="text-2xl font-bold">
-                    {config?.webhook_secret ? "Configurado" : "Pendente"}
+                    {config?.stripe_webhook_secret_encrypted ? "Configurado" : "Pendente"}
                   </div>
                   <p className="text-xs text-muted-foreground">
-                    {config?.webhook_secret
+                    {config?.stripe_webhook_secret_encrypted
                       ? "Recebendo eventos do Stripe"
                       : "Configure o webhook secret"
                     }
@@ -195,7 +197,7 @@ export default function AdminStripe() {
               </CardHeader>
               <CardContent>
                 <div className="bg-muted p-3 rounded-md font-mono text-sm">
-                  {window.location.origin}/api/stripe/webhook
+                  https://ycqinuwrlhuxotypqlfh.supabase.co/functions/v1/stripe-webhook
                 </div>
                 <p className="text-sm text-muted-foreground mt-2">
                   Eventos recomendados: customer.subscription.created, customer.subscription.updated, 
@@ -219,8 +221,8 @@ export default function AdminStripe() {
                     <div>
                       <p className="text-sm font-medium">Publishable Key</p>
                        <p className="text-sm text-muted-foreground font-mono">
-                         {config.publishable_key ? 
-                           `${config.publishable_key.substring(0, 12)}...` : 
+                         {config.stripe_publishable_key ? 
+                           `${config.stripe_publishable_key.substring(0, 12)}...` : 
                            "Não configurado"
                          }
                       </p>
@@ -228,7 +230,7 @@ export default function AdminStripe() {
                     <div>
                       <p className="text-sm font-medium">Webhook Secret</p>
                        <p className="text-sm text-muted-foreground">
-                         {config.webhook_secret ? "Configurado" : "Não configurado"}
+                         {config.stripe_webhook_secret_encrypted ? "Configurado" : "Não configurado"}
                       </p>
                     </div>
                     <Button onClick={() => setConfigDialogOpen(true)}>

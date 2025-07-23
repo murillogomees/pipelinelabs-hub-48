@@ -18,11 +18,11 @@ export function StripeConfigDialog({ open, onOpenChange }: StripeConfigDialogPro
   const { config, saveConfig, testConnection, isSaving, isTesting } = useStripeConfig();
   
   const [formData, setFormData] = useState({
-    stripe_publishable_key: config?.publishable_key || "",
+    stripe_publishable_key: config?.stripe_publishable_key || "",
     stripe_secret_key_encrypted: "",
-    stripe_webhook_secret_encrypted: config?.webhook_secret || "",
-    default_currency: "brl",
-    test_mode: config ? !config.is_live_mode : true,
+    stripe_webhook_secret_encrypted: config?.stripe_webhook_secret_encrypted || "",
+    default_currency: config?.default_currency || "brl",
+    test_mode: config?.test_mode ?? true,
   });
 
   const handleSave = async () => {
