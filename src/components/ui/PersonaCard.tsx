@@ -11,19 +11,14 @@ interface PersonaCardProps {
 
 export function PersonaCard({ className = '' }: PersonaCardProps) {
   return (
-    <Card className={`overflow-hidden shadow-lg h-[300px] ${className}`}>
-      {/* Header com logo Pipeline Labs */}
-      <div className="bg-primary/5 p-3 border-b">
-        <PipelineLabsLogo size="sm" />
-      </div>
-
+    <Card className={`overflow-hidden shadow-lg h-[400px] ${className}`}>
       <CardContent className="p-0">
         {/* Foto da persona */}
         <div className="relative">
           <img 
             src={carlaPersona} 
             alt="Carla - Empreendedora de salgados artesanais" 
-            className="w-full h-24 object-cover"
+            className="w-full h-32 object-cover"
           />
           <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/60 to-transparent p-3">
             <h3 className="text-white font-bold text-lg">Carla Santos</h3>
@@ -31,7 +26,7 @@ export function PersonaCard({ className = '' }: PersonaCardProps) {
           </div>
         </div>
 
-        <div className="p-4 space-y-4">
+        <div className="p-4 space-y-3">
           {/* Identificação */}
           <div className="space-y-2">
             <div className="flex items-center gap-2 text-xs text-muted-foreground">
@@ -71,6 +66,14 @@ export function PersonaCard({ className = '' }: PersonaCardProps) {
                 <div className="w-1 h-1 bg-red-500 rounded-full mt-1.5 flex-shrink-0"></div>
                 <span className="leading-tight">"2h/dia organizando planilhas"</span>
               </div>
+              <div className="flex items-start gap-2 text-xs">
+                <div className="w-1 h-1 bg-red-500 rounded-full mt-1.5 flex-shrink-0"></div>
+                <span className="leading-tight">"Notas fiscais eram um pesadelo"</span>
+              </div>
+              <div className="flex items-start gap-2 text-xs">
+                <div className="w-1 h-1 bg-red-500 rounded-full mt-1.5 flex-shrink-0"></div>
+                <span className="leading-tight">"Controle de estoque em cadernos"</span>
+              </div>
             </div>
           </div>
 
@@ -90,6 +93,14 @@ export function PersonaCard({ className = '' }: PersonaCardProps) {
               <div className="flex items-start gap-2 text-xs">
                 <CheckCircle className="h-3 w-3 text-green-500 mt-0.5 flex-shrink-0" />
                 <span className="leading-tight"><strong>Notas fiscais</strong> em 3 cliques</span>
+              </div>
+              <div className="flex items-start gap-2 text-xs">
+                <CheckCircle className="h-3 w-3 text-green-500 mt-0.5 flex-shrink-0" />
+                <span className="leading-tight"><strong>Controle automático</strong> de estoque</span>
+              </div>
+              <div className="flex items-start gap-2 text-xs">
+                <CheckCircle className="h-3 w-3 text-green-500 mt-0.5 flex-shrink-0" />
+                <span className="leading-tight"><strong>Ordem de produção</strong> otimizada</span>
               </div>
             </div>
           </div>
