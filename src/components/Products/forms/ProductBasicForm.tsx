@@ -303,16 +303,6 @@ export function ProductBasicForm({ data, onChange }: ProductBasicFormProps) {
             </div>
           </div>
 
-          <div>
-            <Label htmlFor="observations">Observações</Label>
-            <Textarea
-              id="observations"
-              value={data.observations || ''}
-              onChange={(e) => onChange('observations', e.target.value)}
-              placeholder="Observações adicionais sobre o produto"
-              rows={3}
-            />
-          </div>
         </CardContent>
       </Card>
     </div>

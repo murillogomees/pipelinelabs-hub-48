@@ -6,6 +6,7 @@ import { ProductBasicForm } from './forms/ProductBasicForm';
 import { ProductStockForm } from './forms/ProductStockForm';
 import { ProductPriceForm } from './forms/ProductPriceForm';
 import { ProductTaxForm } from './forms/ProductTaxForm';
+import { ProductCategoryForm } from './forms/ProductCategoryForm';
 import { useCreateProduct, useUpdateProduct } from './hooks/useProducts';
 import { Product } from './types';
 import { ProductFormData } from './schema';
@@ -126,8 +127,9 @@ export function ProductDialog({ open, onOpenChange, product }: ProductDialogProp
         </DialogHeader>
 
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-          <TabsList className="grid w-full grid-cols-4">
+          <TabsList className="grid w-full grid-cols-5">
             <TabsTrigger value="dados">Dados</TabsTrigger>
+            <TabsTrigger value="categoria">Categoria</TabsTrigger>
             <TabsTrigger value="estoque">Estoque</TabsTrigger>
             <TabsTrigger value="preco">Preço</TabsTrigger>
             <TabsTrigger value="tributacao">Tributação</TabsTrigger>
@@ -135,6 +137,13 @@ export function ProductDialog({ open, onOpenChange, product }: ProductDialogProp
 
           <TabsContent value="dados" className="space-y-4">
             <ProductBasicForm 
+              data={formData} 
+              onChange={handleFormChange}
+            />
+          </TabsContent>
+
+          <TabsContent value="categoria" className="space-y-4">
+            <ProductCategoryForm 
               data={formData} 
               onChange={handleFormChange}
             />
