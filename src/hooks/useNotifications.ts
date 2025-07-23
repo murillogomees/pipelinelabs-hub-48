@@ -1,7 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import { useToast } from '@/hooks/use-toast';
+import { toast } from 'sonner';
 
 export interface Notification {
   id: string;
@@ -10,15 +10,21 @@ export interface Notification {
   title: string;
   message: string;
   type: 'info' | 'success' | 'warning' | 'error';
-  is_read: boolean;
+  category: string;
+  priority: 'low' | 'medium' | 'high' | 'critical';
+  status: 'unread' | 'read';
   action_url?: string;
+  action_label?: string;
   metadata?: Record<string, any>;
+  expires_at?: string;
+  read_at?: string;
+  sent_via_email: boolean;
+  sent_via_whatsapp: boolean;
   created_at: string;
   updated_at: string;
 }
 
 export function useNotifications() {
-  const { toast } = useToast();
   const queryClient = useQueryClient();
 
   // Buscar notificações
@@ -37,48 +43,41 @@ export function useNotifications() {
   });
 
   // Contar notificações não lidas
-  const { data: unreadCount = 0 } = useQuery({
-    queryKey: ['notifications', 'unread-count'],
-    queryFn: async () => {
-      const { count, error } = await supabase
-        .from('notifications')
-        .select('*', { count: 'exact', head: true })
-        .eq('is_read', false);
-      
-      if (error) throw error;
-      return count || 0;
-    },
-  });
+  const unreadCount = notifications.filter(n => n.status === 'unread').length;
 
   // Marcar como lida
   const markAsReadMutation = useMutation({
     mutationFn: async (notificationId: string) => {
       const { error } = await supabase
         .from('notifications')
-        .update({ is_read: true })
+        .update({ status: 'read', read_at: new Date().toISOString() })
         .eq('id', notificationId);
       
       if (error) throw error;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['notifications'] });
-      queryClient.invalidateQueries({ queryKey: ['notifications', 'unread-count'] });
     },
   });
 
   // Marcar todas como lidas
   const markAllAsReadMutation = useMutation({
     mutationFn: async () => {
+      const unreadIds = notifications
+        .filter(n => n.status === 'unread')
+        .map(n => n.id);
+      
+      if (unreadIds.length === 0) return;
+      
       const { error } = await supabase
         .from('notifications')
-        .update({ is_read: true })
-        .eq('is_read', false);
+        .update({ status: 'read', read_at: new Date().toISOString() })
+        .in('id', unreadIds);
       
       if (error) throw error;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['notifications'] });
-      queryClient.invalidateQueries({ queryKey: ['notifications', 'unread-count'] });
     },
   });
 
@@ -94,7 +93,6 @@ export function useNotifications() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['notifications'] });
-      queryClient.invalidateQueries({ queryKey: ['notifications', 'unread-count'] });
     },
   });
 
@@ -110,20 +108,19 @@ export function useNotifications() {
           table: 'notifications'
         },
         (payload) => {
-          // Notification received via realtime
-          
           // Invalidar queries para atualizar a UI
           queryClient.invalidateQueries({ queryKey: ['notifications'] });
-          queryClient.invalidateQueries({ queryKey: ['notifications', 'unread-count'] });
           
           // Mostrar toast para novas notificações
           if (payload.eventType === 'INSERT') {
             const newNotification = payload.new as Notification;
             
-            toast({
-              title: newNotification.title,
+            toast(newNotification.title, {
               description: newNotification.message,
-              variant: newNotification.type === 'error' ? 'destructive' : 'default',
+              action: newNotification.action_url ? {
+                label: newNotification.action_label || 'Ver',
+                onClick: () => window.open(newNotification.action_url!, '_blank')
+              } : undefined,
             });
           }
         }
@@ -133,7 +130,7 @@ export function useNotifications() {
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [queryClient, toast]);
+  }, [queryClient]);
 
   return {
     notifications,
@@ -154,18 +151,17 @@ export function useCreateNotification() {
 
   return useMutation({
     mutationFn: async (notification: Omit<Notification, 'id' | 'created_at' | 'updated_at' | 'company_id'>) => {
-      const { error } = await supabase
-        .from('notifications')
-        .insert({
-          ...notification,
-          company_id: await getCurrentCompanyId()
-        });
+      const { error } = await supabase.functions.invoke('send-notification', {
+        body: {
+          company_id: await getCurrentCompanyId(),
+          ...notification
+        }
+      });
       
       if (error) throw error;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['notifications'] });
-      queryClient.invalidateQueries({ queryKey: ['notifications', 'unread-count'] });
     },
   });
 }
