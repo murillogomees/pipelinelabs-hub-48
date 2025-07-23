@@ -150,7 +150,7 @@ function getDefaultConfig(): LandingPageConfig {
           "Dashboard com visão das vendas diárias"
         ],
         result: "Ganhou tempo, segurança e agora foca no crescimento da loja com visão unificada.",
-        image: "/src/assets/lucas-persona-updated.jpg"
+        image: "/src/assets/lucas-persona.jpg"
       },
       {
         id: 3,

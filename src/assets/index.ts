@@ -12,3 +12,4 @@ export { default as successTeam } from './success-team.jpg';
 
 // Persona Images
 export { default as carlaPersona } from './carla-persona.jpg';
+export { default as lucasPersona } from './lucas-persona.jpg';
