@@ -96,6 +96,7 @@ export const menuItems = [
     icon: Settings,
     path: '/app/configuracoes',
     submenu: [
+      { title: 'Empresa', path: '/app/configuracoes', icon: Building2 },
       { title: 'Configuração NFE.io', path: '/app/configuracoes/nfe' },
       { title: 'Meus Dados (LGPD)', path: '/app/user/dados-pessoais' }
     ]
