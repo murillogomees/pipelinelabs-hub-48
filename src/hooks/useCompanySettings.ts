@@ -42,16 +42,18 @@ export function useCompanySettings() {
         setSettings(data);
       } else {
         // Create default settings if none exist
-        const { data: newSettings, error: insertError } = await supabase
+        const { data: newSettingsData, error: insertError } = await supabase
           .from('company_settings')
           .insert({
             company_id: companyId
           })
-          .select()
-          .single();
+          .select();
 
         if (insertError) throw insertError;
-        setSettings(newSettings);
+        const newSettings = newSettingsData?.[0];
+        if (newSettings) {
+          setSettings(newSettings);
+        }
       }
     } catch (error) {
       console.error('Erro ao carregar configurações:', error);
@@ -69,16 +71,18 @@ export function useCompanySettings() {
     try {
       setSaving(true);
       
-      const { data, error } = await supabase
+      const { data: updatedData, error } = await supabase
         .from('company_settings')
         .update(updates)
         .eq('id', settings?.id)
-        .select()
-        .single();
+        .select();
 
       if (error) throw error;
 
-      setSettings(data);
+      const updatedSettings = updatedData?.[0];
+      if (updatedSettings) {
+        setSettings(updatedSettings);
+      }
       toast({
         title: "Sucesso",
         description: "Configurações salvas com sucesso"

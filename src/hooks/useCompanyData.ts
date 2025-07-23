@@ -72,15 +72,20 @@ export function useCompanyData(): UseCompanyDataReturn {
       setCanEdit(canUserEdit);
 
       // Buscar dados da empresa
-      const { data: companyData, error: companyError } = await supabase
+      const { data: companiesData, error: companyError } = await supabase
         .from('companies')
         .select('*')
-        .eq('id', userCompany.company_id)
-        .single();
+        .eq('id', userCompany.company_id);
 
       if (companyError) {
         console.error('Erro ao buscar dados da empresa:', companyError);
         toast.error('Erro ao carregar dados da empresa');
+        return;
+      }
+
+      const companyData = companiesData?.[0];
+      if (!companyData) {
+        toast.error('Empresa não encontrada');
         return;
       }
 
