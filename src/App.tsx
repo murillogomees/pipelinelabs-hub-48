@@ -6,6 +6,7 @@ import { MainLayout } from '@/components/Layout/MainLayout';
 import { ProtectedRoute } from '@/components/ProtectedRoute';
 import { ErrorBoundary } from '@/components/ErrorBoundary';
 import { AuthProvider, useAuth } from '@/components/Auth/AuthProvider';
+import { AnalyticsProvider } from '@/components/Analytics/AnalyticsProvider';
 import { Auth } from '@/pages/Auth';
 import React, { Suspense, useEffect } from 'react';
 import { Outlet, useLocation } from 'react-router-dom';
@@ -44,6 +45,7 @@ const AdminCache = React.lazy(() => import('@/pages/AdminCache').then(module => 
 const AdminLandingPage = React.lazy(() => import('@/pages/AdminLandingPage').then(module => ({ default: module.AdminLandingPage })));
 const AdminCompressao = React.lazy(() => import('@/pages/AdminCompressao').then(module => ({ default: module.AdminCompressao })));
 const AdminMonitoramento = React.lazy(() => import('@/pages/AdminMonitoramento'));
+const Analytics = React.lazy(() => import('@/pages/Analytics'));
 
 // Landing Page
 const LandingPage = React.lazy(() => import('@/pages/LandingPage').then(module => ({ default: module.LandingPage })));
@@ -192,6 +194,7 @@ function RouteHandler() {
         <Route path="admin/landing-page" element={<ProtectedRoute requireSuperAdmin><AdminLandingPage /></ProtectedRoute>} />
         <Route path="admin/compressao" element={<ProtectedRoute requireSuperAdmin><AdminCompressao /></ProtectedRoute>} />
         <Route path="admin/monitoramento" element={<ProtectedRoute requireSuperAdmin><AdminMonitoramento /></ProtectedRoute>} />
+        <Route path="analytics" element={<Analytics />} />
         
         <Route path="*" element={<NotFound />} />
       </Route>
@@ -205,12 +208,14 @@ function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
-        <SentryErrorBoundary>
+        <AnalyticsProvider>
+          <SentryErrorBoundary>
           <ErrorBoundary>
             <AppRoutes />
             <Toaster />
           </ErrorBoundary>
         </SentryErrorBoundary>
+        </AnalyticsProvider>
       </AuthProvider>
     </QueryClientProvider>
   );

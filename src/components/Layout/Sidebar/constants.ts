@@ -19,7 +19,8 @@ import {
   Building2,
   Type,
   Shield,
-  Palette
+  Palette,
+  Activity
 } from 'lucide-react';
 
 export const menuItems = [
@@ -102,6 +103,12 @@ export const menuItems = [
     title: 'Relatórios',
     icon: BarChart3,
     path: '/app/relatorios',
+    submenu: []
+  },
+  {
+    title: 'Analytics',
+    icon: Activity,
+    path: '/app/analytics',
     submenu: []
   },
   {

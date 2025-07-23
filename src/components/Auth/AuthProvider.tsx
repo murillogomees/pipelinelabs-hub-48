@@ -58,7 +58,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         
         // Defer any additional processing
         if (event === 'SIGNED_IN' && session?.user) {
-          setTimeout(() => {
+          setTimeout(async () => {
             if (mounted) {
               authLogger.info('User signed in successfully');
               // Set Sentry user context
@@ -66,11 +66,33 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
                 id: session.user.id,
                 email: session.user.email,
               });
+              
+              // Track login event
+              try {
+                await supabase.rpc('create_analytics_event' as any, {
+                  p_event_name: 'user:login',
+                  p_device_type: window.innerWidth <= 768 ? 'mobile' : 'desktop',
+                  p_route: window.location.pathname,
+                  p_meta: { user_id: session.user.id, email: session.user.email }
+                });
+              } catch (error) {
+                console.error('Error tracking login event:', error);
+              }
             }
           }, 0);
         }
 
         if (event === 'SIGNED_OUT') {
+          // Track logout event before cleaning up
+          setTimeout(() => {
+            supabase.rpc('create_analytics_event' as any, {
+              p_event_name: 'user:logout',
+              p_device_type: window.innerWidth <= 768 ? 'mobile' : 'desktop',
+              p_route: window.location.pathname,
+              p_meta: { timestamp: new Date().toISOString() }
+            });
+          }, 0);
+          
           cleanupAuthState();
           // Clear Sentry user context
           setUserContext({ id: '' });

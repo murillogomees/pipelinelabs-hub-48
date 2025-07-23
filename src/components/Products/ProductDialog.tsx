@@ -11,6 +11,7 @@ import { ProductImagesForm } from './forms/ProductImagesForm';
 import { useCreateProduct, useUpdateProduct } from './hooks/useProducts';
 import { Product } from './types';
 import { ProductFormData } from './schema';
+import { useAutoTrack } from '@/components/Analytics/useAutoTrack';
 
 interface ProductDialogProps {
   open: boolean;
@@ -35,6 +36,7 @@ export function ProductDialog({ open, onOpenChange, product }: ProductDialogProp
 
   const createMutation = useCreateProduct();
   const updateMutation = useUpdateProduct();
+  const { trackCreate, trackUpdate } = useAutoTrack();
 
   const handleFormChange = (field: string, value: any) => {
     setFormData(prev => ({
@@ -46,16 +48,17 @@ export function ProductDialog({ open, onOpenChange, product }: ProductDialogProp
   const handleSave = async () => {
     try {
       if (product) {
-        await updateMutation.mutateAsync({
+        const result = await updateMutation.mutateAsync({
           id: product.id,
           ...formData
         });
+        trackUpdate('produto', product.id);
       } else {
         if (!formData.code || !formData.name || formData.price === undefined) {
           alert('Código, nome e preço são obrigatórios');
           return;
         }
-        await createMutation.mutateAsync({
+        const result = await createMutation.mutateAsync({
           code: formData.code,
           name: formData.name,
           description: formData.description || null,
@@ -73,6 +76,7 @@ export function ProductDialog({ open, onOpenChange, product }: ProductDialogProp
           stock_location: formData.stock_location || null,
           category_id: formData.category_id || null,
         });
+        trackCreate('produto', result?.id);
       }
       onOpenChange(false);
       setFormData({});
