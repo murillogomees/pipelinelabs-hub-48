@@ -9,3 +9,6 @@ export { default as financialMockup } from './financial-mockup.jpg';
 export { default as invoiceMockup } from './invoice-mockup.jpg';
 export { default as frustratedBusinessOwner } from './frustrated-business-owner.jpg';
 export { default as successTeam } from './success-team.jpg';
+
+// Persona Images
+export { default as carlaPersona } from './carla-persona.jpg';

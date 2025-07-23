@@ -56,5 +56,8 @@ export * from './use-toast';
 export * from './composed';
 export * from './utils';
 
+// Custom components
+export { PersonaCard } from './PersonaCard';
+
 // Common component patterns
 export type { UIAction } from './composed';

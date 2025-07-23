@@ -110,12 +110,25 @@ function getDefaultConfig(): LandingPageConfig {
     personas: [
       {
         id: 1,
-        name: "Ana",
-        age: 34,
-        business: "Loja de roupas femininas",
-        problem: "Usa planilhas, tem falhas e perde tempo",
-        solution: "Estoque automatizado e emissão fiscal simplificada",
-        image: "/placeholder.svg"
+        name: "Carla",
+        age: 41,
+        business: "Fábrica de salgados artesanais",
+        location: "Belo Horizonte/MG",
+        situation: "Mãe solo de 2 filhos, empreende há 5 anos",
+        problems: [
+          "Não sabia se o negócio realmente dava lucro",
+          "Perdia 2 horas por dia organizando planilhas", 
+          "Emitir notas fiscais era um pesadelo",
+          "Controle de estoque em cadernos"
+        ],
+        solutions: [
+          "Dashboard financeiro mostra lucros em tempo real",
+          "Notas fiscais emitidas em 3 cliques",
+          "Controle automático de ingredientes e estoque",
+          "Ordem de produção otimizada por demanda"
+        ],
+        result: "Conseguiu contratar 2 funcionários e dobrar sua produção, mantendo total controle financeiro e operacional.",
+        image: "/src/assets/carla-persona.jpg"
       },
       {
         id: 2,

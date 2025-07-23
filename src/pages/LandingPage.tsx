@@ -10,6 +10,7 @@ import { Footer } from '@/components/Layout/Footer';
 
 // Import the advanced mockup components
 import { MockupDashboard, MockupPDV, MockupNFe, MockupInventory, MockupFinancial, MockupNotifications, MockupDailySales } from '@/components/ui/SystemMockups';
+import { PersonaCard } from '@/components/ui/PersonaCard';
 
 // Icon mapping helper
 const getIcon = (iconName: string) => {
@@ -204,24 +205,33 @@ export function LandingPage() {
               </p>
             </div>
 
-            <div className="grid lg:grid-cols-2 xl:grid-cols-3 gap-8">
-              {painSection.content_data?.personas?.map((persona: any, index: number) => <Card key={index} className="overflow-hidden">
+            <div className="grid lg:grid-cols-1 xl:grid-cols-2 gap-8 max-w-4xl mx-auto">
+              {/* Featured persona card - Carla */}
+              <div className="lg:col-span-1">
+                <PersonaCard />
+              </div>
+              
+              {/* Other personas with simplified cards */}
+              {painSection.content_data?.personas?.slice(1).map((persona: any, index: number) => (
+                <Card key={index + 1} className="overflow-hidden">
                   <CardHeader>
                     <CardTitle className="text-xl">{persona.name}</CardTitle>
+                    <CardDescription>{persona.business}</CardDescription>
                   </CardHeader>
                   <CardContent>
                     <div className="space-y-4">
                       <div className="bg-red-50/50 p-4 rounded-lg border border-red-200">
                         <p className="text-sm text-muted-foreground mb-2">Antes:</p>
-                        <p className="text-red-800 font-medium">{persona.before}</p>
+                        <p className="text-red-800 font-medium">{persona.problem || persona.before}</p>
                       </div>
                       <div className="bg-green-50/50 p-4 rounded-lg border border-green-200">
                         <p className="text-sm text-muted-foreground mb-2">Depois:</p>
-                        <p className="text-green-800 font-medium">{persona.after}</p>
+                        <p className="text-green-800 font-medium">{persona.solution || persona.after}</p>
                       </div>
                     </div>
                   </CardContent>
-                </Card>)}
+                </Card>
+              ))}
             </div>
           </div>
         </section>}
