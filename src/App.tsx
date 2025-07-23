@@ -183,7 +183,7 @@ function RouteHandler() {
         <Route path="relatorios" element={<Relatorios />} />
         <Route path="integracoes" element={<Integracoes />} />
         <Route path="configuracoes" element={<Configuracoes />} />
-        <Route path="configuracoes/nfe" element={<ConfiguracaoNFe />} />
+        
         <Route path="configuracoes/integracoes" element={<ConfiguracoesIntegracoes />} />
         <Route path="integracoes/marketplaces" element={<Suspense fallback={<PageLoader />}>{React.createElement(React.lazy(() => import('@/pages/MarketplaceIntegrations')))}</Suspense>} />
         
