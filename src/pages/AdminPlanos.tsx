@@ -18,8 +18,6 @@ interface Plan {
   user_limit: number | null;
   trial_days: number;
   features: string[];
-  is_custom: boolean;
-  is_whitelabel: boolean;
   active: boolean;
 }
 
@@ -129,8 +127,8 @@ export function AdminPlanos() {
             <div className="flex items-center space-x-2">
               <div className="w-4 h-4 rounded-full bg-green-500" />
               <div>
-                <p className="text-sm font-medium">Planos Customizados</p>
-                <p className="text-2xl font-bold">{plans.filter(p => p.is_custom).length}</p>
+                <p className="text-sm font-medium">Maior Preço</p>
+                <p className="text-2xl font-bold">R$ {Math.max(...plans.map(p => p.price), 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</p>
               </div>
             </div>
           </CardContent>
@@ -168,21 +166,29 @@ export function AdminPlanos() {
       </Card>
 
       {/* Plans Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 sm:gap-6">
+      {filteredPlans.length === 0 ? (
+        <Card>
+          <CardContent className="flex flex-col items-center justify-center py-12">
+            <Crown className="h-12 w-12 text-muted-foreground mb-4" />
+            <h3 className="text-lg font-semibold mb-2">Nenhum plano encontrado</h3>
+            <p className="text-muted-foreground text-center mb-4">
+              {searchTerm ? 'Nenhum plano corresponde à sua busca.' : 'Comece criando seu primeiro plano de assinatura.'}
+            </p>
+            {!searchTerm && (
+              <Button onClick={handleCreatePlan}>
+                <Plus className="h-4 w-4 mr-2" />
+                Criar Primeiro Plano
+              </Button>
+            )}
+          </CardContent>
+        </Card>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 sm:gap-6">
         {filteredPlans.map((plan) => (
           <Card key={plan.id} className="relative">
-            {plan.is_whitelabel && (
-              <div className="absolute top-4 right-4">
-                <Badge variant="secondary" className="bg-purple-100 text-purple-800">
-                  White Label
-                </Badge>
-              </div>
-            )}
-            
             <CardHeader>
               <div className="flex items-center justify-between">
                 <CardTitle className="flex items-center space-x-2">
-                  {plan.is_custom && <Crown className="h-4 w-4 text-yellow-500" />}
                   <span>{plan.name}</span>
                 </CardTitle>
                 <Badge variant={plan.active ? 'default' : 'destructive'}>
@@ -276,7 +282,8 @@ export function AdminPlanos() {
             </CardContent>
           </Card>
         ))}
-      </div>
+        </div>
+      )}
 
       {/* Plan Dialog */}
       <PlanDialog

@@ -8,6 +8,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Switch } from '@/components/ui/switch';
 import { Badge } from '@/components/ui/badge';
 import { X, Plus } from 'lucide-react';
+import { toast } from 'sonner';
 
 interface Plan {
   id?: string;
@@ -17,8 +18,6 @@ interface Plan {
   user_limit: number | null;
   trial_days: number;
   features: string[];
-  is_custom: boolean;
-  is_whitelabel: boolean;
   active: boolean;
 }
 
@@ -38,8 +37,6 @@ export function PlanDialog({ open, onOpenChange, plan, onSave, isLoading }: Plan
     user_limit: 1,
     trial_days: 0,
     features: [],
-    is_custom: false,
-    is_whitelabel: false,
     active: true,
   });
   const [newFeature, setNewFeature] = useState('');
@@ -53,8 +50,6 @@ export function PlanDialog({ open, onOpenChange, plan, onSave, isLoading }: Plan
         user_limit: plan.user_limit,
         trial_days: plan.trial_days,
         features: Array.isArray(plan.features) ? plan.features : [],
-        is_custom: plan.is_custom,
-        is_whitelabel: plan.is_whitelabel,
         active: plan.active,
       });
     } else {
@@ -65,8 +60,6 @@ export function PlanDialog({ open, onOpenChange, plan, onSave, isLoading }: Plan
         user_limit: 1,
         trial_days: 0,
         features: [],
-        is_custom: false,
-        is_whitelabel: false,
         active: true,
       });
     }
@@ -74,6 +67,28 @@ export function PlanDialog({ open, onOpenChange, plan, onSave, isLoading }: Plan
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    // Validações frontend
+    if (!formData.name.trim()) {
+      toast.error('Nome do plano é obrigatório');
+      return;
+    }
+    
+    if (formData.price < 0) {
+      toast.error('Preço deve ser maior ou igual a zero');
+      return;
+    }
+    
+    if (formData.trial_days < 0) {
+      toast.error('Dias de teste deve ser maior ou igual a zero');
+      return;
+    }
+    
+    if (formData.user_limit !== null && formData.user_limit < 1) {
+      toast.error('Limite de usuários deve ser maior que zero ou nulo para ilimitado');
+      return;
+    }
+    
     try {
       await onSave(formData);
       onOpenChange(false);
@@ -205,33 +220,13 @@ export function PlanDialog({ open, onOpenChange, plan, onSave, isLoading }: Plan
             </div>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div className="flex items-center space-x-2">
-              <Switch
-                id="active"
-                checked={formData.active}
-                onCheckedChange={(checked) => setFormData(prev => ({ ...prev, active: checked }))}
-              />
-              <Label htmlFor="active">Plano Ativo</Label>
-            </div>
-
-            <div className="flex items-center space-x-2">
-              <Switch
-                id="is_custom"
-                checked={formData.is_custom}
-                onCheckedChange={(checked) => setFormData(prev => ({ ...prev, is_custom: checked }))}
-              />
-              <Label htmlFor="is_custom">Plano Customizado</Label>
-            </div>
-
-            <div className="flex items-center space-x-2">
-              <Switch
-                id="is_whitelabel"
-                checked={formData.is_whitelabel}
-                onCheckedChange={(checked) => setFormData(prev => ({ ...prev, is_whitelabel: checked }))}
-              />
-              <Label htmlFor="is_whitelabel">White Label</Label>
-            </div>
+          <div className="flex items-center space-x-2">
+            <Switch
+              id="active"
+              checked={formData.active}
+              onCheckedChange={(checked) => setFormData(prev => ({ ...prev, active: checked }))}
+            />
+            <Label htmlFor="active">Plano Ativo</Label>
           </div>
 
           <DialogFooter>
