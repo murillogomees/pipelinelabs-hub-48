@@ -56,10 +56,14 @@ function NFe() {
           <h2 className="text-2xl font-bold text-foreground">NFe - Nota Fiscal Eletrônica</h2>
           <p className="text-muted-foreground">Emita notas fiscais eletrônicas</p>
         </div>
-        <Button onClick={() => setDialogOpen(true)}>
-          <Plus className="w-4 h-4 mr-2" />
-          Nova NFe
-        </Button>
+        <RealNFeDialog 
+          trigger={
+            <Button>
+              <Plus className="w-4 h-4 mr-2" />
+              Nova NFe
+            </Button>
+          }
+        />
       </div>
 
       <Card>
@@ -150,6 +154,7 @@ function NFe() {
           )}
         </CardContent>
       </Card>
+
     </div>
   );
 }

@@ -185,10 +185,7 @@ function RouteHandler() {
         <Route path="financeiro/pagar" element={<div>Contas a Pagar</div>} />
         <Route path="financeiro/receber" element={<div>Contas a Receber</div>} />
         <Route path="financeiro/conciliacao" element={<div>Conciliação</div>} />
-        <Route path="notas-fiscais" element={<NotasFiscais />} />
-        <Route path="notas-fiscais/nfe" element={<div>NFe</div>} />
-        <Route path="notas-fiscais/nfce" element={<div>NFCe</div>} />
-        <Route path="notas-fiscais/nfse" element={<div>NFSe</div>} />
+        <Route path="notas-fiscais/*" element={<NotasFiscais />} />
         <Route path="emissao-fiscal" element={<EmissaoFiscal />} />
         <Route path="producao" element={<Producao />} />
         <Route path="producao/os" element={<div>Ordens de Serviço</div>} />
