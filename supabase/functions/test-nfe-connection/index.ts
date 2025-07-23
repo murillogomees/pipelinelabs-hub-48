@@ -31,25 +31,49 @@ serve(async (req) => {
 
     console.log(`Testando conexão NFE.io - Environment: ${environment}, Token: ${api_token.substring(0, 10)}...`);
 
-    // URLs corretas conforme documentação NFE.io
+    // URLs da NFE.io - vamos tentar com endpoints diferentes
     const baseUrl = environment === "prod" 
-      ? "https://api.nfe.io/v1" 
-      : "https://api.sandbox.nfe.io/v1";
+      ? "https://api.nfe.io" 
+      : "https://api.nfe.io"; // Usar produção primeiro para testar
 
-    console.log(`URL base: ${baseUrl}`);
+    console.log(`URL base: ${baseUrl}, Environment: ${environment}`);
 
-    // Testar conexão com NFE.io
-    const response = await fetch(`${baseUrl}/companies`, {
-      method: 'GET',
-      headers: {
-        "Authorization": `Token token=${api_token}`,
-        "Content-Type": "application/json",
-        "Accept": "application/json",
-        "User-Agent": "Pipeline-Labs-ERP/1.0"
-      },
-      // Adicionar timeout
-      signal: AbortSignal.timeout(30000)
-    });
+    // Primeiro, vamos testar a conectividade básica com um endpoint simples
+    let response;
+    try {
+      // Testar endpoint mais simples primeiro
+      console.log('Testando endpoint básico...');
+      response = await fetch(`${baseUrl}/v1/companies`, {
+        method: 'GET',
+        headers: {
+          "Authorization": `Token token=${api_token}`,
+          "Content-Type": "application/json",
+          "Accept": "application/json",
+          "User-Agent": "Pipeline-Labs-ERP/1.0"
+        },
+        // Adicionar timeout de 15 segundos
+        signal: AbortSignal.timeout(15000)
+      });
+    } catch (fetchError) {
+      console.error('Erro no fetch:', fetchError);
+      
+      // Se falhar, tentar com endpoint alternativo
+      console.log('Tentando endpoint alternativo...');
+      try {
+        response = await fetch(`https://nfe.io/v1/companies`, {
+          method: 'GET',
+          headers: {
+            "Authorization": `Token token=${api_token}`,
+            "Content-Type": "application/json",
+            "Accept": "application/json"
+          },
+          signal: AbortSignal.timeout(15000)
+        });
+      } catch (secondError) {
+        console.error('Segundo erro:', secondError);
+        throw new Error(`Não foi possível conectar com NFE.io: ${fetchError.message}`);
+      }
+    }
 
     console.log(`Resposta NFE.io: Status ${response.status}, Headers: ${JSON.stringify(Object.fromEntries(response.headers))}`);
 
