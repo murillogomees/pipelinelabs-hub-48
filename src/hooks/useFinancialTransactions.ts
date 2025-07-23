@@ -40,7 +40,6 @@ export interface FinancialTransaction {
 }
 
 export interface NewFinancialTransaction {
-  company_id: string;
   type: 'income' | 'expense' | 'transfer';
   category_id?: string;
   cost_center_id?: string;
@@ -61,6 +60,25 @@ export const useFinancialTransactions = () => {
 
   const fetchTransactions = async () => {
     try {
+      // Get the current user's company_id
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error('User not authenticated');
+
+      // Get user's company from profiles
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select(`
+          user_companies!inner(company_id)
+        `)
+        .eq('user_id', user.id)
+        .single();
+
+      if (!profile?.user_companies?.[0]?.company_id) {
+        throw new Error('User company not found');
+      }
+
+      const company_id = profile.user_companies[0].company_id;
+
       const { data, error } = await supabase
         .from('financial_transactions')
         .select(`
@@ -69,6 +87,7 @@ export const useFinancialTransactions = () => {
           cost_centers (name),
           bank_accounts (bank_name, account_number)
         `)
+        .eq('company_id', company_id)
         .order('transaction_date', { ascending: false });
 
       if (error) throw error;
@@ -87,9 +106,32 @@ export const useFinancialTransactions = () => {
 
   const createTransaction = async (newTransaction: NewFinancialTransaction) => {
     try {
+      // Get the current user's company_id
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error('User not authenticated');
+
+      // Get user's company from profiles
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select(`
+          user_companies!inner(company_id)
+        `)
+        .eq('user_id', user.id)
+        .single();
+
+      if (!profile?.user_companies?.[0]?.company_id) {
+        throw new Error('User company not found');
+      }
+
+      const company_id = profile.user_companies[0].company_id;
+
       const { data, error } = await supabase
         .from('financial_transactions')
-        .insert(newTransaction)
+        .insert({
+          ...newTransaction,
+          company_id,
+          status: 'pending'
+        })
         .select(`
           *,
           financial_categories (name, color),
