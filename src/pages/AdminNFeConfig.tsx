@@ -169,6 +169,11 @@ export default function AdminNFeConfig() {
       setIsTestingConnection(true);
       setConnectionTest({});
 
+      console.log('Iniciando teste de conexão NFE.io', { 
+        environment: config.environment,
+        tokenLength: config.api_token.length 
+      });
+
       const { data, error } = await supabase.functions.invoke('test-nfe-connection', {
         body: {
           api_token: config.api_token,
@@ -176,36 +181,67 @@ export default function AdminNFeConfig() {
         }
       });
 
+      console.log('Resposta da edge function:', { data, error });
+
       if (error) {
-        throw error;
+        console.error('Erro na edge function:', error);
+        throw new Error(error.message || 'Erro na chamada da função');
       }
 
-      setConnectionTest({
-        status: data.success ? 'success' : 'error',
-        message: data.message || (data.success ? 'Conexão estabelecida com sucesso!' : 'Falha na conexão')
-      });
+      // Verificar se a resposta contém erro mesmo sem throw
+      if (data?.error) {
+        console.error('Erro retornado pela edge function:', data.error);
+        setConnectionTest({
+          status: 'error',
+          message: data.error
+        });
+        toast({
+          title: "Erro na Conexão",
+          description: data.error,
+          variant: "destructive",
+        });
+        return;
+      }
 
-      if (data.success) {
+      if (data?.success) {
+        setConnectionTest({
+          status: 'success',
+          message: data.message || 'Conexão estabelecida com sucesso!'
+        });
+
         toast({
           title: "Sucesso",
-          description: "Conexão com NFE.io estabelecida com sucesso!",
+          description: `${data.message} - ${data.companies || 0} empresa(s) encontrada(s)`,
         });
       } else {
+        setConnectionTest({
+          status: 'error',
+          message: data?.message || 'Resposta inesperada da API'
+        });
         toast({
           title: "Erro",
-          description: data.message || "Falha ao conectar com NFE.io",
+          description: data?.message || "Resposta inesperada da API NFE.io",
           variant: "destructive",
         });
       }
     } catch (error: any) {
       console.error('Erro no teste de conexão:', error);
+      
+      let errorMessage = 'Erro interno no teste de conexão';
+      if (error.message) {
+        errorMessage = error.message;
+      } else if (typeof error === 'string') {
+        errorMessage = error;
+      }
+
       setConnectionTest({
         status: 'error',
-        message: error.message || 'Erro interno no teste de conexão'
+        message: errorMessage
       });
+      
       toast({
         title: "Erro",
-        description: "Falha no teste de conexão",
+        description: errorMessage,
         variant: "destructive",
       });
     } finally {
@@ -265,6 +301,16 @@ export default function AdminNFeConfig() {
                 </div>
               </CardHeader>
               <CardContent className="space-y-4">
+                <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-4">
+                  <h4 className="font-medium text-blue-900 mb-2">📝 Como obter seu Token NFE.io:</h4>
+                  <ol className="text-sm text-blue-800 space-y-1">
+                    <li>1. Acesse <a href="https://app.nfe.io" target="_blank" rel="noopener noreferrer" className="underline">app.nfe.io</a> e faça login</li>
+                    <li>2. Vá em Configurações → API</li>
+                    <li>3. Copie seu Token da API</li>
+                    <li>4. Para testes, use o ambiente "Sandbox"</li>
+                  </ol>
+                </div>
+
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <Label htmlFor="api_token">API Token *</Label>
