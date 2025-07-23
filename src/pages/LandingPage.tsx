@@ -107,9 +107,7 @@ export function LandingPage() {
                 {getIcon('rocket')}
                 {heroSection.content_data?.button_text || 'Começar Agora'}
               </Button>
-              <Button size="lg" variant="outline" className="text-lg px-8 py-6">
-                {heroSection.content_data?.secondary_button || 'Ver Demo'}
-              </Button>
+              
             </div>
             
             {/* Demonstração do Sistema */}
