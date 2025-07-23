@@ -1,7 +1,11 @@
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
-import { useToast } from '@/hooks/use-toast';
+// Hook de compatibilidade para PDV - redireciona para useSales unificado
+import { 
+  usePOSSales, 
+  useCreatePOSSale, 
+  useUpdateSale as useUpdatePOSSale 
+} from './useSales';
 
+// Re-export interfaces para compatibilidade
 export interface POSItem {
   product_id: string;
   product_name: string;
@@ -41,97 +45,5 @@ export interface POSSale {
   };
 }
 
-export function usePOSSales() {
-  return useQuery({
-    queryKey: ['pos-sales'],
-    queryFn: async () => {
-      const { data, error } = await (supabase as any)
-        .from('pos_sales')
-        .select(`
-          *,
-          customers (
-            name
-          )
-        `)
-        .order('created_at', { ascending: false });
-      
-      if (error) throw error;
-      return data as POSSale[];
-    },
-  });
-}
-
-export function useCreatePOSSale() {
-  const queryClient = useQueryClient();
-  const { toast } = useToast();
-
-  return useMutation({
-    mutationFn: async (sale: Partial<POSSale>) => {
-      // Gerar número da venda
-      const { data: companyData } = await supabase.rpc('get_user_company_id');
-      const { data: saleNumber } = await supabase.rpc('generate_pos_sale_number', {
-        company_uuid: companyData
-      });
-
-      const { data, error } = await (supabase as any)
-        .from('pos_sales')
-        .insert([{
-          ...sale,
-          sale_number: saleNumber,
-          company_id: companyData,
-        }])
-        .select()
-        .single();
-      
-      if (error) throw error;
-      return data;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['pos-sales'] });
-      toast({
-        title: 'Venda realizada',
-        description: 'A venda foi registrada com sucesso.',
-      });
-    },
-    onError: (error: any) => {
-      toast({
-        title: 'Erro',
-        description: error.message,
-        variant: 'destructive',
-      });
-    },
-  });
-}
-
-export function useUpdatePOSSale() {
-  const queryClient = useQueryClient();
-  const { toast } = useToast();
-
-  return useMutation({
-    mutationFn: async ({ id, ...updates }: Partial<POSSale> & { id: string }) => {
-      const { data, error } = await (supabase as any)
-        .from('pos_sales')
-        .update(updates)
-        .eq('id', id)
-        .select()
-        .single();
-      
-      if (error) throw error;
-      return data;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['pos-sales'] });
-      toast({
-        title: 'Venda atualizada',
-        description: 'A venda foi atualizada com sucesso.',
-      });
-    },
-    onError: (error: any) => {
-      toast({
-        title: 'Erro',
-        description: error.message,
-        variant: 'destructive',
-      });
-    },
-  });
-}
+// Re-export hooks unificados
+export { usePOSSales, useCreatePOSSale, useUpdatePOSSale };

@@ -9,15 +9,23 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Skeleton } from '@/components/ui/skeleton';
-import { useSales } from '@/hooks/useSales';
+import { useSales, Sale } from '@/hooks/useSales';
 import { useProposals, Proposal } from '@/hooks/useProposals';
 import { POSInterface } from '@/components/POS/POSInterface';
 import { ProposalDialog } from '@/components/Proposals/ProposalDialog';
+import { SaleDialog } from '@/components/Sales/SaleDialog';
 import { format } from 'date-fns';
 
 // Componente para Pedidos
 function Pedidos() {
-  const { data: sales, isLoading, error } = useSales();
+  const { data: sales, isLoading, error } = useSales({ saleType: 'traditional' });
+  const [selectedSale, setSelectedSale] = useState<Sale | undefined>();
+  const [isSaleDialogOpen, setIsSaleDialogOpen] = useState(false);
+
+  const openSaleDialog = (sale?: Sale) => {
+    setSelectedSale(sale);
+    setIsSaleDialogOpen(true);
+  };
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -55,7 +63,10 @@ function Pedidos() {
           <h2 className="heading-mobile font-bold">Pedidos</h2>
           <p className="text-mobile text-muted-foreground">Gerencie todos os seus pedidos</p>
         </div>
-        <Button className="btn-mobile bg-primary hover:bg-primary/90 text-primary-foreground">
+        <Button 
+          onClick={() => openSaleDialog()}
+          className="btn-mobile bg-primary hover:bg-primary/90 text-primary-foreground"
+        >
           <Plus className="w-4 h-4 mr-2" />
           <span className="hidden sm:inline">Novo Pedido</span>
           <span className="sm:hidden">Novo</span>
@@ -139,6 +150,12 @@ function Pedidos() {
           </div>
         </CardContent>
       </Card>
+
+      <SaleDialog
+        isOpen={isSaleDialogOpen}
+        onClose={() => setIsSaleDialogOpen(false)}
+        sale={selectedSale}
+      />
     </div>
   );
 }

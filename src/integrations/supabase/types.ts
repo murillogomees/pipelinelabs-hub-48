@@ -2124,55 +2124,96 @@ export type Database = {
           },
         ]
       }
+      sale_payments: {
+        Row: {
+          amount: number
+          created_at: string
+          details: string | null
+          id: string
+          payment_method: string
+          sale_id: string
+        }
+        Insert: {
+          amount: number
+          created_at?: string
+          details?: string | null
+          id?: string
+          payment_method: string
+          sale_id: string
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          details?: string | null
+          id?: string
+          payment_method?: string
+          sale_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "sale_payments_sale_id_fkey"
+            columns: ["sale_id"]
+            isOneToOne: false
+            referencedRelation: "sales"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       sales: {
         Row: {
           company_id: string
           created_at: string
-          created_by: string | null
           customer_id: string | null
           discount: number | null
           id: string
+          is_active: boolean | null
+          nfce_number: string | null
           notes: string | null
+          operator_id: string | null
           payment_method: string | null
-          payment_terms: string | null
+          receipt_printed: boolean | null
           sale_date: string
           sale_number: string
+          sale_type: string | null
           status: string
-          subtotal: number
           total_amount: number
           updated_at: string
         }
         Insert: {
           company_id: string
           created_at?: string
-          created_by?: string | null
           customer_id?: string | null
           discount?: number | null
           id?: string
+          is_active?: boolean | null
+          nfce_number?: string | null
           notes?: string | null
+          operator_id?: string | null
           payment_method?: string | null
-          payment_terms?: string | null
+          receipt_printed?: boolean | null
           sale_date?: string
           sale_number: string
+          sale_type?: string | null
           status?: string
-          subtotal?: number
           total_amount?: number
           updated_at?: string
         }
         Update: {
           company_id?: string
           created_at?: string
-          created_by?: string | null
           customer_id?: string | null
           discount?: number | null
           id?: string
+          is_active?: boolean | null
+          nfce_number?: string | null
           notes?: string | null
+          operator_id?: string | null
           payment_method?: string | null
-          payment_terms?: string | null
+          receipt_printed?: boolean | null
           sale_date?: string
           sale_number?: string
+          sale_type?: string | null
           status?: string
-          subtotal?: number
           total_amount?: number
           updated_at?: string
         }
@@ -3299,6 +3340,10 @@ export type Database = {
       }
       generate_purchase_order_number: {
         Args: Record<PropertyKey, never> | { company_id: string }
+        Returns: string
+      }
+      generate_sale_number: {
+        Args: { company_uuid: string; sale_type_param?: string }
         Returns: string
       }
       get_analytics_metrics: {
