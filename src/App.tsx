@@ -49,7 +49,7 @@ const AdminCompressao = React.lazy(() => import('@/pages/AdminCompressao').then(
 const AdminMonitoramento = React.lazy(() => import('@/pages/AdminMonitoramento'));
 const AdminStripe = React.lazy(() => import('@/pages/AdminStripe'));
 const AdminNFeConfig = React.lazy(() => import('@/pages/AdminNFeConfig'));
-const AdminVersions = React.lazy(() => import('@/pages/AdminVersions'));
+import AdminVersions from '@/pages/AdminVersions';
 const Analytics = React.lazy(() => import('@/pages/Analytics'));
 
 // LGPD pages
