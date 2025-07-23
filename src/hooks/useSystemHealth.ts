@@ -33,36 +33,22 @@ export const useSystemHealth = () => {
       if (!user) return null;
 
       try {
-        const { data, error } = await supabase.functions.invoke('health-check');
-
-        // Handle both success and error responses from health-check
-        // The function returns 503 for 'down' status, but still provides data
-        if (data) {
-          return data;
-        }
-        
-        // If there's an error but it contains health data, use it
-        if (error && typeof error === 'object' && 'status' in error) {
-          return error as SystemHealthData;
-        }
-        
-        // For 503 errors from health-check function, the data might be in the error context
-        if (error && (error as any).context?.body) {
-          try {
-            const healthData = JSON.parse((error as any).context.body);
-            if (healthData && healthData.status) {
-              return healthData as SystemHealthData;
-            }
-          } catch (parseError) {
-            console.warn('Failed to parse health data from error context:', parseError);
+        // Use fetch directly to handle 503 responses with data
+        const response = await fetch('https://ycqinuwrlhuxotypqlfh.supabase.co/functions/v1/health-check', {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${(await supabase.auth.getSession()).data.session?.access_token}`,
+            'apikey': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InljcWludXdybGh1eG90eXBxbGZoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTIwODg2MjIsImV4cCI6MjA2NzY2NDYyMn0.p8AcfnfR44BVF0T28sIgL9Qtnu1uwyGywc-p7Uh0wKQ',
+            'Content-Type': 'application/json'
           }
+        });
+
+        if (response.ok || response.status === 503) {
+          const data = await response.json();
+          return data as SystemHealthData;
         }
         
-        // Only throw if there's a real connection error and no health data
-        if (error) {
-          console.warn('Health check returned error, falling back to degraded status:', error);
-        }
-        return null;
+        throw new Error(`Health check failed with status ${response.status}`);
       } catch (fetchError) {
         // Handle network errors or function unavailable
         console.warn('Health check failed:', fetchError);
@@ -150,10 +136,27 @@ export const useRunHealthCheck = () => {
   
   return useMutation({
     mutationFn: async () => {
-      const { data, error } = await supabase.functions.invoke('health-check');
-      
-      if (error) throw error;
-      return data;
+      try {
+        // Use fetch directly to handle 503 responses with data
+        const response = await fetch('https://ycqinuwrlhuxotypqlfh.supabase.co/functions/v1/health-check', {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${(await supabase.auth.getSession()).data.session?.access_token}`,
+            'apikey': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InljcWludXdybGh1eG90eXBxbGZoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTIwODg2MjIsImV4cCI6MjA2NzY2NDYyMn0.p8AcfnfR44BVF0T28sIgL9Qtnu1uwyGywc-p7Uh0wKQ',
+            'Content-Type': 'application/json'
+          }
+        });
+
+        if (response.ok || response.status === 503) {
+          const data = await response.json();
+          return data;
+        }
+        
+        throw new Error(`Health check failed with status ${response.status}`);
+      } catch (error) {
+        console.warn('Manual health check failed:', error);
+        throw error;
+      }
     },
     onSuccess: () => {
       // Invalidate health queries to refresh data
