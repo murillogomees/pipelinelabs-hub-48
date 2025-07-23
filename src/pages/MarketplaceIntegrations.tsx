@@ -196,8 +196,20 @@ export default function MarketplaceIntegrations() {
             setIsDialogOpen(open);
             if (!open) setEditingIntegration(null);
           }}
-          onSubmit={handleCreateIntegration}
-          isLoading={createIntegration.isPending}
+          onSubmit={editingIntegration ? 
+            (data) => updateIntegration.mutate({
+              id: editingIntegration.id,
+              updates: data
+            }, {
+              onSuccess: () => {
+                setIsDialogOpen(false);
+                setEditingIntegration(null);
+              }
+            }) : 
+            handleCreateIntegration
+          }
+          isLoading={createIntegration.isPending || updateIntegration.isPending}
+          editingIntegration={editingIntegration}
         />
       </div>
     </BaseLayout>

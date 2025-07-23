@@ -45,15 +45,17 @@ interface MarketplaceConnectionDialogProps {
   onOpenChange: (open: boolean) => void;
   onSubmit: (data: any) => void;
   isLoading?: boolean;
+  editingIntegration?: any;
 }
 
 export const MarketplaceConnectionDialog = ({
   open,
   onOpenChange,
   onSubmit,
-  isLoading
+  isLoading,
+  editingIntegration
 }: MarketplaceConnectionDialogProps) => {
-  const [selectedMarketplace, setSelectedMarketplace] = useState<string>('');
+  const [selectedMarketplace, setSelectedMarketplace] = useState<string>(editingIntegration?.marketplace || '');
 
   const form = useForm<FormData>({
     resolver: zodResolver(formSchema),
