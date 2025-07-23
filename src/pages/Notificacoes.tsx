@@ -42,8 +42,8 @@ export function Notificacoes() {
     
     const matchesTab = 
       activeTab === 'todas' ||
-      (activeTab === 'nao-lidas' && !notification.is_read) ||
-      (activeTab === 'lidas' && notification.is_read);
+      (activeTab === 'nao-lidas' && notification.status === 'unread') ||
+      (activeTab === 'lidas' && notification.status === 'read');
     
     return matchesSearch && matchesTab;
   });
@@ -77,7 +77,7 @@ export function Notificacoes() {
   };
 
   const handleNotificationClick = (notification: any) => {
-    if (!notification.is_read) {
+    if (notification.status === 'unread') {
       markAsRead(notification.id);
     }
     
@@ -182,7 +182,7 @@ export function Notificacoes() {
                     <Card 
                       key={notification.id}
                       className={`transition-all hover:shadow-md ${
-                        getNotificationBgColor(notification.type, notification.is_read)
+                        getNotificationBgColor(notification.type, notification.status === 'read')
                       }`}
                     >
                       <CardContent className="p-4">
@@ -198,20 +198,20 @@ export function Notificacoes() {
                               <div className="flex-1 min-w-0">
                                 <div className="flex items-center space-x-2 mb-1">
                                   <h3 className={`font-semibold ${
-                                    notification.is_read 
+                                    notification.status === 'read'
                                       ? 'text-muted-foreground' 
                                       : 'text-foreground'
                                   }`}>
                                     {notification.title}
                                   </h3>
-                                  {!notification.is_read && (
+                                  {notification.status === 'unread' && (
                                     <Badge variant="outline" className="text-xs">
                                       Novo
                                     </Badge>
                                   )}
                                 </div>
                                 <p className={`text-sm mb-2 ${
-                                  notification.is_read 
+                                  notification.status === 'read'
                                     ? 'text-muted-foreground/70' 
                                     : 'text-muted-foreground'
                                 }`}>
@@ -239,7 +239,7 @@ export function Notificacoes() {
                           </div>
                           
                           <div className="flex items-center space-x-2 ml-4">
-                            {!notification.is_read && (
+                            {notification.status === 'unread' && (
                               <Button
                                 variant="outline"
                                 size="sm"

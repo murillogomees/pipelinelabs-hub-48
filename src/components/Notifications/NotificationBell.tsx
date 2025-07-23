@@ -59,7 +59,7 @@ export function NotificationBell() {
   };
 
   const handleNotificationClick = (notification: any) => {
-    if (!notification.is_read) {
+    if (notification.status === 'unread') {
       markAsRead(notification.id);
     }
     
@@ -125,7 +125,7 @@ export function NotificationBell() {
               <div
                 key={notification.id}
                 className={`p-4 border-b hover:bg-muted/50 transition-colors ${
-                  getNotificationBgColor(notification.type, notification.is_read)
+                  getNotificationBgColor(notification.type, notification.status === 'read')
                 }`}
               >
                 <div className="flex items-start justify-between">
@@ -139,12 +139,12 @@ export function NotificationBell() {
                       </span>
                       <div className="flex-1 min-w-0">
                         <p className={`font-medium text-sm ${
-                          notification.is_read ? 'text-muted-foreground' : 'text-foreground'
+                          notification.status === 'read' ? 'text-muted-foreground' : 'text-foreground'
                         }`}>
                           {notification.title}
                         </p>
                         <p className={`text-xs mt-1 ${
-                          notification.is_read ? 'text-muted-foreground/70' : 'text-muted-foreground'
+                          notification.status === 'read' ? 'text-muted-foreground/70' : 'text-muted-foreground'
                         }`}>
                           {notification.message}
                         </p>
@@ -164,7 +164,7 @@ export function NotificationBell() {
                   </div>
                   
                   <div className="flex items-center space-x-1 ml-2">
-                    {!notification.is_read && (
+                    {notification.status === 'unread' && (
                       <Button
                         variant="ghost"
                         size="sm"

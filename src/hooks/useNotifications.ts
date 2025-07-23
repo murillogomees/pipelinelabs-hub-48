@@ -38,7 +38,14 @@ export function useNotifications() {
         .limit(50);
       
       if (error) throw error;
-      return data as Notification[];
+      return (data || []).map((item: any) => ({
+        ...item,
+        category: item.category || 'system',
+        priority: item.priority || 'medium',
+        status: item.status || ((item.is_read) ? 'read' : 'unread'),
+        sent_via_email: item.sent_via_email || false,
+        sent_via_whatsapp: item.sent_via_whatsapp || false,
+      })) as Notification[];
     },
   });
 
@@ -50,7 +57,11 @@ export function useNotifications() {
     mutationFn: async (notificationId: string) => {
       const { error } = await supabase
         .from('notifications')
-        .update({ status: 'read', read_at: new Date().toISOString() })
+        .update({ 
+          status: 'read', 
+          read_at: new Date().toISOString(),
+          updated_at: new Date().toISOString()
+        })
         .eq('id', notificationId);
       
       if (error) throw error;
@@ -71,7 +82,11 @@ export function useNotifications() {
       
       const { error } = await supabase
         .from('notifications')
-        .update({ status: 'read', read_at: new Date().toISOString() })
+        .update({ 
+          status: 'read', 
+          read_at: new Date().toISOString(),
+          updated_at: new Date().toISOString()
+        })
         .in('id', unreadIds);
       
       if (error) throw error;
