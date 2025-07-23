@@ -29,16 +29,14 @@ export function MainLayout({ children }: MainLayoutProps) {
   };
 
   return (
-    <div className="h-screen w-full bg-background grid grid-cols-[auto_1fr] overflow-hidden">
+    <div className="h-screen w-full bg-background flex overflow-hidden">
       {/* Desktop Sidebar */}
       {!isMobile && (
-        <div className="flex-shrink-0">
-          <Sidebar 
-            collapsed={sidebarCollapsed} 
-            onToggle={toggleSidebar}
-            onNavigate={closeMobileMenu}
-          />
-        </div>
+        <Sidebar 
+          collapsed={sidebarCollapsed} 
+          onToggle={toggleSidebar}
+          onNavigate={closeMobileMenu}
+        />
       )}
       
       {/* Mobile Sidebar */}
@@ -54,18 +52,18 @@ export function MainLayout({ children }: MainLayoutProps) {
         </Sheet>
       )}
       
-      <div className="grid grid-rows-[auto_1fr] h-full overflow-hidden min-w-0">
-        <header className="border-b bg-background">
-          <div className="flex items-center justify-between h-16 px-4 lg:px-6">
+      <div className="flex-1 flex flex-col h-full overflow-hidden">
+        <header className="flex-shrink-0 border-b bg-background">
+          <div className="flex items-center justify-between h-16 px-4">
             <Header onToggleSidebar={toggleSidebar} />
             <NotificationDropdown />
           </div>
           <EnvironmentBanner />
         </header>
         
-        <main className="overflow-y-auto bg-background min-h-0">
-          <div className="container mx-auto max-w-7xl">
-            <div className="p-4 sm:p-6 lg:p-8">
+        <main className="flex-1 overflow-y-auto bg-background">
+          <div className="h-full w-full">
+            <div className="p-4 sm:p-6 lg:p-8 max-w-full">
               {children}
             </div>
           </div>
