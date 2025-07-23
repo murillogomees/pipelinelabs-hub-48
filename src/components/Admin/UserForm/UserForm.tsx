@@ -41,7 +41,7 @@ export function UserForm({ user, onSubmit, loading }: UserFormProps) {
       try {
         const { data } = await supabase.rpc('get_default_company_id');
         if (data) {
-          setDefaultCompanyId(data);
+          setDefaultCompanyId(String(data));
         } else {
           // Fallback: buscar Pipeline Labs diretamente
           const { data: company } = await supabase

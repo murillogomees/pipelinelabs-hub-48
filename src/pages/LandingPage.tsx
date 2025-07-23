@@ -5,6 +5,7 @@ import { Badge } from '@/components/ui/badge';
 import { Check, Star, ArrowRight, Users, TrendingUp, Shield, Zap } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useLandingPageConfig } from '@/hooks/useLandingPageConfig';
+import { PipelineLabsLogo } from '@/components/Layout/PipelineLabsLogo';
 
 // Mockup images
 import dashboardMockup from '@/assets/dashboard-mockup.jpg';
@@ -137,12 +138,7 @@ export function LandingPage() {
       <header className="border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
         <div className="container mx-auto px-4 py-4 flex items-center justify-between">
           <div className="flex items-center space-x-2">
-            {config.logo_url ? (
-              <img src={config.logo_url} alt={config.company_name} className="h-8 w-8" />
-            ) : (
-              <div className="h-8 w-8 bg-primary rounded-md"></div>
-            )}
-            <span className="font-bold text-xl">{config.company_name}</span>
+            <PipelineLabsLogo size="md" showText={true} />
           </div>
           <div className="flex items-center space-x-4">
             <Button variant="ghost" onClick={() => navigate('/auth')}>
@@ -411,9 +407,8 @@ export function LandingPage() {
         <div className="container mx-auto">
           <div className="grid md:grid-cols-4 gap-8">
             <div>
-              <div className="flex items-center space-x-2 mb-4">
-                <div className="h-6 w-6 bg-primary rounded"></div>
-                <span className="font-bold">Pipeline Labs</span>
+              <div className="mb-4">
+                <PipelineLabsLogo size="sm" showText={true} />
               </div>
               <p className="text-muted-foreground text-sm">
                 ERP inteligente, dinâmico e escalável para pequenos empreendedores.

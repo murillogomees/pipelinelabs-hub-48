@@ -22,7 +22,7 @@ export const getEnvironment = (): Environment => {
     }
     
     // Production domains
-    if (hostname.includes('pipelinelabs.app') || hostname.includes('pipelinelabs.com')) {
+    if (hostname.includes('pipelinelabs.com.br') || hostname.includes('pipelinelabs.com') || hostname.includes('pipelinelabs.app')) {
       return 'production';
     }
   }
@@ -42,7 +42,7 @@ export const getEnvironmentConfig = () => {
   const configs = {
     production: {
       apiUrl: 'https://ycqinuwrlhuxotypqlfh.supabase.co',
-      appUrl: 'https://pipelinelabs.app',
+      appUrl: 'https://pipelinelabs.com.br',
       enableAnalytics: true,
       enableDebug: false,
       enableErrorReporting: true,
@@ -51,7 +51,7 @@ export const getEnvironmentConfig = () => {
     },
     staging: {
       apiUrl: 'https://pipeline-staging.supabase.co', // Configurar projeto separado
-      appUrl: 'https://staging.pipelinelabs.app',
+      appUrl: 'https://staging.pipelinelabs.com.br',
       enableAnalytics: false,
       enableDebug: true,
       enableErrorReporting: true,
@@ -105,6 +105,7 @@ export const isStagingAccessAllowed = (userEmail?: string): boolean => {
   ];
   
   const allowedDomains = [
+    '@pipelinelabs.com.br',
     '@pipelinelabs.com',
     '@pipeline.dev'
   ];
