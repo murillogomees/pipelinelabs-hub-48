@@ -88,10 +88,8 @@ export const menuItems = [
   {
     title: 'Market Places',
     icon: Zap,
-    path: '/app/integracoes',
-    submenu: [
-      { title: 'Marketplaces', path: '/app/integracoes/marketplaces' }
-    ]
+    path: '/app/integracoes/marketplaces',
+    submenu: []
   },
   {
     title: 'Configurações',
