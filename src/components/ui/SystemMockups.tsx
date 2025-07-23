@@ -349,13 +349,7 @@ export const MockupFinancial = ({
     </div>
 
     {/* Financial Status */}
-    <div className="bg-green-50 border border-green-200 rounded-lg p-3">
-      <div className="flex items-center justify-between">
-        <span className="text-sm font-medium text-green-800">Lucro Líquido</span>
-        <span className="text-lg font-bold text-green-800">R$ 13.1k</span>
-      </div>
-      <p className="text-xs text-green-600 mt-1">+15% vs mês anterior</p>
-    </div>
+    
   </div>;
 interface MockupFinancialProps {
   className?: string;
@@ -495,7 +489,7 @@ export const MockupDailySales = ({
 
     {/* Recent Sales */}
     <div className="space-y-2">
-      <h4 className="text-sm font-medium text-gray-800">Últimas Vendas</h4>
+      
       
       <div className="flex items-center justify-between p-2 bg-gray-50 rounded-lg">
         <div className="flex items-center gap-2">
@@ -513,21 +507,7 @@ export const MockupDailySales = ({
         </div>
       </div>
 
-      <div className="flex items-center justify-between p-2 bg-gray-50 rounded-lg">
-        <div className="flex items-center gap-2">
-          <div className="w-6 h-6 bg-blue-500 rounded-full flex items-center justify-center">
-            <CheckCircle className="h-3 w-3 text-white" />
-          </div>
-          <div>
-            <p className="text-xs font-medium text-gray-800">Venda #1246</p>
-            <p className="text-xs text-gray-600">João Silva</p>
-          </div>
-        </div>
-        <div className="text-right">
-          <p className="text-xs font-bold text-gray-800">R$ 459,80</p>
-          <p className="text-xs text-gray-500">16:32</p>
-        </div>
-      </div>
+      
     </div>
   </div>;
 interface MockupDailySalesProps {
