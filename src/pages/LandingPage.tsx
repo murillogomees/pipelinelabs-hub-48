@@ -205,21 +205,61 @@ export function LandingPage() {
               </p>
             </div>
 
-            {/* Grid responsivo para cards de persona */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 max-w-7xl mx-auto">
+            {/* Cards de personas no formato antigo */}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 max-w-6xl mx-auto">
               {personasSection.content_data?.personas?.map((persona: any, index: number) => (
-                <Card key={index} className="h-full hover:shadow-lg transition-shadow">
-                  <CardContent className="p-6 text-center">
-                    <div className="w-16 h-16 bg-gradient-to-br from-primary/20 to-primary/40 rounded-full mx-auto mb-4 flex items-center justify-center">
-                      <span className="text-2xl font-bold text-primary">
-                        {persona.name?.charAt(0) || 'P'}
-                      </span>
+                <Card key={index} className="h-full hover:shadow-xl transition-all duration-300 overflow-hidden">
+                  <div className="aspect-[4/3] overflow-hidden">
+                    <img 
+                      src={persona.image} 
+                      alt={persona.name}
+                      className="w-full h-full object-cover"
+                    />
+                  </div>
+                  <CardContent className="p-6 space-y-4">
+                    {/* Header com nome e info */}
+                    <div className="text-center">
+                      <h3 className="font-bold text-xl mb-1">{persona.name}</h3>
+                      <p className="text-muted-foreground text-sm">{persona.age} anos • {persona.location}</p>
+                      <p className="text-primary font-medium text-sm mt-1">{persona.business}</p>
                     </div>
-                    <h3 className="font-bold text-lg mb-2">{persona.name}</h3>
-                    <p className="text-muted-foreground text-sm mb-3">{persona.business}</p>
-                    <div className="text-xs text-muted-foreground space-y-1">
-                      <p>Idade: {persona.age} anos</p>
-                      <p>Local: {persona.location}</p>
+
+                    {/* Problemas/Dores */}
+                    <div>
+                      <h4 className="font-semibold text-sm text-destructive mb-2 flex items-center gap-1">
+                        😰 Principais Dores
+                      </h4>
+                      <ul className="text-xs text-muted-foreground space-y-1">
+                        {persona.problems?.map((problem: string, i: number) => (
+                          <li key={i} className="flex items-start gap-1">
+                            <span className="text-destructive mt-0.5">•</span>
+                            {problem}
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+
+                    {/* Soluções/Benefícios */}
+                    <div>
+                      <h4 className="font-semibold text-sm text-success mb-2 flex items-center gap-1">
+                        ✅ Soluções Pipeline Labs
+                      </h4>
+                      <ul className="text-xs space-y-1">
+                        {persona.solutions?.map((solution: string, i: number) => (
+                          <li key={i} className="flex items-start gap-1">
+                            <span className="text-success mt-0.5">•</span>
+                            <span dangerouslySetInnerHTML={{ __html: solution }} />
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+
+                    {/* Resultado Final */}
+                    <div className="bg-muted/50 rounded-lg p-3 border-l-4 border-primary">
+                      <h4 className="font-semibold text-sm text-primary mb-1 flex items-center gap-1">
+                        🚀 Resultado Alcançado
+                      </h4>
+                      <p className="text-xs leading-relaxed">{persona.result}</p>
                     </div>
                   </CardContent>
                 </Card>
