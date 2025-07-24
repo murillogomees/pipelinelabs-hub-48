@@ -1611,6 +1611,51 @@ export type Database = {
         }
         Relationships: []
       }
+      marketplace_channels: {
+        Row: {
+          config_schema: Json
+          created_at: string
+          description: string | null
+          display_name: string
+          id: string
+          logo_url: string | null
+          name: string
+          oauth_config: Json | null
+          required_plan_features: Json | null
+          status: string
+          updated_at: string
+          webhook_endpoints: Json | null
+        }
+        Insert: {
+          config_schema?: Json
+          created_at?: string
+          description?: string | null
+          display_name: string
+          id?: string
+          logo_url?: string | null
+          name: string
+          oauth_config?: Json | null
+          required_plan_features?: Json | null
+          status?: string
+          updated_at?: string
+          webhook_endpoints?: Json | null
+        }
+        Update: {
+          config_schema?: Json
+          created_at?: string
+          description?: string | null
+          display_name?: string
+          id?: string
+          logo_url?: string | null
+          name?: string
+          oauth_config?: Json | null
+          required_plan_features?: Json | null
+          status?: string
+          updated_at?: string
+          webhook_endpoints?: Json | null
+        }
+        Relationships: []
+      }
       marketplace_integrations: {
         Row: {
           auth_type: string
