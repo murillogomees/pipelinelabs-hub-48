@@ -70,19 +70,19 @@ const LandingPage = React.lazy(() => import('@/pages/LandingPage').then(module =
 // Loading components para diferentes tamanhos
 const PageLoader = () => (
   <div className="flex items-center justify-center min-h-[400px]">
-    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+    <div className="animate-spin rounded-full h-8 w-8 border-2 border-primary border-t-transparent"></div>
   </div>
 );
 
 const SmallLoader = () => (
   <div className="flex items-center justify-center min-h-[200px]">
-    <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-primary"></div>
+    <div className="animate-spin rounded-full h-6 w-6 border-2 border-primary border-t-transparent"></div>
   </div>
 );
 
 const ComponentLoader = () => (
   <div className="flex items-center justify-center p-4">
-    <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-primary"></div>
+    <div className="animate-spin rounded-full h-5 w-5 border-2 border-primary border-t-transparent"></div>
   </div>
 );
 
@@ -110,7 +110,7 @@ function AppRoutes() {
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+        <div className="animate-spin rounded-full h-8 w-8 border-2 border-primary border-t-transparent"></div>
       </div>
     );
   }

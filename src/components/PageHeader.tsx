@@ -1,3 +1,5 @@
+import { PageHeader as StandardPageHeader } from "@/components/ui/page-header"
+
 interface PageHeaderProps {
   title: string;
   description?: string;
@@ -6,14 +8,10 @@ interface PageHeaderProps {
 
 export const PageHeader = ({ title, description, action }: PageHeaderProps) => {
   return (
-    <div className="flex items-center justify-between mb-8">
-      <div>
-        <h1 className="text-3xl font-bold tracking-tight">{title}</h1>
-        {description && (
-          <p className="text-muted-foreground mt-2">{description}</p>
-        )}
-      </div>
-      {action && <div>{action}</div>}
-    </div>
+    <StandardPageHeader
+      title={title}
+      description={description}
+      action={action}
+    />
   );
 };

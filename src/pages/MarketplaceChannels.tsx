@@ -117,12 +117,12 @@ export default function MarketplaceChannels() {
         {/* Header */}
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
           <div>
-            <h1 className="text-2xl font-bold tracking-tight">Marketplace Channels</h1>
-            <p className="text-muted-foreground">
+            <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">Marketplace Channels</h1>
+            <p className="text-muted-foreground text-sm sm:text-base">
               Gerencie os canais de marketplace disponíveis no sistema
             </p>
           </div>
-          <Button onClick={handleNewChannel}>
+          <Button onClick={handleNewChannel} className="w-full sm:w-auto">
             <Plus className="mr-2 h-4 w-4" />
             Novo Canal
           </Button>

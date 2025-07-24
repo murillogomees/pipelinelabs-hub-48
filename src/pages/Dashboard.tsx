@@ -174,7 +174,7 @@ export function Dashboard() {
       {/* Header */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div className="min-w-0 flex-1">
-          <h1 className="text-2xl sm:text-3xl font-bold text-foreground truncate">
+          <h1 className="text-2xl sm:text-3xl font-bold tracking-tight truncate">
             Dashboard
           </h1>
           <p className="text-sm sm:text-base text-muted-foreground">
