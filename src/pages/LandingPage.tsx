@@ -514,15 +514,15 @@ export function LandingPage() {
                   </div>
                 </div>
                 <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-black/20 to-transparent"></div>
-                <div className="absolute bottom-2 left-2 flex items-center text-primary-foreground drop-shadow-lg">
-                  <Shield className="w-3 h-3 text-primary-foreground mr-1" />
-                  <h3 className="text-sm md:text-base font-semibold drop-shadow-md">
+                <div className="absolute bottom-4 left-4 flex items-center text-primary-foreground drop-shadow-lg">
+                  <Shield className="w-5 h-5 text-primary-foreground mr-2" />
+                  <h3 className="text-xl md:text-2xl font-semibold drop-shadow-md">
                     Autenticação Forte
                   </h3>
                 </div>
               </div>
-              <div className="mt-2 px-3 pb-3">
-                <p className="text-xs md:text-sm text-card-foreground font-medium leading-relaxed">
+              <div className="mt-4 px-4 pb-6">
+                <p className="text-base md:text-lg text-card-foreground font-medium leading-relaxed">
                   Login seguro com autenticação de dois fatores e controle de acesso rigoroso.
                 </p>
               </div>
@@ -564,13 +564,13 @@ export function LandingPage() {
               aria-label="Card de Backup Seguro"
             >
               <div className="relative aspect-[3/2] overflow-hidden bg-gradient-to-br from-info/10 to-info/5 flex items-center justify-center">
-                <div className="text-center p-8">
-                  <div className="w-20 h-20 bg-info/20 rounded-2xl flex items-center justify-center mx-auto mb-4">
-                    <Database className="w-10 h-10 text-info" />
+                <div className="text-center p-4">
+                  <div className="w-12 h-12 bg-info/20 rounded-lg flex items-center justify-center mx-auto mb-2">
+                    <Database className="w-6 h-6 text-info" />
                   </div>
-                  <div className="space-y-2">
-                    <div className="w-22 h-3 bg-info/30 rounded mx-auto"></div>
-                    <div className="w-18 h-2 bg-muted rounded mx-auto"></div>
+                  <div className="space-y-1">
+                    <div className="w-16 h-1.5 bg-info/30 rounded mx-auto"></div>
+                    <div className="w-10 h-1 bg-muted rounded mx-auto"></div>
                   </div>
                 </div>
                 <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-black/20 to-transparent"></div>
