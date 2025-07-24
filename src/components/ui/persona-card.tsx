@@ -88,15 +88,15 @@ export function PersonaCard({
           </p>
         </div>
 
-        {/* Layout otimizado com espaçamento consistente e centralização */}
-        <div className="flex-1 flex flex-col justify-evenly items-center mx-auto my-auto w-full max-w-[95%] gap-4">
+        {/* Layout padronizado com espaçamento consistente e design responsivo */}
+        <div className="flex-1 flex flex-col justify-center items-center w-full max-w-full px-2 sm:px-4 lg:px-6 gap-4 sm:gap-5 lg:gap-6">
           {/* Principais Dores */}
           {problems && problems.length > 0 && (
-            <div className="space-y-2 text-center w-full mb-[15px]">
-              <h4 className="font-semibold text-sm text-destructive mb-2 flex items-center justify-center gap-1.5">
+            <div className="w-full max-w-full text-center px-3 py-4 sm:px-4 sm:py-5 lg:px-6 lg:py-6 space-y-3 sm:space-y-4" style={{ WebkitTextSizeAdjust: '100%' }}>
+              <h4 className="font-semibold text-sm sm:text-base lg:text-lg text-destructive mb-3 sm:mb-4 flex items-center justify-center gap-1.5">
                  Principais Dores
               </h4>
-              <ul className="text-xs text-muted-foreground space-y-1.5">
+              <ul className="text-xs sm:text-sm lg:text-base text-muted-foreground space-y-2 sm:space-y-2.5 lg:space-y-3">
                 {problems.map((problem: string, i: number) => (
                   <li key={i} className="flex items-start gap-2 text-left">
                     <span className="text-destructive mt-0.5 flex-shrink-0">•</span>
@@ -109,11 +109,11 @@ export function PersonaCard({
 
           {/* Soluções Pipeline Labs */}
           {solutions && solutions.length > 0 && (
-            <div className="space-y-2 text-center w-full mb-[15px]">
-              <h4 className="font-semibold text-sm text-success mb-2 flex items-center justify-center gap-1.5">
+            <div className="w-full max-w-full text-center px-3 py-4 sm:px-4 sm:py-5 lg:px-6 lg:py-6 space-y-3 sm:space-y-4" style={{ WebkitTextSizeAdjust: '100%' }}>
+              <h4 className="font-semibold text-sm sm:text-base lg:text-lg text-success mb-3 sm:mb-4 flex items-center justify-center gap-1.5">
                  Soluções Pipeline Labs
               </h4>
-              <ul className="text-xs space-y-1.5">
+              <ul className="text-xs sm:text-sm lg:text-base space-y-2 sm:space-y-2.5 lg:space-y-3">
                 {solutions.map((solution: string, i: number) => (
                   <li key={i} className="flex items-start gap-2 text-left">
                     <span className="text-success mt-0.5 flex-shrink-0">•</span>
@@ -126,11 +126,11 @@ export function PersonaCard({
 
           {/* Resultado Alcançado */}
           {result && (
-            <div className="bg-muted/50 rounded-lg p-4 border-l-4 border-primary w-full text-center">
-              <h4 className="font-semibold text-sm text-primary mb-2 flex items-center justify-center gap-1.5">
+            <div className="w-full max-w-full bg-muted/50 rounded-lg px-3 py-4 sm:px-4 sm:py-5 lg:px-6 lg:py-6 border-l-4 border-primary text-center space-y-3 sm:space-y-4" style={{ WebkitTextSizeAdjust: '100%' }}>
+              <h4 className="font-semibold text-sm sm:text-base lg:text-lg text-primary mb-3 sm:mb-4 flex items-center justify-center gap-1.5">
                 🚀 Resultado Alcançado
               </h4>
-              <p className="text-xs leading-relaxed text-foreground">{result}</p>
+              <p className="text-xs sm:text-sm lg:text-base leading-relaxed text-foreground">{result}</p>
             </div>
           )}
         </div>
