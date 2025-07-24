@@ -1,4 +1,3 @@
-
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
@@ -28,7 +27,7 @@ export function useBackupSettings() {
     queryKey: ["backup-settings"],
     queryFn: async (): Promise<BackupSettings | null> => {
       const { data, error } = await supabase
-        .from("backup_settings" as any)
+        .from("backup_settings")
         .select("*")
         .maybeSingle();
 
@@ -44,7 +43,7 @@ export function useBackupSettings() {
   const updateSettingsMutation = useMutation({
     mutationFn: async (settings: Partial<BackupSettings>) => {
       const { data, error } = await supabase
-        .from("backup_settings" as any)
+        .from("backup_settings")
         .upsert(settings as any)
         .select()
         .single();
@@ -71,7 +70,7 @@ export function useBackupSettings() {
 
   const triggerBackupMutation = useMutation({
     mutationFn: async () => {
-      const { data, error } = await supabase.rpc("trigger_manual_backup" as any);
+      const { data, error } = await supabase.rpc("trigger_manual_backup");
       
       if (error) throw error;
       return data;

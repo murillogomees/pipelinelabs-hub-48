@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
 import { menuItems } from '../constants';
@@ -11,11 +10,11 @@ export function useSidebarState() {
   useEffect(() => {
     const currentPath = location.pathname;
     const activeMenuItem = menuItems.find(item => 
-      item.submenu.some(sub => currentPath.startsWith(sub.path)) ||
+      item.submenu && item.submenu.some(sub => currentPath.startsWith(sub.path)) ||
       currentPath === item.path
     );
     
-    if (activeMenuItem && activeMenuItem.submenu.length > 0) {
+    if (activeMenuItem && activeMenuItem.submenu && activeMenuItem.submenu.length > 0) {
       // Mantém apenas o item ativo expandido
       setExpandedItems([activeMenuItem.title]);
     } else {
