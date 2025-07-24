@@ -24,6 +24,7 @@ export interface CompanySubscription {
     price: number;
     interval: string;
     features: string[];
+    max_users?: number;
   };
 }
 

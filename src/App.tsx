@@ -39,7 +39,6 @@ const NotFound = React.lazy(() => import('@/pages/NotFound'));
 
 // Admin pages - também lazy loaded
 const Admin = React.lazy(() => import('@/pages/Admin').then(module => ({ default: module.Admin })));
-const AdminPlanos = React.lazy(() => import('@/pages/AdminPlanos').then(module => ({ default: module.AdminPlanos })));
 const AdminUsuarios = React.lazy(() => import('@/pages/AdminUsuarios'));
 const AdminIntegracoes = React.lazy(() => import('@/pages/AdminIntegracoes').then(module => ({ default: module.AdminIntegracoes })));
 const AdminNotificacoes = React.lazy(() => import('@/pages/AdminNotificacoes').then(module => ({ default: module.AdminNotificacoes })));
@@ -199,7 +198,6 @@ function RouteHandler() {
         
         {/* Admin routes */}
         <Route path="admin" element={<ProtectedRoute requireAdmin><Admin /></ProtectedRoute>} />
-        <Route path="admin/planos" element={<ProtectedRoute requireAdmin><AdminPlanos /></ProtectedRoute>} />
         <Route path="admin/usuarios" element={<ProtectedRoute requireAdmin><AdminUsuarios /></ProtectedRoute>} />
         <Route path="admin/integracoes" element={<ProtectedRoute requireAdmin><AdminIntegracoes /></ProtectedRoute>} />
         <Route path="admin/notificacoes" element={<ProtectedRoute requireAdmin><AdminNotificacoes /></ProtectedRoute>} />

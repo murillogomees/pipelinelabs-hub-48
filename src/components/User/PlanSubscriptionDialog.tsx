@@ -115,39 +115,38 @@ export function PlanSubscriptionDialog({ open, onOpenChange }: PlanSubscriptionD
                     <div>
                       <p className="text-sm text-muted-foreground">Nome do Plano</p>
                       <p className="font-medium flex items-center space-x-2">
-                        <span>{subscription.plans?.name || 'Plano Básico'}</span>
+                        <span>{subscription.billing_plan?.name || 'Plano Básico'}</span>
                       </p>
                     </div>
                     <div>
-                      <p className="text-sm text-muted-foreground">Valor Pago</p>
+                      <p className="text-sm text-muted-foreground">Valor do Plano</p>
                       <p className="font-medium">
-                        {subscription.price_paid ? formatCurrency(subscription.price_paid) : 
-                         subscription.plans?.price ? formatCurrency(subscription.plans.price) : 'Gratuito'}
+                        {subscription.billing_plan?.price ? formatCurrency(subscription.billing_plan.price) : 'Gratuito'}
                       </p>
                     </div>
                   </div>
 
-                  {subscription.subscription_number && (
+                  {subscription.stripe_subscription_id && (
                     <div>
-                      <p className="text-sm text-muted-foreground">Número da Assinatura</p>
-                      <p className="font-medium">{subscription.subscription_number}</p>
+                      <p className="text-sm text-muted-foreground">ID da Assinatura</p>
+                      <p className="font-medium font-mono text-xs">{subscription.stripe_subscription_id}</p>
                     </div>
                   )}
 
                   <div className="grid grid-cols-2 gap-4">
                     <div>
                       <p className="text-sm text-muted-foreground">Data de Início</p>
-                      <p className="font-medium">{formatDate(subscription.start_date)}</p>
+                      <p className="font-medium">{subscription.current_period_start ? formatDate(subscription.current_period_start) : 'Não definido'}</p>
                     </div>
                     <div>
                       <p className="text-sm text-muted-foreground">
                         {subscription.status === 'trial' ? 'Fim do Teste' : 'Próxima Cobrança'}
                       </p>
                       <p className="font-medium">
-                        {subscription.trial_end_date 
-                          ? formatDate(subscription.trial_end_date)
-                          : subscription.end_date 
-                          ? formatDate(subscription.end_date)
+                        {subscription.trial_end 
+                          ? formatDate(subscription.trial_end)
+                          : subscription.current_period_end 
+                          ? formatDate(subscription.current_period_end)
                           : 'Não definido'
                         }
                       </p>
@@ -159,12 +158,12 @@ export function PlanSubscriptionDialog({ open, onOpenChange }: PlanSubscriptionD
                     </div>
                   </div>
 
-                  {subscription.payment_method && (
+                  {subscription.stripe_customer_id && (
                     <div>
                       <p className="text-sm text-muted-foreground">Método de Pagamento</p>
                       <p className="font-medium flex items-center space-x-2">
                         <CreditCard className="w-4 h-4" />
-                        <span>{subscription.payment_method}</span>
+                        <span>Stripe</span>
                       </p>
                     </div>
                   )}
@@ -172,14 +171,14 @@ export function PlanSubscriptionDialog({ open, onOpenChange }: PlanSubscriptionD
               </Card>
 
               {/* Plan Features */}
-              {subscription.plans?.features && (
+              {subscription.billing_plan?.features && (
                 <Card>
                   <CardHeader>
                     <CardTitle>Recursos Incluídos</CardTitle>
                   </CardHeader>
                   <CardContent>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                      {(subscription.plans.features as string[]).map((feature, index) => (
+                      {(subscription.billing_plan.features as string[]).map((feature, index) => (
                         <div key={index} className="flex items-center space-x-2">
                           <CheckCircle className="w-4 h-4 text-green-600 flex-shrink-0" />
                           <span className="text-sm">{feature}</span>
@@ -191,21 +190,21 @@ export function PlanSubscriptionDialog({ open, onOpenChange }: PlanSubscriptionD
               )}
 
               {/* Plan Limits */}
-              {subscription.plans && (
+              {subscription.billing_plan && (
                 <Card>
                   <CardHeader>
                     <CardTitle>Limites do Plano</CardTitle>
                   </CardHeader>
                   <CardContent>
                     <div className="space-y-3">
-                      {subscription.plans.user_limit && (
+                      {subscription.billing_plan.max_users && (
                         <div className="flex items-center justify-between">
                           <div className="flex items-center space-x-2">
                             <Users className="w-4 h-4 text-muted-foreground" />
                             <span>Usuários</span>
                           </div>
                           <Badge variant="outline">
-                            {subscription.plans.user_limit === -1 ? 'Ilimitado' : `${subscription.plans.user_limit} usuários`}
+                            {subscription.billing_plan.max_users === -1 ? 'Ilimitado' : `${subscription.billing_plan.max_users} usuários`}
                           </Badge>
                         </div>
                       )}

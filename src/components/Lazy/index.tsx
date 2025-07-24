@@ -163,11 +163,6 @@ export const LazyCompanyDialog = createLazyComponent(
   'default'
 );
 
-export const LazyPlanDialog = createLazyComponent(
-  () => import('@/components/Admin/PlanDialog'),
-  'PlanDialog',
-  'default'
-);
 
 export const LazyIntegrationDialog = createLazyComponent(
   () => import('@/components/Admin/Integrations/IntegrationDialog'),
