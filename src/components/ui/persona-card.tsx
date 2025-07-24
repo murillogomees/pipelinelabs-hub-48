@@ -79,28 +79,28 @@ export function PersonaCard({
         </div>
       </div>
 
-      {/* Conteúdo do card com layout simétrico */}
-      <CardContent className="p-4 sm:p-6 flex flex-col h-full">
-        {/* Descrição da persona - logo abaixo da imagem */}
-        <div className="text-center mb-4">
-          <p className="text-base sm:text-lg lg:text-xl font-semibold text-foreground leading-tight">
+      {/* Conteúdo do card com layout centralizado e altura uniforme */}
+      <CardContent className="flex flex-col justify-center items-center min-h-[120px] py-6 px-4 sm:px-6">
+        {/* Descrição da persona - centralizada */}
+        <div className="text-center w-full max-w-[90%]">
+          <p className="text-base sm:text-lg font-semibold text-foreground leading-relaxed">
             {business}
           </p>
         </div>
 
-        {/* Layout otimizado com espaçamento consistente */}
-        <div className="flex-1 flex flex-col space-y-5">
+        {/* Layout otimizado com espaçamento consistente e centralização */}
+        <div className="flex-1 flex flex-col justify-center items-center space-y-4 mt-4 w-full max-w-[95%]">
           {/* Principais Dores */}
           {problems && problems.length > 0 && (
-            <div className="space-y-2">
-              <h4 className="font-semibold text-sm text-destructive mb-2 flex items-center gap-1.5">
+            <div className="space-y-2 text-center w-full">
+              <h4 className="font-semibold text-sm text-destructive mb-2 flex items-center justify-center gap-1.5">
                 😰 Principais Dores
               </h4>
               <ul className="text-xs text-muted-foreground space-y-1.5">
                 {problems.map((problem: string, i: number) => (
-                  <li key={i} className="flex items-start gap-2">
+                  <li key={i} className="flex items-start gap-2 text-left">
                     <span className="text-destructive mt-0.5 flex-shrink-0">•</span>
-                    <span>{problem}</span>
+                    <span className="leading-relaxed">{problem}</span>
                   </li>
                 ))}
               </ul>
@@ -109,15 +109,15 @@ export function PersonaCard({
 
           {/* Soluções Pipeline Labs */}
           {solutions && solutions.length > 0 && (
-            <div className="space-y-2">
-              <h4 className="font-semibold text-sm text-success mb-2 flex items-center gap-1.5">
+            <div className="space-y-2 text-center w-full">
+              <h4 className="font-semibold text-sm text-success mb-2 flex items-center justify-center gap-1.5">
                 ✅ Soluções Pipeline Labs
               </h4>
               <ul className="text-xs space-y-1.5">
                 {solutions.map((solution: string, i: number) => (
-                  <li key={i} className="flex items-start gap-2">
+                  <li key={i} className="flex items-start gap-2 text-left">
                     <span className="text-success mt-0.5 flex-shrink-0">•</span>
-                    <span dangerouslySetInnerHTML={{ __html: solution }} />
+                    <span className="leading-relaxed" dangerouslySetInnerHTML={{ __html: solution }} />
                   </li>
                 ))}
               </ul>
@@ -126,8 +126,8 @@ export function PersonaCard({
 
           {/* Resultado Alcançado */}
           {result && (
-            <div className="bg-muted/50 rounded-lg p-4 border-l-4 border-primary">
-              <h4 className="font-semibold text-sm text-primary mb-2 flex items-center gap-1.5">
+            <div className="bg-muted/50 rounded-lg p-4 border-l-4 border-primary w-full text-center">
+              <h4 className="font-semibold text-sm text-primary mb-2 flex items-center justify-center gap-1.5">
                 🚀 Resultado Alcançado
               </h4>
               <p className="text-xs leading-relaxed text-foreground">{result}</p>
