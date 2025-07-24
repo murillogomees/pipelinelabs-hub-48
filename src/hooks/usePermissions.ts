@@ -188,6 +188,12 @@ export function usePermissions() {
     canAccessAdminPanel: (permissionsData?.isSuperAdmin || permissionsData?.isContratante) || false,
     canViewReports: (permissionsData?.isSuperAdmin || permissionsData?.isContratante || permissionsData?.specificPermissions?.reports) || false,
     
+    // Verificações específicas de permissão por funcionalidade
+    hasPermission: (permission: string) => {
+      if (permissionsData?.isSuperAdmin) return true;
+      return permissionsData?.specificPermissions?.[permission] === true;
+    },
+    
     // Verificações por contexto
     canAccessDepartmentData: (companyId: string, department?: string) => {
       if (permissionsData?.isSuperAdmin) return true;

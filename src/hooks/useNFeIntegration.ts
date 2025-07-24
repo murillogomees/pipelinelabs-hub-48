@@ -3,7 +3,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { useState } from 'react';
-import { useUserRole } from '@/hooks/useUserRole';
+import { usePermissions } from '@/hooks/usePermissions';
 
 interface NFeConfig {
   api_token?: string;
@@ -33,7 +33,7 @@ interface CertificateInfo {
 export const useNFeIntegration = () => {
   const { toast } = useToast();
   const queryClient = useQueryClient();
-  const { companyId: userCompanyId } = useUserRole();
+  const { companyId: userCompanyId } = usePermissions();
   const [testingConnection, setTestingConnection] = useState(false);
   const [uploadingCertificate, setUploadingCertificate] = useState(false);
 

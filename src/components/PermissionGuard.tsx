@@ -1,5 +1,5 @@
 import React from 'react';
-import { useRoleChecks } from '@/hooks/useUserRole';
+import { usePermissions } from '@/hooks/usePermissions';
 import { AlertTriangle, Lock } from 'lucide-react';
 
 interface PermissionGuardProps {
@@ -26,10 +26,11 @@ export function PermissionGuard({
   showFallback = true
 }: PermissionGuardProps) {
   const {
-    canAccessSystemAdmin,
-    canAccessCompanyAdmin,
-    canAccessOperationalData
-  } = useRoleChecks();
+    canManageSystem,
+    canManageCompany,
+    canAccessDepartmentData,
+    hasPermission
+  } = usePermissions();
 
   // Verificação personalizada
   if (customCheck && !customCheck()) {
@@ -37,12 +38,12 @@ export function PermissionGuard({
   }
 
   // Verificação por nível de sistema
-  if (requireSystemAdmin && !canAccessSystemAdmin()) {
+  if (requireSystemAdmin && !canManageSystem) {
     return showFallback ? (fallback || <DefaultAccessDenied />) : null;
   }
 
   // Verificação por nível de empresa
-  if (requireCompanyAdmin && !canAccessCompanyAdmin(companyId)) {
+  if (requireCompanyAdmin && !canManageCompany) {
     return showFallback ? (fallback || <DefaultAccessDenied />) : null;
   }
 
@@ -52,13 +53,13 @@ export function PermissionGuard({
     
     switch (requiredRole) {
       case 'super_admin':
-        hasAccess = canAccessSystemAdmin();
+        hasAccess = canManageSystem;
         break;
       case 'contratante':
-        hasAccess = canAccessCompanyAdmin(companyId);
+        hasAccess = canManageCompany;
         break;
       case 'operador':
-        hasAccess = canAccessOperationalData(companyId, department);
+        hasAccess = canAccessDepartmentData(companyId || '', department);
         break;
     }
 

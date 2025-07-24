@@ -6,6 +6,7 @@ import { MainLayout } from '@/components/Layout/MainLayout';
 import { ProtectedRoute } from '@/components/ProtectedRoute';
 import { ErrorBoundary } from '@/components/ErrorBoundary';
 import { AuthProvider, useAuth } from '@/components/Auth/AuthProvider';
+import { PermissionProvider } from '@/components/PermissionProvider';
 import { AnalyticsProvider } from '@/components/Analytics';
 import { PrivacyConsentProvider } from '@/components/LGPD/PrivacyConsentProvider';
 import { TermsProvider } from '@/components/Terms/TermsProvider';
@@ -251,12 +252,14 @@ function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
-        <SentryErrorBoundary>
-          <ErrorBoundary>
-            <AppRoutes />
-            <Toaster />
-          </ErrorBoundary>
-        </SentryErrorBoundary>
+        <PermissionProvider>
+          <SentryErrorBoundary>
+            <ErrorBoundary>
+              <AppRoutes />
+              <Toaster />
+            </ErrorBoundary>
+          </SentryErrorBoundary>
+        </PermissionProvider>
       </AuthProvider>
     </QueryClientProvider>
   );

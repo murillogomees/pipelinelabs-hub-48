@@ -66,16 +66,18 @@ export function useUserManagement(onSave: () => void, onClose: () => void) {
       .single();
 
     if (currentUserCompany) {
-      // Criar associação do novo usuário com a empresa selecionada
-      const { error: companyError } = await supabase
-        .from('user_companies')
-        .insert({
-          user_id: authData.user.id,
-          company_id: formData.company_id || currentUserCompany.company_id,
+    // Criar associação do novo usuário com a empresa selecionada
+    const { error: companyError } = await supabase
+      .from('user_companies')
+      .insert({
+        user_id: authData.user.id,
+        company_id: formData.company_id || currentUserCompany.company_id,
         user_type: formData.user_type,
-          permissions: formData.permissions,
-          is_active: formData.is_active
-        });
+        permissions: formData.permissions,
+        specific_permissions: formData.permissions,
+        role: formData.user_type === 'contratante' ? 'admin' : 'user',
+        is_active: formData.is_active
+      });
 
       if (companyError) {
         // Error associating user to company
@@ -121,6 +123,8 @@ export function useUserManagement(onSave: () => void, onClose: () => void) {
       .update({
         user_type: formData.user_type,
         permissions: formData.permissions,
+        specific_permissions: formData.permissions,
+        role: formData.user_type === 'contratante' ? 'admin' : 'user',
         is_active: formData.is_active
       })
       .eq('user_id', user.user_id);

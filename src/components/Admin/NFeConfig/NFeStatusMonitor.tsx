@@ -15,7 +15,7 @@ import {
 } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
-import { useUserRole } from '@/hooks/useUserRole';
+import { usePermissions } from '@/hooks/usePermissions';
 
 interface NFeStats {
   total: number;
@@ -38,7 +38,7 @@ interface RecentNFe {
 }
 
 export function NFeStatusMonitor() {
-  const { companyId } = useUserRole();
+  const { companyId } = usePermissions();
   const [refreshing, setRefreshing] = useState(false);
 
   // Buscar estatísticas de NFe
