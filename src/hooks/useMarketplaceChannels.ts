@@ -1,6 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import { useCurrentCompany } from './useCurrentCompany';
 
 export interface MarketplaceChannel {
   id: string;
@@ -33,6 +34,7 @@ export interface CompanyMarketplaceConfig {
 export const useMarketplaceChannels = () => {
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const { data: currentCompany } = useCurrentCompany();
 
   // Buscar todos os canais de marketplace
   const { data: channels, isLoading: channelsLoading } = useQuery({
@@ -50,36 +52,45 @@ export const useMarketplaceChannels = () => {
 
   // Buscar configurações da empresa atual
   const { data: companyConfigs, isLoading: configsLoading } = useQuery({
-    queryKey: ['company-marketplace-configs'],
+    queryKey: ['company-marketplace-configs', currentCompany?.company_id],
     queryFn: async () => {
+      if (!currentCompany?.company_id) return [];
+      
       const { data, error } = await supabase
         .from('company_marketplace_configs')
-        .select('*');
+        .select('*')
+        .eq('company_id', currentCompany.company_id);
       
       if (error) throw error;
       return data as CompanyMarketplaceConfig[];
-    }
+    },
+    enabled: !!currentCompany?.company_id
   });
 
   // Ativar/desativar canal para empresa (apenas admins)
   const toggleChannelMutation = useMutation({
     mutationFn: async ({ channelName, isEnabled }: { channelName: string; isEnabled: boolean }) => {
+      if (!currentCompany?.company_id) {
+        throw new Error('Empresa não encontrada');
+      }
+
       const { data: session } = await supabase.auth.getSession();
       if (!session.session?.user) throw new Error('Usuário não autenticado');
 
-      // Verificar se já existe configuração
+      // Verificar se já existe configuração para esta empresa
       const { data: existing } = await supabase
         .from('company_marketplace_configs')
         .select('*')
         .eq('channel_name', channelName)
-        .single();
+        .eq('company_id', currentCompany.company_id)
+        .maybeSingle();
 
       if (existing) {
         // Atualizar configuração existente
         const { data, error } = await supabase
           .from('company_marketplace_configs')
           .update({ is_enabled: isEnabled })
-          .eq('channel_name', channelName)
+          .eq('id', existing.id)
           .select()
           .single();
         
@@ -87,22 +98,13 @@ export const useMarketplaceChannels = () => {
         return data;
       } else {
         // Criar nova configuração
-        const { data: userData } = await supabase.auth.getUser();
-        const { data: userCompany } = await supabase
-          .from('user_companies')
-          .select('company_id')
-          .eq('user_id', userData.user?.id)
-          .single();
-
-        if (!userCompany) throw new Error('Empresa não encontrada');
-
         const { data, error } = await supabase
           .from('company_marketplace_configs')
           .insert({
-            company_id: userCompany.company_id,
+            company_id: currentCompany.company_id,
             channel_name: channelName,
             is_enabled: isEnabled,
-            created_by: userData.user?.id
+            created_by: session.session.user.id
           })
           .select()
           .single();
@@ -112,7 +114,7 @@ export const useMarketplaceChannels = () => {
       }
     },
     onSuccess: (data) => {
-      queryClient.invalidateQueries({ queryKey: ['company-marketplace-configs'] });
+      queryClient.invalidateQueries({ queryKey: ['company-marketplace-configs', currentCompany?.company_id] });
       toast({
         title: "Configuração atualizada",
         description: `Canal ${data.channel_name} ${data.is_enabled ? 'ativado' : 'desativado'} com sucesso.`

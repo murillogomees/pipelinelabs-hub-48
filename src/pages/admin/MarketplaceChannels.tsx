@@ -127,7 +127,7 @@ export default function MarketplaceChannels() {
           <CardContent>
             <div className="text-2xl font-bold">{activeChannels}</div>
             <p className="text-xs text-muted-foreground">
-              {channels.length - activeChannels} em manutenção
+              {(channels?.length || 0) - activeChannels} em manutenção
             </p>
           </CardContent>
         </Card>
@@ -176,7 +176,7 @@ export default function MarketplaceChannels() {
           </div>
         </div>
 
-        {channels.length === 0 ? (
+        {(channels?.length || 0) === 0 ? (
           <Card>
             <CardContent className="py-8 text-center">
               <ShoppingCart className="mx-auto h-12 w-12 text-muted-foreground mb-4" />
