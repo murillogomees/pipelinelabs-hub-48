@@ -47,6 +47,7 @@ const AdminNotificacoes = React.lazy(() => import('@/pages/AdminNotificacoes').t
 const AdminBackup = React.lazy(() => import('@/pages/AdminBackup'));
 const AdminAuditLogs = React.lazy(() => import('@/pages/AdminAuditLogs'));
 const AdminCache = React.lazy(() => import('@/pages/AdminCache').then(module => ({ default: module.AdminCache })));
+const AdminEngineerNotes = React.lazy(() => import('@/pages/AdminEngineerNotes'));
 const AdminLandingPage = React.lazy(() => import('@/pages/AdminLandingPage').then(module => ({ default: module.AdminLandingPage })));
 const AdminCompressao = React.lazy(() => import('@/pages/AdminCompressao').then(module => ({ default: module.AdminCompressao })));
 const AdminMonitoramento = React.lazy(() => import('@/pages/AdminMonitoramento'));
@@ -220,6 +221,7 @@ function RouteHandler() {
         <Route path="admin/stripe" element={<ProtectedRoute requireSuperAdmin><AdminStripe /></ProtectedRoute>} />
         <Route path="admin/nfe-config" element={<ProtectedRoute requireSuperAdmin><AdminNFeConfig /></ProtectedRoute>} />
         <Route path="admin/versions" element={<ProtectedRoute requireSuperAdmin><AdminVersions /></ProtectedRoute>} />
+        <Route path="admin/engineer-notes" element={<ProtectedRoute requireSuperAdmin><AdminEngineerNotes /></ProtectedRoute>} />
         
         <Route path="analytics" element={<Analytics />} />
         

@@ -21,7 +21,8 @@ import {
   Shield,
   Palette,
   Activity,
-  GitBranch
+  GitBranch,
+  Code2
 } from 'lucide-react';
 
 export const menuItems = [
@@ -119,7 +120,8 @@ export const menuItems = [
       { title: 'Versões', path: '/app/admin/versions', icon: GitBranch },
       { title: 'Stripe', path: '/app/admin/stripe', icon: CreditCard },
       { title: 'Logs de Auditoria', path: '/app/admin/audit-logs' },
-      { title: 'Landing Page', path: '/app/admin/landing-page' }
+      { title: 'Landing Page', path: '/app/admin/landing-page' },
+      { title: 'Engineering Notes', path: '/app/admin/engineer-notes', icon: Code2 }
     ]
   }
 ];

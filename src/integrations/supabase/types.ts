@@ -899,6 +899,36 @@ export type Database = {
         }
         Relationships: []
       }
+      copilot_engineer_notes: {
+        Row: {
+          created_at: string | null
+          id: string
+          notes: string
+          tag: string | null
+          title: string
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          notes: string
+          tag?: string | null
+          title: string
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          notes?: string
+          tag?: string | null
+          title?: string
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       cost_centers: {
         Row: {
           company_id: string
