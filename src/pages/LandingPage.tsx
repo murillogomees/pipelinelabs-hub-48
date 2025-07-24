@@ -503,7 +503,7 @@ export function LandingPage() {
               className="group rounded-xl shadow-lg overflow-hidden relative bg-card hover:shadow-xl transition-all duration-300 hover:scale-105"
               aria-label="Card de Autenticação Segura"
             >
-              <div className="relative aspect-[2/1] overflow-hidden bg-gradient-to-br from-primary/10 to-primary/5 flex items-center justify-center">
+              <div className="relative aspect-[3/2] overflow-hidden bg-gradient-to-br from-primary/10 to-primary/5 flex items-center justify-center">
                 <div className="text-center p-4">
                   <div className="w-12 h-12 bg-primary/20 rounded-lg flex items-center justify-center mx-auto mb-2">
                     <Shield className="w-6 h-6 text-primary" />
