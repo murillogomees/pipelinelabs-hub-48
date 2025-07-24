@@ -26,11 +26,13 @@ export function usePerformanceMonitoring() {
             setMetrics(prev => ({ ...prev, lcp: entry.startTime }));
             break;
           case 'first-input':
-            setMetrics(prev => ({ ...prev, fid: entry.processingStart - entry.startTime }));
+            const fidEntry = entry as PerformanceEventTiming;
+            setMetrics(prev => ({ ...prev, fid: fidEntry.processingStart - fidEntry.startTime }));
             break;
           case 'layout-shift':
-            if (!entry.hadRecentInput) {
-              setMetrics(prev => ({ ...prev, cls: (prev.cls || 0) + entry.value }));
+            const clsEntry = entry as any; // LayoutShift interface not available in all browsers
+            if (!clsEntry.hadRecentInput) {
+              setMetrics(prev => ({ ...prev, cls: (prev.cls || 0) + clsEntry.value }));
             }
             break;
           case 'paint':
@@ -39,7 +41,8 @@ export function usePerformanceMonitoring() {
             }
             break;
           case 'navigation':
-            setMetrics(prev => ({ ...prev, ttfb: entry.responseStart }));
+            const navEntry = entry as PerformanceNavigationTiming;
+            setMetrics(prev => ({ ...prev, ttfb: navEntry.responseStart }));
             break;
         }
       }
