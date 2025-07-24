@@ -2,7 +2,7 @@ import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Check, Star, ArrowRight, Users, TrendingUp, Shield, Zap, FileText, Package, Truck, ClipboardCheck, Building, Globe, Lock, Database, Cloud, Rocket, BarChart3, Calculator, CreditCard, ShoppingCart, Bell, Settings, Calendar, PieChart, Monitor, Smartphone, Tablet, DollarSign } from 'lucide-react';
+import { Check, Star, ArrowRight, Users, TrendingUp, Shield, Zap, FileText, Package, Truck, ClipboardCheck, Building, Globe, Lock, Database, Cloud, Rocket, BarChart3, Calculator, CreditCard, ShoppingCart, Bell, Settings, Calendar, PieChart, Monitor, Smartphone, Tablet, DollarSign, Banknote, LayoutDashboard, Warehouse, Receipt, Megaphone } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useLandingPageContent } from '@/hooks/useLandingPageContent';
 import { PipelineLabsLogo } from '@/components/Layout/PipelineLabsLogo';
@@ -240,87 +240,185 @@ export function LandingPage() {
             </p>
           </div>
 
-          {/* Grid de Cards com Mockups */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-6 max-w-screen-xl mx-auto">
+          {/* Grid de Cards com Mockups Modernos */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 max-w-screen-xl mx-auto">
+            
             {/* Card Financeiro */}
-            <Card className="group overflow-hidden hover:shadow-xl transition-all duration-300 hover:scale-105">
-              <div className="aspect-video relative overflow-hidden rounded-t-xl">
-                <MockupFinancial className="w-full h-full transform transition-transform duration-300 group-hover:scale-110" />
+            <div 
+              className="group rounded-xl shadow-lg overflow-hidden relative bg-white hover:shadow-xl transition-all duration-300 hover:scale-105"
+              aria-label="Card de Módulo Financeiro"
+            >
+              <div className="relative aspect-[4/3] overflow-hidden">
+                <MockupFinancial className="w-full h-full object-cover" />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-black/30 to-transparent"></div>
+                <div className="absolute bottom-4 left-4 flex items-center text-white">
+                  <Banknote className="w-5 h-5 text-white mr-2" />
+                  <h3 className="text-xl md:text-2xl font-semibold drop-shadow-md">
+                    Financeiro
+                  </h3>
+                </div>
               </div>
-              <CardContent className="p-4 text-center">
-                <h3 className="text-md font-medium text-foreground">Financeiro</h3>
-              </CardContent>
-            </Card>
+              <div className="mt-4 px-4 pb-6">
+                <p className="text-base md:text-lg text-gray-800 font-medium leading-relaxed">
+                  Controle financeiro completo com fluxo de caixa e cobranças automatizadas.
+                </p>
+              </div>
+            </div>
 
             {/* Card Dashboard */}
-            <Card className="group overflow-hidden hover:shadow-xl transition-all duration-300 hover:scale-105">
-              <div className="aspect-video relative overflow-hidden rounded-t-xl">
-                <MockupDashboard className="w-full h-full transform transition-transform duration-300 group-hover:scale-110" />
+            <div 
+              className="group rounded-xl shadow-lg overflow-hidden relative bg-white hover:shadow-xl transition-all duration-300 hover:scale-105"
+              aria-label="Card de Módulo Dashboard"
+            >
+              <div className="relative aspect-[4/3] overflow-hidden">
+                <MockupDashboard className="w-full h-full object-cover" />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-black/30 to-transparent"></div>
+                <div className="absolute bottom-4 left-4 flex items-center text-white">
+                  <LayoutDashboard className="w-5 h-5 text-white mr-2" />
+                  <h3 className="text-xl md:text-2xl font-semibold drop-shadow-md">
+                    Dashboard
+                  </h3>
+                </div>
               </div>
-              <CardContent className="p-4 text-center">
-                <h3 className="text-md font-medium text-foreground">Dashboard</h3>
-              </CardContent>
-            </Card>
+              <div className="mt-4 px-4 pb-6">
+                <p className="text-base md:text-lg text-gray-800 font-medium leading-relaxed">
+                  Visão completa do seu negócio com relatórios e métricas em tempo real.
+                </p>
+              </div>
+            </div>
 
             {/* Card Estoque */}
-            <Card className="group overflow-hidden hover:shadow-xl transition-all duration-300 hover:scale-105">
-              <div className="aspect-video relative overflow-hidden rounded-t-xl">
-                <MockupInventory className="w-full h-full transform transition-transform duration-300 group-hover:scale-110" />
+            <div 
+              className="group rounded-xl shadow-lg overflow-hidden relative bg-white hover:shadow-xl transition-all duration-300 hover:scale-105"
+              aria-label="Card de Módulo Estoque"
+            >
+              <div className="relative aspect-[4/3] overflow-hidden">
+                <MockupInventory className="w-full h-full object-cover" />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-black/30 to-transparent"></div>
+                <div className="absolute bottom-4 left-4 flex items-center text-white">
+                  <Warehouse className="w-5 h-5 text-white mr-2" />
+                  <h3 className="text-xl md:text-2xl font-semibold drop-shadow-md">
+                    Estoque
+                  </h3>
+                </div>
               </div>
-              <CardContent className="p-4 text-center">
-                <h3 className="text-md font-medium text-foreground">Estoque</h3>
-              </CardContent>
-            </Card>
+              <div className="mt-4 px-4 pb-6">
+                <p className="text-base md:text-lg text-gray-800 font-medium leading-relaxed">
+                  Gestão inteligente de produtos com controle automático de baixas.
+                </p>
+              </div>
+            </div>
 
             {/* Card Vendas PDV */}
-            <Card className="group overflow-hidden hover:shadow-xl transition-all duration-300 hover:scale-105">
-              <div className="aspect-video relative overflow-hidden rounded-t-xl">
-                <MockupPDV className="w-full h-full transform transition-transform duration-300 group-hover:scale-110" />
+            <div 
+              className="group rounded-xl shadow-lg overflow-hidden relative bg-white hover:shadow-xl transition-all duration-300 hover:scale-105"
+              aria-label="Card de Módulo PDV"
+            >
+              <div className="relative aspect-[4/3] overflow-hidden">
+                <MockupPDV className="w-full h-full object-cover" />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-black/30 to-transparent"></div>
+                <div className="absolute bottom-4 left-4 flex items-center text-white">
+                  <Monitor className="w-5 h-5 text-white mr-2" />
+                  <h3 className="text-xl md:text-2xl font-semibold drop-shadow-md">
+                    PDV
+                  </h3>
+                </div>
               </div>
-              <CardContent className="p-4 text-center">
-                <h3 className="text-md font-medium text-foreground">PDV</h3>
-              </CardContent>
-            </Card>
+              <div className="mt-4 px-4 pb-6">
+                <p className="text-base md:text-lg text-gray-800 font-medium leading-relaxed">
+                  Terminal de vendas rápido e intuitivo para atendimento ágil.
+                </p>
+              </div>
+            </div>
 
             {/* Card NFe */}
-            <Card className="group overflow-hidden hover:shadow-xl transition-all duration-300 hover:scale-105">
-              <div className="aspect-video relative overflow-hidden rounded-t-xl">
-                <MockupNFe className="w-full h-full transform transition-transform duration-300 group-hover:scale-110" />
+            <div 
+              className="group rounded-xl shadow-lg overflow-hidden relative bg-white hover:shadow-xl transition-all duration-300 hover:scale-105"
+              aria-label="Card de Módulo Nota Fiscal"
+            >
+              <div className="relative aspect-[4/3] overflow-hidden">
+                <MockupNFe className="w-full h-full object-cover" />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-black/30 to-transparent"></div>
+                <div className="absolute bottom-4 left-4 flex items-center text-white">
+                  <Receipt className="w-5 h-5 text-white mr-2" />
+                  <h3 className="text-xl md:text-2xl font-semibold drop-shadow-md">
+                    Nota Fiscal
+                  </h3>
+                </div>
               </div>
-              <CardContent className="p-4 text-center">
-                <h3 className="text-md font-medium text-foreground">Nota Fiscal</h3>
-              </CardContent>
-            </Card>
+              <div className="mt-4 px-4 pb-6">
+                <p className="text-base md:text-lg text-gray-800 font-medium leading-relaxed">
+                  Emissão automática de NFe, NFSe e NFCe integrada com a Sefaz.
+                </p>
+              </div>
+            </div>
 
             {/* Card Vendas Diárias */}
-            <Card className="group overflow-hidden hover:shadow-xl transition-all duration-300 hover:scale-105">
-              <div className="aspect-video relative overflow-hidden rounded-t-xl">
-                <MockupDailySales className="w-full h-full transform transition-transform duration-300 group-hover:scale-110" />
+            <div 
+              className="group rounded-xl shadow-lg overflow-hidden relative bg-white hover:shadow-xl transition-all duration-300 hover:scale-105"
+              aria-label="Card de Módulo Vendas"
+            >
+              <div className="relative aspect-[4/3] overflow-hidden">
+                <MockupDailySales className="w-full h-full object-cover" />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-black/30 to-transparent"></div>
+                <div className="absolute bottom-4 left-4 flex items-center text-white">
+                  <TrendingUp className="w-5 h-5 text-white mr-2" />
+                  <h3 className="text-xl md:text-2xl font-semibold drop-shadow-md">
+                    Vendas
+                  </h3>
+                </div>
               </div>
-              <CardContent className="p-4 text-center">
-                <h3 className="text-md font-medium text-foreground">Vendas</h3>
-              </CardContent>
-            </Card>
+              <div className="mt-4 px-4 pb-6">
+                <p className="text-base md:text-lg text-gray-800 font-medium leading-relaxed">
+                  Relatórios detalhados de vendas com análise de performance.
+                </p>
+              </div>
+            </div>
 
             {/* Card Notificações */}
-            <Card className="group overflow-hidden hover:shadow-xl transition-all duration-300 hover:scale-105">
-              <div className="aspect-video relative overflow-hidden rounded-t-xl">
-                <MockupNotifications className="w-full h-full transform transition-transform duration-300 group-hover:scale-110" />
+            <div 
+              className="group rounded-xl shadow-lg overflow-hidden relative bg-white hover:shadow-xl transition-all duration-300 hover:scale-105"
+              aria-label="Card de Módulo Notificações"
+            >
+              <div className="relative aspect-[4/3] overflow-hidden">
+                <MockupNotifications className="w-full h-full object-cover" />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-black/30 to-transparent"></div>
+                <div className="absolute bottom-4 left-4 flex items-center text-white">
+                  <Bell className="w-5 h-5 text-white mr-2" />
+                  <h3 className="text-xl md:text-2xl font-semibold drop-shadow-md">
+                    Notificações
+                  </h3>
+                </div>
               </div>
-              <CardContent className="p-4 text-center">
-                <h3 className="text-md font-medium text-foreground">Notificações</h3>
-              </CardContent>
-            </Card>
+              <div className="mt-4 px-4 pb-6">
+                <p className="text-base md:text-lg text-gray-800 font-medium leading-relaxed">
+                  Central de alertas para manter você sempre informado sobre seu negócio.
+                </p>
+              </div>
+            </div>
 
-            {/* Card CRM - Usando Dashboard como placeholder */}
-            <Card className="group overflow-hidden hover:shadow-xl transition-all duration-300 hover:scale-105">
-              <div className="aspect-video relative overflow-hidden rounded-t-xl">
-                <MockupDashboard className="w-full h-full transform transition-transform duration-300 group-hover:scale-110" />
+            {/* Card CRM */}
+            <div 
+              className="group rounded-xl shadow-lg overflow-hidden relative bg-white hover:shadow-xl transition-all duration-300 hover:scale-105"
+              aria-label="Card de Módulo CRM"
+            >
+              <div className="relative aspect-[4/3] overflow-hidden">
+                <MockupDashboard className="w-full h-full object-cover" />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-black/30 to-transparent"></div>
+                <div className="absolute bottom-4 left-4 flex items-center text-white">
+                  <Users className="w-5 h-5 text-white mr-2" />
+                  <h3 className="text-xl md:text-2xl font-semibold drop-shadow-md">
+                    CRM
+                  </h3>
+                </div>
               </div>
-              <CardContent className="p-4 text-center">
-                <h3 className="text-md font-medium text-foreground">CRM</h3>
-              </CardContent>
-            </Card>
+              <div className="mt-4 px-4 pb-6">
+                <p className="text-base md:text-lg text-gray-800 font-medium leading-relaxed">
+                  Gestão completa de clientes e relacionamento comercial integrado.
+                </p>
+              </div>
+            </div>
+
           </div>
         </div>
       </section>
