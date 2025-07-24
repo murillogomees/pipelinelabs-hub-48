@@ -669,6 +669,53 @@ export type Database = {
           },
         ]
       }
+      company_marketplace_configs: {
+        Row: {
+          api_limits: Json | null
+          channel_name: string
+          company_id: string | null
+          created_at: string
+          created_by: string | null
+          global_config: Json | null
+          id: string
+          is_enabled: boolean
+          updated_at: string
+          webhook_config: Json | null
+        }
+        Insert: {
+          api_limits?: Json | null
+          channel_name: string
+          company_id?: string | null
+          created_at?: string
+          created_by?: string | null
+          global_config?: Json | null
+          id?: string
+          is_enabled?: boolean
+          updated_at?: string
+          webhook_config?: Json | null
+        }
+        Update: {
+          api_limits?: Json | null
+          channel_name?: string
+          company_id?: string | null
+          created_at?: string
+          created_by?: string | null
+          global_config?: Json | null
+          id?: string
+          is_enabled?: boolean
+          updated_at?: string
+          webhook_config?: Json | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "company_marketplace_configs_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       company_settings: {
         Row: {
           cdn_cache_settings: Json | null
