@@ -290,8 +290,8 @@ export function LandingPage() {
         </div>
       </section>}
 
-      {/* Pain/Personas Section - Busca agora diretamente do Supabase */}
-      {personasSection && (
+      {/* Pain/Personas Section - DISABLED */}
+      {false && personasSection && (
         <section className="py-20 px-4 bg-muted/50">
           <div className="container mx-auto">
             <div className="text-center mb-16">
