@@ -24,9 +24,8 @@ export const useMarketplaceIntegrations = () => {
     try {
       setIsLoading(true);
       
-      // Using raw query until types are updated
       const { data, error } = await supabase
-        .from('marketplace_integrations' as any)
+        .from('marketplace_integrations')
         .select('*')
         .order('created_at', { ascending: false });
 
@@ -35,7 +34,7 @@ export const useMarketplaceIntegrations = () => {
         return;
       }
 
-      setIntegrations((data as any) || []);
+      setIntegrations((data as MarketplaceIntegration[]) || []);
     } catch (error: any) {
       console.error('Failed to fetch marketplace integrations:', error);
       toast({
@@ -51,7 +50,7 @@ export const useMarketplaceIntegrations = () => {
   const updateIntegration = async (id: string, updates: Partial<MarketplaceIntegration>) => {
     try {
       const { error } = await supabase
-        .from('marketplace_integrations' as any)
+        .from('marketplace_integrations')
         .update({
           ...updates,
           updated_at: new Date().toISOString()
@@ -80,7 +79,7 @@ export const useMarketplaceIntegrations = () => {
   const syncIntegration = async (integrationId: string) => {
     try {
       const { error } = await supabase
-        .from('marketplace_integrations' as any)
+        .from('marketplace_integrations')
         .update({
           last_sync: new Date().toISOString(),
           sync_status: 'syncing',
