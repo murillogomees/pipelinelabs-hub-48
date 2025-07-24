@@ -105,11 +105,8 @@ export function PersonaCard({
             )}
           </div>
 
-          {/* Espaço flexível para empurrar resultado para o bottom */}
-          <div></div>
-
-          {/* Resultado - sempre no bottom */}
-          <div className="flex-shrink-0 mt-auto">
+          {/* Resultado - logo após soluções */}
+          <div className="flex-shrink-0">
             {result && (
               <div className="bg-muted/50 rounded-lg p-3 border-l-4 border-primary">
                 <h4 className="font-semibold text-sm text-primary mb-1 flex items-center gap-1">
