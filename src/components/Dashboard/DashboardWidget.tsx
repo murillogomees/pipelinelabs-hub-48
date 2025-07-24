@@ -23,7 +23,7 @@ import {
 } from 'lucide-react';
 import { Widget } from '@/hooks/useDashboard';
 import { useSales } from '@/hooks/useSales';
-import { useProducts } from '@/hooks/useProducts';
+import { useProducts } from '@/components/Products/hooks/useProducts';
 import { useAccountsReceivable } from '@/hooks/useAccountsReceivable';
 import { useAccountsPayable } from '@/hooks/useAccountsPayable';
 import { useProposals } from '@/hooks/useProposals';

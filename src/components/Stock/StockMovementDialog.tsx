@@ -5,7 +5,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { SearchableSelect } from "@/components/ui/searchable-select";
 import { useState, useEffect } from "react";
-import { useProducts } from "@/hooks/useProducts";
+import { useProducts } from "@/components/Products/hooks/useProducts";
 import { useWarehouses } from "@/hooks/useWarehouses";
 import { StockMovementFormData } from "@/hooks/useStockMovements";
 

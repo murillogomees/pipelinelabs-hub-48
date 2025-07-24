@@ -10,7 +10,7 @@ import { Footer } from '@/components/Layout/Footer';
 
 // Import the advanced mockup components (mantido para seção hero)
 import { MockupDashboard, MockupPDV, MockupNFe, MockupInventory, MockupFinancial, MockupNotifications, MockupDailySales } from '@/components/ui/SystemMockups';
-import { PersonaCard } from '@/components/ui/PersonaCard';
+// PersonaCard removido - implementação inline
 
 // Icon mapping helper
 const getIcon = (iconName: string) => {
@@ -208,7 +208,21 @@ export function LandingPage() {
             {/* Grid responsivo para cards de persona */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 max-w-7xl mx-auto">
               {personasSection.content_data?.personas?.map((persona: any, index: number) => (
-                <PersonaCard key={index} persona={persona} />
+                <Card key={index} className="h-full hover:shadow-lg transition-shadow">
+                  <CardContent className="p-6 text-center">
+                    <div className="w-16 h-16 bg-gradient-to-br from-primary/20 to-primary/40 rounded-full mx-auto mb-4 flex items-center justify-center">
+                      <span className="text-2xl font-bold text-primary">
+                        {persona.name?.charAt(0) || 'P'}
+                      </span>
+                    </div>
+                    <h3 className="font-bold text-lg mb-2">{persona.name}</h3>
+                    <p className="text-muted-foreground text-sm mb-3">{persona.business}</p>
+                    <div className="text-xs text-muted-foreground space-y-1">
+                      <p>Idade: {persona.age} anos</p>
+                      <p>Local: {persona.location}</p>
+                    </div>
+                  </CardContent>
+                </Card>
               ))}
             </div>
           </div>

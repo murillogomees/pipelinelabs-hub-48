@@ -14,7 +14,7 @@ import { Badge } from '@/components/ui/badge';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Plus, Trash2, Search } from 'lucide-react';
 import { useSuppliers } from '@/hooks/useSuppliers';
-import { useProducts } from '@/hooks/useProducts';
+import { useProducts } from '@/components/Products/hooks/useProducts';
 import { SearchableSelect } from '@/components/ui/searchable-select';
 import { formatCurrency } from '@/lib/utils';
 import { purchaseOrderFormSchema, newItemFormSchema, type NewItemFormData } from './schema';

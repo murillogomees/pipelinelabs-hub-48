@@ -74,23 +74,15 @@ backend = "postgres"
 pg_remote_backup = false
 
 [functions]
-[functions.compression-proxy]
-verify_jwt = false
-
 [functions.sentry-metrics]
 verify_jwt = true
 
-[functions.sync-stripe-products]
-verify_jwt = true
 
 [functions.nfe-io-integration]
 verify_jwt = true
 
 [functions.test-nfe-connection]
 verify_jwt = true
-
-[functions.demo-rate-limit]
-verify_jwt = false
 
 [functions.health-check]
 verify_jwt = false
