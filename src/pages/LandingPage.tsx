@@ -325,8 +325,8 @@ export function LandingPage() {
         </div>
       </section>
 
-      {/* Features Section - DISABLED */}
-      {false && featuresSection && <section className="py-20 px-4">
+      {/* Features Section */}
+      {featuresSection && <section className="py-20 px-4">
           <div className="container mx-auto">
             <div className="text-center mb-16">
               <h2 className="text-3xl md:text-4xl font-bold mb-4">
@@ -337,16 +337,41 @@ export function LandingPage() {
               </p>
             </div>
 
-            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8 mb-12">
-              {featuresSection.content_data?.features?.map((feature: any, index: number) => <Card key={index} className="text-center hover:shadow-lg transition-shadow">
-                  <CardContent className="p-6">
-                    <div className="mb-4 flex justify-center">
-                      {getIcon(feature.icon)}
-                    </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 max-w-screen-xl mx-auto mb-12">
+              {featuresSection.content_data?.features?.map((feature: any, index: number) => (
+                <div 
+                  key={index} 
+                  className="group rounded-xl shadow-lg overflow-hidden relative bg-white hover:shadow-xl transition-all duration-300 hover:scale-105"
+                  aria-label={`Card de Módulo ${feature.title}`}
+                >
+                  {/* Container da Imagem com Overlay */}
+                  <div className="relative aspect-[4/3] overflow-hidden">
+                    <img
+                      src={feature.image_url || "/placeholder.svg"}
+                      alt={`Tela do módulo ${feature.title} do ERP`}
+                      className="w-full h-full object-cover"
+                      loading="lazy"
+                    />
+                    {/* Overlay Gradient */}
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-black/30 to-transparent"></div>
                     
-                    <CardDescription>{feature.description}</CardDescription>
-                  </CardContent>
-                </Card>)}
+                    {/* Título Sobreposto */}
+                    <div className="absolute bottom-4 left-4 flex items-center text-white">
+                      {getIcon(feature.icon)}
+                      <h3 className="ml-2 text-xl md:text-2xl font-semibold drop-shadow-md">
+                        {feature.title}
+                      </h3>
+                    </div>
+                  </div>
+                  
+                  {/* Descrição Abaixo da Imagem */}
+                  <div className="mt-4 px-4 pb-6">
+                    <p className="text-base md:text-lg text-gray-800 font-medium leading-relaxed">
+                      {feature.description}
+                    </p>
+                  </div>
+                </div>
+              ))}
             </div>
 
             {/* Call to Action */}
