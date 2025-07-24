@@ -193,8 +193,8 @@ export function LandingPage() {
           </div>
         </section>}
 
-      {/* ERP Modules Section */}
-      <section className="py-20 px-4 bg-muted/30">
+      {/* ERP Modules Section - DISABLED */}
+      {false && <section className="py-20 px-4 bg-muted/30">
         <div className="container mx-auto">
           <div className="text-center mb-16">
             <h2 className="text-3xl md:text-5xl font-bold mb-6 max-w-3xl mx-auto">
@@ -288,7 +288,7 @@ export function LandingPage() {
             </Card>
           </div>
         </div>
-      </section>
+      </section>}
 
       {/* Pain/Personas Section - Busca agora diretamente do Supabase */}
       {personasSection && (
