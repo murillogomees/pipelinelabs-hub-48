@@ -22,7 +22,8 @@ import {
   Palette,
   Activity,
   GitBranch,
-  Code2
+  Code2,
+  Brain
 } from 'lucide-react';
 
 export const menuItems = [
@@ -121,6 +122,7 @@ export const menuItems = [
       { title: 'Stripe', path: '/app/admin/stripe', icon: CreditCard },
       { title: 'Logs de Auditoria', path: '/app/admin/audit-logs' },
       { title: 'Landing Page', path: '/app/admin/landing-page' },
+      { title: 'Engineering Insights', path: '/app/admin/engineering-notes', icon: Brain },
       
     ]
   }
