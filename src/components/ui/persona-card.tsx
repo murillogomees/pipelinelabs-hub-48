@@ -65,57 +65,51 @@ export function PersonaCard({
           </p>
         </div>
 
-        {/* Layout flexível para distribuir seções simetricamente */}
-        <div className="flex-1 flex flex-col space-y-4">
-          {/* Principais Dores - sempre no topo */}
-          <div className="flex-shrink-0">
-            {problems && problems.length > 0 && (
-              <div>
-                <h4 className="font-semibold text-sm text-destructive mb-2 flex items-center gap-1">
-                  😰 Principais Dores
-                </h4>
-                <ul className="text-xs text-muted-foreground space-y-1">
-                  {problems.map((problem: string, i: number) => (
-                    <li key={i} className="flex items-start gap-1">
-                      <span className="text-destructive mt-0.5">•</span>
-                      {problem}
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            )}
-          </div>
+        {/* Layout otimizado com espaçamento consistente */}
+        <div className="flex-1 flex flex-col space-y-5">
+          {/* Principais Dores */}
+          {problems && problems.length > 0 && (
+            <div className="space-y-2">
+              <h4 className="font-semibold text-sm text-destructive mb-2 flex items-center gap-1.5">
+                😰 Principais Dores
+              </h4>
+              <ul className="text-xs text-muted-foreground space-y-1.5">
+                {problems.map((problem: string, i: number) => (
+                  <li key={i} className="flex items-start gap-2">
+                    <span className="text-destructive mt-0.5 flex-shrink-0">•</span>
+                    <span>{problem}</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
 
-          {/* Soluções - logo após as dores */}
-          <div className="flex-shrink-0">
-            {solutions && solutions.length > 0 && (
-              <div>
-                <h4 className="font-semibold text-sm text-success mb-2 flex items-center gap-1">
-                  ✅ Soluções Pipeline Labs
-                </h4>
-                <ul className="text-xs space-y-1">
-                  {solutions.map((solution: string, i: number) => (
-                    <li key={i} className="flex items-start gap-1">
-                      <span className="text-success mt-0.5">•</span>
-                      <span dangerouslySetInnerHTML={{ __html: solution }} />
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            )}
-          </div>
+          {/* Soluções Pipeline Labs */}
+          {solutions && solutions.length > 0 && (
+            <div className="space-y-2">
+              <h4 className="font-semibold text-sm text-success mb-2 flex items-center gap-1.5">
+                ✅ Soluções Pipeline Labs
+              </h4>
+              <ul className="text-xs space-y-1.5">
+                {solutions.map((solution: string, i: number) => (
+                  <li key={i} className="flex items-start gap-2">
+                    <span className="text-success mt-0.5 flex-shrink-0">•</span>
+                    <span dangerouslySetInnerHTML={{ __html: solution }} />
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
 
-          {/* Resultado - logo após soluções */}
-          <div className="flex-shrink-0">
-            {result && (
-              <div className="bg-muted/50 rounded-lg p-3 border-l-4 border-primary">
-                <h4 className="font-semibold text-sm text-primary mb-1 flex items-center gap-1">
-                  🚀 Resultado Alcançado
-                </h4>
-                <p className="text-xs leading-relaxed">{result}</p>
-              </div>
-            )}
-          </div>
+          {/* Resultado Alcançado */}
+          {result && (
+            <div className="bg-muted/50 rounded-lg p-4 border-l-4 border-primary">
+              <h4 className="font-semibold text-sm text-primary mb-2 flex items-center gap-1.5">
+                🚀 Resultado Alcançado
+              </h4>
+              <p className="text-xs leading-relaxed text-foreground">{result}</p>
+            </div>
+          )}
         </div>
       </CardContent>
     </Card>
