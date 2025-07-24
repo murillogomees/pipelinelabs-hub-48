@@ -4,16 +4,23 @@ import { useCurrentCompany } from '@/hooks/useCurrentCompany';
 import { useCompanySubscription } from '@/hooks/useCompanySubscription';
 import { useAuth } from '@/components/Auth/AuthProvider';
 import { useBillingPlans } from '@/hooks/useBillingPlans';
+import { usePermissions } from '@/hooks/usePermissions';
 
 export const useSubscriptionGuard = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { user } = useAuth();
+  const { isAdmin, isSuperAdmin } = usePermissions();
   const { data: currentCompany } = useCurrentCompany();
   const { subscription, isSubscriptionActive, isLoading: subscriptionLoading } = useCompanySubscription(currentCompany?.company_id || '');
   const { plans } = useBillingPlans();
 
   useEffect(() => {
+    // Administradores têm acesso total - não precisam de empresa ou plano
+    if (isAdmin || isSuperAdmin) {
+      return;
+    }
+
     // Só verificar se usuário está autenticado e não está na página de planos
     if (!user || !currentCompany || subscriptionLoading || location.pathname === '/planos') {
       return;
@@ -39,12 +46,12 @@ export const useSubscriptionGuard = () => {
       navigate('/planos', { replace: true });
       return;
     }
-  }, [user, currentCompany, subscription, isSubscriptionActive, subscriptionLoading, location.pathname, navigate, plans]);
+  }, [user, currentCompany, subscription, isSubscriptionActive, subscriptionLoading, location.pathname, navigate, plans, isAdmin, isSuperAdmin]);
 
   return {
     subscription,
-    isSubscriptionActive,
+    isSubscriptionActive: isSubscriptionActive || isAdmin || isSuperAdmin,
     isLoading: subscriptionLoading,
-    hasAccess: isSubscriptionActive || (plans?.some(plan => plan.price === 0) && subscription),
+    hasAccess: isSubscriptionActive || (plans?.some(plan => plan.price === 0) && subscription) || isAdmin || isSuperAdmin,
   };
 };
