@@ -92,7 +92,7 @@ export function PersonaCard({
         <div className="flex-1 flex flex-col justify-evenly items-center mx-auto my-auto w-full max-w-[95%] gap-4">
           {/* Principais Dores */}
           {problems && problems.length > 0 && (
-            <div className="space-y-2 text-center w-full">
+            <div className="space-y-2 text-center w-full mb-[15px]">
               <h4 className="font-semibold text-sm text-destructive mb-2 flex items-center justify-center gap-1.5">
                 😰 Principais Dores
               </h4>
