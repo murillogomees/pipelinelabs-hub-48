@@ -3,6 +3,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
 import { MarketplaceChannel } from "@/hooks/useMarketplaceChannels";
+import { MarketplaceIcon } from "@/components/Marketplace/MarketplaceIcon";
 import { ShoppingCart, Settings, AlertTriangle, CheckCircle } from "lucide-react";
 
 interface MarketplaceChannelCardProps {
@@ -55,15 +56,7 @@ export const MarketplaceChannelCard = ({
         <div className="flex items-start justify-between">
           <div className="flex items-center space-x-3">
             <div className="w-12 h-12 rounded-lg bg-muted flex items-center justify-center">
-              {channel.logo_url ? (
-                <img 
-                  src={channel.logo_url} 
-                  alt={channel.display_name}
-                  className="w-8 h-8 object-contain"
-                />
-              ) : (
-                <ShoppingCart className="w-6 h-6 text-muted-foreground" />
-              )}
+              <MarketplaceIcon name={channel.name} size={32} />
             </div>
             <div className="flex-1">
               <CardTitle className="text-base flex items-center gap-2">
