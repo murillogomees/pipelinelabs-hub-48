@@ -1,5 +1,6 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useToast } from '@/hooks/use-toast';
+import { supabase } from '@/integrations/supabase/client';
 
 export interface MarketplaceIntegration {
   id: string;
@@ -17,11 +18,48 @@ export interface MarketplaceIntegration {
 export const useMarketplaceIntegrations = () => {
   const { toast } = useToast();
   const [integrations, setIntegrations] = useState<MarketplaceIntegration[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
 
-  // Mock data para demonstração - em produção, isso viria do Supabase
+  const fetchIntegrations = async () => {
+    try {
+      setIsLoading(true);
+      
+      // Using raw query until types are updated
+      const { data, error } = await supabase
+        .from('marketplace_integrations' as any)
+        .select('*')
+        .order('created_at', { ascending: false });
+
+      if (error) {
+        console.error('Error fetching integrations:', error);
+        return;
+      }
+
+      setIntegrations((data as any) || []);
+    } catch (error: any) {
+      console.error('Failed to fetch marketplace integrations:', error);
+      toast({
+        title: "Erro ao carregar integrações",
+        description: error.message || "Não foi possível carregar as integrações.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   const updateIntegration = async (id: string, updates: Partial<MarketplaceIntegration>) => {
     try {
-      // Simulação de update
+      const { error } = await supabase
+        .from('marketplace_integrations' as any)
+        .update({
+          ...updates,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', id);
+
+      if (error) throw error;
+
       setIntegrations(prev => 
         prev.map(item => item.id === id ? { ...item, ...updates } : item)
       );
@@ -41,7 +79,17 @@ export const useMarketplaceIntegrations = () => {
 
   const syncIntegration = async (integrationId: string) => {
     try {
-      // Simulação de sincronização
+      const { error } = await supabase
+        .from('marketplace_integrations' as any)
+        .update({
+          last_sync: new Date().toISOString(),
+          sync_status: 'syncing',
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', integrationId);
+
+      if (error) throw error;
+
       setIntegrations(prev => 
         prev.map(item => 
           item.id === integrationId 
@@ -63,10 +111,16 @@ export const useMarketplaceIntegrations = () => {
     }
   };
 
+  useEffect(() => {
+    fetchIntegrations();
+  }, []);
+
   return {
     integrations,
     updateIntegration,
     syncIntegration,
+    fetchIntegrations,
+    isLoading,
     isUpdating: false,
     isSyncing: false,
   };

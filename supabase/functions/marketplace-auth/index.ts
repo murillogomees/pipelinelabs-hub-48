@@ -495,12 +495,23 @@ async function handleValidateCredentials(
   console.log(`✅ Validating credentials for ${config.name}`)
 
   // Get user company
-  const { data: userCompany } = await supabase
+  const { data: userCompany, error: companyError } = await supabase
     .from('user_companies')
     .select('company_id')
     .eq('user_id', userId)
     .eq('is_active', true)
     .single()
+
+  if (companyError || !userCompany) {
+    return new Response(
+      JSON.stringify({
+        success: false,
+        valid: false,
+        message: 'User company not found'
+      }),
+      { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+    )
+  }
 
   // Get integration
   const { data: integration } = await supabase
