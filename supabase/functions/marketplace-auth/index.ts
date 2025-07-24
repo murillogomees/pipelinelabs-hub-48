@@ -511,7 +511,14 @@ async function handleValidateCredentials(
     .single()
 
   if (!integration) {
-    throw new Error('Integration not found')
+    return new Response(
+      JSON.stringify({
+        success: false,
+        valid: false,
+        message: 'No integration found for this marketplace'
+      }),
+      { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+    )
   }
 
   let testResult
