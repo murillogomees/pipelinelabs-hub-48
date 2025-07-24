@@ -5,7 +5,7 @@ interface MockupDashboardProps {
 }
 export const MockupDashboard = ({
   className = ""
-}: MockupDashboardProps) => <div className={`bg-white border rounded-xl p-6 shadow-lg h-[400px] ${className}`}>
+}: MockupDashboardProps) => <div className={`bg-card border border-border rounded-xl p-6 shadow-lg h-[400px] ${className}`}>
     {/* Header */}
     <div className="flex items-center justify-between mb-4">
       <div className="flex items-center gap-2">
@@ -74,7 +74,7 @@ export const MockupDashboard = ({
   </div>;
 export const MockupPDV = ({
   className = ""
-}: MockupPDVProps) => <div className={`bg-white border rounded-xl p-6 shadow-lg h-[400px] ${className}`}>
+}: MockupPDVProps) => <div className={`bg-card border border-border rounded-xl p-6 shadow-lg h-[400px] ${className}`}>
     {/* Header */}
     <div className="flex items-center justify-between mb-4">
       <div className="flex items-center gap-2">
@@ -127,7 +127,7 @@ export const MockupPDV = ({
         <span>Total:</span>
         <span className="text-green-600 font-bold">R$ 249,80</span>
       </div>
-      <button className="w-full bg-green-600 text-white py-2 rounded-lg text-sm font-medium hover:bg-green-700 transition-colors">
+      <button className="w-full bg-success text-success-foreground py-2 rounded-lg text-sm font-medium hover:bg-success/90 transition-colors">
         Finalizar Venda
       </button>
     </div>
@@ -137,7 +137,7 @@ interface MockupPDVProps {
 }
 export const MockupNFe = ({
   className = ""
-}: MockupNFeProps) => <div className={`bg-white border rounded-xl p-6 shadow-lg h-[400px] ${className}`}>
+}: MockupNFeProps) => <div className={`bg-card border border-border rounded-xl p-6 shadow-lg h-[400px] ${className}`}>
     {/* Header */}
     <div className="flex items-center justify-between mb-4">
       <div className="flex items-center gap-2">
@@ -183,7 +183,7 @@ export const MockupNFe = ({
 
     {/* Action Buttons */}
     <div className="flex gap-3">
-      <button className="flex-1 bg-blue-600 text-white py-2 rounded-lg text-sm font-medium hover:bg-blue-700 transition-colors">
+      <button className="flex-1 bg-primary text-primary-foreground py-2 rounded-lg text-sm font-medium hover:bg-primary/90 transition-colors">
         Emitir NFe
       </button>
       <button className="px-4 border border-gray-300 text-gray-700 py-2 rounded-lg text-sm font-medium hover:bg-gray-50 transition-colors">
@@ -196,7 +196,7 @@ interface MockupNFeProps {
 }
 export const MockupInventory = ({
   className = ""
-}: MockupInventoryProps) => <div className={`bg-white border rounded-xl p-6 shadow-lg h-[400px] ${className}`}>
+}: MockupInventoryProps) => <div className={`bg-card border border-border rounded-xl p-6 shadow-lg h-[400px] ${className}`}>
     {/* Header */}
     <div className="flex items-center justify-between mb-4">
       <div className="flex items-center gap-2">
@@ -283,7 +283,7 @@ interface MockupInventoryProps {
 }
 export const MockupFinancial = ({
   className = ""
-}: MockupFinancialProps) => <div className={`bg-white border rounded-xl p-6 shadow-lg h-[400px] ${className}`}>
+}: MockupFinancialProps) => <div className={`bg-card border border-border rounded-xl p-6 shadow-lg h-[400px] ${className}`}>
     {/* Header */}
     <div className="flex items-center justify-between mb-4">
       <div className="flex items-center gap-2">
@@ -356,7 +356,7 @@ interface MockupFinancialProps {
 }
 export const MockupNotifications = ({
   className = ""
-}: MockupNotificationsProps) => <div className={`bg-white border rounded-xl p-6 shadow-lg h-[400px] ${className}`}>
+}: MockupNotificationsProps) => <div className={`bg-card border border-border rounded-xl p-6 shadow-lg h-[400px] ${className}`}>
     {/* Header */}
     <div className="flex items-center justify-between mb-4">
       <div className="flex items-center gap-2">
@@ -372,7 +372,7 @@ export const MockupNotifications = ({
     <div className="space-y-3 overflow-y-auto h-[300px]">
       <div className="flex items-start gap-3 p-3 bg-gradient-to-r from-green-50 to-emerald-50 border border-green-200 rounded-lg">
         <div className="w-8 h-8 bg-green-500 rounded-full flex items-center justify-center flex-shrink-0">
-          <CheckCircle className="h-4 w-4 text-white" />
+          <CheckCircle className="h-4 w-4 text-primary-foreground" />
         </div>
         <div className="flex-1">
           <div className="flex items-center justify-between mb-1">
@@ -386,7 +386,7 @@ export const MockupNotifications = ({
 
       <div className="flex items-start gap-3 p-3 bg-gradient-to-r from-blue-50 to-cyan-50 border border-blue-200 rounded-lg">
         <div className="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center flex-shrink-0">
-          <ShoppingCart className="h-4 w-4 text-white" />
+          <ShoppingCart className="h-4 w-4 text-primary-foreground" />
         </div>
         <div className="flex-1">
           <div className="flex items-center justify-between mb-1">
@@ -400,7 +400,7 @@ export const MockupNotifications = ({
 
       <div className="flex items-start gap-3 p-3 bg-gradient-to-r from-yellow-50 to-orange-50 border border-yellow-200 rounded-lg">
         <div className="w-8 h-8 bg-yellow-500 rounded-full flex items-center justify-center flex-shrink-0">
-          <AlertTriangle className="h-4 w-4 text-white" />
+          <AlertTriangle className="h-4 w-4 text-primary-foreground" />
         </div>
         <div className="flex-1">
           <div className="flex items-center justify-between mb-1">
@@ -414,7 +414,7 @@ export const MockupNotifications = ({
 
       <div className="flex items-start gap-3 p-3 bg-gradient-to-r from-purple-50 to-pink-50 border border-purple-200 rounded-lg">
         <div className="w-8 h-8 bg-purple-500 rounded-full flex items-center justify-center flex-shrink-0">
-          <Package className="h-4 w-4 text-white" />
+          <Package className="h-4 w-4 text-primary-foreground" />
         </div>
         <div className="flex-1">
           <div className="flex items-center justify-between mb-1">
@@ -432,7 +432,7 @@ interface MockupNotificationsProps {
 }
 export const MockupDailySales = ({
   className = ""
-}: MockupDailySalesProps) => <div className={`bg-white border rounded-xl p-6 shadow-lg h-[400px] ${className}`}>
+}: MockupDailySalesProps) => <div className={`bg-card border border-border rounded-xl p-6 shadow-lg h-[400px] ${className}`}>
     {/* Header */}
     <div className="flex items-center justify-between mb-4">
       <div className="flex items-center gap-2">
@@ -465,7 +465,7 @@ export const MockupDailySales = ({
     </div>
 
     {/* Hourly Chart */}
-    <div className="bg-white shadow-sm mb-4 border rounded-lg p-3">
+    <div className="bg-card shadow-sm mb-4 border border-border rounded-lg p-3">
       <div className="flex items-center gap-2 mb-3">
         <Activity className="h-4 w-4 text-gray-600" />
         <span className="text-sm font-medium text-gray-800">Vendas por Hora</span>
@@ -494,7 +494,7 @@ export const MockupDailySales = ({
       <div className="flex items-center justify-between p-2 bg-gray-50 rounded-lg">
         <div className="flex items-center gap-2">
           <div className="w-6 h-6 bg-emerald-500 rounded-full flex items-center justify-center">
-            <CheckCircle className="h-3 w-3 text-white" />
+            <CheckCircle className="h-3 w-3 text-primary-foreground" />
           </div>
           <div>
             <p className="text-xs font-medium text-gray-800">Venda #1247</p>

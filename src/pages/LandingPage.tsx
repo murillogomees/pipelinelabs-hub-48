@@ -33,13 +33,13 @@ const getIcon = (iconName: string) => {
     'shopping-cart': <ShoppingCart className="h-8 w-8 text-primary" />,
     'pie-chart': <PieChart className="h-8 w-8 text-primary" />,
     'dollar-sign': <DollarSign className="h-8 w-8 text-primary" />,
-    'lock': <Lock className="h-4 w-4 text-green-600" />,
-    'database': <Database className="h-4 w-4 text-green-600" />,
-    'cloud': <Cloud className="h-4 w-4 text-green-600" />,
+    'lock': <Lock className="h-4 w-4 text-success" />,
+    'database': <Database className="h-4 w-4 text-success" />,
+    'cloud': <Cloud className="h-4 w-4 text-success" />,
     'rocket': <Rocket className="h-5 w-5" />,
-    'bell': <Bell className="h-4 w-4 text-blue-600" />,
-    'settings': <Settings className="h-4 w-4 text-gray-600" />,
-    'calendar': <Calendar className="h-4 w-4 text-purple-600" />,
+    'bell': <Bell className="h-4 w-4 text-info" />,
+    'settings': <Settings className="h-4 w-4 text-muted-foreground" />,
+    'calendar': <Calendar className="h-4 w-4 text-accent" />,
     'monitor': <Monitor className="h-6 w-6 text-primary" />,
     'smartphone': <Smartphone className="h-6 w-6 text-primary" />,
     'tablet': <Tablet className="h-6 w-6 text-primary" />
@@ -115,8 +115,8 @@ export function LandingPage() {
             <div className="max-w-7xl mx-auto mt-16">
               <div className="bg-gradient-to-br from-primary/5 via-primary/10 to-blue-50 rounded-3xl p-8 border border-primary/20 shadow-2xl">
                 <div className="text-center mb-8">
-                  <div className="inline-flex items-center gap-2 bg-white/80 px-4 py-2 rounded-full text-sm font-medium mb-4">
-                    <div className="w-3 h-3 bg-green-500 rounded-full animate-pulse"></div>
+                  <div className="inline-flex items-center gap-2 bg-background/80 backdrop-blur-sm px-4 py-2 rounded-full text-sm font-medium mb-4 border border-border/20">
+                    <div className="w-3 h-3 bg-success rounded-full animate-pulse"></div>
                     Sistema em funcionamento
                   </div>
                   <h3 className="text-2xl font-bold mb-2">Veja o sistema em ação:</h3>
@@ -245,21 +245,21 @@ export function LandingPage() {
             
             {/* Card Financeiro */}
             <div 
-              className="group rounded-xl shadow-lg overflow-hidden relative bg-white hover:shadow-xl transition-all duration-300 hover:scale-105"
+              className="group rounded-xl shadow-lg overflow-hidden relative bg-card hover:shadow-xl transition-all duration-300 hover:scale-105"
               aria-label="Card de Módulo Financeiro"
             >
               <div className="relative aspect-[4/3] overflow-hidden">
                 <MockupFinancial className="w-full h-full object-cover" />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-black/30 to-transparent"></div>
-                <div className="absolute bottom-4 left-4 flex items-center text-white">
-                  <Banknote className="w-5 h-5 text-white mr-2" />
+                <div className="absolute bottom-4 left-4 flex items-center text-primary-foreground drop-shadow-lg">
+                  <Banknote className="w-5 h-5 text-primary-foreground mr-2" />
                   <h3 className="text-xl md:text-2xl font-semibold drop-shadow-md">
                     Financeiro
                   </h3>
                 </div>
               </div>
               <div className="mt-4 px-4 pb-6">
-                <p className="text-base md:text-lg text-gray-800 font-medium leading-relaxed">
+                <p className="text-base md:text-lg text-card-foreground font-medium leading-relaxed">
                   Controle financeiro completo com fluxo de caixa e cobranças automatizadas.
                 </p>
               </div>
@@ -267,21 +267,21 @@ export function LandingPage() {
 
             {/* Card Dashboard */}
             <div 
-              className="group rounded-xl shadow-lg overflow-hidden relative bg-white hover:shadow-xl transition-all duration-300 hover:scale-105"
+              className="group rounded-xl shadow-lg overflow-hidden relative bg-card hover:shadow-xl transition-all duration-300 hover:scale-105"
               aria-label="Card de Módulo Dashboard"
             >
               <div className="relative aspect-[4/3] overflow-hidden">
                 <MockupDashboard className="w-full h-full object-cover" />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-black/30 to-transparent"></div>
-                <div className="absolute bottom-4 left-4 flex items-center text-white">
-                  <LayoutDashboard className="w-5 h-5 text-white mr-2" />
+                <div className="absolute bottom-4 left-4 flex items-center text-primary-foreground drop-shadow-lg">
+                  <LayoutDashboard className="w-5 h-5 text-primary-foreground mr-2" />
                   <h3 className="text-xl md:text-2xl font-semibold drop-shadow-md">
                     Dashboard
                   </h3>
                 </div>
               </div>
               <div className="mt-4 px-4 pb-6">
-                <p className="text-base md:text-lg text-gray-800 font-medium leading-relaxed">
+                <p className="text-base md:text-lg text-card-foreground font-medium leading-relaxed">
                   Visão completa do seu negócio com relatórios e métricas em tempo real.
                 </p>
               </div>
@@ -289,21 +289,21 @@ export function LandingPage() {
 
             {/* Card Estoque */}
             <div 
-              className="group rounded-xl shadow-lg overflow-hidden relative bg-white hover:shadow-xl transition-all duration-300 hover:scale-105"
+              className="group rounded-xl shadow-lg overflow-hidden relative bg-card hover:shadow-xl transition-all duration-300 hover:scale-105"
               aria-label="Card de Módulo Estoque"
             >
               <div className="relative aspect-[4/3] overflow-hidden">
                 <MockupInventory className="w-full h-full object-cover" />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-black/30 to-transparent"></div>
-                <div className="absolute bottom-4 left-4 flex items-center text-white">
-                  <Warehouse className="w-5 h-5 text-white mr-2" />
+                <div className="absolute bottom-4 left-4 flex items-center text-primary-foreground drop-shadow-lg">
+                  <Warehouse className="w-5 h-5 text-primary-foreground mr-2" />
                   <h3 className="text-xl md:text-2xl font-semibold drop-shadow-md">
                     Estoque
                   </h3>
                 </div>
               </div>
               <div className="mt-4 px-4 pb-6">
-                <p className="text-base md:text-lg text-gray-800 font-medium leading-relaxed">
+                <p className="text-base md:text-lg text-card-foreground font-medium leading-relaxed">
                   Gestão inteligente de produtos com controle automático de baixas.
                 </p>
               </div>
@@ -311,21 +311,21 @@ export function LandingPage() {
 
             {/* Card Vendas PDV */}
             <div 
-              className="group rounded-xl shadow-lg overflow-hidden relative bg-white hover:shadow-xl transition-all duration-300 hover:scale-105"
+              className="group rounded-xl shadow-lg overflow-hidden relative bg-card hover:shadow-xl transition-all duration-300 hover:scale-105"
               aria-label="Card de Módulo PDV"
             >
               <div className="relative aspect-[4/3] overflow-hidden">
                 <MockupPDV className="w-full h-full object-cover" />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-black/30 to-transparent"></div>
-                <div className="absolute bottom-4 left-4 flex items-center text-white">
-                  <Monitor className="w-5 h-5 text-white mr-2" />
+                <div className="absolute bottom-4 left-4 flex items-center text-primary-foreground drop-shadow-lg">
+                  <Monitor className="w-5 h-5 text-primary-foreground mr-2" />
                   <h3 className="text-xl md:text-2xl font-semibold drop-shadow-md">
                     PDV
                   </h3>
                 </div>
               </div>
               <div className="mt-4 px-4 pb-6">
-                <p className="text-base md:text-lg text-gray-800 font-medium leading-relaxed">
+                <p className="text-base md:text-lg text-card-foreground font-medium leading-relaxed">
                   Terminal de vendas rápido e intuitivo para atendimento ágil.
                 </p>
               </div>
@@ -333,21 +333,21 @@ export function LandingPage() {
 
             {/* Card NFe */}
             <div 
-              className="group rounded-xl shadow-lg overflow-hidden relative bg-white hover:shadow-xl transition-all duration-300 hover:scale-105"
+              className="group rounded-xl shadow-lg overflow-hidden relative bg-card hover:shadow-xl transition-all duration-300 hover:scale-105"
               aria-label="Card de Módulo Nota Fiscal"
             >
               <div className="relative aspect-[4/3] overflow-hidden">
                 <MockupNFe className="w-full h-full object-cover" />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-black/30 to-transparent"></div>
-                <div className="absolute bottom-4 left-4 flex items-center text-white">
-                  <Receipt className="w-5 h-5 text-white mr-2" />
+                <div className="absolute bottom-4 left-4 flex items-center text-primary-foreground drop-shadow-lg">
+                  <Receipt className="w-5 h-5 text-primary-foreground mr-2" />
                   <h3 className="text-xl md:text-2xl font-semibold drop-shadow-md">
                     Nota Fiscal
                   </h3>
                 </div>
               </div>
               <div className="mt-4 px-4 pb-6">
-                <p className="text-base md:text-lg text-gray-800 font-medium leading-relaxed">
+                <p className="text-base md:text-lg text-card-foreground font-medium leading-relaxed">
                   Emissão automática de NFe, NFSe e NFCe integrada com a Sefaz.
                 </p>
               </div>
@@ -355,21 +355,21 @@ export function LandingPage() {
 
             {/* Card Vendas Diárias */}
             <div 
-              className="group rounded-xl shadow-lg overflow-hidden relative bg-white hover:shadow-xl transition-all duration-300 hover:scale-105"
+              className="group rounded-xl shadow-lg overflow-hidden relative bg-card hover:shadow-xl transition-all duration-300 hover:scale-105"
               aria-label="Card de Módulo Vendas"
             >
               <div className="relative aspect-[4/3] overflow-hidden">
                 <MockupDailySales className="w-full h-full object-cover" />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-black/30 to-transparent"></div>
-                <div className="absolute bottom-4 left-4 flex items-center text-white">
-                  <TrendingUp className="w-5 h-5 text-white mr-2" />
+                <div className="absolute bottom-4 left-4 flex items-center text-primary-foreground drop-shadow-lg">
+                  <TrendingUp className="w-5 h-5 text-primary-foreground mr-2" />
                   <h3 className="text-xl md:text-2xl font-semibold drop-shadow-md">
                     Vendas
                   </h3>
                 </div>
               </div>
               <div className="mt-4 px-4 pb-6">
-                <p className="text-base md:text-lg text-gray-800 font-medium leading-relaxed">
+                <p className="text-base md:text-lg text-card-foreground font-medium leading-relaxed">
                   Relatórios detalhados de vendas com análise de performance.
                 </p>
               </div>
@@ -377,21 +377,21 @@ export function LandingPage() {
 
             {/* Card Notificações */}
             <div 
-              className="group rounded-xl shadow-lg overflow-hidden relative bg-white hover:shadow-xl transition-all duration-300 hover:scale-105"
+              className="group rounded-xl shadow-lg overflow-hidden relative bg-card hover:shadow-xl transition-all duration-300 hover:scale-105"
               aria-label="Card de Módulo Notificações"
             >
               <div className="relative aspect-[4/3] overflow-hidden">
                 <MockupNotifications className="w-full h-full object-cover" />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-black/30 to-transparent"></div>
-                <div className="absolute bottom-4 left-4 flex items-center text-white">
-                  <Bell className="w-5 h-5 text-white mr-2" />
+                <div className="absolute bottom-4 left-4 flex items-center text-primary-foreground drop-shadow-lg">
+                  <Bell className="w-5 h-5 text-primary-foreground mr-2" />
                   <h3 className="text-xl md:text-2xl font-semibold drop-shadow-md">
                     Notificações
                   </h3>
                 </div>
               </div>
               <div className="mt-4 px-4 pb-6">
-                <p className="text-base md:text-lg text-gray-800 font-medium leading-relaxed">
+                <p className="text-base md:text-lg text-card-foreground font-medium leading-relaxed">
                   Central de alertas para manter você sempre informado sobre seu negócio.
                 </p>
               </div>
@@ -399,21 +399,21 @@ export function LandingPage() {
 
             {/* Card CRM */}
             <div 
-              className="group rounded-xl shadow-lg overflow-hidden relative bg-white hover:shadow-xl transition-all duration-300 hover:scale-105"
+              className="group rounded-xl shadow-lg overflow-hidden relative bg-card hover:shadow-xl transition-all duration-300 hover:scale-105"
               aria-label="Card de Módulo CRM"
             >
               <div className="relative aspect-[4/3] overflow-hidden">
                 <MockupDashboard className="w-full h-full object-cover" />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-black/30 to-transparent"></div>
-                <div className="absolute bottom-4 left-4 flex items-center text-white">
-                  <Users className="w-5 h-5 text-white mr-2" />
+                 <div className="absolute bottom-4 left-4 flex items-center text-primary-foreground drop-shadow-lg">
+                  <Users className="w-5 h-5 text-primary-foreground mr-2" />
                   <h3 className="text-xl md:text-2xl font-semibold drop-shadow-md">
                     CRM
                   </h3>
                 </div>
               </div>
               <div className="mt-4 px-4 pb-6">
-                <p className="text-base md:text-lg text-gray-800 font-medium leading-relaxed">
+                <p className="text-base md:text-lg text-card-foreground font-medium leading-relaxed">
                   Gestão completa de clientes e relacionamento comercial integrado.
                 </p>
               </div>
@@ -483,26 +483,146 @@ export function LandingPage() {
           </div>
         </section>}
 
-      {/* Security Section - Movida para logo após Features */}
-      {securitySection && <section className="py-20 px-4 bg-muted/50">
-          <div className="container mx-auto">
-            <div className="text-center mb-16">
-              <h2 className="text-3xl md:text-4xl font-bold mb-4">
-                {securitySection.title}
-              </h2>
-              <p className="text-xl text-muted-foreground">
-                {securitySection.subtitle}
-              </p>
+      {/* Security Section - Nova implementação completa */}
+      <section className="py-20 px-4 bg-muted/30">
+        <div className="container mx-auto">
+          <div className="text-center mb-16">
+            <h2 className="text-3xl md:text-5xl font-bold mb-6 max-w-4xl mx-auto">
+              Segurança de Ponta para o Seu Negócio
+            </h2>
+            <p className="text-lg md:text-xl text-muted-foreground mb-12">
+              Proteção total dos seus dados com tecnologia de última geração
+            </p>
+          </div>
+
+          {/* Grid de Cards de Segurança com Mockups */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8 max-w-6xl mx-auto">
+            
+            {/* Card Autenticação */}
+            <div 
+              className="group rounded-xl shadow-lg overflow-hidden relative bg-card hover:shadow-xl transition-all duration-300 hover:scale-105"
+              aria-label="Card de Autenticação Segura"
+            >
+              <div className="relative aspect-[4/3] overflow-hidden bg-gradient-to-br from-primary/10 to-primary/5 flex items-center justify-center">
+                <div className="text-center p-8">
+                  <div className="w-20 h-20 bg-primary/20 rounded-2xl flex items-center justify-center mx-auto mb-4">
+                    <Shield className="w-10 h-10 text-primary" />
+                  </div>
+                  <div className="space-y-2">
+                    <div className="w-24 h-3 bg-primary/30 rounded mx-auto"></div>
+                    <div className="w-16 h-2 bg-muted rounded mx-auto"></div>
+                  </div>
+                </div>
+                <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-black/20 to-transparent"></div>
+                <div className="absolute bottom-4 left-4 flex items-center text-primary-foreground drop-shadow-lg">
+                  <Shield className="w-5 h-5 text-primary-foreground mr-2" />
+                  <h3 className="text-xl md:text-2xl font-semibold drop-shadow-md">
+                    Autenticação Forte
+                  </h3>
+                </div>
+              </div>
+              <div className="mt-4 px-4 pb-6">
+                <p className="text-base md:text-lg text-card-foreground font-medium leading-relaxed">
+                  Login seguro com autenticação de dois fatores e controle de acesso rigoroso.
+                </p>
+              </div>
             </div>
 
-            <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6 max-w-4xl mx-auto">
-              {securitySection.content_data?.security_items?.map((item: any, index: number) => <div key={index} className="flex items-center gap-3 bg-background/50 p-4 rounded-lg border">
-                  {getIcon(item.icon)}
-                  <span className="text-sm font-medium">{item.title}</span>
-                </div>)}
+            {/* Card Criptografia */}
+            <div 
+              className="group rounded-xl shadow-lg overflow-hidden relative bg-card hover:shadow-xl transition-all duration-300 hover:scale-105"
+              aria-label="Card de Criptografia de Dados"
+            >
+              <div className="relative aspect-[4/3] overflow-hidden bg-gradient-to-br from-success/10 to-success/5 flex items-center justify-center">
+                <div className="text-center p-8">
+                  <div className="w-20 h-20 bg-success/20 rounded-2xl flex items-center justify-center mx-auto mb-4">
+                    <Lock className="w-10 h-10 text-success" />
+                  </div>
+                  <div className="space-y-2">
+                    <div className="w-20 h-3 bg-success/30 rounded mx-auto"></div>
+                    <div className="w-14 h-2 bg-muted rounded mx-auto"></div>
+                  </div>
+                </div>
+                <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-black/20 to-transparent"></div>
+                <div className="absolute bottom-4 left-4 flex items-center text-primary-foreground drop-shadow-lg">
+                  <Lock className="w-5 h-5 text-primary-foreground mr-2" />
+                  <h3 className="text-xl md:text-2xl font-semibold drop-shadow-md">
+                    Criptografia
+                  </h3>
+                </div>
+              </div>
+              <div className="mt-4 px-4 pb-6">
+                <p className="text-base md:text-lg text-card-foreground font-medium leading-relaxed">
+                  Todos os dados são criptografados com algoritmos de segurança militar.
+                </p>
+              </div>
+            </div>
+
+            {/* Card Backup Seguro */}
+            <div 
+              className="group rounded-xl shadow-lg overflow-hidden relative bg-card hover:shadow-xl transition-all duration-300 hover:scale-105"
+              aria-label="Card de Backup Seguro"
+            >
+              <div className="relative aspect-[4/3] overflow-hidden bg-gradient-to-br from-info/10 to-info/5 flex items-center justify-center">
+                <div className="text-center p-8">
+                  <div className="w-20 h-20 bg-info/20 rounded-2xl flex items-center justify-center mx-auto mb-4">
+                    <Database className="w-10 h-10 text-info" />
+                  </div>
+                  <div className="space-y-2">
+                    <div className="w-22 h-3 bg-info/30 rounded mx-auto"></div>
+                    <div className="w-18 h-2 bg-muted rounded mx-auto"></div>
+                  </div>
+                </div>
+                <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-black/20 to-transparent"></div>
+                <div className="absolute bottom-4 left-4 flex items-center text-primary-foreground drop-shadow-lg">
+                  <Database className="w-5 h-5 text-primary-foreground mr-2" />
+                  <h3 className="text-xl md:text-2xl font-semibold drop-shadow-md">
+                    Backup Seguro
+                  </h3>
+                </div>
+              </div>
+              <div className="mt-4 px-4 pb-6">
+                <p className="text-base md:text-lg text-card-foreground font-medium leading-relaxed">
+                  Backups automáticos diários com redundância geográfica garantida.
+                </p>
+              </div>
+            </div>
+
+          </div>
+
+          {/* Recursos de Segurança Adiccionais */}
+          <div className="mt-16 grid grid-cols-2 md:grid-cols-4 gap-4 max-w-4xl mx-auto">
+            <div className="flex items-center gap-3 bg-background/50 backdrop-blur-sm p-4 rounded-lg border border-border/20">
+              <Shield className="w-5 h-5 text-success" />
+              <span className="text-sm font-medium">SSL/TLS</span>
+            </div>
+            <div className="flex items-center gap-3 bg-background/50 backdrop-blur-sm p-4 rounded-lg border border-border/20">
+              <Lock className="w-5 h-5 text-success" />
+              <span className="text-sm font-medium">LGPD</span>
+            </div>
+            <div className="flex items-center gap-3 bg-background/50 backdrop-blur-sm p-4 rounded-lg border border-border/20">
+              <Database className="w-5 h-5 text-success" />
+              <span className="text-sm font-medium">ISO 27001</span>
+            </div>
+            <div className="flex items-center gap-3 bg-background/50 backdrop-blur-sm p-4 rounded-lg border border-border/20">
+              <Cloud className="w-5 h-5 text-success" />
+              <span className="text-sm font-medium">AWS Seguro</span>
             </div>
           </div>
-        </section>}
+
+          {/* CTA de Segurança */}
+          <div className="mt-12 text-center bg-gradient-to-r from-primary/5 to-primary/10 rounded-2xl p-8 border border-primary/20 max-w-3xl mx-auto">
+            <h3 className="text-2xl font-bold mb-4">Seus dados sempre protegidos</h3>
+            <p className="text-lg text-muted-foreground mb-6">
+              Utilizamos as melhores práticas de segurança do mercado para garantir a proteção total das suas informações.
+            </p>
+            <Button size="lg" onClick={() => navigate('/auth')} className="gradient-primary">
+              <Shield className="w-5 h-5 mr-2" />
+              Experimente com Segurança
+            </Button>
+          </div>
+        </div>
+      </section>
 
       {/* Testimonials Section */}
       {testimonialsSection && <section className="py-20 px-4">
@@ -569,8 +689,8 @@ export function LandingPage() {
                   </CardHeader>
                   <CardContent>
                     <ul className="space-y-3 mb-6">
-                      {plan.features.map((feature: string, idx: number) => <li key={idx} className="flex items-center">
-                          <Check className="h-4 w-4 text-green-500 mr-2 flex-shrink-0" />
+                       {plan.features.map((feature: string, idx: number) => <li key={idx} className="flex items-center">
+                          <Check className="h-4 w-4 text-success mr-2 flex-shrink-0" />
                           <span className="text-sm">{feature}</span>
                         </li>)}
                     </ul>
