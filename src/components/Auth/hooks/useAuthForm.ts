@@ -199,7 +199,7 @@ export function useAuthForm({ onSuccess }: UseAuthFormProps = {}) {
           first_name: sanitizedFirstName,
           last_name: sanitizedLastName,
         },
-        emailRedirectTo: `${window.location.origin}/auth?confirmed=true`
+        emailRedirectTo: `${window.location.origin}/planos`
       },
     });
     
@@ -222,6 +222,11 @@ export function useAuthForm({ onSuccess }: UseAuthFormProps = {}) {
       title: 'Conta criada!',
       description: 'Verifique seu email para confirmar a conta.',
     });
+    
+    // Redirecionar para seleção de planos após cadastro confirmado
+    setTimeout(() => {
+      window.location.href = '/planos';
+    }, 2000);
     
     onSuccess?.();
   };

@@ -12,6 +12,8 @@ import { PrivacyConsentProvider } from '@/components/LGPD/PrivacyConsentProvider
 import { TermsProvider } from '@/components/Terms/TermsProvider';
 import { CSRFProvider, SecurityHeaders } from '@/components/Security';
 import { Auth } from '@/pages/Auth';
+import PlanSelection from '@/pages/PlanSelection';
+import { SubscriptionGuard } from '@/components/SubscriptionGuard';
 import React, { Suspense, useEffect } from 'react';
 import { Outlet, useLocation } from 'react-router-dom';
 import { PageSuspenseBoundary } from '@/components/Common/SuspenseBoundary';
@@ -166,15 +168,23 @@ function RouteHandler() {
         path="/auth" 
         element={isAuthenticated ? <Navigate to="/app/dashboard" replace /> : <Auth />} 
       />
+
+      {/* Plan selection route - for users without active subscription */}
+      <Route 
+        path="/planos" 
+        element={<PlanSelection />} 
+      />
       
       {/* Protected routes */}
       <Route path="/app" element={
         <ProtectedRoute>
-          <MainLayout>
+          <SubscriptionGuard>
+            <MainLayout>
             <PageSuspenseBoundary>
               <Outlet />
             </PageSuspenseBoundary>
-          </MainLayout>
+            </MainLayout>
+          </SubscriptionGuard>
         </ProtectedRoute>
       }>
         <Route index element={<Navigate to="/app/dashboard" replace />} />
