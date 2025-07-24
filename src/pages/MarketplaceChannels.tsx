@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Plus, Search, Settings, Zap, ExternalLink } from 'lucide-react';
+import { Plus, Search, Settings, Zap, ExternalLink, AlertCircle } from 'lucide-react';
 import { BaseLayout } from '@/components/Base/BaseLayout';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -194,141 +194,179 @@ export default function MarketplaceChannels() {
         </div>
 
         {/* Search */}
-        <div className="flex items-center space-x-2">
-          <div className="relative flex-1 max-w-sm">
-            <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
+        <div className="flex items-center gap-4">
+          <div className="relative flex-1 max-w-md">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <Input
               placeholder="Buscar canais..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-8"
+              className="pl-10 h-10"
             />
           </div>
         </div>
 
         {/* Content */}
         {isLoading ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {Array.from({ length: 6 }).map((_, i) => (
-              <Skeleton key={i} className="h-32" />
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-6">
+            {Array.from({ length: 8 }).map((_, i) => (
+              <Skeleton key={i} className="h-64 rounded-lg" />
             ))}
           </div>
         ) : filteredChannels.length === 0 ? (
-          <div className="text-center py-12">
-            <div className="mx-auto w-12 h-12 bg-muted rounded-full flex items-center justify-center mb-4">
-              <Plus className="h-6 w-6 text-muted-foreground" />
+          <div className="flex flex-col items-center justify-center py-16 px-4">
+            <div className="w-16 h-16 bg-muted/50 rounded-full flex items-center justify-center mb-6">
+              <Plus className="h-8 w-8 text-muted-foreground" />
             </div>
-            <h3 className="text-lg font-medium mb-2">
+            <h3 className="text-xl font-semibold mb-2 text-center">
               {searchTerm ? 'Nenhum canal encontrado' : 'Nenhum canal cadastrado'}
             </h3>
-            <p className="text-muted-foreground mb-4">
+            <p className="text-muted-foreground mb-6 text-center max-w-md">
               {searchTerm 
-                ? 'Tente ajustar os termos de busca.' 
-                : 'Comece criando seu primeiro canal de marketplace.'
+                ? 'Tente ajustar os termos de busca para encontrar o canal desejado.' 
+                : 'Conecte seus primeiros marketplaces para centralizar a gestão de vendas.'
               }
             </p>
             {!searchTerm && (
-              <Button onClick={handleNewChannel}>
+              <Button onClick={handleNewChannel} size="lg">
                 <Plus className="mr-2 h-4 w-4" />
                 Criar Primeiro Canal
               </Button>
             )}
           </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-6">
             {filteredChannels.map((channel) => {
               const connectionStatus = connectionStatuses.get(channel.id);
+              const isConnected = channel.status && connectionStatus?.connected;
               
               return (
-                <Card key={channel.id} className="hover:shadow-md transition-shadow">
-                  <CardHeader className="pb-3">
-                    <div className="flex items-center justify-between">
-                      <CardTitle className="flex items-center gap-2">
-                        <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-primary to-primary/70 flex items-center justify-center">
-                          <span className="text-white text-sm font-bold">
+                <Card key={channel.id} className="group hover:shadow-lg transition-all duration-200 border-border/50 hover:border-border">
+                  <CardHeader className="pb-4">
+                    {/* Header com avatar, título e status */}
+                    <div className="flex items-start gap-3">
+                      <div className="relative">
+                        <div className={`w-12 h-12 rounded-xl bg-gradient-to-br from-primary via-primary/90 to-primary/80 flex items-center justify-center shadow-sm ${
+                          isConnected ? 'ring-2 ring-green-500/20' : ''
+                        }`}>
+                          <span className="text-white font-bold text-lg">
                             {channel.name.charAt(0).toUpperCase()}
                           </span>
                         </div>
-                        {channel.name}
-                      </CardTitle>
+                        {/* Indicador de status */}
+                        <div className={`absolute -bottom-1 -right-1 w-4 h-4 rounded-full border-2 border-background ${
+                          isConnected 
+                            ? 'bg-green-500' 
+                            : channel.status 
+                              ? 'bg-yellow-500' 
+                              : 'bg-gray-400'
+                        }`} />
+                      </div>
                       
-                      <div className="flex items-center gap-1">
-                        {channel.status && connectionStatus?.connected && (
-                          <Badge variant="default" className="bg-green-600 text-white">
-                            Conectado
-                          </Badge>
-                        )}
-                        {channel.status && !connectionStatus?.connected && (
-                          <Badge variant="destructive">
-                            Desconectado
-                          </Badge>
-                        )}
-                        {!channel.status && (
-                          <Badge variant="secondary">
-                            Inativo
-                          </Badge>
-                        )}
+                      <div className="flex-1 min-w-0">
+                        <CardTitle className="text-base font-semibold truncate mb-1">
+                          {channel.name}
+                        </CardTitle>
+                        
+                        {/* Status Badge */}
+                        <div className="flex items-center gap-2">
+                          {isConnected ? (
+                            <Badge variant="default" className="bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-400 text-xs px-2 py-0.5">
+                              <div className="w-1.5 h-1.5 bg-green-600 dark:bg-green-400 rounded-full mr-1.5" />
+                              Conectado
+                            </Badge>
+                          ) : channel.status ? (
+                            <Badge variant="secondary" className="bg-yellow-100 text-yellow-800 dark:bg-yellow-900/20 dark:text-yellow-400 text-xs px-2 py-0.5">
+                              <div className="w-1.5 h-1.5 bg-yellow-600 dark:bg-yellow-400 rounded-full mr-1.5" />
+                              Aguardando
+                            </Badge>
+                          ) : (
+                            <Badge variant="outline" className="text-xs px-2 py-0.5">
+                              <div className="w-1.5 h-1.5 bg-gray-400 rounded-full mr-1.5" />
+                              Inativo
+                            </Badge>
+                          )}
+                        </div>
                       </div>
                     </div>
                     
+                    {/* Descrição */}
                     {channel.description && (
-                      <p className="text-sm text-muted-foreground">
+                      <p className="text-sm text-muted-foreground line-clamp-2 mt-3">
                         {channel.description}
                       </p>
                     )}
                   </CardHeader>
                   
-                  <CardContent className="space-y-4">
+                  <CardContent className="pt-0 space-y-4">
+                    {/* Informações da conta conectada */}
                     {connectionStatus?.profile && (
-                      <div className="p-3 bg-muted/50 rounded-lg">
-                        <h4 className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-2">
-                          Informações da Conta
-                        </h4>
-                        <div className="space-y-1">
+                      <div className="p-3 bg-muted/30 rounded-lg border border-border/30">
+                        <div className="flex items-center gap-2 mb-2">
+                          <div className="w-1.5 h-1.5 bg-green-500 rounded-full" />
+                          <span className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
+                            Conta Conectada
+                          </span>
+                        </div>
+                        <div className="space-y-1.5">
                           {connectionStatus.profile.name && (
-                            <p className="text-sm">
-                              <span className="font-medium">Nome:</span> {connectionStatus.profile.name}
-                            </p>
+                            <div className="flex items-center justify-between gap-2">
+                              <span className="text-xs text-muted-foreground">Nome:</span>
+                              <span className="text-xs font-medium truncate">
+                                {connectionStatus.profile.name}
+                              </span>
+                            </div>
                           )}
                           {connectionStatus.profile.email && (
-                            <p className="text-sm">
-                              <span className="font-medium">Email:</span> {connectionStatus.profile.email}
-                            </p>
+                            <div className="flex items-center justify-between gap-2">
+                              <span className="text-xs text-muted-foreground">Email:</span>
+                              <span className="text-xs font-medium truncate">
+                                {connectionStatus.profile.email}
+                              </span>
+                            </div>
                           )}
                           {connectionStatus.profile.id && (
-                            <p className="text-sm">
-                              <span className="font-medium">ID:</span> {connectionStatus.profile.id}
-                            </p>
+                            <div className="flex items-center justify-between gap-2">
+                              <span className="text-xs text-muted-foreground">ID:</span>
+                              <span className="text-xs font-mono font-medium truncate">
+                                {connectionStatus.profile.id}
+                              </span>
+                            </div>
                           )}
                         </div>
                       </div>
                     )}
                     
+                    {/* Erro de conexão */}
                     {connectionStatus?.error && (
-                      <Alert variant="destructive">
-                        <AlertDescription className="text-xs">
+                      <Alert variant="destructive" className="py-2">
+                        <AlertCircle className="h-3 w-3" />
+                        <AlertDescription className="text-xs leading-relaxed">
                           {connectionStatus.error}
                         </AlertDescription>
                       </Alert>
                     )}
                     
-                    <div className="flex items-center gap-2">
-                      {channel.status && connectionStatus?.connected ? (
+                    {/* Botões de ação */}
+                    <div className="flex items-center gap-2 pt-2">
+                      {isConnected ? (
                         <>
                           <Button
                             variant="outline" 
                             size="sm"
                             onClick={() => handleDisconnect(channel)}
-                            className="flex-1"
+                            className="flex-1 h-9 text-xs"
                           >
+                            <ExternalLink className="h-3 w-3 mr-1.5" />
                             Desconectar
                           </Button>
                           <Button
                             variant="outline"
                             size="sm"
                             onClick={() => handleEdit(channel)}
+                            className="h-9 w-9 p-0"
                           >
-                            <Settings className="h-4 w-4" />
+                            <Settings className="h-3 w-3" />
                           </Button>
                         </>
                       ) : (
@@ -336,29 +374,30 @@ export default function MarketplaceChannels() {
                           <Button
                             onClick={() => handleConnect(channel)}
                             size="sm"
-                            className="flex-1"
+                            className="flex-1 h-9 text-xs"
                             disabled={!channel.status}
                           >
-                            <Zap className="h-4 w-4 mr-2" />
+                            <Zap className="h-3 w-3 mr-1.5" />
                             Conectar
                           </Button>
                           <Button
                             variant="outline"
                             size="sm"
                             onClick={() => handleEdit(channel)}
+                            className="h-9 w-9 p-0"
                           >
-                            <Settings className="h-4 w-4" />
+                            <Settings className="h-3 w-3" />
                           </Button>
                         </>
                       )}
                       
                       <Button
-                        variant="outline"
+                        variant="ghost"
                         size="sm"
                         onClick={() => handleDelete(channel.id)}
-                        className="text-destructive hover:text-destructive"
+                        className="h-9 w-9 p-0 text-muted-foreground hover:text-destructive"
                       >
-                        <Settings className="h-4 w-4" />
+                        <Settings className="h-3 w-3" />
                       </Button>
                     </div>
                   </CardContent>
