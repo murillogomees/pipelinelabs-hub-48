@@ -109,7 +109,7 @@ export function PersonaCard({
 
           {/* Soluções Pipeline Labs */}
           {solutions && solutions.length > 0 && (
-            <div className="space-y-2 text-center w-full">
+            <div className="space-y-2 text-center w-full mb-[15px]">
               <h4 className="font-semibold text-sm text-success mb-2 flex items-center justify-center gap-1.5">
                  Soluções Pipeline Labs
               </h4>
