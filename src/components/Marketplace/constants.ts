@@ -1,14 +1,17 @@
-// Configurações centralizadas dos marketplaces
 export const MARKETPLACE_CONFIGS = {
   mercadolivre: {
     name: 'Mercado Livre',
     color: 'bg-yellow-500',
     url: 'https://mercadolivre.com.br',
     auth_type: 'oauth' as const,
+    oauth_config: {
+      base_url: 'https://auth.mercadolivre.com.br',
+      auth_endpoint: '/authorization',
+      scopes: ['read', 'write']
+    },
     fields: [
       { name: 'app_id', label: 'App ID', type: 'text' },
       { name: 'client_secret', label: 'Client Secret', type: 'password' },
-      { name: 'refresh_token', label: 'Refresh Token', type: 'password' },
       { name: 'seller_id', label: 'Seller ID', type: 'text' }
     ]
   },
@@ -28,10 +31,15 @@ export const MARKETPLACE_CONFIGS = {
     name: 'Amazon',
     color: 'bg-orange-600',
     url: 'https://amazon.com.br',
-    auth_type: 'apikey' as const,
+    auth_type: 'oauth' as const,
+    oauth_config: {
+      base_url: 'https://sellercentral.amazon.com',
+      auth_endpoint: '/oauth/authorize',
+      scopes: ['inventory:read', 'orders:read', 'products:read']
+    },
     fields: [
-      { name: 'access_key_id', label: 'Access Key ID', type: 'password' },
-      { name: 'secret_access_key', label: 'Secret Access Key', type: 'password' },
+      { name: 'client_id', label: 'Client ID', type: 'text' },
+      { name: 'client_secret', label: 'Client Secret', type: 'password' },
       { name: 'marketplace_id', label: 'Marketplace ID', type: 'text' },
       { name: 'seller_id', label: 'Seller ID', type: 'text' }
     ]

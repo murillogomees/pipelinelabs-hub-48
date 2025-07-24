@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
+import { ExternalLink, Lock } from 'lucide-react';
 import {
   Dialog,
   DialogContent,
@@ -29,7 +30,10 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 import { MARKETPLACE_CONFIGS, MarketplaceType } from './constants';
+import { OAuthService } from '@/services/oauthService';
+import { useToast } from '@/hooks/use-toast';
 
 const formSchema = z.object({
   marketplace: z.string().min(1, 'Selecione um marketplace'),
@@ -61,6 +65,8 @@ export const MarketplaceConnectionDialog = ({
   const [selectedMarketplace, setSelectedMarketplace] = useState<string>(
     selectedChannel || editingIntegration?.marketplace || ''
   );
+  const [isConnecting, setIsConnecting] = useState(false);
+  const { toast } = useToast();
 
   const form = useForm<FormData>({
     resolver: zodResolver(formSchema),
@@ -72,19 +78,64 @@ export const MarketplaceConnectionDialog = ({
     }
   });
 
-  const handleSubmit = (values: FormData) => {
+  const handleSubmit = async (values: FormData) => {
     const config = MARKETPLACE_CONFIGS[selectedMarketplace as MarketplaceType];
     
-    onSubmit({
-      marketplace: values.marketplace,
-      auth_type: config?.auth_type || 'apikey',
-      credentials: values.credentials || {},
-      config: {
-        auto_sync_enabled: values.auto_sync_enabled,
-        sync_interval_minutes: values.sync_interval_minutes,
-        webhook_url: values.webhook_url
+    if (!config) {
+      toast({
+        title: "Erro",
+        description: "Marketplace não encontrado",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    try {
+      setIsConnecting(true);
+      const oauthService = OAuthService.getInstance();
+
+      let result;
+      if (config.auth_type === 'oauth') {
+        // Fluxo OAuth com popup
+        result = await oauthService.connectWithOAuth(values.marketplace, {
+          auto_sync_enabled: values.auto_sync_enabled,
+          sync_interval_minutes: values.sync_interval_minutes,
+          webhook_url: values.webhook_url,
+          credentials: values.credentials || {}
+        });
+      } else {
+        // Fluxo com credenciais diretas
+        result = await oauthService.connectWithCredentials(
+          values.marketplace,
+          values.credentials || {},
+          {
+            auto_sync_enabled: values.auto_sync_enabled,
+            sync_interval_minutes: values.sync_interval_minutes,
+            webhook_url: values.webhook_url
+          }
+        );
       }
-    });
+
+      onSubmit({
+        marketplace: values.marketplace,
+        auth_type: config.auth_type,
+        credentials: values.credentials || {},
+        config: {
+          auto_sync_enabled: values.auto_sync_enabled,
+          sync_interval_minutes: values.sync_interval_minutes,
+          webhook_url: values.webhook_url
+        },
+        integration_result: result
+      });
+    } catch (error: any) {
+      toast({
+        title: "Erro na conexão",
+        description: error.message || "Não foi possível conectar ao marketplace",
+        variant: "destructive"
+      });
+    } finally {
+      setIsConnecting(false);
+    }
   };
 
   const handleMarketplaceChange = (marketplace: string) => {
@@ -137,43 +188,80 @@ export const MarketplaceConnectionDialog = ({
             />
 
             {config && (
-              <Card>
-                <CardHeader>
-                  <CardTitle className="text-lg">Credenciais - {config.name}</CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  {config.fields.map((field) => (
-                    <div key={field.name}>
-                      <FormLabel>{field.label}</FormLabel>
-                      {field.type === 'select' ? (
-                        <Select 
-                          onValueChange={(value) => 
-                            form.setValue(`credentials.${field.name}` as any, value)
-                          }
-                        >
-                          <SelectTrigger>
-                            <SelectValue placeholder={`Selecione ${field.label}`} />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {field.options?.map((option) => (
-                              <SelectItem key={option} value={option}>
-                                {option}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                      ) : (
-                         <Input
-                           type={field.type}
-                           placeholder={field.label}
-                           autoComplete={field.type === 'password' ? 'current-password' : 'off'}
-                           {...form.register(`credentials.${field.name}` as any)}
-                         />
+              <>
+                {config.auth_type === 'oauth' && (
+                  <Alert className="mb-4">
+                    <Lock className="h-4 w-4" />
+                    <AlertDescription>
+                      Este marketplace usa autenticação OAuth. Clique em "Conectar" para abrir 
+                      uma janela de autorização segura do {config.name}.
+                    </AlertDescription>
+                  </Alert>
+                )}
+                
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="text-lg flex items-center space-x-2">
+                      <span>Credenciais - {config.name}</span>
+                      {config.auth_type === 'oauth' && (
+                        <Badge variant="outline" className="text-xs">
+                          <ExternalLink className="h-3 w-3 mr-1" />
+                          OAuth
+                        </Badge>
                       )}
-                    </div>
-                  ))}
-                </CardContent>
-              </Card>
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    {config.auth_type === 'oauth' ? (
+                      <div className="text-sm text-muted-foreground space-y-2">
+                        <p>Configure as credenciais básicas que serão usadas durante o processo de autorização:</p>
+                        {config.fields.filter(field => ['client_id', 'app_id'].includes(field.name)).map((field) => (
+                          <div key={field.name}>
+                            <FormLabel>{field.label}</FormLabel>
+                            <Input
+                              type={field.type}
+                              placeholder={field.label}
+                              autoComplete="off"
+                              {...form.register(`credentials.${field.name}` as any)}
+                            />
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      config.fields.map((field) => (
+                        <div key={field.name}>
+                          <FormLabel>{field.label}</FormLabel>
+                          {field.type === 'select' ? (
+                            <Select 
+                              onValueChange={(value) => 
+                                form.setValue(`credentials.${field.name}` as any, value)
+                              }
+                            >
+                              <SelectTrigger>
+                                <SelectValue placeholder={`Selecione ${field.label}`} />
+                              </SelectTrigger>
+                              <SelectContent>
+                                {field.options?.map((option) => (
+                                  <SelectItem key={option} value={option}>
+                                    {option}
+                                  </SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                          ) : (
+                             <Input
+                               type={field.type}
+                               placeholder={field.label}
+                               autoComplete={field.type === 'password' ? 'current-password' : 'off'}
+                               {...form.register(`credentials.${field.name}` as any)}
+                             />
+                          )}
+                        </div>
+                      ))
+                    )}
+                  </CardContent>
+                </Card>
+              </>
             )}
 
             <Card>
@@ -225,12 +313,12 @@ export const MarketplaceConnectionDialog = ({
                 type="button"
                 variant="outline"
                 onClick={() => onOpenChange(false)}
-                disabled={isLoading}
+                disabled={isLoading || isConnecting}
               >
                 Cancelar
               </Button>
-              <Button type="submit" disabled={isLoading}>
-                {isLoading ? 'Conectando...' : 'Conectar'}
+              <Button type="submit" disabled={isLoading || isConnecting}>
+                {isConnecting ? 'Conectando...' : (config?.auth_type === 'oauth' ? 'Autorizar' : 'Conectar')}
               </Button>
             </DialogFooter>
           </form>
