@@ -108,16 +108,16 @@ export function LandingPage() {
               {getIcon('rocket')}
               {heroSection.content_data?.trust_badge || heroSection.title}
             </Badge>
-            <h1 className="text-4xl md:text-6xl font-bold mb-6 bg-gradient-to-r from-primary to-primary/60 bg-clip-text text-transparent">
+            <h1 className="text-4xl md:text-6xl font-bold mb-6 bg-gradient-to-r from-primary to-primary/60 bg-clip-text text-transparent hero-title">
               {heroSection.title}
             </h1>
-            <p className="text-xl text-muted-foreground mb-4 max-w-3xl mx-auto">
+            <p className="text-xl text-muted-foreground mb-4 max-w-3xl mx-auto hero-subtitle">
               {heroSection.subtitle}
             </p>
-            <p className="text-lg text-muted-foreground mb-8 max-w-2xl mx-auto">
+            <p className="text-lg text-muted-foreground mb-8 max-w-2xl mx-auto hero-subtitle">
               {heroSection.description}
             </p>
-            <div className="flex flex-col sm:flex-row gap-4 justify-center mb-8">
+            <div className="flex flex-col sm:flex-row gap-4 justify-center mb-8 hero-cta">
               <Button size="lg" onClick={() => navigate('/auth')} className="text-lg px-8 py-6">
                 {getIcon('rocket')}
                 {heroSection.content_data?.button_text || 'Começar Agora'}
@@ -224,18 +224,19 @@ export function LandingPage() {
             {/* Cards de personas com novo layout responsivo */}
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8 max-w-7xl mx-auto px-4">
               {personasSection.content_data?.personas?.map((persona: any, index: number) => (
-                <PersonaCard
-                  key={index}
-                  name={persona.name}
-                  age={persona.age}
-                  location={persona.location}
-                  business={persona.business}
-                  image={persona.image}
-                  problems={persona.problems}
-                  solutions={persona.solutions}
-                  result={persona.result}
-                  className="h-full"
-                />
+                <div key={index} className="feature-card opacity-0">
+                  <PersonaCard
+                    name={persona.name}
+                    age={persona.age}
+                    location={persona.location}
+                    business={persona.business}
+                    image={persona.image}
+                    problems={persona.problems}
+                    solutions={persona.solutions}
+                    result={persona.result}
+                    className="h-full hover-lift"
+                  />
+                </div>
               ))}
             </div>
           </div>

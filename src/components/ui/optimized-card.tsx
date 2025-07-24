@@ -8,10 +8,10 @@ const cardVariants = cva(
   {
     variants: {
       variant: {
-        default: 'bg-card text-card-foreground border border-border shadow-sm hover:shadow-md',
-        elevated: 'bg-card text-card-foreground border border-border shadow-md hover:shadow-lg',
-        flat: 'bg-card text-card-foreground border border-border',
-        ghost: 'bg-transparent border-0 shadow-none'
+        default: 'bg-card text-card-foreground border border-border shadow-sm hover:shadow-md hover:-translate-y-1 transition-all duration-300',
+        elevated: 'bg-card text-card-foreground border border-border shadow-md hover:shadow-lg hover:-translate-y-2 transition-all duration-300',
+        flat: 'bg-card text-card-foreground border border-border transition-all duration-200',
+        ghost: 'bg-transparent border-0 shadow-none hover:bg-accent/5 transition-all duration-200'
       },
       size: {
         sm: 'p-3 sm:p-4',
@@ -25,7 +25,7 @@ const cardVariants = cva(
         full: 'rounded-2xl'
       },
       interactive: {
-        true: 'cursor-pointer hover:scale-[1.02] active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring',
+        true: 'cursor-pointer hover:scale-[1.02] active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring transition-all duration-200',
         false: ''
       }
     },
@@ -144,7 +144,7 @@ export function StatsCard({
         </div>
         {icon && (
           <div className="flex-shrink-0 ml-4">
-            <div className="p-2 bg-primary/10 rounded-lg">
+            <div className="p-2 bg-primary/10 rounded-lg hover:bg-primary/20 transition-colors duration-200 hover:scale-110">
               {icon}
             </div>
           </div>
@@ -196,7 +196,7 @@ export function FeatureCard({
     >
       <div className="space-y-4">
         {icon && (
-          <div className="p-3 bg-primary/10 rounded-lg w-fit">
+          <div className="p-3 bg-primary/10 rounded-lg w-fit hover:bg-primary/20 transition-all duration-200 hover:scale-110 hover:-rotate-3">
             {icon}
           </div>
         )}

@@ -3,7 +3,7 @@ import { cn } from '@/lib/utils';
 import { cva, type VariantProps } from 'class-variance-authority';
 
 const inputVariants = cva(
-  'w-full border border-input bg-background ring-offset-background transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50',
+  'w-full border border-input bg-background ring-offset-background transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 focus-visible:scale-[1.01]',
   {
     variants: {
       variant: {
@@ -71,9 +71,9 @@ export const OptimizedInput = React.forwardRef<HTMLInputElement, OptimizedInputP
           </label>
         )}
         
-        <div className="relative">
+        <div className="relative group">
           {icon && iconPosition === 'left' && (
-            <div className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground pointer-events-none">
+            <div className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground pointer-events-none group-focus-within:text-primary transition-colors duration-200">
               {icon}
             </div>
           )}
@@ -91,7 +91,7 @@ export const OptimizedInput = React.forwardRef<HTMLInputElement, OptimizedInputP
           />
           
           {icon && iconPosition === 'right' && (
-            <div className="absolute right-3 top-1/2 transform -translate-y-1/2 text-muted-foreground pointer-events-none">
+            <div className="absolute right-3 top-1/2 transform -translate-y-1/2 text-muted-foreground pointer-events-none group-focus-within:text-primary transition-colors duration-200">
               {icon}
             </div>
           )}
