@@ -83,7 +83,7 @@ export function PersonaCard({
       <CardContent className="flex flex-col justify-center items-center min-h-[120px] py-6 px-4 sm:px-6">
         {/* Descrição da persona - centralizada */}
         <div className="text-center w-full max-w-[90%]">
-          <p className="text-base sm:text-lg font-semibold text-foreground leading-relaxed">
+          <p className="text-sm sm:text-base md:text-lg font-semibold text-foreground truncate whitespace-nowrap overflow-hidden">
             {business}
           </p>
         </div>
