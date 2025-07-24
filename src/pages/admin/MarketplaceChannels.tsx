@@ -68,9 +68,9 @@ export default function MarketplaceChannels() {
   };
 
   // Estatísticas
-  const activeChannels = channels.filter(c => c.status === 'active').length;
-  const enabledChannels = companyConfigs.filter(c => c.is_enabled).length;
-  const connectedAccounts = integrations.filter(i => i.status === 'active').length;
+  const activeChannels = channels?.filter(c => c.status === 'active').length || 0;
+  const enabledChannels = companyConfigs?.filter(c => c.is_enabled).length || 0;
+  const connectedAccounts = integrations?.filter(i => i.status === 'active').length || 0;
 
   if (isLoading) {
     return (
