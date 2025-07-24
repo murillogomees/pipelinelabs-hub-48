@@ -57,7 +57,7 @@ export * from './composed';
 export * from './utils';
 
 // Custom components
-// PersonaCard removido - usado apenas na landing page
+export * from './persona-card';
 
 // Common component patterns
 export type { UIAction } from './composed';
