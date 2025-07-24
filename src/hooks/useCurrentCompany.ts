@@ -10,16 +10,18 @@ export const useCurrentCompany = () => {
         throw new Error('Usuário não autenticado');
       }
 
-      const { data: userCompany, error: companyError } = await supabase
+      const { data: userCompanies, error: companyError } = await supabase
         .from('user_companies')
         .select('company_id, company:companies(id, name)')
         .eq('user_id', user.id)
         .eq('is_active', true)
-        .single();
+        .limit(1);
 
-      if (companyError || !userCompany) {
+      if (companyError || !userCompanies || userCompanies.length === 0) {
         throw new Error('Usuário não possui empresa associada');
       }
+
+      const userCompany = userCompanies[0];
 
       return {
         company_id: userCompany.company_id,
