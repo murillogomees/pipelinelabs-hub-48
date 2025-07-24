@@ -1,6 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { usePermissions } from "@/hooks/usePermissions";
 
 export interface CompanySubscription {
   id: string;
@@ -31,10 +32,39 @@ export interface CompanySubscription {
 export const useCompanySubscription = (companyId: string) => {
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const { isAdmin, isSuperAdmin } = usePermissions();
 
   const { data: subscription, isLoading, error } = useQuery({
     queryKey: ["company-subscription", companyId],
     queryFn: async () => {
+      // Administradores não precisam de subscription real
+      if (isAdmin || isSuperAdmin) {
+        return {
+          id: 'admin-access',
+          company_id: companyId || 'admin',
+          billing_plan_id: 'admin-plan',
+          stripe_customer_id: null,
+          stripe_subscription_id: null,
+          status: 'active',
+          current_period_start: new Date().toISOString(),
+          current_period_end: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString(),
+          trial_start: null,
+          trial_end: null,
+          canceled_at: null,
+          metadata: { admin_access: true },
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+          billing_plan: {
+            id: 'admin-plan',
+            name: 'Acesso Administrativo',
+            description: 'Acesso total do sistema',
+            price: 0,
+            interval: 'lifetime',
+            features: ['Acesso completo', 'Todas as funcionalidades', 'Sem limitações']
+          }
+        } as CompanySubscription;
+      }
+
       const { data, error } = await supabase
         .from("company_subscriptions")
         .select(`
@@ -54,7 +84,7 @@ export const useCompanySubscription = (companyId: string) => {
       if (error && error.code !== "PGRST116") throw error;
       return data as CompanySubscription | null;
     },
-    enabled: !!companyId,
+    enabled: !!companyId || isAdmin || isSuperAdmin,
   });
 
   const createCheckoutMutation = useMutation({
@@ -112,7 +142,7 @@ export const useCompanySubscription = (companyId: string) => {
     ? new Date(subscription.trial_end) > new Date()
     : false;
 
-  const isSubscriptionActive = subscription?.status === "active";
+  const isSubscriptionActive = subscription?.status === "active" || isAdmin || isSuperAdmin;
 
   const daysUntilRenewal = subscription?.current_period_end
     ? Math.ceil((new Date(subscription.current_period_end).getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24))
