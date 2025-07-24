@@ -1644,6 +1644,53 @@ export type Database = {
         }
         Relationships: []
       }
+      marketplace_integrations: {
+        Row: {
+          company_id: string
+          created_at: string
+          credentials: Json
+          error_message: string | null
+          id: string
+          last_sync: string | null
+          marketplace: string
+          status: string
+          sync_status: string | null
+          updated_at: string
+        }
+        Insert: {
+          company_id: string
+          created_at?: string
+          credentials?: Json
+          error_message?: string | null
+          id?: string
+          last_sync?: string | null
+          marketplace: string
+          status?: string
+          sync_status?: string | null
+          updated_at?: string
+        }
+        Update: {
+          company_id?: string
+          created_at?: string
+          credentials?: Json
+          error_message?: string | null
+          id?: string
+          last_sync?: string | null
+          marketplace?: string
+          status?: string
+          sync_status?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "marketplace_integrations_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       nfe_items: {
         Row: {
           cofins_base: number | null

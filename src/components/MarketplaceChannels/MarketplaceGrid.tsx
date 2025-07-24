@@ -190,7 +190,7 @@ export const MarketplaceGrid = ({
       <AuthDialog
         open={authDialog.open}
         marketplace={authDialog.marketplace}
-        channel={authDialog.channel}
+        channelId={authDialog.channel?.id}
         onOpenChange={(open) => setAuthDialog({ open })}
       />
     </>
