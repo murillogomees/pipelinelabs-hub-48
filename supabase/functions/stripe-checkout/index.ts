@@ -1,4 +1,5 @@
-import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
+import "https://deno.land/x/xhr@0.1.0/mod.ts";
+import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import Stripe from "https://esm.sh/stripe@14.21.0";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
 
@@ -20,6 +21,12 @@ serve(async (req) => {
   try {
     logStep("Checkout function started");
 
+    const stripeKey = Deno.env.get("STRIPE_SECRET_KEY");
+    if (!stripeKey) {
+      logStep("ERROR in stripe-checkout", { message: "Stripe not configured" });
+      throw new Error("Stripe not configured");
+    }
+
     const supabaseClient = createClient(
       Deno.env.get("SUPABASE_URL") ?? "",
       Deno.env.get("SUPABASE_ANON_KEY") ?? ""
@@ -36,71 +43,32 @@ serve(async (req) => {
     if (!user?.email) throw new Error("User not authenticated or email not available");
     logStep("User authenticated", { userId: user.id, email: user.email });
 
-    const { billing_plan_id, company_id } = await req.json();
-    if (!billing_plan_id || !company_id) {
-      throw new Error("billing_plan_id and company_id are required");
+    const { planName, priceInCents, interval = 'month' } = await req.json();
+    if (!planName || !priceInCents) {
+      throw new Error("planName and priceInCents are required");
     }
 
-    // Get Stripe configuration
-    const { data: stripeConfig, error: configError } = await supabaseClient
-      .from("stripe_config")
-      .select("*")
-      .is("company_id", null)
-      .eq("is_active", true)
-      .single();
+    const stripe = new Stripe(stripeKey, { apiVersion: "2023-10-16" });
 
-    if (configError || !stripeConfig?.stripe_secret_key_encrypted) {
-      throw new Error("Stripe not configured");
-    }
-
-    // Get billing plan
-    const { data: plan, error: planError } = await supabaseClient
-      .from("billing_plans")
-      .select("*")
-      .eq("id", billing_plan_id)
-      .eq("active", true)
-      .single();
-
-    if (planError || !plan) {
-      throw new Error("Billing plan not found");
-    }
-
-    // Get company
-    const { data: company, error: companyError } = await supabaseClient
-      .from("companies")
-      .select("*")
-      .eq("id", company_id)
-      .single();
-
-    if (companyError || !company) {
-      throw new Error("Company not found");
-    }
-
-    logStep("Data retrieved", { planId: plan.id, companyId: company.id });
-
-    const stripe = new Stripe(stripeConfig.stripe_secret_key_encrypted, {
-      apiVersion: "2023-10-16",
+    // Check if customer exists
+    const customers = await stripe.customers.list({ 
+      email: user.email, 
+      limit: 1 
     });
-
-    // Check if customer already exists
-    const customers = await stripe.customers.list({ email: user.email, limit: 1 });
-    let customerId;
     
+    let customerId;
     if (customers.data.length > 0) {
       customerId = customers.data[0].id;
-      logStep("Existing customer found", { customerId });
+      logStep("Found existing customer", { customerId });
     } else {
       const customer = await stripe.customers.create({
         email: user.email,
-        name: `${user.user_metadata?.first_name || ''} ${user.user_metadata?.last_name || ''}`.trim(),
         metadata: {
-          user_id: user.id,
-          company_id: company_id,
-          company_name: company.name,
-        },
+          user_id: user.id
+        }
       });
       customerId = customer.id;
-      logStep("New customer created", { customerId });
+      logStep("Created new customer", { customerId });
     }
 
     // Create checkout session
@@ -109,38 +77,35 @@ serve(async (req) => {
       line_items: [
         {
           price_data: {
-            currency: stripeConfig.default_currency || "brl",
+            currency: "brl",
             product_data: {
-              name: plan.name,
-              description: plan.description,
+              name: `Plano ${planName}`,
             },
-            unit_amount: Math.round(plan.price * 100), // Convert to cents
+            unit_amount: priceInCents,
             recurring: {
-              interval: plan.interval === "year" ? "year" : "month",
+              interval: interval as 'month' | 'year',
             },
           },
           quantity: 1,
         },
       ],
       mode: "subscription",
-      success_url: `${req.headers.get("origin")}/app?checkout=success`,
-      cancel_url: `${req.headers.get("origin")}/app?checkout=cancel`,
-      metadata: {
-        billing_plan_id,
-        company_id,
-        user_id: user.id,
-      },
+      success_url: `${req.headers.get("origin")}/planos?success=true`,
+      cancel_url: `${req.headers.get("origin")}/planos?canceled=true`,
+      allow_promotion_codes: true,
+      billing_address_collection: 'required',
+      customer_update: {
+        address: 'auto',
+        name: 'auto'
+      }
     });
 
     logStep("Checkout session created", { sessionId: session.id, url: session.url });
 
-    return new Response(
-      JSON.stringify({ url: session.url }),
-      {
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-        status: 200,
-      }
-    );
+    return new Response(JSON.stringify({ url: session.url }), {
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
+      status: 200,
+    });
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : String(error);
     logStep("ERROR in stripe-checkout", { message: errorMessage });

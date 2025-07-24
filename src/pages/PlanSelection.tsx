@@ -3,57 +3,44 @@ import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Check, Crown, Users, Zap, Shield, X } from 'lucide-react';
+import { Check, Crown, Users, Zap, Shield, X, RefreshCw } from 'lucide-react';
 import { useCurrentCompany } from '@/hooks/useCurrentCompany';
 import { useCompanySubscription } from '@/hooks/useCompanySubscription';
 import { useBillingPlans } from '@/hooks/useBillingPlans';
 import { useToast } from '@/hooks/use-toast';
+import { useSubscription } from '@/hooks/useSubscription';
+import { PlanCard } from '@/components/PlanCard';
 import { supabase } from '@/integrations/supabase/client';
 import { formatCurrency } from '@/lib/utils';
 
 export default function PlanSelection() {
   const navigate = useNavigate();
   const { toast } = useToast();
-  const { data: currentCompany } = useCurrentCompany();
-  const { subscription, isSubscriptionActive, createCheckout, isCreatingCheckout } = useCompanySubscription(currentCompany?.company_id || '');
+  const { subscriptionData, loading: subscriptionLoading, checkSubscription, openCustomerPortal } = useSubscription();
   const { plans, isLoading } = useBillingPlans();
   const [selectedPlanId, setSelectedPlanId] = useState<string | null>(null);
 
   // Verificar se usuário já tem plano ativo
   useEffect(() => {
-    if (isSubscriptionActive && subscription?.status === 'active') {
-      navigate('/app/dashboard');
+    if (subscriptionData.subscribed) {
+      // toast({
+      //   title: "Você já tem um plano ativo",
+      //   description: "Redirecionando para o dashboard...",
+      // });
+      // navigate('/app/dashboard');
     }
-  }, [isSubscriptionActive, subscription, navigate]);
+  }, [subscriptionData.subscribed, navigate]);
 
-  const handleSelectPlan = async (planId: string) => {
-    if (!currentCompany?.company_id) {
-      toast({
-        title: "Erro",
-        description: "Empresa não encontrada. Faça login novamente.",
-        variant: "destructive",
-      });
-      return;
-    }
+  const handleRefreshSubscription = async () => {
+    await checkSubscription();
+    toast({
+      title: "Status atualizado",
+      description: "Status da assinatura foi verificado.",
+    });
+  };
 
-    setSelectedPlanId(planId);
-    
-    try {
-      await createCheckout(planId);
-      toast({
-        title: "Redirecionando para pagamento",
-        description: "Você será redirecionado para finalizar a assinatura.",
-      });
-    } catch (error) {
-      console.error('Erro ao criar checkout:', error);
-      toast({
-        title: "Erro ao processar pagamento",
-        description: "Tente novamente em alguns instantes.",
-        variant: "destructive",
-      });
-    } finally {
-      setSelectedPlanId(null);
-    }
+  const handleManageSubscription = async () => {
+    await openCustomerPortal();
   };
 
   const getPlanIcon = (planName: string) => {
@@ -74,7 +61,7 @@ export default function PlanSelection() {
     return planName.toLowerCase().includes('premium') || planName.toLowerCase().includes('pro');
   };
 
-  if (isLoading) {
+  if (isLoading || subscriptionLoading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 flex items-center justify-center">
         <div className="text-center">
@@ -85,8 +72,60 @@ export default function PlanSelection() {
     );
   }
 
-  const freePlans = plans?.filter(plan => plan.price === 0) || [];
-  const hasFreePlans = freePlans.length > 0;
+  // Mock plans for demonstration - you can configure these in your admin functions
+  const mockPlans = [
+    {
+      id: 'basic',
+      name: 'Básico',
+      price: 49,
+      interval: 'month' as const,
+      description: 'Ideal para pequenos negócios',
+      features: [
+        'Até 5 usuários',
+        'Controle de vendas',
+        'Estoque básico',
+        'Relatórios simples',
+        'Suporte por email'
+      ],
+      max_users: 5,
+    },
+    {
+      id: 'premium',
+      name: 'Premium',
+      price: 99,
+      interval: 'month' as const,
+      description: 'Para empresas em crescimento',
+      features: [
+        'Até 20 usuários',
+        'Todas as funcionalidades básicas',
+        'NFe integrada',
+        'Relatórios avançados',
+        'Integração com marketplaces',
+        'Suporte prioritário'
+      ],
+      max_users: 20,
+      isPopular: true,
+    },
+    {
+      id: 'enterprise',
+      name: 'Enterprise',
+      price: 199,
+      interval: 'month' as const,
+      description: 'Solução completa para grandes empresas',
+      features: [
+        'Usuários ilimitados',
+        'Todas as funcionalidades',
+        'API personalizada',
+        'Relatórios customizados',
+        'Integrações avançadas',
+        'Suporte 24/7',
+        'Treinamento incluído'
+      ],
+      max_users: -1,
+    },
+  ];
+
+  const displayPlans = plans && plans.length > 0 ? plans : mockPlans;
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100">
@@ -98,108 +137,74 @@ export default function PlanSelection() {
           <p className="text-xl text-gray-600 max-w-2xl mx-auto">
             Selecione o plano ideal para sua empresa e comece a transformar sua gestão hoje mesmo.
           </p>
-          {!hasFreePlans && (
-            <div className="mt-6 p-4 bg-yellow-50 border border-yellow-200 rounded-lg max-w-md mx-auto">
-              <div className="flex items-center space-x-2">
-                <X className="w-5 h-5 text-yellow-600" />
-                <p className="text-sm text-yellow-800">
-                  É necessário selecionar um plano para continuar
+
+          {/* Status da assinatura atual */}
+          {subscriptionData.subscribed && (
+            <div className="mt-6 p-4 bg-green-50 border border-green-200 rounded-lg max-w-md mx-auto">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm text-green-800 font-medium">
+                    ✅ Plano Ativo: {subscriptionData.subscription_tier}
+                  </p>
+                  {subscriptionData.subscription_end && (
+                    <p className="text-xs text-green-600">
+                      Renovação: {new Date(subscriptionData.subscription_end).toLocaleDateString('pt-BR')}
+                    </p>
+                  )}
+                </div>
+                <div className="flex gap-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={handleRefreshSubscription}
+                    disabled={subscriptionLoading}
+                  >
+                    <RefreshCw className={`w-4 h-4 ${subscriptionLoading ? 'animate-spin' : ''}`} />
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={handleManageSubscription}
+                  >
+                    Gerenciar
+                  </Button>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {!subscriptionData.subscribed && (
+            <div className="mt-6 p-4 bg-blue-50 border border-blue-200 rounded-lg max-w-md mx-auto">
+              <div className="flex items-center justify-between">
+                <p className="text-sm text-blue-800">
+                  💡 Selecione um plano para acessar todas as funcionalidades
                 </p>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={handleRefreshSubscription}
+                  disabled={subscriptionLoading}
+                >
+                  <RefreshCw className={`w-4 h-4 ${subscriptionLoading ? 'animate-spin' : ''}`} />
+                </Button>
               </div>
             </div>
           )}
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 max-w-7xl mx-auto">
-          {plans?.map((plan) => (
-            <Card 
-              key={plan.id} 
-              className={`relative transition-all duration-300 hover:shadow-xl ${
-                isPopularPlan(plan.name) 
-                  ? 'border-2 border-primary shadow-lg scale-105' 
-                  : 'border hover:border-gray-300'
-              }`}
-            >
-              {isPopularPlan(plan.name) && (
-                <div className="absolute -top-4 left-1/2 transform -translate-x-1/2">
-                  <Badge className="bg-primary text-primary-foreground px-4 py-1">
-                    Mais Popular
-                  </Badge>
-                </div>
-              )}
-              
-              <CardHeader className="text-center pb-6">
-                <div className="flex justify-center mb-4">
-                  {getPlanIcon(plan.name)}
-                </div>
-                <CardTitle className="text-2xl font-bold">{plan.name}</CardTitle>
-                <div className="mt-4">
-                  <span className="text-4xl font-bold text-gray-900">
-                    {plan.price === 0 ? 'Grátis' : formatCurrency(plan.price)}
-                  </span>
-                  {plan.price > 0 && (
-                    <span className="text-gray-500 ml-2">
-                      /{plan.interval === 'month' ? 'mês' : 'ano'}
-                    </span>
-                  )}
-                </div>
-                {plan.description && (
-                  <p className="text-gray-600 mt-2">{plan.description}</p>
-                )}
-              </CardHeader>
-
-              <CardContent className="space-y-6">
-                {/* Recursos do plano */}
-                {plan.features && plan.features.length > 0 && (
-                  <div className="space-y-3">
-                    <h4 className="font-semibold text-gray-900">Recursos incluídos:</h4>
-                    <ul className="space-y-2">
-                      {(plan.features as string[]).map((feature, index) => (
-                        <li key={index} className="flex items-start space-x-3">
-                          <Check className="w-5 h-5 text-green-600 flex-shrink-0 mt-0.5" />
-                          <span className="text-gray-700">{feature}</span>
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-                )}
-
-                {/* Limites do plano */}
-                {plan.max_users && (
-                  <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-                    <div className="flex items-center space-x-2">
-                      <Users className="w-4 h-4 text-gray-600" />
-                      <span className="text-sm font-medium">Usuários</span>
-                    </div>
-                    <Badge variant="outline">
-                      {plan.max_users === -1 ? 'Ilimitado' : `${plan.max_users} usuários`}
-                    </Badge>
-                  </div>
-                )}
-
-                <Button
-                  onClick={() => handleSelectPlan(plan.id)}
-                  disabled={isCreatingCheckout}
-                  className={`w-full h-12 text-lg font-semibold ${
-                    isPopularPlan(plan.name)
-                      ? 'bg-primary hover:bg-primary/90'
-                      : ''
-                  }`}
-                  size="lg"
-                >
-                  {selectedPlanId === plan.id && isCreatingCheckout ? (
-                    <div className="flex items-center space-x-2">
-                      <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
-                      <span>Processando...</span>
-                    </div>
-                  ) : plan.price === 0 ? (
-                    'Começar Grátis'
-                  ) : (
-                    'Selecionar Plano'
-                  )}
-                </Button>
-              </CardContent>
-            </Card>
+          {displayPlans?.map((plan) => (
+            <PlanCard
+              key={plan.id}
+              name={plan.name}
+              price={plan.price}
+              interval={plan.interval || 'month'}
+              description={plan.description}
+              features={plan.features as string[] || []}
+              maxUsers={plan.max_users}
+              isPopular={plan.isPopular || isPopularPlan(plan.name)}
+              isCurrentPlan={subscriptionData.subscribed && subscriptionData.subscription_tier === plan.name}
+            />
           ))}
         </div>
 
