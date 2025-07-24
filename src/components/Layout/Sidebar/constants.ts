@@ -86,12 +86,6 @@ export const menuItems = [
     submenu: []
   },
   {
-    title: 'Market Places',
-    icon: Zap,
-    path: '/app/integracoes/marketplaces',
-    submenu: []
-  },
-  {
     title: 'Configurações',
     icon: Settings,
     path: '/app/configuracoes',
@@ -109,7 +103,7 @@ export const menuItems = [
     submenu: [
       { title: 'Planos', path: '/app/admin/planos' },
       { title: 'Usuários', path: '/app/admin/usuarios' },
-      { title: 'Marketplace Channels', path: '/app/admin/marketplace-channels' },
+      
       { title: 'Integrações', path: '/app/admin/integracoes' },
       { title: 'Notificações', path: '/app/admin/notificacoes' },
       { title: 'Backup', path: '/app/admin/backup' },

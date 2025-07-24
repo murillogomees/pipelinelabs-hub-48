@@ -90,14 +90,3 @@ verify_jwt = false
 [functions.cache-manager]
 verify_jwt = true
 
-[functions.marketplace-connect]
-verify_jwt = true
-
-[functions.marketplace-webhook]
-verify_jwt = false
-
-[functions.marketplace-auth]
-verify_jwt = true
-
-[functions.marketplace-oauth-callback]
-verify_jwt = false

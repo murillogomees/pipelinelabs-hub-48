@@ -188,7 +188,7 @@ export function SistemaTab() {
               { key: 'ordem_producao', label: 'Ordem de Produção', description: 'Módulo de controle de produção' },
               { key: 'envio_automatico', label: 'Envio Automático', description: 'Integração com transportadoras' },
               { key: 'pdv', label: 'PDV (Ponto de Venda)', description: 'Sistema de ponto de venda' },
-              { key: 'multicanal', label: 'Vendas Multicanal', description: 'Integração com marketplaces' },
+              { key: 'multicanal', label: 'Vendas Multicanal', description: 'Integração com e-commerce e vendas' },
               { key: 'relatorios_avancados', label: 'Relatórios Avançados', description: 'Dashboards e analytics' }
             ].map((funcionalidade) => (
               <div key={funcionalidade.key} className="flex items-center justify-between p-4 border rounded-lg">

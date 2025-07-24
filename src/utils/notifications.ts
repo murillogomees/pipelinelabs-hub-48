@@ -126,7 +126,7 @@ export async function createWelcomeNotifications() {
 
   await createSystemNotification({
     title: 'Configure suas integrações',
-    message: 'Para aproveitar ao máximo o sistema, configure suas integrações com marketplaces e outras ferramentas.',
+    message: 'Para aproveitar ao máximo o sistema, configure suas integrações e outras ferramentas.',
     type: 'info',
     action_url: '/configuracoes/integracoes'
   });

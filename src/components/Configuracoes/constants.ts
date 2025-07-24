@@ -31,7 +31,7 @@ export const SYSTEM_DEFAULTS = {
     ordem_servico: false,
     estoque_avancado: false,
     notas_fiscais: false,
-    marketplace: false
+    
   },
   notificacoes: {
     email_vendas: false,

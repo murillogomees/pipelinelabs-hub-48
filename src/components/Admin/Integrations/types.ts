@@ -10,7 +10,7 @@ export interface ConfigField {
 export interface IntegrationAvailable {
   id: string;
   name: string;
-  type: 'marketplace' | 'logistica' | 'financeiro' | 'api' | 'comunicacao' | 'contabilidade' | 'personalizada';
+  type: 'logistica' | 'financeiro' | 'api' | 'comunicacao' | 'contabilidade' | 'personalizada';
   description?: string;
   logo_url?: string;
   config_schema: ConfigField[];

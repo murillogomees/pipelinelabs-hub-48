@@ -41,7 +41,6 @@ interface ActiveIntegration {
 
 const getTypeColor = (type: string) => {
   const colors = {
-    marketplace: 'bg-blue-100 text-blue-800',
     logistica: 'bg-green-100 text-green-800',
     financeiro: 'bg-yellow-100 text-yellow-800',
     api: 'bg-purple-100 text-purple-800',
@@ -54,7 +53,6 @@ const getTypeColor = (type: string) => {
 
 const getTypeLabel = (type: string) => {
   const labels = {
-    marketplace: 'Marketplace',
     logistica: 'Logística',
     financeiro: 'Financeiro',
     api: 'API',

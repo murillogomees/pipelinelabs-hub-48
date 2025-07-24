@@ -52,7 +52,7 @@ const AdminStripe = React.lazy(() => import('@/pages/AdminStripe'));
 const AdminNFeConfig = React.lazy(() => import('@/pages/AdminNFeConfig'));
 import AdminVersions from '@/pages/AdminVersions';
 const Analytics = React.lazy(() => import('@/pages/Analytics'));
-const MarketplaceChannels = React.lazy(() => import('@/pages/admin/MarketplaceChannels'));
+
 
 // LGPD pages
 const Privacidade = React.lazy(() => import('@/pages/Privacidade'));
@@ -184,7 +184,7 @@ function RouteHandler() {
         <Route path="relatorios" element={<Relatorios />} />
         <Route path="integracoes" element={<Integracoes />} />
         <Route path="configuracoes" element={<Configuracoes />} />
-        <Route path="integracoes/marketplaces" element={<Suspense fallback={<PageLoader />}>{React.createElement(React.lazy(() => import('@/pages/MarketplaceIntegrations')))}</Suspense>} />
+        
         
         {/* Admin routes */}
         <Route path="admin" element={<ProtectedRoute requireAdmin><Admin /></ProtectedRoute>} />
@@ -201,7 +201,7 @@ function RouteHandler() {
         <Route path="admin/stripe" element={<ProtectedRoute requireSuperAdmin><AdminStripe /></ProtectedRoute>} />
         <Route path="admin/nfe-config" element={<ProtectedRoute requireSuperAdmin><AdminNFeConfig /></ProtectedRoute>} />
         <Route path="admin/versions" element={<ProtectedRoute requireSuperAdmin><AdminVersions /></ProtectedRoute>} />
-        <Route path="admin/marketplace-channels" element={<ProtectedRoute requireAdmin><MarketplaceChannels /></ProtectedRoute>} />
+        
         <Route path="analytics" element={<Analytics />} />
         
         {/* User routes */}

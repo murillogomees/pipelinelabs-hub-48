@@ -11,7 +11,7 @@ export const configFieldSchema = z.object({
 
 export const integrationFormSchema = z.object({
   name: z.string().min(1, 'Nome é obrigatório'),
-  type: z.enum(['marketplace', 'logistica', 'financeiro', 'api', 'comunicacao', 'contabilidade', 'personalizada']),
+  type: z.enum(['logistica', 'financeiro', 'api', 'comunicacao', 'contabilidade', 'personalizada']),
   description: z.string().optional(),
   logo_url: z.string().url('URL inválida').optional().or(z.literal('')),
   config_fields: z.array(configFieldSchema),
