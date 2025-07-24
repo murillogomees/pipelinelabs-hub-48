@@ -94,7 +94,7 @@ export function PersonaCard({
           {problems && problems.length > 0 && (
             <div className="space-y-2 text-center w-full mb-[15px]">
               <h4 className="font-semibold text-sm text-destructive mb-2 flex items-center justify-center gap-1.5">
-                😰 Principais Dores
+                 Principais Dores
               </h4>
               <ul className="text-xs text-muted-foreground space-y-1.5">
                 {problems.map((problem: string, i: number) => (
@@ -111,7 +111,7 @@ export function PersonaCard({
           {solutions && solutions.length > 0 && (
             <div className="space-y-2 text-center w-full">
               <h4 className="font-semibold text-sm text-success mb-2 flex items-center justify-center gap-1.5">
-                ✅ Soluções Pipeline Labs
+                 Soluções Pipeline Labs
               </h4>
               <ul className="text-xs space-y-1.5">
                 {solutions.map((solution: string, i: number) => (
