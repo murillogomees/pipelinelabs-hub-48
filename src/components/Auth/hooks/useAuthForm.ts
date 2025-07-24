@@ -34,8 +34,8 @@ export function useAuthForm({ onSuccess }: UseAuthFormProps = {}) {
   };
 
   const sanitizeErrorMessage = (errorMessage: string): string => {
-    if (errorMessage.includes('duplicate key value')) {
-      return 'Este email já está cadastrado';
+    if (errorMessage.includes('duplicate key value') || errorMessage.includes('Este email já está cadastrado')) {
+      return 'Este email já está cadastrado no sistema';
     }
     if (errorMessage.includes('Invalid login credentials')) {
       return 'Email ou senha incorretos';
@@ -52,6 +52,17 @@ export function useAuthForm({ onSuccess }: UseAuthFormProps = {}) {
     return errorMessage;
   };
 
+  const checkUserExists = async (email: string): Promise<boolean> => {
+    const { data, error } = await supabase
+      .from('profiles')
+      .select('user_id')
+      .eq('email', email)
+      .maybeSingle();
+    
+    if (error && error.code !== 'PGRST116') throw error; // PGRST116 = no rows returned
+    return !!data;
+  };
+
   const checkDocumentExists = async (cleanedDocument: string): Promise<boolean> => {
     const { data, error } = await supabase
       .from('companies')
@@ -59,7 +70,7 @@ export function useAuthForm({ onSuccess }: UseAuthFormProps = {}) {
       .eq('document', cleanedDocument)
       .maybeSingle();
     
-    if (error) throw error;
+    if (error && error.code !== 'PGRST116') throw error; // PGRST116 = no rows returned
     return !!data;
   };
 
@@ -70,6 +81,7 @@ export function useAuthForm({ onSuccess }: UseAuthFormProps = {}) {
   }) => {
     const cleanedDocument = cleanDocument(companyData.document);
     
+    // Verificação adicional de segurança (já foi verificado antes, mas garantindo)
     const documentExists = await checkDocumentExists(cleanedDocument);
     if (documentExists) {
       throw new Error('document_already_exists');
@@ -92,8 +104,18 @@ export function useAuthForm({ onSuccess }: UseAuthFormProps = {}) {
       .insert({
         user_id: userId,
         company_id: company.id,
-        role: 'admin',
+        user_type: 'contratante',
         is_active: true,
+        permissions: {
+          dashboard: true,
+          vendas: true,
+          produtos: true,
+          clientes: true,
+          financeiro: true,
+          notas_fiscais: true,
+          producao: true,
+          contratos: true,
+        },
       });
 
     if (associationError) throw associationError;
@@ -150,9 +172,22 @@ export function useAuthForm({ onSuccess }: UseAuthFormProps = {}) {
       throw new Error('Nome da empresa é obrigatório');
     }
 
+    // Verificar se o usuário já existe
+    const sanitizedEmail = sanitizeInput(formData.email.toLowerCase().trim());
+    const userExists = await checkUserExists(sanitizedEmail);
+    if (userExists) {
+      throw new Error('Este email já está cadastrado no sistema');
+    }
+
+    // Verificar se a empresa (documento) já existe
+    const cleanedDocument = cleanDocument(formData.document);
+    const documentExists = await checkDocumentExists(cleanedDocument);
+    if (documentExists) {
+      throw new Error('document_already_exists');
+    }
+
     cleanupAuthState();
     
-    const sanitizedEmail = sanitizeInput(formData.email.toLowerCase().trim());
     const sanitizedFirstName = sanitizeInput(formData.firstName.trim());
     const sanitizedLastName = sanitizeInput(formData.lastName.trim());
     
