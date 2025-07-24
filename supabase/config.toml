@@ -90,3 +90,6 @@ verify_jwt = false
 [functions.cache-manager]
 verify_jwt = true
 
+[functions.marketplace-auth]
+verify_jwt = true
+

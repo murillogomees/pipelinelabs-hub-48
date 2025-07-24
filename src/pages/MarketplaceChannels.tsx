@@ -1,10 +1,12 @@
-import { useState } from 'react';
-import { Plus, Search } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { Plus, Search, Settings, Zap, ExternalLink } from 'lucide-react';
 import { BaseLayout } from '@/components/Base/BaseLayout';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Skeleton } from '@/components/ui/skeleton';
+import { Badge } from '@/components/ui/badge';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -17,13 +19,21 @@ import {
 } from '@/components/ui/alert-dialog';
 import { ChannelDialog } from '@/components/MarketplaceChannels/ChannelDialog';
 import { ChannelCard } from '@/components/MarketplaceChannels/ChannelCard';
+import { AuthDialog } from '@/components/MarketplaceChannels/AuthDialog';
 import { useMarketplaceChannels, MarketplaceChannel } from '@/hooks/useMarketplaceChannels';
+import { useMarketplaceAuth } from '@/hooks/useMarketplaceAuth';
 
 export default function MarketplaceChannels() {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingChannel, setEditingChannel] = useState<MarketplaceChannel | undefined>();
   const [deletingChannelId, setDeletingChannelId] = useState<string>('');
   const [searchTerm, setSearchTerm] = useState('');
+  const [authDialog, setAuthDialog] = useState<{
+    open: boolean;
+    marketplace: string;
+    channelId?: string;
+  }>({ open: false, marketplace: '' });
+  const [connectionStatuses, setConnectionStatuses] = useState<Map<string, any>>(new Map());
 
   const {
     channels,
@@ -35,8 +45,34 @@ export default function MarketplaceChannels() {
     toggleChannelStatus,
     isCreating,
     isUpdating,
-    isDeleting,
+    isDeleting
   } = useMarketplaceChannels();
+
+  const { getConnectionStatus, disconnect } = useMarketplaceAuth();
+
+  // Check connection statuses on mount and when channels change
+  useEffect(() => {
+    const checkConnections = async () => {
+      const statusMap = new Map();
+      
+      for (const channel of channels) {
+        if (channel.slug && channel.status) {
+          try {
+            const status = await getConnectionStatus(channel.slug);
+            statusMap.set(channel.id, status);
+          } catch (error) {
+            console.error(`Failed to check connection for ${channel.slug}:`, error);
+          }
+        }
+      }
+      
+      setConnectionStatuses(statusMap);
+    };
+
+    if (channels.length > 0) {
+      checkConnections();
+    }
+  }, [channels, getConnectionStatus]);
 
   // Filtrar canais por termo de busca
   const filteredChannels = channels.filter(channel =>
@@ -97,6 +133,35 @@ export default function MarketplaceChannels() {
   const handleCloseDialog = () => {
     setIsDialogOpen(false);
     setEditingChannel(undefined);
+  };
+
+  const handleConnect = (channel: MarketplaceChannel) => {
+    setAuthDialog({
+      open: true,
+      marketplace: channel.slug,
+      channelId: channel.id
+    });
+  };
+
+  const handleDisconnect = async (channel: MarketplaceChannel) => {
+    try {
+      await disconnect(channel.slug, channel.id);
+      // Refresh connection status
+      const status = await getConnectionStatus(channel.slug);
+      setConnectionStatuses(prev => new Map(prev.set(channel.id, status)));
+    } catch (error) {
+      console.error('Disconnect failed:', error);
+    }
+  };
+
+  const handleAuthSuccess = () => {
+    setAuthDialog({ open: false, marketplace: '' });
+    // Refresh connection status for the connected channel
+    if (authDialog.channelId) {
+      getConnectionStatus(authDialog.marketplace).then(status => {
+        setConnectionStatuses(prev => new Map(prev.set(authDialog.channelId!, status)));
+      });
+    }
   };
 
   if (error) {
@@ -171,16 +236,135 @@ export default function MarketplaceChannels() {
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {filteredChannels.map((channel) => (
-              <ChannelCard
-                key={channel.id}
-                channel={channel}
-                onEdit={handleEdit}
-                onDelete={handleDelete}
-                onToggleStatus={(id, status) => toggleChannelStatus({ id, status })}
-                isLoading={isDeleting}
-              />
-            ))}
+            {filteredChannels.map((channel) => {
+              const connectionStatus = connectionStatuses.get(channel.id);
+              
+              return (
+                <Card key={channel.id} className="hover:shadow-md transition-shadow">
+                  <CardHeader className="pb-3">
+                    <div className="flex items-center justify-between">
+                      <CardTitle className="flex items-center gap-2">
+                        <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-primary to-primary/70 flex items-center justify-center">
+                          <span className="text-white text-sm font-bold">
+                            {channel.name.charAt(0).toUpperCase()}
+                          </span>
+                        </div>
+                        {channel.name}
+                      </CardTitle>
+                      
+                      <div className="flex items-center gap-1">
+                        {channel.status && connectionStatus?.connected && (
+                          <Badge variant="default" className="bg-green-600 text-white">
+                            Conectado
+                          </Badge>
+                        )}
+                        {channel.status && !connectionStatus?.connected && (
+                          <Badge variant="destructive">
+                            Desconectado
+                          </Badge>
+                        )}
+                        {!channel.status && (
+                          <Badge variant="secondary">
+                            Inativo
+                          </Badge>
+                        )}
+                      </div>
+                    </div>
+                    
+                    {channel.description && (
+                      <p className="text-sm text-muted-foreground">
+                        {channel.description}
+                      </p>
+                    )}
+                  </CardHeader>
+                  
+                  <CardContent className="space-y-4">
+                    {connectionStatus?.profile && (
+                      <div className="p-3 bg-muted/50 rounded-lg">
+                        <h4 className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-2">
+                          Informações da Conta
+                        </h4>
+                        <div className="space-y-1">
+                          {connectionStatus.profile.name && (
+                            <p className="text-sm">
+                              <span className="font-medium">Nome:</span> {connectionStatus.profile.name}
+                            </p>
+                          )}
+                          {connectionStatus.profile.email && (
+                            <p className="text-sm">
+                              <span className="font-medium">Email:</span> {connectionStatus.profile.email}
+                            </p>
+                          )}
+                          {connectionStatus.profile.id && (
+                            <p className="text-sm">
+                              <span className="font-medium">ID:</span> {connectionStatus.profile.id}
+                            </p>
+                          )}
+                        </div>
+                      </div>
+                    )}
+                    
+                    {connectionStatus?.error && (
+                      <Alert variant="destructive">
+                        <AlertDescription className="text-xs">
+                          {connectionStatus.error}
+                        </AlertDescription>
+                      </Alert>
+                    )}
+                    
+                    <div className="flex items-center gap-2">
+                      {channel.status && connectionStatus?.connected ? (
+                        <>
+                          <Button
+                            variant="outline" 
+                            size="sm"
+                            onClick={() => handleDisconnect(channel)}
+                            className="flex-1"
+                          >
+                            Desconectar
+                          </Button>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => handleEdit(channel)}
+                          >
+                            <Settings className="h-4 w-4" />
+                          </Button>
+                        </>
+                      ) : (
+                        <>
+                          <Button
+                            onClick={() => handleConnect(channel)}
+                            size="sm"
+                            className="flex-1"
+                            disabled={!channel.status}
+                          >
+                            <Zap className="h-4 w-4 mr-2" />
+                            Conectar
+                          </Button>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => handleEdit(channel)}
+                          >
+                            <Settings className="h-4 w-4" />
+                          </Button>
+                        </>
+                      )}
+                      
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handleDelete(channel.id)}
+                        className="text-destructive hover:text-destructive"
+                      >
+                        <Settings className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  </CardContent>
+                </Card>
+              );
+            })}
           </div>
         )}
       </div>
@@ -192,6 +376,15 @@ export default function MarketplaceChannels() {
         channel={editingChannel}
         onSubmit={handleSubmit}
         isLoading={isCreating || isUpdating}
+      />
+
+      {/* Auth Dialog */}
+      <AuthDialog
+        open={authDialog.open}
+        onOpenChange={(open) => setAuthDialog(prev => ({ ...prev, open }))}
+        marketplace={authDialog.marketplace}
+        channelId={authDialog.channelId}
+        onSuccess={handleAuthSuccess}
       />
 
       {/* Delete Confirmation */}
