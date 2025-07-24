@@ -1611,6 +1611,39 @@ export type Database = {
         }
         Relationships: []
       }
+      marketplace_channels: {
+        Row: {
+          created_at: string | null
+          description: string | null
+          id: string
+          logo_url: string | null
+          name: string
+          slug: string
+          status: boolean | null
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          logo_url?: string | null
+          name: string
+          slug: string
+          status?: boolean | null
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          logo_url?: string | null
+          name?: string
+          slug?: string
+          status?: boolean | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       nfe_items: {
         Row: {
           cofins_base: number | null

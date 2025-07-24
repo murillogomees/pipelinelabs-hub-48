@@ -52,7 +52,7 @@ const AdminStripe = React.lazy(() => import('@/pages/AdminStripe'));
 const AdminNFeConfig = React.lazy(() => import('@/pages/AdminNFeConfig'));
 import AdminVersions from '@/pages/AdminVersions';
 const Analytics = React.lazy(() => import('@/pages/Analytics'));
-
+const MarketplaceChannels = React.lazy(() => import('@/pages/MarketplaceChannels'));
 
 // LGPD pages
 const Privacidade = React.lazy(() => import('@/pages/Privacidade'));
@@ -184,7 +184,7 @@ function RouteHandler() {
         <Route path="relatorios" element={<Relatorios />} />
         <Route path="integracoes" element={<Integracoes />} />
         <Route path="configuracoes" element={<Configuracoes />} />
-        
+        <Route path="marketplace-channels" element={<MarketplaceChannels />} />
         
         {/* Admin routes */}
         <Route path="admin" element={<ProtectedRoute requireAdmin><Admin /></ProtectedRoute>} />

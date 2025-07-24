@@ -10,7 +10,7 @@ import {
   Settings, 
   BarChart3, 
   Zap, 
-  
+  Globe,
   Settings2,
   UserCheck,
   CreditCard,
@@ -83,6 +83,12 @@ export const menuItems = [
     title: 'Analytics',
     icon: Activity,
     path: '/app/analytics',
+    submenu: []
+  },
+  {
+    title: 'Marketplace Canais',
+    icon: Globe,
+    path: '/app/marketplace-channels',
     submenu: []
   },
   {
