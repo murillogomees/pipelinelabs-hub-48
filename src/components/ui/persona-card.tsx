@@ -106,7 +106,7 @@ export function PersonaCard({
           </div>
 
           {/* Espaço flexível para empurrar resultado para o bottom */}
-          <div className="flex-grow"></div>
+          <div></div>
 
           {/* Resultado - sempre no bottom */}
           <div className="flex-shrink-0 mt-auto">
