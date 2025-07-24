@@ -4345,7 +4345,7 @@ export type Database = {
           p_refresh_token?: string
           p_expires_in?: number
         }
-        Returns: boolean
+        Returns: undefined
       }
       register_stock_movement: {
         Args: {
