@@ -201,7 +201,7 @@ export function LandingPage() {
               O ERP completo, pensado para pequenos negócios
             </h2>
             <p className="text-lg md:text-xl text-muted-foreground mb-12">
-              Tudo que Você Precisa em Um Só Lugar
+              Gerencie todo seu negócio de forma inteligente e integrada
             </p>
           </div>
 
