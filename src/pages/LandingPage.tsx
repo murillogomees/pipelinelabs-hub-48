@@ -193,6 +193,41 @@ export function LandingPage() {
           </div>
         </section>}
 
+
+      {/* Pain/Personas Section */}
+      {personasSection && (
+        <section className="py-20 px-4 bg-muted/50">
+          <div className="container mx-auto">
+            <div className="text-center mb-16">
+              <h2 className="text-3xl md:text-4xl font-bold mb-4">
+                {personasSection.title}
+              </h2>
+              <p className="text-xl text-muted-foreground">
+                {personasSection.subtitle}
+              </p>
+            </div>
+
+            {/* Cards de personas com novo layout responsivo */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8 max-w-7xl mx-auto px-4">
+              {personasSection.content_data?.personas?.map((persona: any, index: number) => (
+                <PersonaCard
+                  key={index}
+                  name={persona.name}
+                  age={persona.age}
+                  location={persona.location}
+                  business={persona.business}
+                  image={persona.image}
+                  problems={persona.problems}
+                  solutions={persona.solutions}
+                  result={persona.result}
+                  className="h-full"
+                />
+              ))}
+            </div>
+          </div>
+        </section>
+       )}
+
       {/* ERP Modules Section */}
       <section className="py-20 px-4 bg-muted/30">
         <div className="container mx-auto">
@@ -289,40 +324,6 @@ export function LandingPage() {
           </div>
         </div>
       </section>
-
-      {/* Pain/Personas Section */}
-      {personasSection && (
-        <section className="py-20 px-4 bg-muted/50">
-          <div className="container mx-auto">
-            <div className="text-center mb-16">
-              <h2 className="text-3xl md:text-4xl font-bold mb-4">
-                {personasSection.title}
-              </h2>
-              <p className="text-xl text-muted-foreground">
-                {personasSection.subtitle}
-              </p>
-            </div>
-
-            {/* Cards de personas com novo layout responsivo */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8 max-w-7xl mx-auto px-4">
-              {personasSection.content_data?.personas?.map((persona: any, index: number) => (
-                <PersonaCard
-                  key={index}
-                  name={persona.name}
-                  age={persona.age}
-                  location={persona.location}
-                  business={persona.business}
-                  image={persona.image}
-                  problems={persona.problems}
-                  solutions={persona.solutions}
-                  result={persona.result}
-                  className="h-full"
-                />
-              ))}
-            </div>
-          </div>
-        </section>
-      )}
 
       {/* Features Section - DISABLED */}
       {false && featuresSection && <section className="py-20 px-4">
