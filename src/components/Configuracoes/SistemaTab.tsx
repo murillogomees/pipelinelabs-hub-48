@@ -8,14 +8,16 @@ import { Badge } from '@/components/ui/badge';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Settings, Users, Package, Bell, Webhook } from 'lucide-react';
 import { useCompanySettings } from '@/hooks/useCompanySettings';
-import { useSubscription } from '@/hooks/useSubscription';
+import { useCompanySubscription } from '@/hooks/useCompanySubscription';
+import { useCurrentCompany } from '@/hooks/useCurrentCompany';
 import { useToast } from '@/hooks/use-toast';
 import { SYSTEM_DEFAULTS, SUCCESS_MESSAGES } from './constants';
 
 export function SistemaTab() {
   const { settings, loading, updateSettings } = useCompanySettings();
   const { toast } = useToast();
-  const { subscription } = useSubscription();
+  const { data: currentCompany } = useCurrentCompany();
+  const { subscription, isSubscriptionActive } = useCompanySubscription(currentCompany?.company_id || '');
   const [formData, setFormData] = useState({
     crossdocking_padrao: 0,
     estoque_tolerancia_minima: 10,
@@ -90,8 +92,8 @@ export function SistemaTab() {
     if (!subscription) return null;
     
     return {
-      planoAtual: subscription.plans?.name || 'Plano não identificado',
-      usuariosPermitidos: subscription.plans?.user_limit || 1,
+      planoAtual: subscription.billing_plan?.name || 'Plano não identificado',
+      usuariosPermitidos: subscription.billing_plan?.max_users || 1,
       usuariosAtivos: 1 // TODO: Implementar contagem real de usuários ativos
     };
   };

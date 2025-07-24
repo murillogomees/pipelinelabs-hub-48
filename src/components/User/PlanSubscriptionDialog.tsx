@@ -3,7 +3,8 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { useSubscription } from '@/hooks/useSubscription';
+import { useCompanySubscription } from '@/hooks/useCompanySubscription';
+import { useCurrentCompany } from '@/hooks/useCurrentCompany';
 import { usePermissions } from '@/hooks/usePermissions';
 import { Crown, Users, Calendar, CreditCard, CheckCircle, XCircle, Clock, ArrowRight } from 'lucide-react';
 
@@ -14,7 +15,9 @@ interface PlanSubscriptionDialogProps {
 
 export function PlanSubscriptionDialog({ open, onOpenChange }: PlanSubscriptionDialogProps) {
   const { isSuperAdmin, isAdmin } = usePermissions();
-  const { subscription, isTrialActive, trialDaysLeft, daysUntilRenewal } = useSubscription();
+  const { data: currentCompany } = useCurrentCompany();
+  const { subscription, isTrialActive, daysUntilRenewal } = useCompanySubscription(currentCompany?.company_id || '');
+  const trialDaysLeft = subscription?.trial_end ? Math.ceil((new Date(subscription.trial_end).getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24)) : 0;
 
   const getStatusBadge = (status: string) => {
     switch (status) {
@@ -43,7 +46,7 @@ export function PlanSubscriptionDialog({ open, onOpenChange }: PlanSubscriptionD
   };
 
   const getTrialStatus = () => {
-    if (!isTrialActive || !subscription?.trial_end_date) return null;
+    if (!isTrialActive || !subscription?.trial_end) return null;
     
     return (
       <Card className="border-orange-200 bg-orange-50">
@@ -54,7 +57,7 @@ export function PlanSubscriptionDialog({ open, onOpenChange }: PlanSubscriptionD
               <p className="font-medium text-orange-800">Período de Teste Ativo</p>
               <p className="text-sm text-orange-600">
                 {trialDaysLeft > 0 
-                  ? `${trialDaysLeft} dias restantes até ${formatDate(subscription.trial_end_date)}`
+                  ? `${trialDaysLeft} dias restantes até ${formatDate(subscription.trial_end)}`
                   : 'Teste expira hoje!'
                 }
               </p>

@@ -7,7 +7,8 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Badge } from '@/components/ui/badge';
 import { Upload, Palette, Eye, Crown, AlertTriangle } from 'lucide-react';
 import { useCompanySettings } from '@/hooks/useCompanySettings';
-import { useSubscription } from '@/hooks/useSubscription';
+import { useCompanySubscription } from '@/hooks/useCompanySubscription';
+import { useCurrentCompany } from '@/hooks/useCurrentCompany';
 import { useToast } from '@/hooks/use-toast';
 import { CDNConfigSection } from './CDNConfigSection';
 import { useFileUpload } from './hooks/useFileUpload';
@@ -16,7 +17,8 @@ import { SUCCESS_MESSAGES, ERROR_MESSAGES } from './constants';
 
 export function PersonalizacaoTab() {
   const { settings, loading, updateSettings } = useCompanySettings();
-  const { subscription } = useSubscription();
+  const { data: currentCompany } = useCurrentCompany();
+  const { subscription, isSubscriptionActive } = useCompanySubscription(currentCompany?.company_id || '');
   const { toast } = useToast();
   const { uploading, handleFileUpload } = useFileUpload();
   const [formData, setFormData] = useState(BRANDING_DEFAULTS);
