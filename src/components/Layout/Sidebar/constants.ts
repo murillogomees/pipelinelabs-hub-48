@@ -121,7 +121,7 @@ export const menuItems = [
       { title: 'Stripe', path: '/app/admin/stripe', icon: CreditCard },
       { title: 'Logs de Auditoria', path: '/app/admin/audit-logs' },
       { title: 'Landing Page', path: '/app/admin/landing-page' },
-      { title: 'Engineering Notes', path: '/app/admin/engineer-notes', icon: Code2 }
+      
     ]
   }
 ];
