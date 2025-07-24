@@ -47,6 +47,7 @@ interface MarketplaceConnectionDialogProps {
   onSubmit: (data: any) => void;
   isLoading?: boolean;
   editingIntegration?: any;
+  selectedChannel?: string | null;
 }
 
 export const MarketplaceConnectionDialog = ({
@@ -54,14 +55,17 @@ export const MarketplaceConnectionDialog = ({
   onOpenChange,
   onSubmit,
   isLoading,
-  editingIntegration
+  editingIntegration,
+  selectedChannel
 }: MarketplaceConnectionDialogProps) => {
-  const [selectedMarketplace, setSelectedMarketplace] = useState<string>(editingIntegration?.marketplace || '');
+  const [selectedMarketplace, setSelectedMarketplace] = useState<string>(
+    selectedChannel || editingIntegration?.marketplace || ''
+  );
 
   const form = useForm<FormData>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      marketplace: '',
+      marketplace: selectedChannel || editingIntegration?.marketplace || '',
       auto_sync_enabled: true,
       sync_interval_minutes: 5,
       webhook_url: ''
