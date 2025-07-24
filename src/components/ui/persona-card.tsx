@@ -56,75 +56,56 @@ export function PersonaCard({
         </div>
       </div>
 
-      {/* Conteúdo do card com layout simétrico e fixo */}
-      <CardContent className="p-4 sm:p-6 flex flex-col h-full">
+      {/* Conteúdo do card */}
+      <CardContent className="p-4 sm:p-6 space-y-4">
         {/* Descrição da persona - logo abaixo da imagem */}
-        <div className="text-center mb-4">
+        <div className="text-center">
           <p className="text-base sm:text-lg lg:text-xl font-semibold text-foreground leading-tight">
             {business}
           </p>
         </div>
 
-        {/* Container flexível para manter layout simétrico */}
-        <div className="flex flex-col flex-1 space-y-4">
-          {/* Principais Dores - sempre no topo */}
-          <div className="flex-shrink-0">
+        {/* Seções de problemas, soluções e resultados - mantendo funcionalidade existente */}
+        {problems && problems.length > 0 && (
+          <div>
             <h4 className="font-semibold text-sm text-destructive mb-2 flex items-center gap-1">
               😰 Principais Dores
             </h4>
-            <div className="min-h-[60px] sm:min-h-[80px]">
-              {problems && problems.length > 0 ? (
-                <ul className="text-xs text-muted-foreground space-y-1">
-                  {problems.map((problem: string, i: number) => (
-                    <li key={i} className="flex items-start gap-1">
-                      <span className="text-destructive mt-0.5">•</span>
-                      {problem}
-                    </li>
-                  ))}
-                </ul>
-              ) : (
-                <p className="text-xs text-muted-foreground italic">Nenhuma dor identificada</p>
-              )}
-            </div>
+            <ul className="text-xs text-muted-foreground space-y-1">
+              {problems.map((problem: string, i: number) => (
+                <li key={i} className="flex items-start gap-1">
+                  <span className="text-destructive mt-0.5">•</span>
+                  {problem}
+                </li>
+              ))}
+            </ul>
           </div>
+        )}
 
-          {/* Soluções - sempre no meio */}
-          <div className="flex-1 flex flex-col justify-center">
+        {solutions && solutions.length > 0 && (
+          <div>
             <h4 className="font-semibold text-sm text-success mb-2 flex items-center gap-1">
               ✅ Soluções Pipeline Labs
             </h4>
-            <div className="min-h-[60px] sm:min-h-[80px]">
-              {solutions && solutions.length > 0 ? (
-                <ul className="text-xs space-y-1">
-                  {solutions.map((solution: string, i: number) => (
-                    <li key={i} className="flex items-start gap-1">
-                      <span className="text-success mt-0.5">•</span>
-                      <span dangerouslySetInnerHTML={{ __html: solution }} />
-                    </li>
-                  ))}
-                </ul>
-              ) : (
-                <p className="text-xs text-muted-foreground italic">Soluções em desenvolvimento</p>
-              )}
-            </div>
+            <ul className="text-xs space-y-1">
+              {solutions.map((solution: string, i: number) => (
+                <li key={i} className="flex items-start gap-1">
+                  <span className="text-success mt-0.5">•</span>
+                  <span dangerouslySetInnerHTML={{ __html: solution }} />
+                </li>
+              ))}
+            </ul>
           </div>
+        )}
 
-          {/* Resultado Alcançado - sempre no bottom */}
-          <div className="flex-shrink-0 mt-auto">
-            <div className="bg-muted/50 rounded-lg p-3 border-l-4 border-primary">
-              <h4 className="font-semibold text-sm text-primary mb-1 flex items-center gap-1">
-                🚀 Resultado Alcançado
-              </h4>
-              <div className="min-h-[40px] flex items-center">
-                {result ? (
-                  <p className="text-xs leading-relaxed">{result}</p>
-                ) : (
-                  <p className="text-xs text-muted-foreground italic">Resultado em análise</p>
-                )}
-              </div>
-            </div>
+        {result && (
+          <div className="bg-muted/50 rounded-lg p-3 border-l-4 border-primary">
+            <h4 className="font-semibold text-sm text-primary mb-1 flex items-center gap-1">
+              🚀 Resultado Alcançado
+            </h4>
+            <p className="text-xs leading-relaxed">{result}</p>
           </div>
-        </div>
+        )}
       </CardContent>
     </Card>
   );
