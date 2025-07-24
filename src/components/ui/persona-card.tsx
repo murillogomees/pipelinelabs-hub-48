@@ -66,7 +66,7 @@ export function PersonaCard({
         </div>
 
         {/* Layout flexível para distribuir seções simetricamente */}
-        <div className="flex-1 flex flex-col justify-between space-y-4">
+        <div className="flex-1 flex flex-col space-y-4">
           {/* Principais Dores - sempre no topo */}
           <div className="flex-shrink-0">
             {problems && problems.length > 0 && (
@@ -86,10 +86,10 @@ export function PersonaCard({
             )}
           </div>
 
-          {/* Soluções - sempre no meio */}
-          <div className="flex-1 flex items-center">
+          {/* Soluções - logo após as dores */}
+          <div className="flex-shrink-0">
             {solutions && solutions.length > 0 && (
-              <div className="w-full">
+              <div>
                 <h4 className="font-semibold text-sm text-success mb-2 flex items-center gap-1">
                   ✅ Soluções Pipeline Labs
                 </h4>
@@ -105,8 +105,11 @@ export function PersonaCard({
             )}
           </div>
 
+          {/* Espaço flexível para empurrar resultado para o bottom */}
+          <div className="flex-grow"></div>
+
           {/* Resultado - sempre no bottom */}
-          <div className="flex-shrink-0">
+          <div className="flex-shrink-0 mt-auto">
             {result && (
               <div className="bg-muted/50 rounded-lg p-3 border-l-4 border-primary">
                 <h4 className="font-semibold text-sm text-primary mb-1 flex items-center gap-1">
