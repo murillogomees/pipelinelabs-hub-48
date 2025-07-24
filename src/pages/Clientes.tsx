@@ -1,11 +1,11 @@
 import React, { useState } from 'react';
-import { Routes, Route, useLocation } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Plus, Users, Building2, Search, Edit, Trash2, UserCheck, UserX, Mail, Phone, MapPin, AlertCircle } from 'lucide-react';
 import { useCustomers } from '@/hooks/useCustomers';
 import { useSuppliers } from '@/hooks/useSuppliers';
@@ -547,15 +547,6 @@ function Fornecedores() {
 
 // Componente principal Clientes
 export function Clientes() {
-  const location = useLocation();
-  
-  // Determina a aba ativa baseada na URL
-  const getActiveTab = () => {
-    const path = location.pathname;
-    if (path.includes('/fornecedores')) return 'fornecedores';
-    return 'clientes'; // padrão
-  };
-
   return (
     <div className="space-y-6">
       <div>
@@ -563,11 +554,26 @@ export function Clientes() {
         <p className="text-muted-foreground">Gerencie clientes e fornecedores</p>
       </div>
 
-      
-      <Routes>
-        <Route index element={<ClientesLista />} />
-        <Route path="fornecedores" element={<Fornecedores />} />
-      </Routes>
+      <Tabs defaultValue="clientes" className="w-full">
+        <TabsList className="grid w-full grid-cols-2">
+          <TabsTrigger value="clientes" className="flex items-center gap-2">
+            <Users className="h-4 w-4" />
+            Clientes
+          </TabsTrigger>
+          <TabsTrigger value="fornecedores" className="flex items-center gap-2">
+            <Building2 className="h-4 w-4" />
+            Fornecedores
+          </TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="clientes">
+          <ClientesLista />
+        </TabsContent>
+
+        <TabsContent value="fornecedores">
+          <Fornecedores />
+        </TabsContent>
+      </Tabs>
     </div>
   );
 }

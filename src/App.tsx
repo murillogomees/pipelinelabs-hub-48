@@ -175,17 +175,14 @@ function RouteHandler() {
         <Route path="dashboard" element={<Dashboard />} />
         <Route path="vendas" element={<Vendas />} />
         <Route path="produtos/*" element={<Produtos />} />
-        <Route path="produtos/estoque" element={<Estoque />} />
         <Route path="compras" element={<Compras />} />
-        <Route path="clientes" element={<Clientes />} />
+        <Route path="clientes/*" element={<Clientes />} />
         <Route path="financeiro/*" element={<Financeiro />} />
         <Route path="notas-fiscais/*" element={<NotasFiscais />} />
         <Route path="producao" element={<Producao />} />
         <Route path="relatorios" element={<Relatorios />} />
         <Route path="integracoes" element={<Integracoes />} />
         <Route path="configuracoes" element={<Configuracoes />} />
-        
-        <Route path="configuracoes/integracoes" element={<ConfiguracoesIntegracoes />} />
         <Route path="integracoes/marketplaces" element={<Suspense fallback={<PageLoader />}>{React.createElement(React.lazy(() => import('@/pages/MarketplaceIntegrations')))}</Suspense>} />
         
         {/* Admin routes */}
