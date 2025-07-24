@@ -5,67 +5,67 @@ interface MockupDashboardProps {
 }
 export const MockupDashboard = ({
   className = ""
-}: MockupDashboardProps) => <div className={`bg-card border border-border rounded-xl p-6 shadow-lg h-[400px] ${className}`}>
+}: MockupDashboardProps) => <div className={`bg-card border border-border rounded-xl p-3 sm:p-4 md:p-6 shadow-lg h-[280px] sm:h-[320px] md:h-[400px] overflow-hidden ${className}`}>
     {/* Header */}
-    <div className="flex items-center justify-between mb-4">
-      <div className="flex items-center gap-2">
-        <BarChart3 className="h-5 w-5 text-blue-600" />
-        <h3 className="text-lg font-bold text-gray-800">Dashboard Completo</h3>
+    <div className="flex items-center justify-between mb-2 sm:mb-3 md:mb-4">
+      <div className="flex items-center gap-1 sm:gap-2">
+        <BarChart3 className="h-4 w-4 sm:h-5 sm:w-5 text-blue-600" />
+        <h3 className="text-sm sm:text-base md:text-lg font-bold text-gray-800">Dashboard Completo</h3>
       </div>
-      <div className="flex gap-2">
-        <span className="bg-green-100 text-green-800 px-2 py-1 rounded-full text-xs font-medium">
+      <div className="flex gap-1 sm:gap-2">
+        <span className="bg-green-100 text-green-800 px-1 sm:px-2 py-0.5 sm:py-1 rounded-full text-xs font-medium">
           Online
         </span>
-        <Settings className="h-4 w-4 text-gray-500" />
+        <Settings className="h-3 w-3 sm:h-4 sm:w-4 text-gray-500" />
       </div>
     </div>
 
     {/* Main Content */}
-    <div className="space-y-4">
+    <div className="space-y-2 sm:space-y-3 md:space-y-4">
       {/* Metrics Row */}
-      <div className="grid grid-cols-2 gap-3">
-        <div className="bg-gradient-to-br from-emerald-50 to-emerald-100 border border-emerald-200 rounded-lg p-3">
+      <div className="grid grid-cols-2 gap-2 sm:gap-3">
+        <div className="bg-gradient-to-br from-emerald-50 to-emerald-100 border border-emerald-200 rounded-lg p-2 sm:p-3">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-xs text-emerald-700 mb-1">Vendas Hoje</p>
-              <p className="text-lg font-bold text-emerald-800">R$ 8.247</p>
+              <p className="text-xs text-emerald-700 mb-0.5 sm:mb-1">Vendas Hoje</p>
+              <p className="text-sm sm:text-base md:text-lg font-bold text-emerald-800">R$ 8.247</p>
             </div>
-            <DollarSign className="h-6 w-6 text-emerald-600" />
+            <DollarSign className="h-4 w-4 sm:h-5 sm:w-5 md:h-6 md:w-6 text-emerald-600" />
           </div>
         </div>
 
-        <div className="bg-gradient-to-br from-blue-50 to-blue-100 border border-blue-200 rounded-lg p-3">
+        <div className="bg-gradient-to-br from-blue-50 to-blue-100 border border-blue-200 rounded-lg p-2 sm:p-3">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-xs text-blue-700 mb-1">Pedidos</p>
-              <p className="text-lg font-bold text-blue-800">127</p>
+              <p className="text-xs text-blue-700 mb-0.5 sm:mb-1">Pedidos</p>
+              <p className="text-sm sm:text-base md:text-lg font-bold text-blue-800">127</p>
             </div>
-            <ShoppingCart className="h-6 w-6 text-blue-600" />
+            <ShoppingCart className="h-4 w-4 sm:h-5 sm:w-5 md:h-6 md:w-6 text-blue-600" />
           </div>
         </div>
       </div>
 
       {/* Chart Section */}
-      <div className="bg-gradient-to-br from-blue-50 to-purple-50 rounded-lg p-4">
-        <div className="flex items-center gap-2 mb-3">
-          <TrendingUp className="h-4 w-4 text-blue-600" />
-          <span className="text-sm font-medium text-gray-800">Evolução de Vendas</span>
+      <div className="bg-gradient-to-br from-blue-50 to-purple-50 rounded-lg p-2 sm:p-3 md:p-4">
+        <div className="flex items-center gap-1 sm:gap-2 mb-2 sm:mb-3">
+          <TrendingUp className="h-3 w-3 sm:h-4 sm:w-4 text-blue-600" />
+          <span className="text-xs sm:text-sm font-medium text-gray-800">Evolução de Vendas</span>
         </div>
-        <div className="h-24 relative overflow-hidden">
-          <div className="absolute bottom-0 left-0 w-full h-full flex items-end justify-around p-2">
-            <div className="bg-blue-500 w-2 h-8 rounded-t"></div>
-            <div className="bg-blue-500 w-2 h-12 rounded-t"></div>
-            <div className="bg-emerald-500 w-2 h-16 rounded-t"></div>
-            <div className="bg-emerald-500 w-2 h-20 rounded-t"></div>
-            <div className="bg-purple-500 w-2 h-14 rounded-t"></div>
+        <div className="h-16 sm:h-20 md:h-24 relative overflow-hidden">
+          <div className="absolute bottom-0 left-0 w-full h-full flex items-end justify-around p-1 sm:p-2">
+            <div className="bg-blue-500 w-1.5 sm:w-2 h-6 sm:h-8 rounded-t"></div>
+            <div className="bg-blue-500 w-1.5 sm:w-2 h-8 sm:h-12 rounded-t"></div>
+            <div className="bg-emerald-500 w-1.5 sm:w-2 h-10 sm:h-16 rounded-t"></div>
+            <div className="bg-emerald-500 w-1.5 sm:w-2 h-12 sm:h-20 rounded-t"></div>
+            <div className="bg-purple-500 w-1.5 sm:w-2 h-9 sm:h-14 rounded-t"></div>
           </div>
         </div>
       </div>
 
       {/* Recent Activity */}
-      <div className="space-y-2">
-        <div className="flex items-center gap-2 p-2 bg-gray-50 rounded-lg">
-          <CheckCircle className="h-3 w-3 text-green-600" />
+      <div className="space-y-1 sm:space-y-2">
+        <div className="flex items-center gap-1 sm:gap-2 p-1.5 sm:p-2 bg-gray-50 rounded-lg">
+          <CheckCircle className="h-2.5 w-2.5 sm:h-3 sm:w-3 text-green-600 flex-shrink-0" />
           <span className="text-xs text-gray-700 truncate">Venda #1247 finalizada - R$ 189,90</span>
         </div>
         
@@ -74,7 +74,7 @@ export const MockupDashboard = ({
   </div>;
 export const MockupPDV = ({
   className = ""
-}: MockupPDVProps) => <div className={`bg-card border border-border rounded-xl p-6 shadow-lg h-[400px] ${className}`}>
+}: MockupPDVProps) => <div className={`bg-card border border-border rounded-xl p-3 sm:p-4 md:p-6 shadow-lg h-[280px] sm:h-[320px] md:h-[400px] overflow-hidden ${className}`}>
     {/* Header */}
     <div className="flex items-center justify-between mb-4">
       <div className="flex items-center gap-2">
@@ -137,7 +137,7 @@ interface MockupPDVProps {
 }
 export const MockupNFe = ({
   className = ""
-}: MockupNFeProps) => <div className={`bg-card border border-border rounded-xl p-6 shadow-lg h-[400px] ${className}`}>
+}: MockupNFeProps) => <div className={`bg-card border border-border rounded-xl p-3 sm:p-4 md:p-6 shadow-lg h-[280px] sm:h-[320px] md:h-[400px] overflow-hidden ${className}`}>
     {/* Header */}
     <div className="flex items-center justify-between mb-4">
       <div className="flex items-center gap-2">
@@ -196,7 +196,7 @@ interface MockupNFeProps {
 }
 export const MockupInventory = ({
   className = ""
-}: MockupInventoryProps) => <div className={`bg-card border border-border rounded-xl p-6 shadow-lg h-[400px] ${className}`}>
+}: MockupInventoryProps) => <div className={`bg-card border border-border rounded-xl p-3 sm:p-4 md:p-6 shadow-lg h-[280px] sm:h-[320px] md:h-[400px] overflow-hidden ${className}`}>
     {/* Header */}
     <div className="flex items-center justify-between mb-4">
       <div className="flex items-center gap-2">
@@ -283,7 +283,7 @@ interface MockupInventoryProps {
 }
 export const MockupFinancial = ({
   className = ""
-}: MockupFinancialProps) => <div className={`bg-card border border-border rounded-xl p-6 shadow-lg h-[400px] ${className}`}>
+}: MockupFinancialProps) => <div className={`bg-card border border-border rounded-xl p-3 sm:p-4 md:p-6 shadow-lg h-[280px] sm:h-[320px] md:h-[400px] overflow-hidden ${className}`}>
     {/* Header */}
     <div className="flex items-center justify-between mb-4">
       <div className="flex items-center gap-2">
@@ -356,7 +356,7 @@ interface MockupFinancialProps {
 }
 export const MockupNotifications = ({
   className = ""
-}: MockupNotificationsProps) => <div className={`bg-card border border-border rounded-xl p-6 shadow-lg h-[400px] ${className}`}>
+}: MockupNotificationsProps) => <div className={`bg-card border border-border rounded-xl p-3 sm:p-4 md:p-6 shadow-lg h-[280px] sm:h-[320px] md:h-[400px] overflow-hidden ${className}`}>
     {/* Header */}
     <div className="flex items-center justify-between mb-4">
       <div className="flex items-center gap-2">
@@ -432,7 +432,7 @@ interface MockupNotificationsProps {
 }
 export const MockupDailySales = ({
   className = ""
-}: MockupDailySalesProps) => <div className={`bg-card border border-border rounded-xl p-6 shadow-lg h-[400px] ${className}`}>
+}: MockupDailySalesProps) => <div className={`bg-card border border-border rounded-xl p-3 sm:p-4 md:p-6 shadow-lg h-[280px] sm:h-[320px] md:h-[400px] overflow-hidden ${className}`}>
     {/* Header */}
     <div className="flex items-center justify-between mb-4">
       <div className="flex items-center gap-2">

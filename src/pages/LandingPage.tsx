@@ -262,26 +262,28 @@ export function LandingPage() {
             </p>
           </div>
 
-          {/* Grid de Cards com Mockups Modernos */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 max-w-screen-xl mx-auto">
+          {/* Grid de Cards com Mockups Modernos - Sistema responsivo */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6 max-w-screen-xl mx-auto">
             
             {/* Card Financeiro */}
             <div 
-              className="group rounded-xl shadow-lg overflow-hidden relative bg-card hover:shadow-xl transition-all duration-300 hover:scale-105"
+              className="group rounded-xl shadow-lg overflow-hidden relative bg-card hover:shadow-xl transition-all duration-300 hover:scale-105 h-fit"
               aria-label="Card de Módulo Financeiro"
             >
               <div className="relative aspect-[4/3] overflow-hidden">
-                <MockupFinancial className="w-full h-full object-cover" />
+                <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-card to-muted/30">
+                  <MockupFinancial className="w-full h-full scale-90 sm:scale-95 md:scale-100" />
+                </div>
                 <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-black/30 to-transparent"></div>
-                <div className="absolute bottom-4 left-4 flex items-center text-primary-foreground drop-shadow-lg">
-                  <Banknote className="w-5 h-5 text-primary-foreground mr-2" />
-                  <h3 className="text-xl md:text-2xl font-semibold drop-shadow-md">
+                <div className="absolute bottom-2 sm:bottom-3 md:bottom-4 left-2 sm:left-3 md:left-4 flex items-center text-primary-foreground drop-shadow-lg">
+                  <Banknote className="w-4 h-4 sm:w-5 sm:h-5 text-primary-foreground mr-1 sm:mr-2" />
+                  <h3 className="text-lg sm:text-xl md:text-2xl font-semibold drop-shadow-md">
                     Financeiro
                   </h3>
                 </div>
               </div>
-              <div className="mt-4 px-4 pb-6">
-                <p className="text-base md:text-lg text-card-foreground font-medium leading-relaxed">
+              <div className="p-3 sm:p-4 md:p-6">
+                <p className="text-sm sm:text-base md:text-lg text-card-foreground font-medium leading-relaxed">
                   Controle financeiro completo com fluxo de caixa e cobranças automatizadas.
                 </p>
               </div>
