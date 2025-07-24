@@ -114,7 +114,7 @@ export function LandingPage() {
             {/* Demonstração do Sistema */}
             <div className="max-w-7xl mx-auto mt-16">
               <div className="bg-gradient-to-br from-primary/5 via-primary/10 to-blue-50 rounded-3xl p-8 border border-primary/20 shadow-2xl">
-                <div className="text-center mb-8">
+                <div className="text-center mb-12">
                   <div className="inline-flex items-center gap-2 bg-white/80 px-4 py-2 rounded-full text-sm font-medium mb-4">
                     <div className="w-3 h-3 bg-green-500 rounded-full animate-pulse"></div>
                     Sistema em funcionamento
@@ -123,71 +123,147 @@ export function LandingPage() {
                   <p className="text-muted-foreground">Interface real do Pipeline Labs funcionando</p>
                 </div>
                      
-                {/* Grid de mockups - Sistema completo */}
-                <div className="grid lg:grid-cols-2 gap-8 mb-8">
-                  <div className="space-y-6">
-                    <MockupDashboard className="transform hover:scale-105 transition-transform" />
-                    <div className="text-center">
-                      
-                      
+                {/* Grid de mockups modernos - Dashboard e Notificações */}
+                <div className="grid lg:grid-cols-2 gap-8 mb-12">
+                  <div 
+                    className="relative rounded-xl shadow-lg overflow-hidden bg-white group hover:shadow-xl transition-all duration-300"
+                    aria-label="Card de Módulo Dashboard"
+                  >
+                    <div className="relative">
+                      <MockupDashboard className="w-full h-auto aspect-[4/3] object-cover" />
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-black/30 to-transparent"></div>
+                      <div className="absolute bottom-4 left-4 flex items-center text-white">
+                        <BarChart3 className="w-5 h-5 text-white mr-2" />
+                        <h4 className="text-2xl font-semibold drop-shadow-md">Dashboard</h4>
+                      </div>
+                    </div>
+                    <div className="mt-4 px-4 pb-4">
+                      <p className="text-lg text-gray-800 font-medium">
+                        Visão completa do seu negócio com métricas em tempo real e gráficos interativos.
+                      </p>
                     </div>
                   </div>
-                  <div className="space-y-6">
-                    <MockupNotifications className="transform hover:scale-105 transition-transform" />
-                    <div className="text-center">
-                      
-                      
+
+                  <div 
+                    className="relative rounded-xl shadow-lg overflow-hidden bg-white group hover:shadow-xl transition-all duration-300"
+                    aria-label="Card de Módulo Notificações"
+                  >
+                    <div className="relative">
+                      <MockupNotifications className="w-full h-auto aspect-[4/3] object-cover" />
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-black/30 to-transparent"></div>
+                      <div className="absolute bottom-4 left-4 flex items-center text-white">
+                        <Bell className="w-5 h-5 text-white mr-2" />
+                        <h4 className="text-2xl font-semibold drop-shadow-md">Notificações</h4>
+                      </div>
+                    </div>
+                    <div className="mt-4 px-4 pb-4">
+                      <p className="text-lg text-gray-800 font-medium">
+                        Acompanhe pedidos, vendas e alertas importantes em tempo real.
+                      </p>
                     </div>
                   </div>
                 </div>
 
-                {/* Segunda linha - Vendas e sistemas específicos */}
-                <div className="grid lg:grid-cols-3 gap-8 mb-8">
-                  <div className="space-y-6">
-                    <MockupDailySales className="transform hover:scale-105 transition-transform" />
-                    <div className="text-center">
-                      
-                      
+                {/* Vendas e sistemas específicos */}
+                <div className="grid lg:grid-cols-3 gap-8 mb-12">
+                  <div 
+                    className="relative rounded-xl shadow-lg overflow-hidden bg-white group hover:shadow-xl transition-all duration-300"
+                    aria-label="Card de Módulo Vendas"
+                  >
+                    <div className="relative">
+                      <MockupDailySales className="w-full h-auto aspect-[4/3] object-cover" />
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-black/30 to-transparent"></div>
+                      <div className="absolute bottom-4 left-4 flex items-center text-white">
+                        <TrendingUp className="w-5 h-5 text-white mr-2" />
+                        <h4 className="text-xl font-semibold drop-shadow-md">Vendas</h4>
+                      </div>
+                    </div>
+                    <div className="mt-4 px-4 pb-4">
+                      <p className="text-base text-gray-800 font-medium">
+                        Gestão completa de vendas com controle de comissões e relatórios detalhados.
+                      </p>
                     </div>
                   </div>
-                  <div className="space-y-6">
-                    <MockupPDV className="transform hover:scale-105 transition-transform" />
-                    <div className="text-center">
-                      
-                      
+
+                  <div 
+                    className="relative rounded-xl shadow-lg overflow-hidden bg-white group hover:shadow-xl transition-all duration-300"
+                    aria-label="Card de Módulo PDV"
+                  >
+                    <div className="relative">
+                      <MockupPDV className="w-full h-auto aspect-[4/3] object-cover" />
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-black/30 to-transparent"></div>
+                      <div className="absolute bottom-4 left-4 flex items-center text-white">
+                        <ShoppingCart className="w-5 h-5 text-white mr-2" />
+                        <h4 className="text-xl font-semibold drop-shadow-md">PDV</h4>
+                      </div>
+                    </div>
+                    <div className="mt-4 px-4 pb-4">
+                      <p className="text-base text-gray-800 font-medium">
+                        Ponto de venda intuitivo para agilizar atendimentos e processar pagamentos.
+                      </p>
                     </div>
                   </div>
-                  <div className="space-y-6">
-                    <MockupNFe className="transform hover:scale-105 transition-transform" />
-                    <div className="text-center">
-                      
-                      
+
+                  <div 
+                    className="relative rounded-xl shadow-lg overflow-hidden bg-white group hover:shadow-xl transition-all duration-300"
+                    aria-label="Card de Módulo NFe"
+                  >
+                    <div className="relative">
+                      <MockupNFe className="w-full h-auto aspect-[4/3] object-cover" />
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-black/30 to-transparent"></div>
+                      <div className="absolute bottom-4 left-4 flex items-center text-white">
+                        <FileText className="w-5 h-5 text-white mr-2" />
+                        <h4 className="text-xl font-semibold drop-shadow-md">NFe</h4>
+                      </div>
+                    </div>
+                    <div className="mt-4 px-4 pb-4">
+                      <p className="text-base text-gray-800 font-medium">
+                        Emissão automática de notas fiscais com validação completa da Receita Federal.
+                      </p>
                     </div>
                   </div>
                 </div>
 
-                {/* Terceira linha - Estoque e financeiro */}
+                {/* Estoque e financeiro */}
                 <div className="grid md:grid-cols-2 gap-8 mb-6">
-                  <div className="space-y-6">
-                    <MockupInventory className="transform hover:scale-105 transition-transform" />
-                    <div className="text-center">
-                      
-                      
+                  <div 
+                    className="relative rounded-xl shadow-lg overflow-hidden bg-white group hover:shadow-xl transition-all duration-300"
+                    aria-label="Card de Módulo Estoque"
+                  >
+                    <div className="relative">
+                      <MockupInventory className="w-full h-auto aspect-[4/3] object-cover" />
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-black/30 to-transparent"></div>
+                      <div className="absolute bottom-4 left-4 flex items-center text-white">
+                        <Package className="w-5 h-5 text-white mr-2" />
+                        <h4 className="text-2xl font-semibold drop-shadow-md">Estoque</h4>
+                      </div>
+                    </div>
+                    <div className="mt-4 px-6 pb-4">
+                      <p className="text-lg text-gray-800 font-medium">
+                        Controle inteligente de estoque com alertas automáticos e movimentações detalhadas.
+                      </p>
                     </div>
                   </div>
-                  <div className="space-y-6">
-                    <MockupFinancial className="transform hover:scale-105 transition-transform" />
-                    <div className="text-center">
-                      
-                      
+
+                  <div 
+                    className="relative rounded-xl shadow-lg overflow-hidden bg-white group hover:shadow-xl transition-all duration-300"
+                    aria-label="Card de Módulo Financeiro"
+                  >
+                    <div className="relative">
+                      <MockupFinancial className="w-full h-auto aspect-[4/3] object-cover" />
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-black/30 to-transparent"></div>
+                      <div className="absolute bottom-4 left-4 flex items-center text-white">
+                        <DollarSign className="w-5 h-5 text-white mr-2" />
+                        <h4 className="text-2xl font-semibold drop-shadow-md">Financeiro</h4>
+                      </div>
+                    </div>
+                    <div className="mt-4 px-6 pb-4">
+                      <p className="text-lg text-gray-800 font-medium">
+                        Controle financeiro completo com fluxo de caixa, DRE e cobranças automatizadas.
+                      </p>
                     </div>
                   </div>
                 </div>
-
-                {/* Features destacadas */}
-                {heroSection.content_data?.mockup_features && <div className="grid md:grid-cols-3 gap-4">
-                    {heroSection.content_data.mockup_features.map((feature: string, index: number) => {})}
-                  </div>}
               </div>
             </div>
           </div>
