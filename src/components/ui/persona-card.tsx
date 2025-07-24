@@ -79,28 +79,28 @@ export function PersonaCard({
         </div>
       </div>
 
-      {/* Conteúdo do card otimizado com altura reduzida */}
-      <CardContent className="flex flex-col justify-center items-center py-3 px-3 sm:px-4">
-        {/* Descrição da persona - compacta */}
-        <div className="text-center w-full">
-          <p className="text-sm sm:text-base font-semibold text-foreground truncate whitespace-nowrap overflow-hidden mb-3">
+      {/* Conteúdo do card com layout centralizado e altura uniforme */}
+      <CardContent className="flex flex-col justify-center items-center min-h-[120px] py-6 px-4 sm:px-6">
+        {/* Descrição da persona - centralizada */}
+        <div className="text-center w-full max-w-[90%]">
+          <p className="text-sm sm:text-base md:text-lg font-semibold text-foreground truncate whitespace-nowrap overflow-hidden mb-[15px]">
             {business}
           </p>
         </div>
 
-        {/* Layout compacto com espaçamento otimizado */}
-        <div className="flex-1 flex flex-col justify-center items-center w-full gap-3 sm:gap-4">
+        {/* Layout padronizado com espaçamento consistente e design responsivo */}
+        <div className="flex-1 flex flex-col justify-center items-center w-full max-w-full px-2 sm:px-4 lg:px-6 gap-4 sm:gap-5 lg:gap-6">
           {/* Principais Dores */}
           {problems && problems.length > 0 && (
-            <div className="w-full text-center px-2 py-2 sm:px-3 sm:py-3 space-y-2" style={{ WebkitTextSizeAdjust: '100%' }}>
-              <h4 className="font-semibold text-xs sm:text-sm lg:text-base text-destructive mb-2 flex items-center justify-center gap-1">
+            <div className="w-full max-w-full text-center px-3 py-4 sm:px-4 sm:py-5 lg:px-6 lg:py-6 space-y-3 sm:space-y-4" style={{ WebkitTextSizeAdjust: '100%' }}>
+              <h4 className="font-semibold text-sm sm:text-base lg:text-lg text-destructive mb-3 sm:mb-4 flex items-center justify-center gap-1.5">
                  Principais Dores
               </h4>
-              <ul className="text-xs sm:text-sm text-muted-foreground space-y-1 sm:space-y-1.5">
+              <ul className="text-xs sm:text-sm lg:text-base text-muted-foreground space-y-2 sm:space-y-2.5 lg:space-y-3">
                 {problems.map((problem: string, i: number) => (
-                  <li key={i} className="flex items-start gap-1.5 text-left">
-                    <span className="text-destructive mt-0.5 flex-shrink-0 text-xs">•</span>
-                    <span className="leading-snug">{problem}</span>
+                  <li key={i} className="flex items-start gap-2 text-left">
+                    <span className="text-destructive mt-0.5 flex-shrink-0">•</span>
+                    <span className="leading-relaxed">{problem}</span>
                   </li>
                 ))}
               </ul>
@@ -109,15 +109,15 @@ export function PersonaCard({
 
           {/* Soluções Pipeline Labs */}
           {solutions && solutions.length > 0 && (
-            <div className="w-full text-center px-2 py-2 sm:px-3 sm:py-3 space-y-2" style={{ WebkitTextSizeAdjust: '100%' }}>
-              <h4 className="font-semibold text-xs sm:text-sm lg:text-base text-success mb-2 flex items-center justify-center gap-1">
+            <div className="w-full max-w-full text-center px-3 py-4 sm:px-4 sm:py-5 lg:px-6 lg:py-6 space-y-3 sm:space-y-4" style={{ WebkitTextSizeAdjust: '100%' }}>
+              <h4 className="font-semibold text-sm sm:text-base lg:text-lg text-success mb-3 sm:mb-4 flex items-center justify-center gap-1.5">
                  Soluções Pipeline Labs
               </h4>
-              <ul className="text-xs sm:text-sm space-y-1 sm:space-y-1.5">
+              <ul className="text-xs sm:text-sm lg:text-base space-y-2 sm:space-y-2.5 lg:space-y-3">
                 {solutions.map((solution: string, i: number) => (
-                  <li key={i} className="flex items-start gap-1.5 text-left">
-                    <span className="text-success mt-0.5 flex-shrink-0 text-xs">•</span>
-                    <span className="leading-snug" dangerouslySetInnerHTML={{ __html: solution }} />
+                  <li key={i} className="flex items-start gap-2 text-left">
+                    <span className="text-success mt-0.5 flex-shrink-0">•</span>
+                    <span className="leading-relaxed" dangerouslySetInnerHTML={{ __html: solution }} />
                   </li>
                 ))}
               </ul>
@@ -126,11 +126,11 @@ export function PersonaCard({
 
           {/* Resultado Alcançado */}
           {result && (
-            <div className="w-full bg-muted/50 rounded-lg px-2 py-2 sm:px-3 sm:py-3 border-l-4 border-primary text-center space-y-2" style={{ WebkitTextSizeAdjust: '100%' }}>
-              <h4 className="font-semibold text-xs sm:text-sm lg:text-base text-primary mb-2 flex items-center justify-center gap-1">
+            <div className="w-full max-w-full bg-muted/50 rounded-lg px-3 py-4 sm:px-4 sm:py-5 lg:px-6 lg:py-6 border-l-4 border-primary text-center space-y-3 sm:space-y-4" style={{ WebkitTextSizeAdjust: '100%' }}>
+              <h4 className="font-semibold text-sm sm:text-base lg:text-lg text-primary mb-3 sm:mb-4 flex items-center justify-center gap-1.5">
                 🚀 Resultado Alcançado
               </h4>
-              <p className="text-xs sm:text-sm leading-snug text-foreground">{result}</p>
+              <p className="text-xs sm:text-sm lg:text-base leading-relaxed text-foreground">{result}</p>
             </div>
           )}
         </div>
