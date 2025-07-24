@@ -1,7 +1,14 @@
 // Centralized exports for UI components
 
 // Base shadcn-ui components
-export * from './accordion';
+// Enhanced UI Components - Optimized for Pipeline Labs
+export * from './responsive-layout';
+export { OptimizedCard, StatsCard as OptimizedStatsCard, FeatureCard } from './optimized-card';
+export { Button as EnhancedButton, buttonVariants as enhancedButtonVariants } from './enhanced-button';
+export { OptimizedInput, OptimizedTextarea } from './optimized-input';
+export * from './optimized-loading';
+
+// Original shadcn components
 export * from './alert';
 export * from './alert-dialog';
 export * from './avatar';

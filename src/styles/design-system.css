@@ -1,0 +1,306 @@
+// ============ SISTEMA DE DESIGN APRIMORADO ============
+// Responsive Grid System Utilities
+
+@layer components {
+  /* Responsive Grid System */
+  .grid-responsive {
+    @apply grid gap-4 grid-cols-1 sm:gap-6 md:gap-8;
+    @apply sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4;
+  }
+
+  .grid-responsive-2 {
+    @apply grid gap-4 grid-cols-1 sm:gap-6;
+    @apply sm:grid-cols-2;
+  }
+
+  .grid-responsive-3 {
+    @apply grid gap-4 grid-cols-1 sm:gap-6 md:gap-8;
+    @apply md:grid-cols-2 lg:grid-cols-3;
+  }
+
+  .grid-responsive-4 {
+    @apply grid gap-4 grid-cols-1 sm:gap-6 md:gap-8;
+    @apply sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4;
+  }
+
+  .grid-responsive-auto {
+    @apply grid gap-4 sm:gap-6 md:gap-8;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  }
+
+  /* Card System - Unified Visual Standards */
+  .card-system {
+    @apply bg-card text-card-foreground border border-border rounded-xl;
+    @apply shadow-sm hover:shadow-md transition-all duration-200;
+    @apply p-4 sm:p-6;
+  }
+
+  .card-system-compact {
+    @apply bg-card text-card-foreground border border-border rounded-lg;
+    @apply shadow-sm hover:shadow-md transition-all duration-200;
+    @apply p-3 sm:p-4;
+  }
+
+  .card-system-elevated {
+    @apply bg-card text-card-foreground border border-border rounded-xl;
+    @apply shadow-md hover:shadow-lg transition-all duration-200;
+    @apply p-6 sm:p-8;
+  }
+
+  /* Interactive Elements - Enhanced UX */
+  .interactive-element {
+    @apply transition-all duration-200 ease-out;
+    @apply hover:scale-[1.02] active:scale-[0.98];
+    @apply focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring;
+  }
+
+  .interactive-subtle {
+    @apply transition-all duration-200 ease-out;
+    @apply hover:bg-accent/50 active:bg-accent/70;
+    @apply focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring;
+  }
+
+  /* Typography System - Semantic & Responsive */
+  .heading-display {
+    @apply text-3xl sm:text-4xl lg:text-5xl xl:text-6xl font-bold tracking-tight;
+    @apply bg-gradient-to-r from-foreground to-foreground/80 bg-clip-text text-transparent;
+  }
+
+  .heading-section {
+    @apply text-2xl sm:text-3xl lg:text-4xl font-bold tracking-tight;
+    @apply text-foreground;
+  }
+
+  .heading-subsection {
+    @apply text-xl sm:text-2xl lg:text-3xl font-semibold tracking-tight;
+    @apply text-foreground;
+  }
+
+  .body-large {
+    @apply text-lg sm:text-xl text-muted-foreground leading-relaxed;
+  }
+
+  .body-default {
+    @apply text-base sm:text-lg text-muted-foreground leading-relaxed;
+  }
+
+  .body-small {
+    @apply text-sm sm:text-base text-muted-foreground;
+  }
+
+  /* Layout System - Consistent Spacing */
+  .layout-container {
+    @apply max-w-7xl mx-auto px-4 sm:px-6 lg:px-8;
+  }
+
+  .layout-section {
+    @apply py-12 sm:py-16 lg:py-20;
+  }
+
+  .layout-content {
+    @apply space-y-8 sm:space-y-12 lg:space-y-16;
+  }
+
+  /* Form System - Enhanced UX */
+  .form-field {
+    @apply space-y-2;
+  }
+
+  .form-input {
+    @apply w-full px-3 py-2 sm:px-4 sm:py-3;
+    @apply text-base border border-input rounded-md;
+    @apply bg-background placeholder:text-muted-foreground;
+    @apply focus:outline-none focus:ring-2 focus:ring-ring focus:border-transparent;
+    @apply transition-all duration-200;
+    /* Prevent iOS zoom */
+    font-size: 16px;
+  }
+
+  .form-input:focus {
+    @apply ring-2 ring-ring border-transparent;
+  }
+
+  /* Button System - Touch-Optimized */
+  .btn-primary {
+    @apply inline-flex items-center justify-center gap-2;
+    @apply min-h-[44px] px-4 py-2 sm:px-6 sm:py-3;
+    @apply text-sm sm:text-base font-medium;
+    @apply bg-primary text-primary-foreground;
+    @apply border border-transparent rounded-md;
+    @apply hover:bg-primary/90 active:bg-primary/80;
+    @apply focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring;
+    @apply transition-all duration-200;
+    @apply touch-manipulation cursor-pointer;
+  }
+
+  .btn-secondary {
+    @apply inline-flex items-center justify-center gap-2;
+    @apply min-h-[44px] px-4 py-2 sm:px-6 sm:py-3;
+    @apply text-sm sm:text-base font-medium;
+    @apply bg-secondary text-secondary-foreground;
+    @apply border border-border rounded-md;
+    @apply hover:bg-secondary/90 active:bg-secondary/80;
+    @apply focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring;
+    @apply transition-all duration-200;
+    @apply touch-manipulation cursor-pointer;
+  }
+
+  .btn-ghost {
+    @apply inline-flex items-center justify-center gap-2;
+    @apply min-h-[44px] px-4 py-2 sm:px-6 sm:py-3;
+    @apply text-sm sm:text-base font-medium;
+    @apply bg-transparent text-foreground;
+    @apply border border-transparent rounded-md;
+    @apply hover:bg-accent hover:text-accent-foreground;
+    @apply focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring;
+    @apply transition-all duration-200;
+    @apply touch-manipulation cursor-pointer;
+  }
+
+  /* Status System - Semantic Colors */
+  .status-success {
+    @apply bg-success/10 text-success border border-success/20 rounded-full;
+    @apply px-2 py-1 text-xs font-medium;
+  }
+
+  .status-warning {
+    @apply bg-warning/10 text-warning border border-warning/20 rounded-full;
+    @apply px-2 py-1 text-xs font-medium;
+  }
+
+  .status-error {
+    @apply bg-destructive/10 text-destructive border border-destructive/20 rounded-full;
+    @apply px-2 py-1 text-xs font-medium;
+  }
+
+  .status-info {
+    @apply bg-info/10 text-info border border-info/20 rounded-full;
+    @apply px-2 py-1 text-xs font-medium;
+  }
+
+  /* Chart System - Consistent Data Visualization */
+  .chart-container {
+    @apply w-full aspect-[16/9] sm:aspect-[2/1] lg:aspect-[16/9];
+  }
+
+  .chart-legend {
+    @apply flex flex-wrap gap-2 sm:gap-4 justify-center;
+  }
+
+  .chart-legend-item {
+    @apply flex items-center gap-2 text-sm text-muted-foreground;
+  }
+
+  /* Table System - Mobile-First */
+  .table-container {
+    @apply w-full overflow-hidden border border-border rounded-lg;
+  }
+
+  .table-responsive {
+    @apply w-full overflow-x-auto;
+  }
+
+  .table-header {
+    @apply bg-muted/50 border-b border-border;
+  }
+
+  .table-cell {
+    @apply px-3 py-2 sm:px-4 sm:py-3 text-sm sm:text-base;
+    @apply border-b border-border last:border-0;
+  }
+
+  .table-row {
+    @apply hover:bg-muted/50 transition-colors duration-150;
+  }
+
+  /* Modal System - Responsive */
+  .modal-content {
+    @apply w-full max-w-lg mx-4 sm:mx-auto;
+    @apply bg-background border border-border rounded-lg;
+    @apply shadow-lg max-h-[90vh] overflow-y-auto;
+  }
+
+  .modal-header {
+    @apply flex items-center justify-between p-4 sm:p-6 border-b border-border;
+  }
+
+  .modal-body {
+    @apply p-4 sm:p-6 space-y-4;
+  }
+
+  .modal-footer {
+    @apply flex flex-col sm:flex-row gap-3 p-4 sm:p-6 border-t border-border;
+  }
+
+  /* Loading States */
+  .loading-spinner {
+    @apply animate-spin rounded-full border-2 border-muted border-t-primary;
+  }
+
+  .loading-skeleton {
+    @apply animate-pulse bg-muted rounded;
+  }
+
+  .loading-container {
+    @apply flex items-center justify-center p-8;
+  }
+
+  /* Responsive Utilities */
+  .responsive-flex {
+    @apply flex flex-col sm:flex-row gap-4 sm:gap-6;
+  }
+
+  .responsive-grid {
+    @apply grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6;
+  }
+
+  .responsive-spacing {
+    @apply space-y-4 sm:space-y-6 lg:space-y-8;
+  }
+
+  .responsive-padding {
+    @apply p-4 sm:p-6 lg:p-8;
+  }
+
+  .responsive-margin {
+    @apply m-4 sm:m-6 lg:m-8;
+  }
+
+  /* Accessibility Enhancements */
+  .focus-visible-enhanced {
+    @apply focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring;
+    @apply focus-visible:ring-offset-2 focus-visible:ring-offset-background;
+  }
+
+  .screen-reader-only {
+    @apply sr-only;
+  }
+
+  /* Animation Presets */
+  .animate-fade-in-up {
+    @apply animate-[fade-in_0.3s_ease-out,slide-up_0.3s_ease-out];
+  }
+
+  .animate-scale-in-subtle {
+    @apply animate-[scale-in_0.2s_ease-out];
+  }
+
+  .animate-slide-in-smooth {
+    @apply animate-[slide-in-right_0.3s_ease-out];
+  }
+}
+
+/* High-contrast mode support */
+@media (prefers-contrast: high) {
+  .card-system,
+  .card-system-compact,
+  .card-system-elevated {
+    @apply border-2;
+  }
+  
+  .btn-primary,
+  .btn-secondary,
+  .btn-ghost {
+    @apply border-2;
+  }
+}
