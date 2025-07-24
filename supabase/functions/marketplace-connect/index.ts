@@ -42,7 +42,49 @@ async function createMarketplaceIntegration(
 ) {
   console.log('Creating marketplace integration:', { marketplace: request.marketplace, company_id: request.company_id });
   
-  // Criar integração no banco
+  // Verificar se já existe integração para este marketplace/empresa
+  const { data: existingIntegration, error: checkError } = await supabase
+    .from('marketplace_integrations')
+    .select('*')
+    .eq('company_id', request.company_id)
+    .eq('marketplace', request.marketplace)
+    .maybeSingle();
+
+  if (checkError) {
+    console.error('Error checking existing integration:', checkError);
+    throw new Error(`Erro ao verificar integração existente: ${checkError.message}`);
+  }
+
+  if (existingIntegration) {
+    console.log('Updating existing integration:', existingIntegration.id);
+    
+    // Atualizar integração existente
+    const { data: integration, error } = await supabase
+      .from('marketplace_integrations')
+      .update({
+        auth_type: request.integration_type,
+        status: 'pending',
+        credentials: request.credentials || {},
+        config: {
+          auto_sync_enabled: true,
+          sync_interval_minutes: 5
+        },
+        updated_at: new Date().toISOString()
+      })
+      .eq('id', existingIntegration.id)
+      .select()
+      .single();
+
+    if (error) {
+      console.error('Error updating integration:', error);
+      throw new Error(`Erro ao atualizar integração: ${error.message}`);
+    }
+
+    console.log('Integration updated:', integration.id);
+    return integration;
+  }
+
+  // Criar nova integração se não existir
   const { data: integration, error } = await supabase
     .from('marketplace_integrations')
     .insert({
@@ -230,7 +272,7 @@ Deno.serve(async (req) => {
 
     if (requestData.integration_type === 'oauth') {
       // Fluxo OAuth
-      const redirectUrl = requestData.redirect_url || `${Deno.env.get('SITE_URL')}/app/admin/marketplace-channels`;
+      const redirectUrl = requestData.redirect_url || `${req.headers.get('origin') || Deno.env.get('SITE_URL')}/app/admin/marketplace-channels`;
       const oauthData = await generateOAuthUrl(
         requestData.marketplace,
         integration.id,
