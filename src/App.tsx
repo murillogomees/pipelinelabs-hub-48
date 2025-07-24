@@ -67,6 +67,9 @@ const SLA = React.lazy(() => import('@/pages/SLA'));
 // Landing Page
 const LandingPage = React.lazy(() => import('@/pages/LandingPage').then(module => ({ default: module.LandingPage })));
 
+// Testing page - development only
+const BreakpointTest = React.lazy(() => import('@/pages/BreakpointTest').then(module => ({ default: module.BreakpointTest })));
+
 // Loading components para diferentes tamanhos
 const PageLoader = () => (
   <div className="flex items-center justify-center min-h-[400px]">
@@ -185,6 +188,11 @@ function RouteHandler() {
         <Route path="integracoes" element={<Integracoes />} />
         <Route path="configuracoes" element={<Configuracoes />} />
         <Route path="marketplace-channels" element={<MarketplaceChannels />} />
+        
+        {/* Testing route - development only */}
+        {import.meta.env.DEV && (
+          <Route path="breakpoint-test" element={<BreakpointTest />} />
+        )}
         
         {/* Admin routes */}
         <Route path="admin" element={<ProtectedRoute requireAdmin><Admin /></ProtectedRoute>} />

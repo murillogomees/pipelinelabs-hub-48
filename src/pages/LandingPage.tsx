@@ -4,7 +4,7 @@ import { OptimizedCard, StatsCard, FeatureCard } from '@/components/ui/optimized
 import { ResponsiveGrid, ResponsiveCard, ResponsiveContainer, ResponsiveSection } from '@/components/ui/responsive-layout';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Check, Star, ArrowRight, Users, TrendingUp, Shield, Zap, FileText, Package, Truck, ClipboardCheck, Building, Globe, Lock, Database, Cloud, Rocket, BarChart3, Calculator, CreditCard, ShoppingCart, Bell, Settings, Calendar, PieChart, Monitor, Smartphone, Tablet, DollarSign, Banknote, LayoutDashboard, Warehouse, Receipt, Megaphone } from 'lucide-react';
+import { Check, Star, ArrowRight, Users, TrendingUp, Shield, Zap, FileText, Package, Truck, ClipboardCheck, Building, Globe, Lock, Database, Cloud, Rocket, BarChart3, Calculator, CreditCard, ShoppingCart, Bell, Settings, Calendar, PieChart, Monitor, Smartphone, Tablet, DollarSign, Banknote, LayoutDashboard, Warehouse, Receipt, Megaphone, Eye } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useLandingPageContent } from '@/hooks/useLandingPageContent';
 import { useLandingPagePlans } from '@/hooks/useLandingPagePlans';
@@ -90,6 +90,13 @@ export function LandingPage() {
             <Button onClick={() => navigate('/auth')}>
               Teste Grátis
             </Button>
+            {/* Development test button */}
+            {import.meta.env.DEV && (
+              <Button variant="outline" size="sm" onClick={() => window.open('/#/app/breakpoint-test', '_blank')}>
+                <Eye className="w-4 h-4 mr-1" />
+                Teste UI
+              </Button>
+            )}
           </div>
         </div>
       </header>
