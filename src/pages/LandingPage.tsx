@@ -224,7 +224,14 @@ export function LandingPage() {
             {/* Cards de personas com novo layout responsivo */}
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8 max-w-7xl mx-auto px-4">
               {personasSection.content_data?.personas?.map((persona: any, index: number) => (
-                <div key={index} className="feature-card opacity-0">
+                <div 
+                  key={index} 
+                  className="animate-fade-in hover-scale"
+                  style={{
+                    animationDelay: `${index * 0.1}s`,
+                    animationFillMode: 'both'
+                  }}
+                >
                   <PersonaCard
                     name={persona.name}
                     age={persona.age}
@@ -234,7 +241,7 @@ export function LandingPage() {
                     problems={persona.problems}
                     solutions={persona.solutions}
                     result={persona.result}
-                    className="h-full hover-lift"
+                    className="h-full transition-all duration-300 hover:shadow-xl"
                   />
                 </div>
               ))}

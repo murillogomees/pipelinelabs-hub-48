@@ -2,6 +2,14 @@ import React from 'react';
 import { MapPin } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { cn } from '@/lib/utils';
+import { 
+  carlaPersona,
+  lucasPersonaCard, 
+  anaPersona,
+  eduardoPersona,
+  patriciaPersona,
+  joaoPersona 
+} from '@/assets';
 
 export interface PersonaCardProps {
   name: string;
@@ -15,6 +23,20 @@ export interface PersonaCardProps {
   className?: string;
 }
 
+// Helper function to map persona names to images
+const getPersonaImage = (name: string, fallbackImage: string) => {
+  const imageMap: { [key: string]: string } = {
+    'Carla Santos': carlaPersona,
+    'Lucas Silva': lucasPersonaCard,
+    'Ana Costa': anaPersona,
+    'Eduardo Martins': eduardoPersona,
+    'Patrícia Lima': patriciaPersona,
+    'João Santos': joaoPersona
+  };
+  
+  return imageMap[name] || fallbackImage;
+};
+
 export function PersonaCard({
   name,
   age,
@@ -26,6 +48,7 @@ export function PersonaCard({
   result,
   className
 }: PersonaCardProps) {
+  const personaImage = getPersonaImage(name, image);
   return (
     <Card className={cn(
       "group overflow-hidden bg-card border border-border/50 shadow-sm hover:shadow-xl transition-all duration-300",
@@ -34,7 +57,7 @@ export function PersonaCard({
       {/* Container da imagem com overlay e textos sobrepostos */}
       <div className="relative aspect-[4/3] overflow-hidden">
         <img
-          src={image}
+          src={personaImage}
           alt={`${name}, ${age} anos`}
           className="w-full h-full object-cover rounded-t-xl transition-transform duration-300 group-hover:scale-105"
         />
