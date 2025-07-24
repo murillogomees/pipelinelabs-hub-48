@@ -38,7 +38,17 @@ export function usePermissions() {
         }
 
         const userEmail = user.user.email || "";
-        const isSuperAdminByEmail = userEmail === "murilloggomes@gmail.com";
+        
+        // Check for super admin status from database instead of hardcoded email
+        const { data: superAdminCheck } = await supabase
+          .from("user_companies")
+          .select("user_type")
+          .eq("user_id", user.user.id)
+          .eq("user_type", "super_admin")
+          .eq("is_active", true)
+          .maybeSingle();
+        
+        const isSuperAdminByEmail = !!superAdminCheck;
         
         // Se for super admin pelo email, retornar permissões completas
         if (isSuperAdminByEmail) {
@@ -137,7 +147,17 @@ export function usePermissions() {
         try {
           const { data: user } = await supabase.auth.getUser();
           const userEmail = user.user?.email || "";
-          const isSuperAdminByEmail = userEmail === "murilloggomes@gmail.com";
+          
+          // Check for super admin status from database
+          const { data: superAdminCheck } = await supabase
+            .from("user_companies")
+            .select("user_type")
+            .eq("user_id", user.user.id)
+            .eq("user_type", "super_admin")
+            .eq("is_active", true)
+            .maybeSingle();
+          
+          const isSuperAdminByEmail = !!superAdminCheck;
           
           return {
             userType: isSuperAdminByEmail ? 'super_admin' as UserType : null,

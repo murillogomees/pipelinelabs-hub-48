@@ -117,7 +117,7 @@ export function PersonaCard({
                 {solutions.map((solution: string, i: number) => (
                   <li key={i} className="flex items-start gap-2 text-left">
                     <span className="text-success mt-0.5 flex-shrink-0">•</span>
-                    <span className="leading-relaxed" dangerouslySetInnerHTML={{ __html: solution }} />
+                    <span className="leading-relaxed">{solution}</span>
                   </li>
                 ))}
               </ul>

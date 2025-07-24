@@ -1,7 +1,7 @@
 import { Label } from '@/components/ui/label';
-import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { PasswordValidator } from '@/components/ui/password-validator';
+import { SecureInput } from '@/components/Security/SecureInput';
 
 interface FormData {
   email: string;
@@ -32,38 +32,38 @@ export function AuthFormFields({
       {isSignUp && (
         <>
           <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="firstName">Nome</Label>
-              <Input
-                id="firstName"
-                type="text"
-                value={formData.firstName}
-                onChange={(e) => onFormDataChange({ firstName: e.target.value })}
-                required
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="lastName">Sobrenome</Label>
-              <Input
-                id="lastName"
-                type="text"
-                value={formData.lastName}
-                onChange={(e) => onFormDataChange({ lastName: e.target.value })}
-                required
-              />
-            </div>
-          </div>
-          
-          <div className="space-y-2">
-            <Label htmlFor="companyName">Nome da Empresa</Label>
-            <Input
-              id="companyName"
+            <SecureInput
+              id="firstName"
+              label="Nome"
               type="text"
-              value={formData.companyName}
-              onChange={(e) => onFormDataChange({ companyName: e.target.value })}
+              value={formData.firstName}
+              onChange={(e) => onFormDataChange({ firstName: e.target.value })}
               required
+              maxLength={50}
+              sanitize={true}
+            />
+            <SecureInput
+              id="lastName"
+              label="Sobrenome"
+              type="text"
+              value={formData.lastName}
+              onChange={(e) => onFormDataChange({ lastName: e.target.value })}
+              required
+              maxLength={50}
+              sanitize={true}
             />
           </div>
+          
+          <SecureInput
+            id="companyName"
+            label="Nome da Empresa"
+            type="text"
+            value={formData.companyName}
+            onChange={(e) => onFormDataChange({ companyName: e.target.value })}
+            required
+            maxLength={100}
+            sanitize={true}
+          />
 
           <div className="grid grid-cols-3 gap-2">
             <div className="space-y-2">
@@ -82,49 +82,56 @@ export function AuthFormFields({
               </Select>
             </div>
             <div className="col-span-2 space-y-2">
-              <Label htmlFor="document">{formData.documentType.toUpperCase()}</Label>
-              <Input
+              <SecureInput
                 id="document"
+                label={formData.documentType.toUpperCase()}
                 type="text"
                 value={formData.document}
                 onChange={(e) => onDocumentChange(e.target.value)}
                 placeholder={formData.documentType === 'cpf' ? '000.000.000-00' : '00.000.000/0000-00'}
                 required
+                maxLength={18}
+                sanitize={false}
               />
             </div>
           </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="phone">Telefone (opcional)</Label>
-            <Input
-              id="phone"
-              type="tel"
-              value={formData.phone}
-              onChange={(e) => onFormDataChange({ phone: e.target.value })}
-            />
-          </div>
+          <SecureInput
+            id="phone"
+            label="Telefone (opcional)"
+            type="tel"
+            value={formData.phone}
+            onChange={(e) => onFormDataChange({ phone: e.target.value })}
+            maxLength={20}
+            sanitize={false}
+          />
         </>
       )}
       
-      <div className="space-y-2">
-        <Label htmlFor="email">Email</Label>
-        <Input
-          id="email"
-          type="email"
-          value={formData.email}
-          onChange={(e) => onFormDataChange({ email: e.target.value })}
-          required
-        />
-      </div>
+      <SecureInput
+        id="email"
+        label="Email"
+        type="email"
+        value={formData.email}
+        onChange={(e) => onFormDataChange({ email: e.target.value })}
+        required
+        maxLength={100}
+        sanitize={true}
+      />
       
       <div className="space-y-2">
-        <Label htmlFor="password">Senha</Label>
-        <Input
+        <SecureInput
           id="password"
+          label="Senha"
           type="password"
           value={formData.password}
           onChange={(e) => onFormDataChange({ password: e.target.value })}
           required
+          showPasswordToggle={true}
+          strengthMeter={isSignUp}
+          maxLength={128}
+          sanitize={false}
+          helperText={isSignUp ? "Use pelo menos 8 caracteres com letras, números e símbolos" : undefined}
         />
         {isSignUp && formData.password && (
           <PasswordValidator password={formData.password} />
