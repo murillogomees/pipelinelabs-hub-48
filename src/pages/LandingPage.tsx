@@ -503,26 +503,26 @@ export function LandingPage() {
               className="group rounded-xl shadow-lg overflow-hidden relative bg-card hover:shadow-xl transition-all duration-300 hover:scale-105"
               aria-label="Card de Autenticação Segura"
             >
-              <div className="relative aspect-[3/2] overflow-hidden bg-gradient-to-br from-primary/10 to-primary/5 flex items-center justify-center">
-                <div className="text-center p-8">
-                  <div className="w-16 h-16 bg-primary/20 rounded-xl flex items-center justify-center mx-auto mb-3">
-                    <Shield className="w-8 h-8 text-primary" />
+              <div className="relative aspect-[2/1] overflow-hidden bg-gradient-to-br from-primary/10 to-primary/5 flex items-center justify-center">
+                <div className="text-center p-4">
+                  <div className="w-12 h-12 bg-primary/20 rounded-lg flex items-center justify-center mx-auto mb-2">
+                    <Shield className="w-6 h-6 text-primary" />
                   </div>
                   <div className="space-y-1">
-                    <div className="w-20 h-2 bg-primary/30 rounded mx-auto"></div>
-                    <div className="w-14 h-1.5 bg-muted rounded mx-auto"></div>
+                    <div className="w-16 h-1.5 bg-primary/30 rounded mx-auto"></div>
+                    <div className="w-10 h-1 bg-muted rounded mx-auto"></div>
                   </div>
                 </div>
                 <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-black/20 to-transparent"></div>
-                <div className="absolute bottom-3 left-3 flex items-center text-primary-foreground drop-shadow-lg">
-                  <Shield className="w-4 h-4 text-primary-foreground mr-1.5" />
-                  <h3 className="text-lg md:text-xl font-semibold drop-shadow-md">
+                <div className="absolute bottom-2 left-2 flex items-center text-primary-foreground drop-shadow-lg">
+                  <Shield className="w-3 h-3 text-primary-foreground mr-1" />
+                  <h3 className="text-sm md:text-base font-semibold drop-shadow-md">
                     Autenticação Forte
                   </h3>
                 </div>
               </div>
-              <div className="mt-3 px-4 pb-4">
-                <p className="text-sm md:text-base text-card-foreground font-medium leading-relaxed">
+              <div className="mt-2 px-3 pb-3">
+                <p className="text-xs md:text-sm text-card-foreground font-medium leading-relaxed">
                   Login seguro com autenticação de dois fatores e controle de acesso rigoroso.
                 </p>
               </div>
@@ -533,14 +533,14 @@ export function LandingPage() {
               className="group rounded-xl shadow-lg overflow-hidden relative bg-card hover:shadow-xl transition-all duration-300 hover:scale-105"
               aria-label="Card de Criptografia de Dados"
             >
-              <div className="relative aspect-[4/3] overflow-hidden bg-gradient-to-br from-success/10 to-success/5 flex items-center justify-center">
-                <div className="text-center p-8">
-                  <div className="w-20 h-20 bg-success/20 rounded-2xl flex items-center justify-center mx-auto mb-4">
-                    <Lock className="w-10 h-10 text-success" />
+              <div className="relative aspect-[2/1] overflow-hidden bg-gradient-to-br from-success/10 to-success/5 flex items-center justify-center">
+                <div className="text-center p-4">
+                  <div className="w-12 h-12 bg-success/20 rounded-lg flex items-center justify-center mx-auto mb-2">
+                    <Lock className="w-6 h-6 text-success" />
                   </div>
-                  <div className="space-y-2">
-                    <div className="w-20 h-3 bg-success/30 rounded mx-auto"></div>
-                    <div className="w-14 h-2 bg-muted rounded mx-auto"></div>
+                  <div className="space-y-1">
+                    <div className="w-16 h-1.5 bg-success/30 rounded mx-auto"></div>
+                    <div className="w-10 h-1 bg-muted rounded mx-auto"></div>
                   </div>
                 </div>
                 <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-black/20 to-transparent"></div>
@@ -563,7 +563,7 @@ export function LandingPage() {
               className="group rounded-xl shadow-lg overflow-hidden relative bg-card hover:shadow-xl transition-all duration-300 hover:scale-105"
               aria-label="Card de Backup Seguro"
             >
-              <div className="relative aspect-[4/3] overflow-hidden bg-gradient-to-br from-info/10 to-info/5 flex items-center justify-center">
+              <div className="relative aspect-[2/1] overflow-hidden bg-gradient-to-br from-info/10 to-info/5 flex items-center justify-center">
                 <div className="text-center p-8">
                   <div className="w-20 h-20 bg-info/20 rounded-2xl flex items-center justify-center mx-auto mb-4">
                     <Database className="w-10 h-10 text-info" />
