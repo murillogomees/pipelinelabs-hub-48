@@ -16,10 +16,11 @@ import {
   TrendingUp
 } from 'lucide-react';
 import { useMarketplaceIntegration } from '@/hooks/useMarketplaceIntegration';
+import { useCurrentCompany } from '@/hooks/useCurrentCompany';
 import { MarketplaceChannelGrid } from './MarketplaceChannelGrid';
 import { MarketplaceIntegrationList } from './MarketplaceIntegrationList';
 import { MarketplaceSyncPanel } from './MarketplaceSyncPanel';
-import { MarketplaceConnectionDialog } from './MarketplaceConnectionDialog';
+import { OneClickConnectDialog } from './OneClickConnectDialog';
 import { MarketplaceStatsCards } from './MarketplaceStatsCards';
 import { cn } from '@/lib/utils';
 
@@ -31,6 +32,7 @@ export const MarketplaceHub = ({ className }: MarketplaceHubProps) => {
   const [activeTab, setActiveTab] = useState('overview');
   const [isConnectionDialogOpen, setIsConnectionDialogOpen] = useState(false);
   const [selectedChannel, setSelectedChannel] = useState<string | null>(null);
+  const { data: currentCompany } = useCurrentCompany();
 
   const {
     channels,
@@ -38,7 +40,9 @@ export const MarketplaceHub = ({ className }: MarketplaceHubProps) => {
     syncLogs,
     isLoading,
     getChannelStats,
-    canManageChannels
+    canManageChannels,
+    connectMarketplace,
+    isConnecting
   } = useMarketplaceIntegration();
 
   const [canManage, setCanManage] = useState(false);
@@ -58,6 +62,11 @@ export const MarketplaceHub = ({ className }: MarketplaceHubProps) => {
   const handleConnectChannel = (channelName: string) => {
     setSelectedChannel(channelName);
     setIsConnectionDialogOpen(true);
+  };
+
+  const handleConnect = (data: any) => {
+    connectMarketplace(data);
+    setIsConnectionDialogOpen(false);
   };
 
   if (isLoading) {
@@ -295,11 +304,13 @@ export const MarketplaceHub = ({ className }: MarketplaceHubProps) => {
       </Tabs>
 
       {/* Connection Dialog */}
-      <MarketplaceConnectionDialog
+      <OneClickConnectDialog
         open={isConnectionDialogOpen}
         onOpenChange={setIsConnectionDialogOpen}
-        selectedChannel={selectedChannel}
-        onSubmit={() => {}}
+        channel={selectedChannel ? channels.find(c => c.name === selectedChannel) : null}
+        companyId={currentCompany?.company_id || ''}
+        onConnect={handleConnect}
+        isLoading={isConnecting}
       />
     </div>
   );

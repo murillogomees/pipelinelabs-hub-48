@@ -297,18 +297,17 @@ export const useMarketplaceIntegration = () => {
       const integration = integrations?.find(i => i.id === integrationId);
       if (!integration) throw new Error('Integração não encontrada');
 
-      const response = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/marketplace-webhook/${integrationId}`, {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json'
+      const { data, error } = await supabase.functions.invoke('marketplace-auth', {
+        body: {
+          integration_id: integrationId,
+          marketplace: integration.marketplace,
+          action: 'validate'
         }
       });
 
-      if (!response.ok) {
-        throw new Error('Falha na conexão');
-      }
+      if (error) throw error;
 
-      return await response.json();
+      return data;
     },
     onSuccess: () => {
       toast({

@@ -106,3 +106,6 @@ verify_jwt = false
 
 [functions.marketplace-auth]
 verify_jwt = true
+
+[functions.marketplace-oauth-callback]
+verify_jwt = false
