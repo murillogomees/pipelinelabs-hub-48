@@ -193,6 +193,103 @@ export function LandingPage() {
           </div>
         </section>}
 
+      {/* ERP Modules Section */}
+      <section className="py-20 px-4 bg-muted/30">
+        <div className="container mx-auto">
+          <div className="text-center mb-16">
+            <h2 className="text-3xl md:text-5xl font-bold mb-6 max-w-3xl mx-auto">
+              O ERP completo, pensado para pequenos negócios
+            </h2>
+            <p className="text-lg md:text-xl text-muted-foreground mb-12">
+              Tudo que Você Precisa em Um Só Lugar
+            </p>
+          </div>
+
+          {/* Grid de Cards com Mockups */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-6 max-w-screen-xl mx-auto">
+            {/* Card Financeiro */}
+            <Card className="group overflow-hidden hover:shadow-xl transition-all duration-300 hover:scale-105">
+              <div className="aspect-video relative overflow-hidden rounded-t-xl">
+                <MockupFinancial className="w-full h-full transform transition-transform duration-300 group-hover:scale-110" />
+              </div>
+              <CardContent className="p-4 text-center">
+                <h3 className="text-md font-medium text-foreground">Financeiro</h3>
+              </CardContent>
+            </Card>
+
+            {/* Card Dashboard */}
+            <Card className="group overflow-hidden hover:shadow-xl transition-all duration-300 hover:scale-105">
+              <div className="aspect-video relative overflow-hidden rounded-t-xl">
+                <MockupDashboard className="w-full h-full transform transition-transform duration-300 group-hover:scale-110" />
+              </div>
+              <CardContent className="p-4 text-center">
+                <h3 className="text-md font-medium text-foreground">Dashboard</h3>
+              </CardContent>
+            </Card>
+
+            {/* Card Estoque */}
+            <Card className="group overflow-hidden hover:shadow-xl transition-all duration-300 hover:scale-105">
+              <div className="aspect-video relative overflow-hidden rounded-t-xl">
+                <MockupInventory className="w-full h-full transform transition-transform duration-300 group-hover:scale-110" />
+              </div>
+              <CardContent className="p-4 text-center">
+                <h3 className="text-md font-medium text-foreground">Estoque</h3>
+              </CardContent>
+            </Card>
+
+            {/* Card Vendas PDV */}
+            <Card className="group overflow-hidden hover:shadow-xl transition-all duration-300 hover:scale-105">
+              <div className="aspect-video relative overflow-hidden rounded-t-xl">
+                <MockupPDV className="w-full h-full transform transition-transform duration-300 group-hover:scale-110" />
+              </div>
+              <CardContent className="p-4 text-center">
+                <h3 className="text-md font-medium text-foreground">PDV</h3>
+              </CardContent>
+            </Card>
+
+            {/* Card NFe */}
+            <Card className="group overflow-hidden hover:shadow-xl transition-all duration-300 hover:scale-105">
+              <div className="aspect-video relative overflow-hidden rounded-t-xl">
+                <MockupNFe className="w-full h-full transform transition-transform duration-300 group-hover:scale-110" />
+              </div>
+              <CardContent className="p-4 text-center">
+                <h3 className="text-md font-medium text-foreground">Nota Fiscal</h3>
+              </CardContent>
+            </Card>
+
+            {/* Card Vendas Diárias */}
+            <Card className="group overflow-hidden hover:shadow-xl transition-all duration-300 hover:scale-105">
+              <div className="aspect-video relative overflow-hidden rounded-t-xl">
+                <MockupDailySales className="w-full h-full transform transition-transform duration-300 group-hover:scale-110" />
+              </div>
+              <CardContent className="p-4 text-center">
+                <h3 className="text-md font-medium text-foreground">Vendas</h3>
+              </CardContent>
+            </Card>
+
+            {/* Card Notificações */}
+            <Card className="group overflow-hidden hover:shadow-xl transition-all duration-300 hover:scale-105">
+              <div className="aspect-video relative overflow-hidden rounded-t-xl">
+                <MockupNotifications className="w-full h-full transform transition-transform duration-300 group-hover:scale-110" />
+              </div>
+              <CardContent className="p-4 text-center">
+                <h3 className="text-md font-medium text-foreground">Notificações</h3>
+              </CardContent>
+            </Card>
+
+            {/* Card CRM - Usando Dashboard como placeholder */}
+            <Card className="group overflow-hidden hover:shadow-xl transition-all duration-300 hover:scale-105">
+              <div className="aspect-video relative overflow-hidden rounded-t-xl">
+                <MockupDashboard className="w-full h-full transform transition-transform duration-300 group-hover:scale-110" />
+              </div>
+              <CardContent className="p-4 text-center">
+                <h3 className="text-md font-medium text-foreground">CRM</h3>
+              </CardContent>
+            </Card>
+          </div>
+        </div>
+      </section>
+
       {/* Pain/Personas Section - Busca agora diretamente do Supabase */}
       {personasSection && (
         <section className="py-20 px-4 bg-muted/50">
