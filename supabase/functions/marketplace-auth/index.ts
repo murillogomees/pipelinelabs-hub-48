@@ -23,7 +23,7 @@ const MARKETPLACE_CONFIGS: Record<string, MarketplaceConfig> = {
     name: 'Mercado Livre',
     auth_url: 'https://auth.mercadolivre.com.br/authorization',
     token_url: 'https://api.mercadolibre.com/oauth/token',
-    scopes: ['read', 'write']
+    scopes: ['offline_access', 'read', 'write']
   }
 };
 

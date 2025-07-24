@@ -52,12 +52,7 @@ export function useProposals() {
     queryFn: async () => {
       const { data, error } = await (supabase as any)
         .from('proposals')
-        .select(`
-          *,
-          customers (
-            name
-          )
-        `)
+        .select('*')
         .order('created_at', { ascending: false });
       
       if (error) throw error;
