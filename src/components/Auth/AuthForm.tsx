@@ -4,6 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { EnhancedButton as Button } from '@/components/ui/enhanced-button';
 import { useAuthForm } from './hooks/useAuthForm';
 import { useDocumentValidation } from './hooks/useDocumentValidation';
+import { CSRFToken } from '@/components/Security';
 import { AuthFormFields } from './components/AuthFormFields';
 
 export function AuthForm() {
@@ -60,6 +61,7 @@ export function AuthForm() {
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-4">
+            <CSRFToken />
             <AuthFormFields
               isSignUp={isSignUp}
               formData={formData}

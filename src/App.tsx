@@ -10,6 +10,7 @@ import { PermissionProvider } from '@/components/PermissionProvider';
 import { AnalyticsProvider } from '@/components/Analytics';
 import { PrivacyConsentProvider } from '@/components/LGPD/PrivacyConsentProvider';
 import { TermsProvider } from '@/components/Terms/TermsProvider';
+import { CSRFProvider, SecurityHeaders } from '@/components/Security';
 import { Auth } from '@/pages/Auth';
 import React, { Suspense, useEffect } from 'react';
 import { Outlet, useLocation } from 'react-router-dom';
@@ -145,9 +146,11 @@ function RouteHandler() {
   }, [isAuthenticated]);
 
   return (
-    <AnalyticsProvider>
-      <PrivacyConsentProvider>
-        <TermsProvider>
+    <>
+      <SecurityHeaders />
+      <AnalyticsProvider>
+        <PrivacyConsentProvider>
+          <TermsProvider>
           <Routes>
       {/* Landing page - accessible for everyone */}
       <Route 
@@ -250,25 +253,28 @@ function RouteHandler() {
 
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
-        </TermsProvider>
-      </PrivacyConsentProvider>
-    </AnalyticsProvider>
-  );
+         </TermsProvider>
+       </PrivacyConsentProvider>
+     </AnalyticsProvider>
+    </>
+   );
 }
 
 function App() {
   return (
     <QueryClientProvider client={queryClient}>
-      <AuthProvider>
-        <PermissionProvider>
-          <SentryErrorBoundary>
-            <ErrorBoundary>
-              <AppRoutes />
-              <Toaster />
-            </ErrorBoundary>
-          </SentryErrorBoundary>
-        </PermissionProvider>
-      </AuthProvider>
+      <CSRFProvider>
+        <AuthProvider>
+          <PermissionProvider>
+            <SentryErrorBoundary>
+              <ErrorBoundary>
+                <AppRoutes />
+                <Toaster />
+              </ErrorBoundary>
+            </SentryErrorBoundary>
+          </PermissionProvider>
+        </AuthProvider>
+      </CSRFProvider>
     </QueryClientProvider>
   );
 }
