@@ -533,7 +533,7 @@ export function LandingPage() {
               className="group rounded-xl shadow-lg overflow-hidden relative bg-card hover:shadow-xl transition-all duration-300 hover:scale-105"
               aria-label="Card de Criptografia de Dados"
             >
-              <div className="relative aspect-[2/1] overflow-hidden bg-gradient-to-br from-success/10 to-success/5 flex items-center justify-center">
+              <div className="relative aspect-[3/2] overflow-hidden bg-gradient-to-br from-success/10 to-success/5 flex items-center justify-center">
                 <div className="text-center p-4">
                   <div className="w-12 h-12 bg-success/20 rounded-lg flex items-center justify-center mx-auto mb-2">
                     <Lock className="w-6 h-6 text-success" />
@@ -563,7 +563,7 @@ export function LandingPage() {
               className="group rounded-xl shadow-lg overflow-hidden relative bg-card hover:shadow-xl transition-all duration-300 hover:scale-105"
               aria-label="Card de Backup Seguro"
             >
-              <div className="relative aspect-[2/1] overflow-hidden bg-gradient-to-br from-info/10 to-info/5 flex items-center justify-center">
+              <div className="relative aspect-[3/2] overflow-hidden bg-gradient-to-br from-info/10 to-info/5 flex items-center justify-center">
                 <div className="text-center p-8">
                   <div className="w-20 h-20 bg-info/20 rounded-2xl flex items-center justify-center mx-auto mb-4">
                     <Database className="w-10 h-10 text-info" />
