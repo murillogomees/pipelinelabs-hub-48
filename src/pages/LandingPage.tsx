@@ -5,6 +5,9 @@ import { Badge } from '@/components/ui/badge';
 import { Check, Star, ArrowRight, Users, TrendingUp, Shield, Zap, FileText, Package, Truck, ClipboardCheck, Building, Globe, Lock, Database, Cloud, Rocket, BarChart3, Calculator, CreditCard, ShoppingCart, Bell, Settings, Calendar, PieChart, Monitor, Smartphone, Tablet, DollarSign, Banknote, LayoutDashboard, Warehouse, Receipt, Megaphone } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useLandingPageContent } from '@/hooks/useLandingPageContent';
+import { useLandingPagePlans } from '@/hooks/useLandingPagePlans';
+import { useStripeCheckout } from '@/hooks/useStripeCheckout';
+import { supabase } from '@/integrations/supabase/client';
 import { PipelineLabsLogo } from '@/components/Layout/PipelineLabsLogo';
 import { Footer } from '@/components/Layout/Footer';
 import { PersonaCard } from '@/components/ui/persona-card';
@@ -48,6 +51,8 @@ const getIcon = (iconName: string) => {
 };
 export function LandingPage() {
   const navigate = useNavigate();
+  const { plans: billingPlans, isLoading: plansLoading } = useLandingPagePlans();
+  const { createCheckoutSession, isLoading: checkoutLoading } = useStripeCheckout();
   const {
     sections,
     isLoading,
@@ -672,33 +677,114 @@ export function LandingPage() {
             </div>
 
             <div className="grid md:grid-cols-3 gap-8 max-w-6xl mx-auto">
-              {pricingSection.content_data?.plans?.map((plan: any, index: number) => <Card key={index} className={`relative ${plan.highlighted ? 'border-primary scale-105' : ''}`}>
-                  {plan.highlighted && <div className="absolute -top-4 left-1/2 transform -translate-x-1/2">
-                      <Badge className="bg-primary text-primary-foreground">
-                        Mais Popular
-                      </Badge>
-                    </div>}
-                  <CardHeader>
-                    <CardTitle>{plan.name}</CardTitle>
-                    <div className="text-3xl font-bold">
-                      R$ {plan.price}
-                      <span className="text-base font-normal text-muted-foreground">
-                        {plan.period}
-                      </span>
-                    </div>
-                  </CardHeader>
-                  <CardContent>
-                    <ul className="space-y-3 mb-6">
-                       {plan.features.map((feature: string, idx: number) => <li key={idx} className="flex items-center">
-                          <Check className="h-4 w-4 text-success mr-2 flex-shrink-0" />
-                          <span className="text-sm">{feature}</span>
-                        </li>)}
-                    </ul>
-                    <Button className="w-full" variant={plan.highlighted ? "default" : "outline"} onClick={() => navigate('/auth')}>
-                      Começar Agora
-                    </Button>
-                  </CardContent>
-                </Card>)}
+              {plansLoading ? (
+                <div className="col-span-3 text-center">
+                  <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto"></div>
+                  <p className="mt-4 text-muted-foreground">Carregando planos...</p>
+                </div>
+              ) : billingPlans.length > 0 ? (
+                billingPlans.slice(0, 3).map((plan, index) => (
+                  <Card key={plan.id} className={`relative ${index === 1 ? 'border-primary scale-105' : ''}`}>
+                    {index === 1 && (
+                      <div className="absolute -top-4 left-1/2 transform -translate-x-1/2">
+                        <Badge className="bg-primary text-primary-foreground">
+                          Mais Popular
+                        </Badge>
+                      </div>
+                    )}
+                    <CardHeader>
+                      <CardTitle>{plan.name}</CardTitle>
+                      <div className="text-3xl font-bold">
+                        R$ {plan.price}
+                        <span className="text-base font-normal text-muted-foreground">
+                          /{plan.interval === 'month' ? 'mês' : 'ano'}
+                        </span>
+                      </div>
+                      {plan.description && (
+                        <CardDescription>{plan.description}</CardDescription>
+                      )}
+                    </CardHeader>
+                    <CardContent>
+                      <ul className="space-y-3 mb-6">
+                        {plan.features.map((feature: string, idx: number) => (
+                          <li key={idx} className="flex items-center">
+                            <Check className="h-4 w-4 text-success mr-2 flex-shrink-0" />
+                            <span className="text-sm">{feature}</span>
+                          </li>
+                        ))}
+                      </ul>
+                      <Button 
+                        className="w-full" 
+                        variant={index === 1 ? "default" : "outline"}
+                        disabled={checkoutLoading}
+                        onClick={async () => {
+                          // Verificar se o usuário está logado
+                          const { data: { user } } = await supabase.auth.getUser();
+                          
+                          if (user) {
+                            // Buscar company_id do usuário
+                            const { data: userCompany } = await supabase
+                              .from('user_companies')
+                              .select('company_id')
+                              .eq('user_id', user.id)
+                              .eq('is_active', true)
+                              .single();
+                            
+                            if (userCompany?.company_id) {
+                              createCheckoutSession(plan.id, userCompany.company_id);
+                            } else {
+                              navigate('/auth');
+                            }
+                          } else {
+                            navigate('/auth');
+                          }
+                        }}
+                      >
+                        {checkoutLoading ? 'Processando...' : 'Começar Agora'}
+                      </Button>
+                    </CardContent>
+                  </Card>
+                ))
+              ) : (
+                // Fallback para planos estáticos se não carregar do banco
+                pricingSection.content_data?.plans?.map((plan: any, index: number) => (
+                  <Card key={index} className={`relative ${plan.highlighted ? 'border-primary scale-105' : ''}`}>
+                    {plan.highlighted && (
+                      <div className="absolute -top-4 left-1/2 transform -translate-x-1/2">
+                        <Badge className="bg-primary text-primary-foreground">
+                          Mais Popular
+                        </Badge>
+                      </div>
+                    )}
+                    <CardHeader>
+                      <CardTitle>{plan.name}</CardTitle>
+                      <div className="text-3xl font-bold">
+                        R$ {plan.price}
+                        <span className="text-base font-normal text-muted-foreground">
+                          {plan.period}
+                        </span>
+                      </div>
+                    </CardHeader>
+                    <CardContent>
+                      <ul className="space-y-3 mb-6">
+                        {plan.features.map((feature: string, idx: number) => (
+                          <li key={idx} className="flex items-center">
+                            <Check className="h-4 w-4 text-success mr-2 flex-shrink-0" />
+                            <span className="text-sm">{feature}</span>
+                          </li>
+                        ))}
+                      </ul>
+                      <Button 
+                        className="w-full" 
+                        variant={plan.highlighted ? "default" : "outline"} 
+                        onClick={() => navigate('/auth')}
+                      >
+                        Começar Agora
+                      </Button>
+                    </CardContent>
+                  </Card>
+                ))
+              )}
             </div>
           </div>
         </section>}

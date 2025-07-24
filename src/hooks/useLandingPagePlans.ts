@@ -1,6 +1,5 @@
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
-import { toast } from 'sonner';
 
 export interface BillingPlan {
   id: string;
@@ -17,9 +16,7 @@ export interface BillingPlan {
   updated_at?: string;
 }
 
-export function useBillingPlans() {
-  const queryClient = useQueryClient();
-
+export function useLandingPagePlans() {
   const { data: plans, isLoading, error } = useQuery({
     queryKey: ['billing-plans'],
     queryFn: async (): Promise<BillingPlan[]> => {
@@ -29,9 +26,13 @@ export function useBillingPlans() {
         .eq('active', true)
         .order('price', { ascending: true });
 
-      if (error) throw error;
+      if (error) {
+        console.error('Error fetching billing plans:', error);
+        throw error;
+      }
 
-      return (data || []).map(plan => ({
+      // Converter os dados para o formato correto
+      const plans: BillingPlan[] = (data || []).map(plan => ({
         id: plan.id,
         name: plan.name || '',
         description: plan.description || '',
@@ -47,38 +48,14 @@ export function useBillingPlans() {
         created_at: plan.created_at || undefined,
         updated_at: plan.updated_at || undefined,
       }));
+
+      return plans;
     },
   });
-
-  const createPlan = async (planData: any) => {
-    const { data, error } = await supabase.from('billing_plans').insert([planData]).select().single();
-    if (error) throw error;
-    queryClient.invalidateQueries({ queryKey: ['billing-plans'] });
-    toast.success('Plano criado com sucesso!');
-    return data;
-  };
-
-  const updatePlan = async (planData: any) => {
-    const { data, error } = await supabase.from('billing_plans').update(planData).eq('id', planData.id).select().single();
-    if (error) throw error;
-    queryClient.invalidateQueries({ queryKey: ['billing-plans'] });
-    toast.success('Plano atualizado com sucesso!');
-    return data;
-  };
-
-  const deletePlan = async (planId: string) => {
-    const { error } = await supabase.from('billing_plans').delete().eq('id', planId);
-    if (error) throw error;
-    queryClient.invalidateQueries({ queryKey: ['billing-plans'] });
-    toast.success('Plano excluído com sucesso!');
-  };
 
   return {
     plans: plans || [],
     isLoading,
-    error,
-    createPlan,
-    updatePlan,
-    deletePlan
+    error
   };
 }
