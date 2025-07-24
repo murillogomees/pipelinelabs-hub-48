@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
-import { Button } from '@/components/ui/button';
+import { EnhancedButton as Button } from '@/components/ui/enhanced-button';
 import { Plus, LayoutGrid } from 'lucide-react';
 import { DashboardWidget } from '@/components/Dashboard/DashboardWidget';
 import { WidgetSelector } from '@/components/Dashboard/WidgetSelector';

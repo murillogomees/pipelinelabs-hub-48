@@ -1,5 +1,7 @@
 import React from 'react';
-import { Button } from '@/components/ui/button';
+import { EnhancedButton as Button } from '@/components/ui/enhanced-button';
+import { OptimizedCard, StatsCard, FeatureCard } from '@/components/ui/optimized-card';
+import { ResponsiveGrid, ResponsiveCard, ResponsiveContainer, ResponsiveSection } from '@/components/ui/responsive-layout';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Check, Star, ArrowRight, Users, TrendingUp, Shield, Zap, FileText, Package, Truck, ClipboardCheck, Building, Globe, Lock, Database, Cloud, Rocket, BarChart3, Calculator, CreditCard, ShoppingCart, Bell, Settings, Calendar, PieChart, Monitor, Smartphone, Tablet, DollarSign, Banknote, LayoutDashboard, Warehouse, Receipt, Megaphone } from 'lucide-react';

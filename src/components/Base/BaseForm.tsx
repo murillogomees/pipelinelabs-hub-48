@@ -2,10 +2,9 @@ import React from 'react';
 import { useForm, FormProvider, FieldValues, DefaultValues, SubmitHandler } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { Button } from '@/components/ui/button';
+import { EnhancedButton as Button } from '@/components/ui/enhanced-button';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage, FormDescription } from '@/components/ui/form';
-import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
+import { OptimizedInput, OptimizedTextarea } from '@/components/ui/optimized-input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Checkbox } from '@/components/ui/checkbox';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
@@ -83,17 +82,19 @@ export const BaseForm = <T extends FieldValues>({
             </FormLabel>
             <FormControl>
               {type === 'text' || type === 'email' || type === 'password' || type === 'number' || type === 'tel' || type === 'url' ? (
-                <Input
+                <OptimizedInput
                   type={type}
                   placeholder={placeholder}
                   disabled={disabled}
+                  fullWidth={true}
                   {...formField}
                 />
               ) : type === 'textarea' ? (
-                <Textarea
+                <OptimizedTextarea
                   placeholder={placeholder}
                   disabled={disabled}
                   rows={4}
+                  fullWidth={true}
                   {...formField}
                 />
               ) : type === 'select' ? (

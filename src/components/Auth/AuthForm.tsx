@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
+import { OptimizedCard } from '@/components/ui/optimized-card';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
+import { EnhancedButton as Button } from '@/components/ui/enhanced-button';
 import { useAuthForm } from './hooks/useAuthForm';
 import { useDocumentValidation } from './hooks/useDocumentValidation';
 import { AuthFormFields } from './components/AuthFormFields';
