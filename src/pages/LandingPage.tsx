@@ -484,7 +484,7 @@ export function LandingPage() {
         </section>}
 
       {/* Security Section - Nova implementação completa */}
-      <section className="py-20 px-4 bg-muted/30">
+      <section className="py-20 px-4 bg-background">
         <div className="container mx-auto">
           <div className="text-center mb-16">
             <h2 className="text-3xl md:text-5xl font-bold mb-6 max-w-4xl mx-auto">
@@ -503,26 +503,26 @@ export function LandingPage() {
               className="group rounded-xl shadow-lg overflow-hidden relative bg-card hover:shadow-xl transition-all duration-300 hover:scale-105"
               aria-label="Card de Autenticação Segura"
             >
-              <div className="relative aspect-[4/3] overflow-hidden bg-gradient-to-br from-primary/10 to-primary/5 flex items-center justify-center">
+              <div className="relative aspect-[3/2] overflow-hidden bg-gradient-to-br from-primary/10 to-primary/5 flex items-center justify-center">
                 <div className="text-center p-8">
-                  <div className="w-20 h-20 bg-primary/20 rounded-2xl flex items-center justify-center mx-auto mb-4">
-                    <Shield className="w-10 h-10 text-primary" />
+                  <div className="w-16 h-16 bg-primary/20 rounded-xl flex items-center justify-center mx-auto mb-3">
+                    <Shield className="w-8 h-8 text-primary" />
                   </div>
-                  <div className="space-y-2">
-                    <div className="w-24 h-3 bg-primary/30 rounded mx-auto"></div>
-                    <div className="w-16 h-2 bg-muted rounded mx-auto"></div>
+                  <div className="space-y-1">
+                    <div className="w-20 h-2 bg-primary/30 rounded mx-auto"></div>
+                    <div className="w-14 h-1.5 bg-muted rounded mx-auto"></div>
                   </div>
                 </div>
                 <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-black/20 to-transparent"></div>
-                <div className="absolute bottom-4 left-4 flex items-center text-primary-foreground drop-shadow-lg">
-                  <Shield className="w-5 h-5 text-primary-foreground mr-2" />
-                  <h3 className="text-xl md:text-2xl font-semibold drop-shadow-md">
+                <div className="absolute bottom-3 left-3 flex items-center text-primary-foreground drop-shadow-lg">
+                  <Shield className="w-4 h-4 text-primary-foreground mr-1.5" />
+                  <h3 className="text-lg md:text-xl font-semibold drop-shadow-md">
                     Autenticação Forte
                   </h3>
                 </div>
               </div>
-              <div className="mt-4 px-4 pb-6">
-                <p className="text-base md:text-lg text-card-foreground font-medium leading-relaxed">
+              <div className="mt-3 px-4 pb-4">
+                <p className="text-sm md:text-base text-card-foreground font-medium leading-relaxed">
                   Login seguro com autenticação de dois fatores e controle de acesso rigoroso.
                 </p>
               </div>
