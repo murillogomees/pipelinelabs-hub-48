@@ -158,6 +158,50 @@ export const useMarketplaceIntegrations = () => {
     onError: () => toast({ ...TOAST_MESSAGES.error, description: 'Falha na sincronização' })
   });
 
+  // Conectar marketplace com 1 clique
+  const connectMarketplace = useMutation({
+    mutationFn: async ({ marketplace, company_id, integration_type, credentials, redirect_url }: {
+      marketplace: string;
+      company_id: string;
+      integration_type: 'oauth' | 'apikey';
+      credentials?: Record<string, any>;
+      redirect_url?: string;
+    }) => {
+      const { data, error } = await supabase.functions.invoke('marketplace-connect', {
+        body: {
+          marketplace,
+          company_id,
+          integration_type,
+          credentials,
+          redirect_url
+        }
+      });
+
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: ['marketplace-integrations'] });
+      
+      if (data.type === 'oauth' && data.auth_url) {
+        // Redirecionar para OAuth
+        window.location.href = data.auth_url;
+      } else {
+        toast({
+          title: "Sucesso",
+          description: data.message || "Marketplace conectado com sucesso!"
+        });
+      }
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Erro",
+        description: error.message || "Erro ao conectar marketplace.",
+        variant: "destructive"
+      });
+    }
+  });
+
   return {
     integrations,
     isLoading,
@@ -165,6 +209,8 @@ export const useMarketplaceIntegrations = () => {
     updateIntegration,
     deleteIntegration,
     testConnection,
-    syncNow
+    syncNow,
+    connectMarketplace,
+    isConnecting: connectMarketplace.isPending
   };
 };

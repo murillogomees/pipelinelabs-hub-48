@@ -117,10 +117,11 @@ export const MarketplaceChannelCard = ({
           {isEnabled && onConnect && (
             <Button
               onClick={() => onConnect(channel.name)}
-              className="flex-1"
+              className="flex-1 bg-gradient-to-r from-green-600 to-blue-600 hover:from-green-700 hover:to-blue-700"
               size="sm"
             >
-              Conectar Conta
+              <span className="text-lg mr-1">⚡</span>
+              Conectar com 1 Clique
             </Button>
           )}
           

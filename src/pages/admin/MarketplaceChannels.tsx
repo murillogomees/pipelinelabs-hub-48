@@ -5,9 +5,10 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { MarketplaceChannelCard } from "@/components/Marketplace/MarketplaceChannelCard";
-import { MarketplaceConnectionDialog } from "@/components/Marketplace/MarketplaceConnectionDialog";
+import { OneClickConnectDialog } from "@/components/Marketplace/OneClickConnectDialog";
 import { useMarketplaceChannels } from "@/hooks/useMarketplaceChannels";
 import { useMarketplaceIntegrations } from "@/hooks/useMarketplaceIntegrations";
+import { useCurrentCompany } from "@/hooks/useCurrentCompany";
 import { ShoppingCart, Settings, Activity, AlertTriangle } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 
@@ -28,8 +29,11 @@ export default function MarketplaceChannels() {
 
   const {
     integrations,
-    createIntegration
+    connectMarketplace,
+    isConnecting
   } = useMarketplaceIntegrations();
+
+  const { data: currentCompany } = useCurrentCompany();
 
   useEffect(() => {
     const checkPermissions = async () => {
@@ -48,18 +52,14 @@ export default function MarketplaceChannels() {
     setShowConnectionDialog(true);
   };
 
-  const handleCreateIntegration = async (data: any) => {
-    if (!selectedChannel) return;
-
-    createIntegration.mutate({
-      marketplace: selectedChannel,
-      auth_type: 'apikey',
-      credentials: data.credentials,
-      config: {
-        sync_interval: data.sync_interval,
-        webhook_url: data.webhook_url
-      }
-    }, {
+  const handleOneClickConnect = async (data: {
+    marketplace: string;
+    company_id: string;
+    integration_type: 'oauth' | 'apikey';
+    credentials?: Record<string, any>;
+    redirect_url?: string;
+  }) => {
+    connectMarketplace.mutate(data, {
       onSuccess: () => {
         setShowConnectionDialog(false);
         setSelectedChannel(null);
@@ -203,12 +203,14 @@ export default function MarketplaceChannels() {
         )}
       </div>
 
-      {/* Dialog de conexão */}
-      <MarketplaceConnectionDialog
+      {/* Dialog de conexão com 1 clique */}
+      <OneClickConnectDialog
         open={showConnectionDialog}
         onOpenChange={setShowConnectionDialog}
-        onSubmit={handleCreateIntegration}
-        isLoading={createIntegration.isPending}
+        channel={selectedChannel ? channels.find(c => c.name === selectedChannel) || null : null}
+        companyId={currentCompany?.company_id || ''}
+        onConnect={handleOneClickConnect}
+        isLoading={isConnecting}
       />
     </div>
   );

@@ -1711,13 +1711,20 @@ export type Database = {
           config: Json | null
           created_at: string
           credentials: Json | null
+          encrypted_credentials: string | null
           id: string
           last_sync: string | null
+          last_webhook_received: string | null
           marketplace: string
+          oauth_token: string | null
+          refresh_token: string | null
           status: string
           sync_interval_minutes: number | null
+          token_expires_at: string | null
           updated_at: string
+          webhook_id: string | null
           webhook_secret: string | null
+          webhook_status: string | null
           webhook_url: string | null
         }
         Insert: {
@@ -1727,13 +1734,20 @@ export type Database = {
           config?: Json | null
           created_at?: string
           credentials?: Json | null
+          encrypted_credentials?: string | null
           id?: string
           last_sync?: string | null
+          last_webhook_received?: string | null
           marketplace: string
+          oauth_token?: string | null
+          refresh_token?: string | null
           status?: string
           sync_interval_minutes?: number | null
+          token_expires_at?: string | null
           updated_at?: string
+          webhook_id?: string | null
           webhook_secret?: string | null
+          webhook_status?: string | null
           webhook_url?: string | null
         }
         Update: {
@@ -1743,13 +1757,20 @@ export type Database = {
           config?: Json | null
           created_at?: string
           credentials?: Json | null
+          encrypted_credentials?: string | null
           id?: string
           last_sync?: string | null
+          last_webhook_received?: string | null
           marketplace?: string
+          oauth_token?: string | null
+          refresh_token?: string | null
           status?: string
           sync_interval_minutes?: number | null
+          token_expires_at?: string | null
           updated_at?: string
+          webhook_id?: string | null
           webhook_secret?: string | null
+          webhook_status?: string | null
           webhook_url?: string | null
         }
         Relationships: [
@@ -4087,6 +4108,14 @@ export type Database = {
         Args: { p_company_id: string; p_request_type: string; p_notes?: string }
         Returns: string
       }
+      create_marketplace_webhook: {
+        Args: {
+          p_integration_id: string
+          p_marketplace: string
+          p_webhook_url: string
+        }
+        Returns: string
+      }
       create_privacy_consent: {
         Args: {
           p_company_id: string
@@ -4126,6 +4155,18 @@ export type Database = {
           p_terms_url?: string
         }
         Returns: string
+      }
+      decrypt_marketplace_credentials: {
+        Args: { p_integration_id: string; p_encryption_key?: string }
+        Returns: Json
+      }
+      encrypt_marketplace_credentials: {
+        Args: {
+          p_integration_id: string
+          p_credentials: Json
+          p_encryption_key?: string
+        }
+        Returns: undefined
       }
       export_user_data: {
         Args: { p_user_id?: string; p_company_id?: string }
@@ -4296,6 +4337,15 @@ export type Database = {
           p_metadata?: Json
         }
         Returns: string
+      }
+      process_oauth_callback: {
+        Args: {
+          p_integration_id: string
+          p_access_token: string
+          p_refresh_token?: string
+          p_expires_in?: number
+        }
+        Returns: boolean
       }
       register_stock_movement: {
         Args: {
