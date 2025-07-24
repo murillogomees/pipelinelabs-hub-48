@@ -89,7 +89,7 @@ export function PersonaCard({
         </div>
 
         {/* Layout otimizado com espaçamento consistente e centralização */}
-        <div className="flex-1 flex flex-col justify-center items-center space-y-4 mt-4 w-full max-w-[95%]">
+        <div className="flex-1 flex flex-col justify-evenly items-center mx-auto my-auto w-full max-w-[95%] gap-4">
           {/* Principais Dores */}
           {problems && problems.length > 0 && (
             <div className="space-y-2 text-center w-full">
