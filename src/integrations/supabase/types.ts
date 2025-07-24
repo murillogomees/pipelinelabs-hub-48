@@ -3918,6 +3918,10 @@ export type Database = {
           status: string
         }[]
       }
+      cleanup_old_security_logs: {
+        Args: Record<PropertyKey, never>
+        Returns: undefined
+      }
       create_alert: {
         Args: {
           p_company_id: string
@@ -4217,6 +4221,10 @@ export type Database = {
         Args: { p_user_id: string; p_company_id: string }
         Returns: boolean
       }
+      validate_admin_action: {
+        Args: { p_action: string; p_user_id?: string }
+        Returns: boolean
+      }
       validate_cnpj: {
         Args: { cnpj_input: string }
         Returns: boolean
@@ -4227,6 +4235,14 @@ export type Database = {
       }
       validate_password: {
         Args: { password: string }
+        Returns: boolean
+      }
+      validate_sensitive_operation: {
+        Args: {
+          p_operation: string
+          p_resource_type: string
+          p_resource_id?: string
+        }
         Returns: boolean
       }
     }

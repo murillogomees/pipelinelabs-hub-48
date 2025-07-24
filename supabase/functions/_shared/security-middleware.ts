@@ -10,6 +10,8 @@ export interface SecurityOptions {
     windowMs: number;
   };
   sanitizeInput?: boolean;
+  logSecurityEvents?: boolean;
+  validateSensitiveOps?: boolean;
 }
 
 export async function securityMiddleware(
@@ -21,7 +23,9 @@ export async function securityMiddleware(
     allowedMethods = ['POST', 'GET', 'PUT', 'DELETE'],
     requireAuth = true,
     rateLimit = { maxRequests: 60, windowMs: 60000 },
-    sanitizeInput = true
+    sanitizeInput = true,
+    logSecurityEvents = true,
+    validateSensitiveOps = false
   } = options;
 
   // Check HTTP method
@@ -61,6 +65,29 @@ export async function securityMiddleware(
   return null; // No security violations
 }
 
+export function getSecurityHeaders(): Record<string, string> {
+  return {
+    'X-Content-Type-Options': 'nosniff',
+    'X-Frame-Options': 'DENY',
+    'X-XSS-Protection': '1; mode=block',
+    'Referrer-Policy': 'strict-origin-when-cross-origin',
+    'Content-Security-Policy': "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline';",
+    'Strict-Transport-Security': 'max-age=31536000; includeSubDomains',
+    'Permissions-Policy': 'camera=(), microphone=(), geolocation=()'
+  };
+}
+
 export function sanitizeEdgeRequest(data: any): any {
   return sanitizeRequestData(data);
+}
+
+export function createSecureResponse(data: any, status: number = 200, additionalHeaders: Record<string, string> = {}): Response {
+  const securityHeaders = getSecurityHeaders();
+  const headers = {
+    'Content-Type': 'application/json',
+    ...securityHeaders,
+    ...additionalHeaders
+  };
+  
+  return new Response(JSON.stringify(data), { status, headers });
 }
