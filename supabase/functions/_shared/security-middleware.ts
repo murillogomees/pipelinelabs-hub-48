@@ -1,5 +1,5 @@
 import { checkRateLimit } from './rate-limiter.ts';
-import { sanitizeRequestData } from '../../../src/lib/validation/sanitization.ts';
+import { sanitizeRequestData } from './sanitization.ts';
 
 export interface SecurityOptions {
   maxRequestSize?: number;
