@@ -40,7 +40,7 @@ interface MarketplaceConfig {
 }
 
 const MARKETPLACE_CONFIGS: Record<string, MarketplaceConfig> = {
-  'mercado_livre': {
+  'mercado-livre': {
     name: 'Mercado Livre',
     auth_type: 'oauth2',
     auth_url: 'https://auth.mercadolivre.com.br/authorization',
@@ -81,7 +81,7 @@ const MARKETPLACE_CONFIGS: Record<string, MarketplaceConfig> = {
       inventory: 'https://sellingpartnerapi-na.amazon.com/fba/inventory/v1/summaries'
     }
   },
-  'magazine_luiza': {
+  'magazine-luiza': {
     name: 'Magazine Luiza',
     auth_type: 'api_key',
     required_fields: ['api_key', 'seller_id'],
@@ -92,7 +92,7 @@ const MARKETPLACE_CONFIGS: Record<string, MarketplaceConfig> = {
       inventory: 'https://api.magazineluiza.com/seller/v1/inventory'
     }
   },
-  'via_varejo': {
+  'via-varejo': {
     name: 'Via Varejo (Casas Bahia)',
     auth_type: 'api_key',
     required_fields: ['api_key', 'seller_id'],
