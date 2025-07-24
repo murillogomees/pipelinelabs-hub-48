@@ -2556,6 +2556,36 @@ export type Database = {
           },
         ]
       }
+      rate_limits: {
+        Row: {
+          blocked_until: string | null
+          created_at: string
+          id: string
+          identifier: string
+          request_count: number
+          updated_at: string
+          window_start: string
+        }
+        Insert: {
+          blocked_until?: string | null
+          created_at?: string
+          id?: string
+          identifier: string
+          request_count?: number
+          updated_at?: string
+          window_start?: string
+        }
+        Update: {
+          blocked_until?: string | null
+          created_at?: string
+          id?: string
+          identifier?: string
+          request_count?: number
+          updated_at?: string
+          window_start?: string
+        }
+        Relationships: []
+      }
       reports: {
         Row: {
           chart_type: string
@@ -2761,6 +2791,39 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      security_audit_logs: {
+        Row: {
+          created_at: string
+          event_data: Json | null
+          event_type: string
+          id: string
+          ip_address: unknown | null
+          risk_level: string
+          user_agent: string | null
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          event_data?: Json | null
+          event_type: string
+          id?: string
+          ip_address?: unknown | null
+          risk_level?: string
+          user_agent?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          event_data?: Json | null
+          event_type?: string
+          id?: string
+          ip_address?: unknown | null
+          risk_level?: string
+          user_agent?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
       }
       service_orders: {
         Row: {
@@ -3835,6 +3898,14 @@ export type Database = {
         Args: { doc: string }
         Returns: boolean
       }
+      check_rate_limit: {
+        Args: {
+          p_identifier: string
+          p_max_requests?: number
+          p_window_minutes?: number
+        }
+        Returns: boolean
+      }
       check_request: {
         Args: Record<PropertyKey, never>
         Returns: boolean
@@ -3946,6 +4017,10 @@ export type Database = {
           p_user_agent?: string
           p_terms_url?: string
         }
+        Returns: string
+      }
+      encrypt_sensitive_data: {
+        Args: { data_to_encrypt: string; encryption_key: string }
         Returns: string
       }
       export_user_data: {
@@ -4102,6 +4177,17 @@ export type Database = {
           p_response_time_ms?: number
           p_error_message?: string
           p_error_details?: Json
+        }
+        Returns: string
+      }
+      log_security_event: {
+        Args: {
+          p_event_type: string
+          p_user_id?: string
+          p_ip_address?: unknown
+          p_user_agent?: string
+          p_event_data?: Json
+          p_risk_level?: string
         }
         Returns: string
       }
