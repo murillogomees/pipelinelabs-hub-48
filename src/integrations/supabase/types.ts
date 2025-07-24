@@ -2825,6 +2825,36 @@ export type Database = {
         }
         Relationships: []
       }
+      security_config: {
+        Row: {
+          config_key: string
+          config_value: Json
+          created_at: string
+          description: string | null
+          id: string
+          is_active: boolean
+          updated_at: string
+        }
+        Insert: {
+          config_key: string
+          config_value?: Json
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_active?: boolean
+          updated_at?: string
+        }
+        Update: {
+          config_key?: string
+          config_value?: Json
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_active?: boolean
+          updated_at?: string
+        }
+        Relationships: []
+      }
       service_orders: {
         Row: {
           assigned_to: string | null
@@ -3886,6 +3916,10 @@ export type Database = {
           recommendation: string
         }[]
       }
+      automated_security_cleanup: {
+        Args: Record<PropertyKey, never>
+        Returns: undefined
+      }
       can_access_company_data: {
         Args: { company_uuid: string }
         Returns: boolean
@@ -4128,6 +4162,10 @@ export type Database = {
         Args: Record<PropertyKey, never>
         Returns: number
       }
+      get_security_config: {
+        Args: { p_config_key: string }
+        Returns: Json
+      }
       get_system_health: {
         Args: Record<PropertyKey, never>
         Returns: {
@@ -4213,9 +4251,21 @@ export type Database = {
         Args: { p_alert_id: string; p_resolution_notes?: string }
         Returns: boolean
       }
+      setup_initial_super_admin: {
+        Args: { p_email: string }
+        Returns: string
+      }
       trigger_manual_backup: {
         Args: Record<PropertyKey, never>
         Returns: Json
+      }
+      update_security_config: {
+        Args: {
+          p_config_key: string
+          p_config_value: Json
+          p_description?: string
+        }
+        Returns: boolean
       }
       user_has_accepted_current_terms: {
         Args: { p_user_id: string; p_company_id: string }
