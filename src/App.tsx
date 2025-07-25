@@ -219,7 +219,7 @@ function RouteHandler() {
         <Route path="admin/landing-page" element={<ProtectedRoute requireSuperAdmin><AdminLandingPage /></ProtectedRoute>} />
         <Route path="admin/compressao" element={<ProtectedRoute requireSuperAdmin><AdminCompressao /></ProtectedRoute>} />
         <Route path="admin/monitoramento" element={<ProtectedRoute requireSuperAdmin><AdminMonitoramento /></ProtectedRoute>} />
-        <Route path="admin/stripe" element={<ProtectedRoute requireSuperAdmin><AdminStripe /></ProtectedRoute>} />
+        <Route path="admin/stripe" element={<ProtectedRoute requireAdmin><AdminStripe /></ProtectedRoute>} />
         <Route path="admin/nfe-config" element={<ProtectedRoute requireSuperAdmin><AdminNFeConfig /></ProtectedRoute>} />
         <Route path="admin/versions" element={<ProtectedRoute requireSuperAdmin><AdminVersions /></ProtectedRoute>} />
         <Route path="admin/engineering-notes" element={<ProtectedRoute requireAdmin><AdminEngineeringNotes /></ProtectedRoute>} />

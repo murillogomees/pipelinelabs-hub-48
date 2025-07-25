@@ -5,7 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { SuperAdminGuard } from "@/components/PermissionGuard";
+
 import { StripeConfigDialog } from "@/components/Admin/Stripe/StripeConfigDialog";
 import { BillingPlansManager } from "@/components/Admin/Stripe/BillingPlansManager";
 import { useStripeConfig } from "@/hooks/useStripeConfig";
@@ -20,7 +20,7 @@ export default function AdminStripe() {
   };
 
   return (
-    <SuperAdminGuard>
+    <div>
       <div className="space-y-6">
         {/* Header */}
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
@@ -294,6 +294,6 @@ export default function AdminStripe() {
           onOpenChange={setConfigDialogOpen}
         />
       </div>
-    </SuperAdminGuard>
+    </div>
   );
 }
