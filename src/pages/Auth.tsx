@@ -10,7 +10,7 @@ export function Auth() {
 
   useEffect(() => {
     if (user) {
-      navigate('/', { replace: true });
+      navigate('/app/dashboard', { replace: true });
     }
   }, [user, navigate]);
 
