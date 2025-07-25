@@ -85,12 +85,17 @@ export function UsersManagement() {
                   onClick={() => {
                     // Transformar dados para o formato esperado pelo modal
                     const transformedUser = {
-                      id: user.id,
+                      id: user.user_id, // Usar user_id como id principal
                       user_id: user.user_id,
                       display_name: user.profiles?.display_name || '',
                       email: user.profiles?.email || '',
                       is_active: user.is_active,
-                      user_companies: [user] // O modal espera um array
+                      user_companies: [{
+                        ...user,
+                        company_id: user.company_id,
+                        user_type: user.user_type,
+                        permissions: user.permissions || {}
+                      }]
                     };
                     setSelectedUser(transformedUser);
                     setShowUserDialog(true);
