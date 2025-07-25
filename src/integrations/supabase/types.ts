@@ -3951,6 +3951,10 @@ export type Database = {
         Args: { company_uuid: string }
         Returns: boolean
       }
+      can_bypass_all_restrictions: {
+        Args: Record<PropertyKey, never>
+        Returns: boolean
+      }
       can_manage_company_data: {
         Args: { company_uuid: string }
         Returns: boolean

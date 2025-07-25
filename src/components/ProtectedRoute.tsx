@@ -17,7 +17,12 @@ export function ProtectedRoute({
   requireSuperAdmin = false 
 }: ProtectedRouteProps) {
   const { isAuthenticated, isLoading, error } = useAuth();
-  const { isSuperAdmin, isAdmin, isLoading: permissionsLoading } = usePermissions();
+  const { 
+    isSuperAdmin, 
+    isAdmin, 
+    isLoading: permissionsLoading,
+    canBypassAllRestrictions 
+  } = usePermissions();
 
   // Mostrar loading durante verificação de autenticação
   if (isLoading || permissionsLoading) {
@@ -42,6 +47,11 @@ export function ProtectedRoute({
   // Se não estiver autenticado, redirecionar para auth
   if (!isAuthenticated) {
     return <Navigate to="/auth" replace />;
+  }
+
+  // Super Admin pode bypassar todas as restrições
+  if (canBypassAllRestrictions) {
+    return <>{children}</>;
   }
 
   // Verificar permissões específicas

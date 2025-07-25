@@ -10,12 +10,17 @@ export const useSubscriptionGuard = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { user } = useAuth();
-  const { isAdmin, isSuperAdmin } = usePermissions();
+  const { isAdmin, isSuperAdmin, canBypassAllRestrictions } = usePermissions();
   const { data: currentCompany } = useCurrentCompany();
   const { subscription, isSubscriptionActive, isLoading: subscriptionLoading } = useCompanySubscription(currentCompany?.company_id || '');
   const { plans } = useBillingPlans();
 
   useEffect(() => {
+    // Super Admin pode bypassar todas as restrições de plano e empresa
+    if (canBypassAllRestrictions) {
+      return;
+    }
+    
     // Administradores têm acesso total - não precisam de empresa ou plano
     if (isAdmin || isSuperAdmin) {
       return;
@@ -46,12 +51,13 @@ export const useSubscriptionGuard = () => {
       navigate('/planos', { replace: true });
       return;
     }
-  }, [user, currentCompany, subscription, isSubscriptionActive, subscriptionLoading, location.pathname, navigate, plans, isAdmin, isSuperAdmin]);
+  }, [user, currentCompany, subscription, isSubscriptionActive, subscriptionLoading, location.pathname, navigate, plans, isAdmin, isSuperAdmin, canBypassAllRestrictions]);
 
   return {
     subscription,
-    isSubscriptionActive: isSubscriptionActive || isAdmin || isSuperAdmin,
+    isSubscriptionActive: isSubscriptionActive || isAdmin || isSuperAdmin || canBypassAllRestrictions,
     isLoading: subscriptionLoading,
-    hasAccess: isSubscriptionActive || (plans?.some(plan => plan.price === 0) && subscription) || isAdmin || isSuperAdmin,
+    hasAccess: isSubscriptionActive || (plans?.some(plan => plan.price === 0) && subscription) || isAdmin || isSuperAdmin || canBypassAllRestrictions,
+    canBypassRestrictions: canBypassAllRestrictions,
   };
 };

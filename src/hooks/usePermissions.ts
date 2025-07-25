@@ -200,22 +200,30 @@ export function usePermissions() {
     isLoading,
     hasFullAccess: permissionsData?.isSuperAdmin || false,
     
-    // Funções de conveniência específicas por hierarquia
+    // Funções de conveniência específicas por hierarquia - Super Admin pode TUDO
     canManageSystem: permissionsData?.isSuperAdmin || false,
-    canManageCompany: (permissionsData?.isSuperAdmin || permissionsData?.isContratante) || false,
-    canManageUsers: (permissionsData?.isSuperAdmin || permissionsData?.isContratante) || false,
+    canManageCompany: permissionsData?.isSuperAdmin || permissionsData?.isContratante || false,
+    canManageUsers: permissionsData?.isSuperAdmin || permissionsData?.isContratante || false,
     canManagePlans: permissionsData?.isSuperAdmin || false,
-    canAccessAdminPanel: (permissionsData?.isSuperAdmin || permissionsData?.isContratante) || false,
-    canViewReports: (permissionsData?.isSuperAdmin || permissionsData?.isContratante || permissionsData?.specificPermissions?.reports) || false,
+    canAccessAdminPanel: permissionsData?.isSuperAdmin || permissionsData?.isContratante || false,
+    canViewReports: permissionsData?.isSuperAdmin || permissionsData?.isContratante || permissionsData?.specificPermissions?.reports || false,
+    
+    // Super Admin bypass - sempre retorna true para super admin
+    canBypassAllRestrictions: permissionsData?.isSuperAdmin || false,
+    canAccessAnyCompany: permissionsData?.isSuperAdmin || false,
+    canModifyAnyData: permissionsData?.isSuperAdmin || false,
+    canDeleteAnyRecord: permissionsData?.isSuperAdmin || false,
     
     // Verificações específicas de permissão por funcionalidade
     hasPermission: (permission: string) => {
+      // Super Admin tem todas as permissões
       if (permissionsData?.isSuperAdmin) return true;
       return permissionsData?.specificPermissions?.[permission] === true;
     },
     
     // Verificações por contexto
     canAccessDepartmentData: (companyId: string, department?: string) => {
+      // Super Admin pode acessar qualquer departamento de qualquer empresa
       if (permissionsData?.isSuperAdmin) return true;
       if (permissionsData?.isContratante && permissionsData?.companyId === companyId) return true;
       if (permissionsData?.isOperador && permissionsData?.companyId === companyId) {
@@ -225,8 +233,23 @@ export function usePermissions() {
     },
     
     canManageCompanyData: (companyId: string) => {
+      // Super Admin pode gerenciar qualquer empresa
       if (permissionsData?.isSuperAdmin) return true;
       return permissionsData?.isContratante && permissionsData?.companyId === companyId;
+    },
+
+    // Verificar se pode acessar qualquer rota/página
+    canAccessRoute: (route: string) => {
+      // Super Admin pode acessar qualquer rota
+      if (permissionsData?.isSuperAdmin) return true;
+      
+      // Rotas administrativas só para super admin e contratante
+      const adminRoutes = ['/app/admin', '/app/configuracoes'];
+      if (adminRoutes.some(adminRoute => route.startsWith(adminRoute))) {
+        return permissionsData?.isContratante || false;
+      }
+      
+      return true; // Outras rotas são acessíveis para usuários autenticados
     },
 
     error
