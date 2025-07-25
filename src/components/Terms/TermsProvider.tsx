@@ -32,23 +32,28 @@ export function TermsProvider({ children }: TermsProviderProps) {
   useEffect(() => {
     // Only check for authenticated users
     if (user && currentTerms) {
+      // Check if user has already accepted this version permanently
+      const hasAcceptedVersion = localStorage.getItem(`terms_accepted_${user.id}_${currentTerms.version}`);
+      
+      // If user has already accepted this version, don't show modal
+      if (hasAcceptedVersion) {
+        setRequiresAcceptance(false);
+        setShowTermsModal(false);
+        return;
+      }
+      
       const needsAcceptance = !hasAcceptedCurrent;
       setRequiresAcceptance(needsAcceptance);
       
       if (needsAcceptance) {
-        // Check if user has already accepted this version permanently
-        const hasAcceptedVersion = localStorage.getItem(`terms_accepted_${user.id}_${currentTerms.version}`);
+        // Check if user has been shown the terms modal before for this session
+        const hasShownTermsModal = localStorage.getItem(`terms_modal_shown_${user.id}_${currentTerms.version}`);
         
-        if (!hasAcceptedVersion) {
-          // Check if user has been shown the terms modal before for this session
-          const hasShownTermsModal = localStorage.getItem(`terms_modal_shown_${user.id}_${currentTerms.version}`);
-          
-          if (!hasShownTermsModal) {
-            // Small delay to ensure page is loaded
-            setTimeout(() => {
-              setShowTermsModal(true);
-            }, 1500);
-          }
+        if (!hasShownTermsModal) {
+          // Small delay to ensure page is loaded
+          setTimeout(() => {
+            setShowTermsModal(true);
+          }, 1500);
         }
       }
     }
