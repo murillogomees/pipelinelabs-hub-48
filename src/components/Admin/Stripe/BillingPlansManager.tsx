@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -29,6 +29,31 @@ function PlanDialog({ plan, open, onOpenChange, onSave }: PlanDialogProps) {
   });
 
   const [newFeature, setNewFeature] = useState("");
+
+  // Atualizar formulário quando o plano mudar
+  useEffect(() => {
+    if (plan) {
+      setFormData({
+        name: plan.name || "",
+        description: plan.description || "",
+        price: plan.price || 0,
+        interval: plan.interval || "month",
+        max_users: plan.max_users || null,
+        features: plan.features || [],
+      });
+    } else {
+      // Limpar formulário para novo plano
+      setFormData({
+        name: "",
+        description: "",
+        price: 0,
+        interval: "month",
+        max_users: null,
+        features: [],
+      });
+    }
+    setNewFeature("");
+  }, [plan, open]); // Reagir tanto ao plan quanto ao open para garantir atualização
 
   const handleAddFeature = () => {
     if (newFeature.trim()) {
