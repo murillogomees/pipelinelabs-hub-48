@@ -24,10 +24,17 @@ const defaultFormData: UserFormData = {
     vendas: false,
     produtos: false,
     clientes: false,
+    compras: false,
+    estoque: false,
     financeiro: false,
     notas_fiscais: false,
     producao: false,
     contratos: false,
+    relatorios: false,
+    analytics: false,
+    marketplace_canais: false,
+    integracoes: false,
+    configuracoes: false,
   },
 };
 
@@ -79,10 +86,17 @@ export function UserForm({ user, onSubmit, loading }: UserFormProps) {
           vendas: false,
           produtos: false,
           clientes: false,
+          compras: false,
+          estoque: false,
           financeiro: false,
           notas_fiscais: false,
           producao: false,
           contratos: false,
+          relatorios: false,
+          analytics: false,
+          marketplace_canais: false,
+          integracoes: false,
+          configuracoes: false,
           ...(userCompany?.permissions || {})
         }
       });

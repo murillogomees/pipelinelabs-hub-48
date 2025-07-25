@@ -11,7 +11,14 @@ import {
   DollarSign, 
   FileText, 
   Cog,
-  FileCheck
+  FileCheck,
+  ShoppingBag,
+  Archive,
+  TrendingUp,
+  Activity,
+  Globe,
+  Zap,
+  Settings
 } from 'lucide-react';
 
 interface PermissionsSectionProps {
@@ -50,6 +57,20 @@ const permissionConfig = [
     category: 'Comercial'
   },
   {
+    key: 'compras',
+    label: 'Compras',
+    description: 'Gerenciar compras e fornecedores',
+    icon: ShoppingBag,
+    category: 'Comercial'
+  },
+  {
+    key: 'estoque',
+    label: 'Estoque',
+    description: 'Controle de estoque e movimentações',
+    icon: Archive,
+    category: 'Operacional'
+  },
+  {
     key: 'financeiro',
     label: 'Financeiro',
     description: 'Controle financeiro e relatórios',
@@ -76,6 +97,41 @@ const permissionConfig = [
     description: 'Gestão de contratos',
     icon: FileCheck,
     category: 'Jurídico'
+  },
+  {
+    key: 'relatorios',
+    label: 'Relatórios',
+    description: 'Visualizar e gerar relatórios',
+    icon: TrendingUp,
+    category: 'Relatórios'
+  },
+  {
+    key: 'analytics',
+    label: 'Analytics',
+    description: 'Análises avançadas e métricas',
+    icon: Activity,
+    category: 'Relatórios'
+  },
+  {
+    key: 'marketplace_canais',
+    label: 'Marketplace Canais',
+    description: 'Integração com marketplaces',
+    icon: Globe,
+    category: 'Integrações'
+  },
+  {
+    key: 'integracoes',
+    label: 'Integrações',
+    description: 'Configurar integrações externas',
+    icon: Zap,
+    category: 'Integrações'
+  },
+  {
+    key: 'configuracoes',
+    label: 'Configurações',
+    description: 'Configurações gerais do sistema',
+    icon: Settings,
+    category: 'Sistema'
   }
 ];
 

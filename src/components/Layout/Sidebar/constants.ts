@@ -109,7 +109,6 @@ export const menuItems = [
     path: '/app/admin',
     adminOnly: true,
     submenu: [
-      { title: 'Planos', path: '/app/admin/planos' },
       { title: 'Usuários', path: '/app/admin/usuarios' },
       
       { title: 'Integrações', path: '/app/admin/integracoes' },

@@ -10,6 +10,7 @@ export const PERMISSIONS = {
   VENDAS: 'vendas',
   PRODUTOS: 'produtos',
   CLIENTES: 'clientes',
+  COMPRAS: 'compras',
   
   // Financeiro
   FINANCEIRO: 'financeiro',
@@ -20,6 +21,18 @@ export const PERMISSIONS = {
   // Operacional
   PRODUCAO: 'producao',
   CONTRATOS: 'contratos',
+  ESTOQUE: 'estoque',
+  
+  // Relatórios e Analytics
+  RELATORIOS: 'relatorios',
+  ANALYTICS: 'analytics',
+  
+  // Integrações
+  MARKETPLACE_CANAIS: 'marketplace_canais',
+  INTEGRACOES: 'integracoes',
+  
+  // Configurações
+  CONFIGURACOES: 'configuracoes',
   
   // Administrativo
   ADMIN_PANEL: 'admin_panel',
@@ -43,10 +56,17 @@ export const DEFAULT_PERMISSIONS = {
     [PERMISSIONS.VENDAS]: true,
     [PERMISSIONS.PRODUTOS]: true,
     [PERMISSIONS.CLIENTES]: true,
+    [PERMISSIONS.COMPRAS]: true,
     [PERMISSIONS.FINANCEIRO]: true,
     [PERMISSIONS.NOTAS_FISCAIS]: true,
     [PERMISSIONS.PRODUCAO]: true,
     [PERMISSIONS.CONTRATOS]: true,
+    [PERMISSIONS.ESTOQUE]: true,
+    [PERMISSIONS.RELATORIOS]: true,
+    [PERMISSIONS.ANALYTICS]: true,
+    [PERMISSIONS.MARKETPLACE_CANAIS]: true,
+    [PERMISSIONS.INTEGRACOES]: true,
+    [PERMISSIONS.CONFIGURACOES]: true,
     [PERMISSIONS.ADMIN_PANEL]: true,
     [PERMISSIONS.USER_MANAGEMENT]: true,
     [PERMISSIONS.COMPANY_MANAGEMENT]: true,
@@ -57,21 +77,35 @@ export const DEFAULT_PERMISSIONS = {
     [PERMISSIONS.VENDAS]: true,
     [PERMISSIONS.PRODUTOS]: true,
     [PERMISSIONS.CLIENTES]: true,
+    [PERMISSIONS.COMPRAS]: true,
     [PERMISSIONS.FINANCEIRO]: true,
     [PERMISSIONS.NOTAS_FISCAIS]: true,
     [PERMISSIONS.PRODUCAO]: true,
     [PERMISSIONS.CONTRATOS]: true,
+    [PERMISSIONS.ESTOQUE]: true,
+    [PERMISSIONS.RELATORIOS]: true,
+    [PERMISSIONS.ANALYTICS]: true,
+    [PERMISSIONS.MARKETPLACE_CANAIS]: true,
+    [PERMISSIONS.INTEGRACOES]: true,
+    [PERMISSIONS.CONFIGURACOES]: true,
     [PERMISSIONS.USER_MANAGEMENT]: true
   },
   [USER_TYPES.OPERADOR]: {
     [PERMISSIONS.DASHBOARD]: true,
-    [PERMISSIONS.VENDAS]: false,
-    [PERMISSIONS.PRODUTOS]: false,
-    [PERMISSIONS.CLIENTES]: false,
+    [PERMISSIONS.VENDAS]: true,
+    [PERMISSIONS.PRODUTOS]: true,
+    [PERMISSIONS.CLIENTES]: true,
+    [PERMISSIONS.COMPRAS]: true,
     [PERMISSIONS.FINANCEIRO]: false,
     [PERMISSIONS.NOTAS_FISCAIS]: false,
-    [PERMISSIONS.PRODUCAO]: false,
-    [PERMISSIONS.CONTRATOS]: false
+    [PERMISSIONS.PRODUCAO]: true,
+    [PERMISSIONS.CONTRATOS]: false,
+    [PERMISSIONS.ESTOQUE]: true,
+    [PERMISSIONS.RELATORIOS]: true,
+    [PERMISSIONS.ANALYTICS]: false,
+    [PERMISSIONS.MARKETPLACE_CANAIS]: false,
+    [PERMISSIONS.INTEGRACOES]: false,
+    [PERMISSIONS.CONFIGURACOES]: false
   }
 };
 

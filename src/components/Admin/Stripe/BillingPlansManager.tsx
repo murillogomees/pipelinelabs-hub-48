@@ -8,8 +8,9 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { useBillingPlans, BillingPlan } from "@/hooks/useBillingPlans";
-import { Plus, Edit, Trash2, Users, Check } from "lucide-react";
+import { Plus, Edit, Trash2, Users, Check, X } from "lucide-react";
 import { formatCurrency } from "@/lib/utils";
+import { Checkbox } from "@/components/ui/checkbox";
 
 interface PlanDialogProps {
   plan?: BillingPlan;
@@ -29,6 +30,24 @@ function PlanDialog({ plan, open, onOpenChange, onSave }: PlanDialogProps) {
   });
 
   const [newFeature, setNewFeature] = useState("");
+
+  const availableFeatures = [
+    "Dashboard",
+    "Vendas",
+    "Produtos",
+    "Clientes", 
+    "Compras",
+    "Estoque",
+    "Financeiro",
+    "Notas Fiscais",
+    "Produção",
+    "Contratos",
+    "Relatórios",
+    "Analytics",
+    "Marketplace Canais",
+    "Integrações",
+    "Configurações"
+  ];
 
   // Atualizar formulário quando o plano mudar
   useEffect(() => {
@@ -150,34 +169,69 @@ function PlanDialog({ plan, open, onOpenChange, onSave }: PlanDialogProps) {
           </div>
 
           <div>
-            <Label>Funcionalidades</Label>
-            <div className="space-y-2">
-              <div className="flex gap-2">
+            <Label>Funcionalidades do Sistema</Label>
+            <p className="text-sm text-muted-foreground mb-3">
+              Selecione as funcionalidades que estarão disponíveis neste plano
+            </p>
+            <div className="grid grid-cols-2 gap-3 max-h-64 overflow-y-auto border rounded-md p-3">
+              {availableFeatures.map((feature) => (
+                <div key={feature} className="flex items-center space-x-2">
+                  <Checkbox
+                    id={feature}
+                    checked={formData.features.includes(feature)}
+                    onCheckedChange={(checked) => {
+                      if (checked) {
+                        setFormData(prev => ({
+                          ...prev,
+                          features: [...prev.features, feature]
+                        }));
+                      } else {
+                        setFormData(prev => ({
+                          ...prev,
+                          features: prev.features.filter(f => f !== feature)
+                        }));
+                      }
+                    }}
+                  />
+                  <Label htmlFor={feature} className="text-sm cursor-pointer">
+                    {feature}
+                  </Label>
+                </div>
+              ))}
+            </div>
+            
+            <div className="mt-3">
+              <Label className="text-sm font-medium">Funcionalidades Personalizadas</Label>
+              <div className="flex gap-2 mt-2">
                 <Input
                   value={newFeature}
                   onChange={(e) => setNewFeature(e.target.value)}
-                  placeholder="Digite uma funcionalidade..."
+                  placeholder="Digite uma funcionalidade personalizada..."
                   onKeyPress={(e) => e.key === "Enter" && handleAddFeature()}
                 />
                 <Button type="button" onClick={handleAddFeature}>
                   <Plus className="h-4 w-4" />
                 </Button>
               </div>
-              <div className="flex flex-wrap gap-2">
-                {formData.features.map((feature, index) => (
-                  <Badge key={index} variant="secondary" className="gap-1">
-                    <Check className="h-3 w-3" />
-                    {feature}
-                    <button
-                      type="button"
-                      onClick={() => handleRemoveFeature(index)}
-                      className="ml-1 hover:text-destructive"
-                    >
-                      ×
-                    </button>
-                  </Badge>
-                ))}
-              </div>
+              
+              {formData.features.filter(f => !availableFeatures.includes(f)).length > 0 && (
+                <div className="flex flex-wrap gap-2 mt-2">
+                  {formData.features
+                    .filter(f => !availableFeatures.includes(f))
+                    .map((feature, index) => (
+                      <Badge key={index} variant="secondary" className="gap-1">
+                        {feature}
+                        <button
+                          type="button"
+                          onClick={() => handleRemoveFeature(formData.features.indexOf(feature))}
+                          className="ml-1 hover:text-destructive"
+                        >
+                          <X className="h-3 w-3" />
+                        </button>
+                      </Badge>
+                    ))}
+                </div>
+              )}
             </div>
           </div>
 

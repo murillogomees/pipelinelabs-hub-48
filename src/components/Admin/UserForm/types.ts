@@ -10,10 +10,17 @@ export interface UserFormData {
     vendas: boolean;
     produtos: boolean;
     clientes: boolean;
+    compras: boolean;
+    estoque: boolean;
     financeiro: boolean;
     notas_fiscais: boolean;
     producao: boolean;
     contratos: boolean;
+    relatorios: boolean;
+    analytics: boolean;
+    marketplace_canais: boolean;
+    integracoes: boolean;
+    configuracoes: boolean;
   };
 }
 
