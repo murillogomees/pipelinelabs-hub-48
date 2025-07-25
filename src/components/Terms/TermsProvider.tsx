@@ -36,14 +36,19 @@ export function TermsProvider({ children }: TermsProviderProps) {
       setRequiresAcceptance(needsAcceptance);
       
       if (needsAcceptance) {
-        // Check if user has been shown the terms modal before
-        const hasShownTermsModal = localStorage.getItem(`terms_modal_shown_${user.id}_${currentTerms.version}`);
+        // Check if user has already accepted this version permanently
+        const hasAcceptedVersion = localStorage.getItem(`terms_accepted_${user.id}_${currentTerms.version}`);
         
-        if (!hasShownTermsModal) {
-          // Small delay to ensure page is loaded
-          setTimeout(() => {
-            setShowTermsModal(true);
-          }, 1500);
+        if (!hasAcceptedVersion) {
+          // Check if user has been shown the terms modal before for this session
+          const hasShownTermsModal = localStorage.getItem(`terms_modal_shown_${user.id}_${currentTerms.version}`);
+          
+          if (!hasShownTermsModal) {
+            // Small delay to ensure page is loaded
+            setTimeout(() => {
+              setShowTermsModal(true);
+            }, 1500);
+          }
         }
       }
     }
@@ -60,9 +65,11 @@ export function TermsProvider({ children }: TermsProviderProps) {
     setRequiresAcceptance(false);
     setShowTermsModal(false);
     
-    // Clear the modal shown flag since user has now accepted
+    // Mark that user has accepted terms and clear the modal shown flag
     if (user && currentTerms) {
       localStorage.removeItem(`terms_modal_shown_${user.id}_${currentTerms.version}`);
+      // Set a flag to never show the modal again for this terms version
+      localStorage.setItem(`terms_accepted_${user.id}_${currentTerms.version}`, 'true');
     }
   };
 
