@@ -48,7 +48,7 @@ const AdminBackup = React.lazy(() => import('@/pages/AdminBackup'));
 const AdminAuditLogs = React.lazy(() => import('@/pages/AdminAuditLogs'));
 const AdminCache = React.lazy(() => import('@/pages/AdminCache').then(module => ({ default: module.AdminCache })));
 
-
+const AdminLandingPage = React.lazy(() => import('@/pages/AdminLandingPage').then(module => ({ default: module.AdminLandingPage })));
 const AdminCompressao = React.lazy(() => import('@/pages/AdminCompressao').then(module => ({ default: module.AdminCompressao })));
 const AdminMonitoramento = React.lazy(() => import('@/pages/AdminMonitoramento'));
 const AdminEngineeringNotes = React.lazy(() => import('@/pages/AdminEngineeringNotes'));
@@ -68,6 +68,8 @@ const TermosDeUso = React.lazy(() => import('@/pages/TermosDeUso'));
 // SLA page
 const SLA = React.lazy(() => import('@/pages/SLA'));
 
+// Landing Page
+const LandingPage = React.lazy(() => import('@/pages/LandingPage').then(module => ({ default: module.LandingPage })));
 
 // Testing page - development only
 const BreakpointTest = React.lazy(() => import('@/pages/BreakpointTest').then(module => ({ default: module.BreakpointTest })));
@@ -153,10 +155,14 @@ function RouteHandler() {
         <PrivacyConsentProvider>
           <TermsProvider>
           <Routes>
-      {/* Redirect to auth for non-authenticated users */}
+      {/* Landing page - accessible for everyone */}
       <Route 
         path="/" 
-        element={isAuthenticated ? <Navigate to="/app/dashboard" replace /> : <Navigate to="/auth" replace />} 
+        element={
+          <PageSuspenseBoundary>
+            <LandingPage />
+          </PageSuspenseBoundary>
+        } 
       />
       
       {/* Auth route - only for non-authenticated users */}
@@ -210,7 +216,7 @@ function RouteHandler() {
         <Route path="admin/backup" element={<ProtectedRoute requireSuperAdmin><AdminBackup /></ProtectedRoute>} />
         <Route path="admin/cache" element={<ProtectedRoute requireSuperAdmin><AdminCache /></ProtectedRoute>} />
         <Route path="admin/audit-logs" element={<ProtectedRoute requireAdmin><AdminAuditLogs /></ProtectedRoute>} />
-        
+        <Route path="admin/landing-page" element={<ProtectedRoute requireSuperAdmin><AdminLandingPage /></ProtectedRoute>} />
         <Route path="admin/compressao" element={<ProtectedRoute requireSuperAdmin><AdminCompressao /></ProtectedRoute>} />
         <Route path="admin/monitoramento" element={<ProtectedRoute requireSuperAdmin><AdminMonitoramento /></ProtectedRoute>} />
         <Route path="admin/stripe" element={<ProtectedRoute requireAdmin><AdminStripe /></ProtectedRoute>} />
