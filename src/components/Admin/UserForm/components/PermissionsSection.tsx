@@ -25,6 +25,7 @@ interface PermissionsSectionProps {
   permissions: Record<string, boolean>;
   onPermissionChange: (permission: string, value: boolean) => void;
   disabled?: boolean;
+  userType?: 'contratante' | 'operador';
 }
 
 const permissionConfig = [
@@ -135,64 +136,111 @@ const permissionConfig = [
   }
 ];
 
-export function PermissionsSection({ permissions, onPermissionChange, disabled = false }: PermissionsSectionProps) {
+export function PermissionsSection({ permissions, onPermissionChange, disabled = false, userType }: PermissionsSectionProps) {
   const categories = [...new Set(permissionConfig.map(p => p.category))];
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>Permissões de Acesso</CardTitle>
-        <CardDescription>
-          Defina quais funcionalidades o usuário pode acessar
-        </CardDescription>
+    <Card className="border-0 shadow-lg bg-gradient-to-br from-background to-muted/20">
+      <CardHeader className="pb-6">
+        <div className="flex items-center space-x-3">
+          <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center">
+            <Settings className="w-5 h-5 text-primary" />
+          </div>
+          <div>
+            <CardTitle className="text-xl font-semibold">Permissões de Acesso</CardTitle>
+            <CardDescription className="text-sm text-muted-foreground mt-1">
+              Configure os módulos e funcionalidades que o usuário pode acessar
+            </CardDescription>
+          </div>
+        </div>
       </CardHeader>
-      <CardContent>
-        <div className="space-y-6">
-          {categories.map((category) => {
-            const categoryPermissions = permissionConfig.filter(p => p.category === category);
-            
-            return (
-              <div key={category} className="space-y-3">
-                <div className="flex items-center justify-between">
-                  <Badge variant="outline">{category}</Badge>
+      <CardContent className="space-y-8">
+        {categories.map((category) => {
+          const categoryPermissions = permissionConfig.filter(p => p.category === category);
+          const enabledCount = categoryPermissions.filter(p => permissions[p.key]).length;
+          
+          return (
+            <div key={category} className="space-y-4">
+              <div className="flex items-center justify-between pb-2 border-b border-border/50">
+                <div className="flex items-center space-x-3">
+                  <Badge 
+                    variant="secondary" 
+                    className="px-3 py-1 text-sm font-medium bg-primary/10 text-primary border-primary/20"
+                  >
+                    {category}
+                  </Badge>
+                  <span className="text-xs text-muted-foreground">
+                    {enabledCount} de {categoryPermissions.length} habilitados
+                  </span>
                 </div>
-                
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
-                  {categoryPermissions.map((permission) => {
-                    const Icon = permission.icon;
-                    
-                    return (
-                      <div
-                        key={permission.key}
-                        className="flex items-start space-x-3 p-4 border rounded-lg hover:bg-muted/50 transition-colors bg-card"
-                      >
-                        <Icon className="w-5 h-5 text-primary mt-0.5" />
+              </div>
+              
+              <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-4">
+                {categoryPermissions.map((permission) => {
+                  const Icon = permission.icon;
+                  const isEnabled = permissions[permission.key] || false;
+                  
+                  return (
+                    <div
+                      key={permission.key}
+                      className={`group relative p-4 rounded-xl border transition-all duration-200 cursor-pointer ${
+                        isEnabled 
+                          ? 'bg-primary/5 border-primary/20 shadow-sm hover:shadow-md' 
+                          : 'bg-card hover:bg-muted/30 border-border hover:border-border/80'
+                      }`}
+                      onClick={() => !disabled && onPermissionChange(permission.key, !isEnabled)}
+                    >
+                      <div className="flex items-start space-x-3">
+                        <div className={`w-8 h-8 rounded-lg flex items-center justify-center transition-colors ${
+                          isEnabled 
+                            ? 'bg-primary/10 text-primary' 
+                            : 'bg-muted text-muted-foreground group-hover:bg-primary/5 group-hover:text-primary'
+                        }`}>
+                          <Icon className="w-4 h-4" />
+                        </div>
                         <div className="flex-1 min-w-0">
-                          <div className="flex items-center justify-between">
+                          <div className="flex items-center justify-between mb-1">
                             <Label 
                               htmlFor={permission.key}
-                              className="text-sm font-medium cursor-pointer"
+                              className="text-sm font-medium cursor-pointer leading-none"
                             >
                               {permission.label}
                             </Label>
                             <Switch
                               id={permission.key}
-                              checked={permissions[permission.key] || false}
+                              checked={isEnabled}
                               onCheckedChange={(checked) => onPermissionChange(permission.key, checked)}
                               disabled={disabled}
+                              className="data-[state=checked]:bg-primary scale-90"
                             />
                           </div>
-                          <p className="text-xs text-muted-foreground mt-1">
+                          <p className="text-xs text-muted-foreground leading-relaxed">
                             {permission.description}
                           </p>
                         </div>
                       </div>
-                    );
-                  })}
-                </div>
+                      
+                      {/* Indicador visual de status */}
+                      <div className={`absolute top-2 right-2 w-2 h-2 rounded-full transition-opacity ${
+                        isEnabled ? 'bg-primary opacity-100' : 'bg-muted-foreground/20 opacity-0 group-hover:opacity-50'
+                      }`} />
+                    </div>
+                  );
+                })}
               </div>
-            );
-          })}
+            </div>
+          );
+        })}
+        
+        {/* Resumo das permissões */}
+        <div className="mt-8 p-4 rounded-lg bg-muted/30 border border-border/50">
+          <div className="flex items-center space-x-2 text-sm text-muted-foreground">
+            <Activity className="w-4 h-4" />
+            <span>
+              Total: <strong>{Object.values(permissions).filter(Boolean).length}</strong> de{' '}
+              <strong>{permissionConfig.length}</strong> funcionalidades habilitadas
+            </span>
+          </div>
         </div>
       </CardContent>
     </Card>

@@ -5,6 +5,8 @@ import { CompanySelector } from './components/CompanySelector';
 import { PasswordField } from './components/PasswordField';
 import { PermissionsSection } from './components/PermissionsSection';
 import { supabase } from '@/integrations/supabase/client';
+import { usePermissions } from '@/hooks/usePermissions';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 
 interface UserFormProps {
   user?: User;
@@ -41,6 +43,9 @@ const defaultFormData: UserFormData = {
 export function UserForm({ user, onSubmit, loading }: UserFormProps) {
   const [formData, setFormData] = useState<UserFormData>(defaultFormData);
   const [defaultCompanyId, setDefaultCompanyId] = useState('');
+  const [showDowngradeAlert, setShowDowngradeAlert] = useState(false);
+  const [pendingUserType, setPendingUserType] = useState<'contratante' | 'operador' | null>(null);
+  const { isSuperAdmin, isContratante } = usePermissions();
 
   // Carregar empresa padrão
   useEffect(() => {
@@ -110,7 +115,33 @@ export function UserForm({ user, onSubmit, loading }: UserFormProps) {
   }, [user, defaultCompanyId]);
 
   const handleFieldChange = (field: string, value: string | boolean) => {
+    // Verificar se é mudança de tipo de usuário que requer confirmação
+    if (field === 'user_type' && user) {
+      const currentUserType = user.user_companies?.[0]?.user_type;
+      const newUserType = value as 'contratante' | 'operador';
+      
+      // Se for downgrade de contratante para operador, mostrar alerta
+      if (currentUserType === 'contratante' && newUserType === 'operador') {
+        setPendingUserType(newUserType);
+        setShowDowngradeAlert(true);
+        return;
+      }
+    }
+    
     setFormData(prev => ({ ...prev, [field]: value }));
+  };
+
+  const confirmDowngrade = () => {
+    if (pendingUserType) {
+      setFormData(prev => ({ ...prev, user_type: pendingUserType }));
+      setPendingUserType(null);
+    }
+    setShowDowngradeAlert(false);
+  };
+
+  const cancelDowngrade = () => {
+    setPendingUserType(null);
+    setShowDowngradeAlert(false);
   };
 
   const handlePermissionChange = (permission: string, value: boolean) => {
@@ -149,10 +180,14 @@ export function UserForm({ user, onSubmit, loading }: UserFormProps) {
         isEditing={!!user}
       />
 
-      <PermissionsSection
-        permissions={formData.permissions}
-        onPermissionChange={handlePermissionChange}
-      />
+      {/* Só mostrar permissões para administradores */}
+      {(isSuperAdmin || isContratante) && (
+        <PermissionsSection
+          permissions={formData.permissions}
+          onPermissionChange={handlePermissionChange}
+          userType={formData.user_type}
+        />
+      )}
 
       <div className="flex justify-end space-x-2 pt-4">
         <button
@@ -163,6 +198,23 @@ export function UserForm({ user, onSubmit, loading }: UserFormProps) {
           {loading ? 'Salvando...' : user ? 'Atualizar' : 'Criar'}
         </button>
       </div>
+
+      {/* Alert de confirmação para downgrade */}
+      <AlertDialog open={showDowngradeAlert} onOpenChange={setShowDowngradeAlert}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Confirmar Alteração de Perfil</AlertDialogTitle>
+            <AlertDialogDescription>
+              Você está alterando o perfil de "Contratante" para "Operador". Isso reduzirá as permissões do usuário.
+              Tem certeza que deseja continuar?
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={cancelDowngrade}>Cancelar</AlertDialogCancel>
+            <AlertDialogAction onClick={confirmDowngrade}>Confirmar</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </form>
   );
 }

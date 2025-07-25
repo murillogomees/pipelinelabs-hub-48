@@ -17,20 +17,31 @@ export function UserDialog({ open, onOpenChange, user, onSave }: UserDialogProps
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
-        <DialogHeader>
-          <DialogTitle>
-            {user ? 'Editar Usuário' : 'Novo Usuário'}
+      <DialogContent className="max-w-4xl max-h-[95vh] overflow-hidden flex flex-col">
+        <DialogHeader className="pb-4 border-b">
+          <DialogTitle className="text-xl font-semibold flex items-center space-x-2">
+            {user ? (
+              <>
+                <span>Editar Usuário</span>
+                <span className="text-sm font-normal text-muted-foreground">
+                  • {user.display_name || user.email}
+                </span>
+              </>
+            ) : (
+              'Novo Usuário'
+            )}
           </DialogTitle>
         </DialogHeader>
 
-        <UserForm
-          user={user}
-          onSubmit={(formData) => handleSubmit(user, formData)}
-          loading={loading}
-        />
+        <div className="flex-1 overflow-y-auto pr-2">
+          <UserForm
+            user={user}
+            onSubmit={(formData) => handleSubmit(user, formData)}
+            loading={loading}
+          />
+        </div>
 
-        <DialogFooter>
+        <DialogFooter className="pt-4 border-t mt-4">
           <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
             Cancelar
           </Button>
