@@ -36,8 +36,24 @@ export function useStripeCheckout() {
       }
 
       if (data?.url) {
-        // Abrir Stripe checkout em nova aba
-        window.open(data.url, '_blank');
+        // Abrir Stripe checkout em popup para evitar bloqueio de cookies
+        const popup = window.open(
+          data.url, 
+          'stripe-checkout',
+          'width=800,height=600,scrollbars=yes,resizable=yes,status=1'
+        );
+        
+        // Monitorar se o popup foi fechado
+        const pollTimer = setInterval(() => {
+          if (popup?.closed) {
+            clearInterval(pollTimer);
+            // Opcional: atualizar status da assinatura após fechamento
+            toast({
+              title: "Checkout fechado",
+              description: "Verifique seu status de assinatura se o pagamento foi concluído.",
+            });
+          }
+        }, 1000);
       }
 
     } catch (error: any) {
