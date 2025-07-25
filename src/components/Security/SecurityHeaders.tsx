@@ -31,7 +31,6 @@ export function SecurityHeaders({ nonce, additionalCSP }: SecurityHeadersProps) 
       <meta httpEquiv="X-Content-Type-Options" content="nosniff" />
       <meta httpEquiv="Referrer-Policy" content="strict-origin-when-cross-origin" />
       <meta httpEquiv="Permissions-Policy" content="camera=(), microphone=(), geolocation=()" />
-      <meta httpEquiv="Set-Cookie" content="SameSite=None; Secure" />
       <meta httpEquiv="Cross-Origin-Embedder-Policy" content="credentialless" />
       <meta httpEquiv="Cross-Origin-Opener-Policy" content="same-origin-allow-popups" />
       {nonce && <meta name="csp-nonce" content={nonce} />}
