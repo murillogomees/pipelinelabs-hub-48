@@ -24,15 +24,13 @@ export function SecurityHeaders({ nonce, additionalCSP }: SecurityHeadersProps) 
 
   const csp = additionalCSP ? `${defaultCSP}; ${additionalCSP}` : defaultCSP;
 
+  // Note: Security headers should be set via HTTP headers in production
+  // Meta tags are used here for development but will show warnings
   return (
     <Helmet>
-      <meta httpEquiv="Content-Security-Policy" content={csp} />
       <meta httpEquiv="X-Content-Type-Options" content="nosniff" />
-      <meta httpEquiv="X-Frame-Options" content="DENY" />
-      <meta httpEquiv="X-XSS-Protection" content="1; mode=block" />
       <meta httpEquiv="Referrer-Policy" content="strict-origin-when-cross-origin" />
       <meta httpEquiv="Permissions-Policy" content="camera=(), microphone=(), geolocation=()" />
-      <meta httpEquiv="Strict-Transport-Security" content="max-age=31536000; includeSubDomains; preload" />
       {nonce && <meta name="csp-nonce" content={nonce} />}
     </Helmet>
   );
