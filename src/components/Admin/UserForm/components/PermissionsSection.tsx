@@ -157,14 +157,14 @@ export function PermissionsSection({ permissions, onPermissionChange, disabled =
                   <Badge variant="outline">{category}</Badge>
                 </div>
                 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
                   {categoryPermissions.map((permission) => {
                     const Icon = permission.icon;
                     
                     return (
                       <div
                         key={permission.key}
-                        className="flex items-start space-x-3 p-3 border rounded-lg hover:bg-muted/50 transition-colors"
+                        className="flex items-start space-x-3 p-4 border rounded-lg hover:bg-muted/50 transition-colors bg-card"
                       >
                         <Icon className="w-5 h-5 text-primary mt-0.5" />
                         <div className="flex-1 min-w-0">
