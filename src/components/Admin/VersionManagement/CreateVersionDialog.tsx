@@ -38,6 +38,7 @@ export const CreateVersionDialog = ({ children }: CreateVersionDialogProps) => {
         git_sha: formData.git_sha,
         git_branch: formData.git_branch,
         environment: formData.environment,
+        deployed_at: new Date().toISOString(),
         deployed_by: formData.deployed_by || undefined,
         release_notes: formData.release_notes || undefined,
       });
