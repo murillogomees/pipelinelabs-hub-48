@@ -1,11 +1,11 @@
 
 import { useState } from 'react';
-import { Plus } from 'lucide-react';
+import { Plus, Edit } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { BaseTable } from '@/components/Base/BaseTable';
 import { CustomerDialog } from '@/components/Customers/CustomerDialog';
 import { useCustomers } from '@/hooks/useCustomers';
-import type { Customer } from '@/types/customer';
+import type { Customer } from '@/hooks/useCustomers';
 
 export default function Clientes() {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
@@ -20,10 +20,16 @@ export default function Clientes() {
     { key: 'document', label: 'Documento' }
   ];
 
-  const handleEdit = (customer: Customer) => {
-    setSelectedCustomer(customer);
-    setIsDialogOpen(true);
-  };
+  const actions = [
+    {
+      icon: Edit,
+      label: 'Editar',
+      onClick: (customer: Customer) => {
+        setSelectedCustomer(customer);
+        setIsDialogOpen(true);
+      }
+    }
+  ];
 
   const handleCreate = () => {
     setSelectedCustomer(null);
@@ -54,8 +60,8 @@ export default function Clientes() {
       <BaseTable
         data={customers || []}
         columns={columns}
+        actions={actions}
         loading={loading}
-        onEdit={handleEdit}
       />
 
       <CustomerDialog

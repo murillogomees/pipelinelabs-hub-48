@@ -1,6 +1,6 @@
 
 import { useState } from 'react';
-import { Plus, Package, Settings } from 'lucide-react';
+import { Plus, Package, Settings, Edit } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { BaseTable } from '@/components/Base/BaseTable';
@@ -14,8 +14,8 @@ export default function Producao() {
   const [isServiceDialogOpen, setIsServiceDialogOpen] = useState(false);
   const [selectedOrder, setSelectedOrder] = useState(null);
 
-  const { orders: productionOrders, loading: isLoadingProduction } = useProductionOrders();
-  const { orders: serviceOrders, loading: isLoadingService } = useServiceOrders();
+  const { orders: productionOrders, loading: productionLoading } = useProductionOrders();
+  const { orders: serviceOrders, loading: serviceLoading } = useServiceOrders();
 
   const productionColumns = [
     { key: 'code', label: 'Código' },
@@ -31,6 +31,28 @@ export default function Producao() {
     { key: 'customer_name', label: 'Cliente' },
     { key: 'status', label: 'Status' },
     { key: 'due_date', label: 'Prazo' }
+  ];
+
+  const productionActions = [
+    {
+      icon: Edit,
+      label: 'Editar',
+      onClick: (order: any) => {
+        setSelectedOrder(order);
+        setIsProductionDialogOpen(true);
+      }
+    }
+  ];
+
+  const serviceActions = [
+    {
+      icon: Edit,
+      label: 'Editar',
+      onClick: (order: any) => {
+        setSelectedOrder(order);
+        setIsServiceDialogOpen(true);
+      }
+    }
   ];
 
   return (
@@ -67,11 +89,8 @@ export default function Producao() {
           <BaseTable
             data={productionOrders || []}
             columns={productionColumns}
-            loading={isLoadingProduction}
-            onEdit={(order) => {
-              setSelectedOrder(order);
-              setIsProductionDialogOpen(true);
-            }}
+            actions={productionActions}
+            loading={productionLoading}
           />
         </TabsContent>
 
@@ -86,11 +105,8 @@ export default function Producao() {
           <BaseTable
             data={serviceOrders || []}
             columns={serviceColumns}
-            loading={isLoadingService}
-            onEdit={(order) => {
-              setSelectedOrder(order);
-              setIsServiceDialogOpen(true);
-            }}
+            actions={serviceActions}
+            loading={serviceLoading}
           />
         </TabsContent>
       </Tabs>

@@ -52,14 +52,14 @@ export default function ConfiguracoesIntegracoes() {
               <CardTitle className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
                   <Settings className="w-5 h-5" />
-                  {integration.integration_name || 'Integração'}
+                  {integration.marketplace || 'Integração'}
                 </div>
                 {getStatusBadge(integration.status)}
               </CardTitle>
             </CardHeader>
             <CardContent>
               <p className="text-sm text-muted-foreground mb-4">
-                {integration.config?.description || 'Integração com marketplace'}
+                Integração com {integration.marketplace}
               </p>
               <Button variant="outline" size="sm" className="w-full">
                 Configurar
@@ -76,7 +76,7 @@ export default function ConfiguracoesIntegracoes() {
               <Settings className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
               <h3 className="text-lg font-medium mb-2">Nenhuma integração configurada</h3>
               <p className="text-muted-foreground mb-4">
-                Configure integrações para sincronizar seus dados with marketplaces e sistemas externos
+                Configure integrações para sincronizar seus dados com marketplaces e sistemas externos
               </p>
               <Button>
                 <Plus className="w-4 h-4 mr-2" />

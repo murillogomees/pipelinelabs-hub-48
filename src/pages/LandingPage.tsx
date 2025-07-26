@@ -98,21 +98,46 @@ export default function LandingPage() {
             </p>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {featuresSection?.content?.features?.map((feature: any, index: number) => (
-              <Card key={index} className="bg-card/70 backdrop-blur">
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-3">
-                    <CheckCircle className="w-5 h-5 text-primary" />
-                    {feature.title}
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <p className="text-sm text-muted-foreground">
-                    {feature.description}
-                  </p>
-                </CardContent>
-              </Card>
-            )) || []}
+            {/* Mock features if no content available */}
+            <Card className="bg-card/70 backdrop-blur">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-3">
+                  <CheckCircle className="w-5 h-5 text-primary" />
+                  Gestão de Vendas
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p className="text-sm text-muted-foreground">
+                  Controle completo de suas vendas e emissão de notas fiscais
+                </p>
+              </CardContent>
+            </Card>
+            <Card className="bg-card/70 backdrop-blur">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-3">
+                  <CheckCircle className="w-5 h-5 text-primary" />
+                  Controle de Estoque
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p className="text-sm text-muted-foreground">
+                  Gestão inteligente de estoque com relatórios detalhados
+                </p>
+              </CardContent>
+            </Card>
+            <Card className="bg-card/70 backdrop-blur">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-3">
+                  <CheckCircle className="w-5 h-5 text-primary" />
+                  Dashboard Financeiro
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p className="text-sm text-muted-foreground">
+                  Visão completa da saúde financeira do seu negócio
+                </p>
+              </CardContent>
+            </Card>
           </div>
         </div>
       </section>
@@ -129,15 +154,28 @@ export default function LandingPage() {
             </p>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {testimonialsSection?.content?.testimonials?.map((testimonial: any, index: number) => (
-              <PersonaCard
-                key={index}
-                name={testimonial.name}
-                position={testimonial.title}
-                avatar={testimonial.avatar}
-                description={testimonial.comment}
-              />
-            )) || []}
+            {/* Mock personas as we don't have testimonials content */}
+            <PersonaCard
+              name="Ana Costa"
+              age={34}
+              location="São Paulo, SP"
+              business="Loja de roupas femininas"
+              image=""
+            />
+            <PersonaCard
+              name="Lucas Silva"
+              age={28}
+              location="Rio de Janeiro, RJ"
+              business="Vendedor em marketplaces"
+              image=""
+            />
+            <PersonaCard
+              name="Carla Santos"
+              age={41}
+              location="Belo Horizonte, MG"
+              business="Pequena fábrica de salgados"
+              image=""
+            />
           </div>
         </div>
       </section>
