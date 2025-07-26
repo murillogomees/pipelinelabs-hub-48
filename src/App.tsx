@@ -1,6 +1,7 @@
 
 import React from 'react';
 import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { AuthProvider } from '@/components/Auth/AuthProvider';
 import { ProtectedRoute } from '@/components/ProtectedRoute';
 import Dashboard from '@/pages/Dashboard';
@@ -32,54 +33,66 @@ import { Toaster } from '@/components/ui/toaster';
 
 const AdminPromptGenerator = React.lazy(() => import('@/pages/AdminPromptGenerator'));
 
+// Create a single QueryClient instance
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      staleTime: 5 * 60 * 1000, // 5 minutes
+      retry: 2,
+    },
+  },
+});
+
 function App() {
   return (
-    <AuthProvider>
-      <PermissionProvider>
-        <Router>
-          <div className="container">
-            <Routes>
-              <Route index element={<Dashboard />} />
-              <Route path="vendas" element={<Vendas />} />
-              <Route path="produtos" element={<Produtos />} />
-              <Route path="compras" element={<Compras />} />
-              <Route path="clientes" element={<Clientes />} />
-              <Route path="financeiro" element={<Financeiro />} />
-              <Route path="notas-fiscais" element={<NotasFiscais />} />
-              <Route path="producao" element={<Producao />} />
-              <Route path="relatorios" element={<Relatorios />} />
-              <Route path="analytics" element={<Analytics />} />
-              <Route path="marketplace-channels" element={<MarketplaceChannels />} />
-              <Route path="configuracoes" element={<Configuracoes />} />
-              <Route path="user/*" element={
-                <Routes>
-                  <Route path="dados-pessoais" element={<UserDadosPessoais />} />
-                </Routes>
-              } />
-              <Route path="admin/*" element={
-                <ProtectedRoute requireSuperAdmin>
+    <QueryClientProvider client={queryClient}>
+      <AuthProvider>
+        <PermissionProvider>
+          <Router>
+            <div className="container">
+              <Routes>
+                <Route index element={<Dashboard />} />
+                <Route path="vendas" element={<Vendas />} />
+                <Route path="produtos" element={<Produtos />} />
+                <Route path="compras" element={<Compras />} />
+                <Route path="clientes" element={<Clientes />} />
+                <Route path="financeiro" element={<Financeiro />} />
+                <Route path="notas-fiscais" element={<NotasFiscais />} />
+                <Route path="producao" element={<Producao />} />
+                <Route path="relatorios" element={<Relatorios />} />
+                <Route path="analytics" element={<Analytics />} />
+                <Route path="marketplace-channels" element={<MarketplaceChannels />} />
+                <Route path="configuracoes" element={<Configuracoes />} />
+                <Route path="user/*" element={
                   <Routes>
-                    <Route path="" element={<Admin />} />
-                    <Route path="usuarios" element={<AdminUsuarios />} />
-                    <Route path="integracoes" element={<AdminIntegracoes />} />
-                    <Route path="notificacoes" element={<AdminNotificacoes />} />
-                    <Route path="backup" element={<AdminBackup />} />
-                    <Route path="cache" element={<AdminCache />} />
-                    <Route path="compressao" element={<AdminCompressao />} />
-                    <Route path="monitoramento" element={<AdminMonitoramento />} />
-                    <Route path="versions" element={<AdminVersions />} />
-                    <Route path="audit-logs" element={<AdminAuditLogs />} />
-                    <Route path="landing-page" element={<AdminLandingPage />} />
-                    <Route path="prompt-generator" element={<AdminPromptGenerator />} />
+                    <Route path="dados-pessoais" element={<UserDadosPessoais />} />
                   </Routes>
-                </ProtectedRoute>
-              } />
-            </Routes>
-          </div>
-        </Router>
-        <Toaster />
-      </PermissionProvider>
-    </AuthProvider>
+                } />
+                <Route path="admin/*" element={
+                  <ProtectedRoute requireSuperAdmin>
+                    <Routes>
+                      <Route path="" element={<Admin />} />
+                      <Route path="usuarios" element={<AdminUsuarios />} />
+                      <Route path="integracoes" element={<AdminIntegracoes />} />
+                      <Route path="notificacoes" element={<AdminNotificacoes />} />
+                      <Route path="backup" element={<AdminBackup />} />
+                      <Route path="cache" element={<AdminCache />} />
+                      <Route path="compressao" element={<AdminCompressao />} />
+                      <Route path="monitoramento" element={<AdminMonitoramento />} />
+                      <Route path="versions" element={<AdminVersions />} />
+                      <Route path="audit-logs" element={<AdminAuditLogs />} />
+                      <Route path="landing-page" element={<AdminLandingPage />} />
+                      <Route path="prompt-generator" element={<AdminPromptGenerator />} />
+                    </Routes>
+                  </ProtectedRoute>
+                } />
+              </Routes>
+            </div>
+          </Router>
+          <Toaster />
+        </PermissionProvider>
+      </AuthProvider>
+    </QueryClientProvider>
   );
 }
 
