@@ -90,7 +90,7 @@ export function usePermissions() {
         if (userCompaniesData.access_level_id) {
           try {
             const { data: accessLevelData } = await supabase
-              .from('access_levels' as any)
+              .from('access_levels')
               .select('id, name, display_name, permissions')
               .eq('id', userCompaniesData.access_level_id)
               .single();

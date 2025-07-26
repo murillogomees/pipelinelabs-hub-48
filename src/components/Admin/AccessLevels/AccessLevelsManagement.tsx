@@ -24,7 +24,7 @@ export function AccessLevelsManagement() {
       try {
         // Query access levels directly
         const { data: levelsData, error: levelsError } = await supabase
-          .from('access_levels' as any)
+          .from('access_levels')
           .select('*')
           .order('created_at', { ascending: false });
 
@@ -84,7 +84,7 @@ export function AccessLevelsManagement() {
 
     try {
       const { error } = await supabase
-        .from('access_levels' as any)
+        .from('access_levels')
         .delete()
         .eq('id', level.id);
 

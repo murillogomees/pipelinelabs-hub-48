@@ -14,6 +14,42 @@ export type Database = {
   }
   public: {
     Tables: {
+      access_levels: {
+        Row: {
+          created_at: string | null
+          description: string | null
+          display_name: string
+          id: string
+          is_active: boolean | null
+          is_system: boolean | null
+          name: string
+          permissions: Json | null
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          description?: string | null
+          display_name: string
+          id?: string
+          is_active?: boolean | null
+          is_system?: boolean | null
+          name: string
+          permissions?: Json | null
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          description?: string | null
+          display_name?: string
+          id?: string
+          is_active?: boolean | null
+          is_system?: boolean | null
+          name?: string
+          permissions?: Json | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       accounts_payable: {
         Row: {
           amount: number
@@ -3696,6 +3732,7 @@ export type Database = {
       }
       user_companies: {
         Row: {
+          access_level_id: string | null
           company_id: string
           created_at: string
           department: string | null
@@ -3708,6 +3745,7 @@ export type Database = {
           user_type: Database["public"]["Enums"]["user_type"] | null
         }
         Insert: {
+          access_level_id?: string | null
           company_id: string
           created_at?: string
           department?: string | null
@@ -3720,6 +3758,7 @@ export type Database = {
           user_type?: Database["public"]["Enums"]["user_type"] | null
         }
         Update: {
+          access_level_id?: string | null
           company_id?: string
           created_at?: string
           department?: string | null
@@ -3738,6 +3777,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "user_companies_access_level_id_fkey"
+            columns: ["access_level_id"]
+            isOneToOne: false
+            referencedRelation: "access_levels"
+            referencedColumns: ["id"]
           },
           {
             foreignKeyName: "user_companies_company_id_fkey"

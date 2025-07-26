@@ -58,7 +58,7 @@ export function UserForm({ user, onSubmit, loading }: UserFormProps) {
     queryFn: async (): Promise<AccessLevel[]> => {
       try {
         const { data, error } = await supabase
-          .from('access_levels' as any)
+          .from('access_levels')
           .select('*')
           .eq('is_active', true);
 
@@ -191,7 +191,7 @@ export function UserForm({ user, onSubmit, loading }: UserFormProps) {
     
     // Aplicar mudança diretamente
     if (selectedLevel) {
-      const newUserType = selectedLevel.name === 'super_admin' 
+      const newUserType: 'super_admin' | 'contratante' | 'operador' = selectedLevel.name === 'super_admin' 
         ? 'super_admin' 
         : selectedLevel.name === 'contratante' 
         ? 'contratante' 
@@ -210,7 +210,7 @@ export function UserForm({ user, onSubmit, loading }: UserFormProps) {
     if (pendingAccessLevel) {
       const selectedLevel = accessLevels.find(level => level.id === pendingAccessLevel);
       if (selectedLevel) {
-        const newUserType = selectedLevel.name === 'super_admin' 
+        const newUserType: 'super_admin' | 'contratante' | 'operador' = selectedLevel.name === 'super_admin' 
           ? 'super_admin' 
           : selectedLevel.name === 'contratante' 
           ? 'contratante' 
