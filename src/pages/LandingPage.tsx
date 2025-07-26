@@ -61,130 +61,6 @@ export function LandingPage() {
     getSection
   } = useLandingPageContent();
 
-  // Dados estáticos das personas para garantir que sempre sejam exibidas
-  const defaultPersonas = [
-    {
-      name: "Ana Costa",
-      age: 34,
-      location: "São Paulo, SP",
-      business: "Loja de roupas femininas",
-      image: "/placeholder.svg",
-      problems: [
-        "Controle de estoque desorganizado em planilhas",
-        "Perda de vendas por falta de produtos",
-        "Dificuldade para emitir notas fiscais",
-        "Não sabe qual produto vende mais"
-      ],
-      solutions: [
-        "Estoque automatizado com alertas",
-        "Emissão de NFe integrada",
-        "Relatórios de vendas detalhados",
-        "Dashboard com métricas em tempo real"
-      ],
-      result: "Aumentou as vendas em 35% e reduziu o tempo de gestão em 60% com automação completa do estoque e vendas."
-    },
-    {
-      name: "Lucas Silva",
-      age: 28,
-      location: "Rio de Janeiro, RJ",
-      business: "Vendedor em marketplaces",
-      image: "/placeholder.svg",
-      problems: [
-        "Gestão manual de múltiplos canais",
-        "Controle de estoque descentralizado",
-        "Dificuldade para precificar produtos",
-        "Perda de pedidos por desorganização"
-      ],
-      solutions: [
-        "Integração com Mercado Livre e outros",
-        "Estoque unificado multicanal",
-        "Sistema de precificação inteligente",
-        "Central de pedidos automatizada"
-      ],
-      result: "Triplicou as vendas online e automatizou 80% dos processos com gestão multicanal integrada."
-    },
-    {
-      name: "Carla Santos",
-      age: 41,
-      location: "Belo Horizonte, MG",
-      business: "Pequena fábrica de salgados",
-      image: "/placeholder.svg",
-      problems: [
-        "Controle de produção manual",
-        "Dificuldade no controle financeiro",
-        "Falta de visibilidade dos custos",
-        "Gestão de pedidos desorganizada"
-      ],
-      solutions: [
-        "Ordens de produção automatizadas",
-        "Dashboard financeiro completo",
-        "Controle de custos detalhado",
-        "Sistema de pedidos integrado"
-      ],
-      result: "Organizou completamente a produção e aumentou a margem de lucro em 45% com controle financeiro preciso."
-    },
-    {
-      name: "Eduardo Martins",
-      age: 38,
-      location: "Curitiba, PR",
-      business: "Distribuidor de bebidas",
-      image: "/placeholder.svg",
-      problems: [
-        "Logística complexa e manual",
-        "Controle de estoque em múltiplos depósitos",
-        "Pedidos grandes com muitos erros",
-        "Dificuldade no controle de entregas"
-      ],
-      solutions: [
-        "Sistema de separação inteligente",
-        "Controle multi-depósito",
-        "Etiquetas e código de barras",
-        "Integração com transportadoras"
-      ],
-      result: "Reduziu erros de entrega em 90% e otimizou a logística com sistema automatizado de distribuição."
-    },
-    {
-      name: "Patrícia Lima",
-      age: 32,
-      location: "Fortaleza, CE",
-      business: "Prestadora de serviços",
-      image: "/placeholder.svg",
-      problems: [
-        "Emissão manual de NFSe",
-        "Controle financeiro precário",
-        "Dificuldade para acompanhar recebimentos",
-        "Gestão de clientes desorganizada"
-      ],
-      solutions: [
-        "NFSe automática integrada",
-        "Dashboard financeiro",
-        "Controle de recebimentos",
-        "CRM para gestão de clientes"
-      ],
-      result: "Automatizou 100% da emissão fiscal e melhorou o controle financeiro, aumentando a produtividade em 50%."
-    },
-    {
-      name: "João Santos",
-      age: 45,
-      location: "Porto Alegre, RS",
-      business: "Comércio atacadista",
-      image: "/placeholder.svg",
-      problems: [
-        "Volume alto de pedidos manuais",
-        "Controle de crédito inadequado",
-        "Dificuldade na gestão de representantes",
-        "Relatórios financeiros demorados"
-      ],
-      solutions: [
-        "Automatização de pedidos",
-        "Sistema de crédito integrado",
-        "Portal para representantes",
-        "Relatórios automáticos"
-      ],
-      result: "Aumentou a capacidade de vendas em 200% e reduziu inadimplência em 60% com controle de crédito automatizado."
-    }
-  ];
-
   if (isLoading) {
     return <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="text-center">
@@ -313,8 +189,8 @@ export function LandingPage() {
 
           {/* Cards de personas com layout responsivo */}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8 max-w-7xl mx-auto px-4">
-            {/* Usar personas do CMS se disponível, senão usar as estáticas */}
-            {(personasSection?.content_data?.personas || defaultPersonas).map((persona: any, index: number) => (
+            {/* Usar personas do CMS se disponível, garantindo que sempre tenha dados */}
+            {(personasSection?.content_data?.personas || []).map((persona: any, index: number) => (
               <div 
                 key={index} 
                 className="animate-fade-in hover-scale"
