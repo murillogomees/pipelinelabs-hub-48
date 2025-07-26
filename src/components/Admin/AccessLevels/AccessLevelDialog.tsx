@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
@@ -139,17 +138,26 @@ export function AccessLevelDialog({ open, onOpenChange, accessLevel, onSave }: A
 
   const handleFieldChange = useCallback((field: string, value: string | boolean) => {
     setFormData(prev => {
-      if (field === 'display_name') {
+      if (field === 'display_name' && typeof value === 'string') {
         return {
           ...prev,
-          [field]: value,
-          name: typeof value === 'string' ? value.toLowerCase().replace(/\s+/g, '_') : prev.name
+          display_name: value,
+          name: value.toLowerCase().replace(/\s+/g, '_')
         };
       }
-      return {
-        ...prev,
-        [field]: value
-      };
+      if (field === 'is_active' && typeof value === 'boolean') {
+        return {
+          ...prev,
+          is_active: value
+        };
+      }
+      if (typeof value === 'string') {
+        return {
+          ...prev,
+          [field]: value
+        };
+      }
+      return prev;
     });
   }, []);
 
