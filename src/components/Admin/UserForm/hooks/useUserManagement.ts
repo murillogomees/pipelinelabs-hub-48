@@ -20,8 +20,8 @@ export function useUserManagement(onSave?: () => void, onClose?: () => void) {
   const [loading, setLoading] = useState(false);
   const { toast } = useToast();
 
-  // Fetch companies with simple query
-  const companiesQuery = useQuery({
+  // Fetch companies - simplified to avoid type inference issues
+  const companiesQuery = useQuery<SimpleCompany[]>({
     queryKey: ['companies-for-user-form'],
     queryFn: async () => {
       const { data, error } = await supabase
@@ -31,23 +31,27 @@ export function useUserManagement(onSave?: () => void, onClose?: () => void) {
         .order('name');
       
       if (error) throw error;
-      return data as SimpleCompany[];
+      
+      return (data || []).map(item => ({
+        id: item.id,
+        name: item.name
+      }));
     }
   });
 
-  // Fetch access levels with simple query
-  const accessLevelsQuery = useQuery({
+  // Fetch access levels - simplified to avoid type inference issues  
+  const accessLevelsQuery = useQuery<SimpleAccessLevel[]>({
     queryKey: ['access-levels-for-user-form'],
     queryFn: async () => {
       const { data, error } = await supabase
         .from('access_levels')
-        .select('*')
+        .select('id, name, display_name, permissions')
         .eq('is_active', true)
         .order('name');
       
       if (error) throw error;
       
-      const result: SimpleAccessLevel[] = (data || []).map(item => ({
+      return (data || []).map(item => ({
         id: item.id,
         name: item.name,
         display_name: item.display_name,
@@ -55,8 +59,6 @@ export function useUserManagement(onSave?: () => void, onClose?: () => void) {
           ? item.permissions as Record<string, boolean>
           : {}
       }));
-      
-      return result;
     }
   });
 
