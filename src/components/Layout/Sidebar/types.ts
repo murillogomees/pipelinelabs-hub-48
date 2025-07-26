@@ -7,7 +7,7 @@ export interface MenuItem {
   icon: React.ComponentType<any>;
   adminOnly?: boolean;
   order: number;
-  submenu?: SubMenuItem[];
+  submenu: SubMenuItem[];
 }
 
 export interface SubMenuItem {

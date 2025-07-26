@@ -1,3 +1,4 @@
+
 import { ChevronDown, ChevronRight } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { MenuItem } from '../types';
@@ -16,7 +17,7 @@ export function SidebarMenuButton({
   onToggle 
 }: SidebarMenuButtonProps) {
   const Icon = item.icon;
-  const hasSubmenu = item.submenu.length > 0;
+  const hasSubmenu = item.submenu && item.submenu.length > 0;
 
   return (
     <button

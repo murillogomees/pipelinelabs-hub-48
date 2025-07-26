@@ -1,3 +1,4 @@
+
 import { MenuItem } from '../types';
 import { SidebarMenuButton } from './SidebarMenuButton';
 import { SidebarMenuLink } from './SidebarMenuLink';
@@ -18,7 +19,7 @@ export function SidebarMenuItem({
   onToggle,
   onNavigate 
 }: SidebarMenuItemProps) {
-  const hasSubmenu = item.submenu.length > 0;
+  const hasSubmenu = item.submenu && item.submenu.length > 0;
 
   return (
     <div>
@@ -40,7 +41,7 @@ export function SidebarMenuItem({
       </div>
 
       <SidebarSubmenu
-        submenu={item.submenu}
+        submenu={item.submenu || []}
         isExpanded={isExpanded}
         collapsed={collapsed}
         onNavigate={onNavigate}

@@ -25,6 +25,7 @@ export const menuItems: MenuItem[] = [
     href: '/app',
     icon: LayoutDashboard,
     order: 1,
+    submenu: [],
   },
   {
     id: 'vendas',
@@ -33,6 +34,7 @@ export const menuItems: MenuItem[] = [
     href: '/app/vendas',
     icon: ShoppingCart,
     order: 2,
+    submenu: [],
   },
   {
     id: 'produtos',
@@ -41,6 +43,7 @@ export const menuItems: MenuItem[] = [
     href: '/app/produtos',
     icon: Package,
     order: 3,
+    submenu: [],
   },
   {
     id: 'clientes',
@@ -49,6 +52,7 @@ export const menuItems: MenuItem[] = [
     href: '/app/clientes',
     icon: Users,
     order: 4,
+    submenu: [],
   },
   {
     id: 'compras',
@@ -57,6 +61,7 @@ export const menuItems: MenuItem[] = [
     href: '/app/compras',
     icon: Building,
     order: 5,
+    submenu: [],
   },
   {
     id: 'estoque',
@@ -65,6 +70,7 @@ export const menuItems: MenuItem[] = [
     href: '/app/estoque',
     icon: Warehouse,
     order: 6,
+    submenu: [],
   },
   {
     id: 'financeiro',
@@ -73,6 +79,7 @@ export const menuItems: MenuItem[] = [
     href: '/app/financeiro',
     icon: DollarSign,
     order: 7,
+    submenu: [],
   },
   {
     id: 'notas_fiscais',
@@ -81,6 +88,7 @@ export const menuItems: MenuItem[] = [
     href: '/app/notas-fiscais',
     icon: FileText,
     order: 8,
+    submenu: [],
   },
   {
     id: 'producao',
@@ -89,6 +97,7 @@ export const menuItems: MenuItem[] = [
     href: '/app/producao',
     icon: Wrench,
     order: 9,
+    submenu: [],
   },
   {
     id: 'relatorios',
@@ -97,6 +106,7 @@ export const menuItems: MenuItem[] = [
     href: '/app/relatorios',
     icon: BarChart3,
     order: 10,
+    submenu: [],
   },
   {
     id: 'analytics',
@@ -105,6 +115,7 @@ export const menuItems: MenuItem[] = [
     href: '/app/analytics',
     icon: BarChart3,
     order: 11,
+    submenu: [],
   },
   {
     id: 'marketplace_canais',
@@ -113,6 +124,7 @@ export const menuItems: MenuItem[] = [
     href: '/app/marketplace-channels',
     icon: Store,
     order: 12,
+    submenu: [],
   },
   {
     id: 'integracoes',
@@ -121,6 +133,7 @@ export const menuItems: MenuItem[] = [
     href: '/app/integracoes',
     icon: Link,
     order: 13,
+    submenu: [],
   },
   {
     id: 'configuracoes',
@@ -129,6 +142,7 @@ export const menuItems: MenuItem[] = [
     href: '/app/configuracoes',
     icon: Cog,
     order: 14,
+    submenu: [],
   },
   {
     id: 'admin',
