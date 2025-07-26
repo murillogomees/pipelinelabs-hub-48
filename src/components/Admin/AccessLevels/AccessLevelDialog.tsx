@@ -1,4 +1,5 @@
-import React, { useState, useEffect } from 'react';
+
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -92,37 +93,41 @@ const permissionCategories = [
 ];
 
 export function AccessLevelDialog({ open, onOpenChange, accessLevel, onSave }: AccessLevelDialogProps) {
-  const [formData, setFormData] = useState({
+  const defaultFormData = useMemo(() => ({
     name: '',
     display_name: '',
     description: '',
     is_active: true,
     permissions: {} as Record<string, boolean>
-  });
+  }), []);
+
+  const [formData, setFormData] = useState(defaultFormData);
   const [loading, setLoading] = useState(false);
   const { toast } = useToast();
 
-  useEffect(() => {
-    if (accessLevel?.id) {
-      setFormData({
-        name: accessLevel.name,
-        display_name: accessLevel.display_name,
-        description: accessLevel.description || '',
-        is_active: accessLevel.is_active,
-        permissions: accessLevel.permissions || {}
-      });
-    } else if (!accessLevel) {
-      setFormData({
-        name: '',
-        display_name: '',
-        description: '',
-        is_active: true,
-        permissions: {}
-      });
-    }
-  }, [accessLevel?.id]);
+  // Memoize the access level ID to prevent unnecessary re-renders
+  const accessLevelId = useMemo(() => accessLevel?.id, [accessLevel?.id]);
 
-  const handlePermissionChange = (permission: string, value: boolean) => {
+  // Initialize form data based on access level, but only when the dialog opens or accessLevel changes
+  useEffect(() => {
+    if (open) {
+      if (accessLevelId && accessLevel) {
+        console.log('Setting form data for access level:', accessLevelId);
+        setFormData({
+          name: accessLevel.name || '',
+          display_name: accessLevel.display_name || '',
+          description: accessLevel.description || '',
+          is_active: accessLevel.is_active ?? true,
+          permissions: accessLevel.permissions || {}
+        });
+      } else {
+        console.log('Resetting form data to defaults');
+        setFormData(defaultFormData);
+      }
+    }
+  }, [open, accessLevelId, accessLevel, defaultFormData]);
+
+  const handlePermissionChange = useCallback((permission: string, value: boolean) => {
     setFormData(prev => ({
       ...prev,
       permissions: {
@@ -130,9 +135,25 @@ export function AccessLevelDialog({ open, onOpenChange, accessLevel, onSave }: A
         [permission]: value
       }
     }));
-  };
+  }, []);
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleFieldChange = useCallback((field: string, value: string | boolean) => {
+    setFormData(prev => {
+      if (field === 'display_name') {
+        return {
+          ...prev,
+          [field]: value,
+          name: typeof value === 'string' ? value.toLowerCase().replace(/\s+/g, '_') : prev.name
+        };
+      }
+      return {
+        ...prev,
+        [field]: value
+      };
+    });
+  }, []);
+
+  const handleSubmit = useCallback(async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
 
@@ -164,6 +185,7 @@ export function AccessLevelDialog({ open, onOpenChange, accessLevel, onSave }: A
 
       onSave();
     } catch (error) {
+      console.error('Error saving access level:', error);
       toast({
         title: "Erro",
         description: `Falha ao ${accessLevel ? 'atualizar' : 'criar'} nível de acesso`,
@@ -172,10 +194,15 @@ export function AccessLevelDialog({ open, onOpenChange, accessLevel, onSave }: A
     } finally {
       setLoading(false);
     }
-  };
+  }, [formData, accessLevel, toast, onSave]);
 
-  const enabledPermissions = Object.values(formData.permissions).filter(Boolean).length;
-  const totalPermissions = permissionCategories.reduce((acc, cat) => acc + cat.permissions.length, 0);
+  const enabledPermissions = useMemo(() => 
+    Object.values(formData.permissions).filter(Boolean).length
+  , [formData.permissions]);
+
+  const totalPermissions = useMemo(() => 
+    permissionCategories.reduce((acc, cat) => acc + cat.permissions.length, 0)
+  , []);
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -194,11 +221,7 @@ export function AccessLevelDialog({ open, onOpenChange, accessLevel, onSave }: A
               <Input
                 id="display_name"
                 value={formData.display_name}
-                onChange={(e) => setFormData(prev => ({ 
-                  ...prev, 
-                  display_name: e.target.value,
-                  name: e.target.value.toLowerCase().replace(/\s+/g, '_')
-                }))}
+                onChange={(e) => handleFieldChange('display_name', e.target.value)}
                 placeholder="Ex: Administrador da Empresa"
                 required
               />
@@ -209,10 +232,7 @@ export function AccessLevelDialog({ open, onOpenChange, accessLevel, onSave }: A
               <Input
                 id="name"
                 value={formData.name}
-                onChange={(e) => setFormData(prev => ({ 
-                  ...prev, 
-                  name: e.target.value.toLowerCase().replace(/\s+/g, '_')
-                }))}
+                onChange={(e) => handleFieldChange('name', e.target.value.toLowerCase().replace(/\s+/g, '_'))}
                 placeholder="Ex: admin_empresa"
                 disabled={accessLevel?.is_system}
               />
@@ -224,7 +244,7 @@ export function AccessLevelDialog({ open, onOpenChange, accessLevel, onSave }: A
             <Textarea
               id="description"
               value={formData.description}
-              onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
+              onChange={(e) => handleFieldChange('description', e.target.value)}
               placeholder="Descreva as responsabilidades deste nível de acesso"
               rows={3}
             />
@@ -233,7 +253,7 @@ export function AccessLevelDialog({ open, onOpenChange, accessLevel, onSave }: A
           <div className="flex items-center space-x-2">
             <Switch
               checked={formData.is_active}
-              onCheckedChange={(checked) => setFormData(prev => ({ ...prev, is_active: checked }))}
+              onCheckedChange={(checked) => handleFieldChange('is_active', checked)}
             />
             <Label>Nível de acesso ativo</Label>
           </div>
