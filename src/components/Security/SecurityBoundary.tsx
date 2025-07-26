@@ -1,105 +1,107 @@
 
 import React, { Component, ErrorInfo, ReactNode } from 'react';
-import { securityLogger } from './SecurityEventLogger';
-import { Alert, AlertDescription } from '@/components/ui/alert';
-import { AlertTriangle } from 'lucide-react';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { Button } from '@/components/ui/button';
+import { RefreshCw, Shield } from 'lucide-react';
 
 interface Props {
   children: ReactNode;
-  fallback?: ReactNode;
-  onError?: (error: Error, errorInfo: ErrorInfo) => void;
 }
 
 interface State {
   hasError: boolean;
-  error?: Error;
+  error: Error | null;
+  errorInfo: ErrorInfo | null;
+  isSecurityError: boolean;
 }
 
 export class SecurityBoundary extends Component<Props, State> {
-  constructor(props: Props) {
-    super(props);
-    this.state = { hasError: false };
+  public state: State = {
+    hasError: false,
+    error: null,
+    errorInfo: null,
+    isSecurityError: false
+  };
+
+  public static getDerivedStateFromError(error: Error): State {
+    // Determine if this is a security-related error
+    const isSecurityError = error.message?.toLowerCase().includes('security') ||
+                           error.message?.toLowerCase().includes('unauthorized') ||
+                           error.message?.toLowerCase().includes('forbidden') ||
+                           error.stack?.toLowerCase().includes('security');
+
+    return { 
+      hasError: true, 
+      error,
+      errorInfo: null,
+      isSecurityError 
+    };
   }
 
-  static getDerivedStateFromError(error: Error): State {
-    return { hasError: true, error };
-  }
-
-  componentDidCatch(error: Error, errorInfo: ErrorInfo) {
-    // Log security-relevant errors
-    this.logSecurityError(error, errorInfo);
+  public componentDidCatch(error: Error, errorInfo: ErrorInfo) {
+    console.error('SecurityBoundary caught an error:', error, errorInfo);
     
-    // Call custom error handler if provided
-    this.props.onError?.(error, errorInfo);
-  }
+    this.setState({
+      error,
+      errorInfo,
+    });
 
-  private async logSecurityError(error: Error, errorInfo: ErrorInfo) {
-    try {
-      // Check if error might be security-related
-      const securityKeywords = [
-        'permission', 'unauthorized', 'forbidden', 'csrf', 'xss', 'sql',
-        'injection', 'token', 'auth', 'session', 'cookie', 'cors'
-      ];
-      
-      const isSecurityRelated = securityKeywords.some(keyword => 
-        error.message.toLowerCase().includes(keyword) ||
-        error.stack?.toLowerCase().includes(keyword) ||
-        errorInfo.componentStack.toLowerCase().includes(keyword)
-      );
-
-      await securityLogger.logEvent(
-        'client_error_boundary',
-        isSecurityRelated ? 'high' : 'medium',
-        {
-          error_message: error.message,
-          error_name: error.name,
-          component_stack: errorInfo.componentStack,
-          is_security_related: isSecurityRelated,
-          timestamp: Date.now(),
-          user_agent: navigator.userAgent,
-          url: window.location.href
-        }
-      );
-    } catch (loggingError) {
-      console.error('Failed to log security error:', loggingError);
+    // Only log to security if it's actually a security error
+    if (this.state.isSecurityError) {
+      // Log security event (if available)
+      try {
+        import('@/components/Security/SecurityEventLogger').then(({ securityLogger }) => {
+          securityLogger.logSecurityViolation('security_boundary_error', {
+            error: error.message,
+            stack: error.stack,
+            componentStack: errorInfo.componentStack
+          });
+        });
+      } catch (logError) {
+        console.warn('Failed to log security error:', logError);
+      }
     }
   }
 
-  render() {
-    if (this.state.hasError) {
-      // Custom fallback UI
-      if (this.props.fallback) {
-        return this.props.fallback;
-      }
+  private handleReload = () => {
+    window.location.reload();
+  };
 
-      // Default fallback UI
+  private handleReset = () => {
+    this.setState({
+      hasError: false,
+      error: null,
+      errorInfo: null,
+      isSecurityError: false
+    });
+  };
+
+  public render() {
+    if (this.state.hasError && this.state.isSecurityError) {
       return (
         <div className="min-h-screen flex items-center justify-center p-4">
-          <Alert className="max-w-md">
-            <AlertTriangle className="h-4 w-4" />
-            <AlertDescription>
-              Ocorreu um erro inesperado. Por motivos de segurança, esta sessão foi encerrada.
+          <Alert className="max-w-md border-destructive">
+            <Shield className="h-4 w-4" />
+            <AlertTitle>Erro de Segurança</AlertTitle>
+            <AlertDescription className="mt-2 mb-4">
+              Ocorreu um erro inesperado. Por motivos de segurança, esta sessão foi encerrada. 
               Por favor, recarregue a página e tente novamente.
             </AlertDescription>
+            <div className="flex gap-2">
+              <Button onClick={this.handleReload} variant="outline" size="sm">
+                <RefreshCw className="h-4 w-4 mr-2" />
+                Recarregar Página
+              </Button>
+              <Button onClick={this.handleReset} variant="ghost" size="sm">
+                Tentar Novamente
+              </Button>
+            </div>
           </Alert>
         </div>
       );
     }
 
+    // For non-security errors, just render children normally
     return this.props.children;
   }
-}
-
-// Higher-order component for easy use
-export function withSecurityBoundary<P extends object>(
-  Component: React.ComponentType<P>,
-  fallback?: ReactNode
-) {
-  return function SecuredComponent(props: P) {
-    return (
-      <SecurityBoundary fallback={fallback}>
-        <Component {...props} />
-      </SecurityBoundary>
-    );
-  };
 }

@@ -3,7 +3,6 @@ import { useState } from 'react';
 import { useAuthForm } from './useAuthForm';
 import { useSecurityLogger } from '@/components/Security/SecurityEventLogger';
 import { EnhancedRateLimiter } from '@/utils/securityEnhancements';
-import { PasswordStrengthValidator } from '@/components/Security/PasswordStrengthValidator';
 
 interface PasswordStrength {
   score: number;

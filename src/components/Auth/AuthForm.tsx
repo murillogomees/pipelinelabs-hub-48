@@ -6,10 +6,9 @@ import { Label } from '@/components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { AuthFormFields } from './components/AuthFormFields';
-import { useEnhancedAuthForm } from './hooks/useEnhancedAuthForm';
+import { useAuthForm } from './hooks/useAuthForm';
 import { PasswordStrengthValidator } from '@/components/Security/PasswordStrengthValidator';
-import { CSRFToken } from '@/components/Security/CSRFProtection';
-import { SecurityBoundary } from '@/components/Security/SecurityBoundary';
+import { CSRFToken, CSRFProvider } from '@/components/Security/CSRFProtection';
 import { cleanDocument } from '@/utils/documentValidation';
 
 export function AuthForm() {
@@ -25,14 +24,14 @@ export function AuthForm() {
     documentType: 'cpf' as 'cpf' | 'cnpj'
   });
 
+  const [isPasswordValid, setIsPasswordValid] = useState(false);
+
   const { 
     loading, 
     rateLimited, 
     rateLimitTime, 
-    handleAuth,
-    isPasswordValid,
-    handlePasswordValidation
-  } = useEnhancedAuthForm();
+    handleAuth
+  } = useAuthForm();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -58,6 +57,10 @@ export function AuthForm() {
     setFormData(prev => ({ ...prev, document: cleaned }));
   };
 
+  const handlePasswordValidation = (isValid: boolean) => {
+    setIsPasswordValid(isValid);
+  };
+
   if (rateLimited) {
     return (
       <Card className="w-full max-w-md mx-auto">
@@ -72,7 +75,7 @@ export function AuthForm() {
   }
 
   return (
-    <SecurityBoundary>
+    <CSRFProvider>
       <Card className="w-full max-w-md mx-auto">
         <CardHeader>
           <CardTitle>Pipeline Labs</CardTitle>
@@ -151,6 +154,6 @@ export function AuthForm() {
           </Tabs>
         </CardContent>
       </Card>
-    </SecurityBoundary>
+    </CSRFProvider>
   );
 }
