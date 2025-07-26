@@ -33,7 +33,6 @@ export function MainLayout({ children }: MainLayoutProps) {
       {!isMobile && (
         <Sidebar 
           collapsed={sidebarCollapsed} 
-          onToggle={toggleSidebar}
           onNavigate={closeMobileMenu}
         />
       )}
@@ -44,7 +43,6 @@ export function MainLayout({ children }: MainLayoutProps) {
           <SheetContent side="left" className="w-64 p-0">
             <Sidebar 
               collapsed={false} 
-              onToggle={() => {}}
               onNavigate={closeMobileMenu}
             />
           </SheetContent>

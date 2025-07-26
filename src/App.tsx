@@ -6,6 +6,7 @@ import { AuthProvider } from '@/components/Auth/AuthProvider';
 import { AnalyticsProvider } from '@/components/Analytics/AnalyticsProvider';
 import { ProtectedRoute } from '@/components/ProtectedRoute';
 import { PermissionProvider } from '@/components/PermissionProvider';
+import { MainLayout } from '@/components/Layout/MainLayout';
 import { Toaster } from '@/components/ui/toaster';
 
 // Páginas públicas
@@ -64,10 +65,10 @@ function App() {
                 <Route path="/" element={<LandingPage />} />
                 <Route path="/auth" element={<Auth />} />
                 
-                {/* Rotas protegidas - requer login */}
+                {/* Rotas protegidas - requer login com layout */}
                 <Route path="/app/*" element={
                   <ProtectedRoute>
-                    <div className="container">
+                    <MainLayout>
                       <Routes>
                         <Route index element={<Dashboard />} />
                         <Route path="dashboard" element={<Dashboard />} />
@@ -108,7 +109,7 @@ function App() {
                           </ProtectedRoute>
                         } />
                       </Routes>
-                    </div>
+                    </MainLayout>
                   </ProtectedRoute>
                 } />
               </Routes>
