@@ -49,8 +49,8 @@ function App() {
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
         <PermissionProvider>
-          <AnalyticsProvider>
-            <Router>
+          <Router>
+            <AnalyticsProvider>
               <div className="container">
                 <Routes>
                   <Route index element={<Dashboard />} />
@@ -90,9 +90,9 @@ function App() {
                   } />
                 </Routes>
               </div>
-            </Router>
-            <Toaster />
-          </AnalyticsProvider>
+              <Toaster />
+            </AnalyticsProvider>
+          </Router>
         </PermissionProvider>
       </AuthProvider>
     </QueryClientProvider>
