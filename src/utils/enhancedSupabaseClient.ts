@@ -7,7 +7,7 @@ const logger = createLogger('EnhancedSupabase');
 
 // Enhanced Supabase client with automatic retry
 export const enhancedSupabase = {
-  from: (table: string) => {
+  from: <T extends keyof Database['public']['Tables']>(table: T) => {
     const originalFrom = supabase.from(table);
     
     return {
@@ -112,11 +112,14 @@ export const enhancedSupabase = {
     })
   },
 
-  rpc: (fnName: string, params?: any) => retryWithBackoff(
+  rpc: <T extends keyof Database['public']['Functions']>(fnName: T, params?: any) => retryWithBackoff(
     () => supabase.rpc(fnName, params),
     { maxRetries: 1 }
   ).catch(error => {
-    logger.error(`Failed to call RPC function ${fnName}`, error);
+    logger.error(`Failed to call RPC function ${String(fnName)}`, error);
     throw error;
   })
 };
+
+// Import Database type
+import type { Database } from '@/integrations/supabase/types';

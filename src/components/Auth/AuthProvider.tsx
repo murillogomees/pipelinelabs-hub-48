@@ -82,14 +82,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
                   
                   // Track login event with retry
                   try {
-                    await retryWithBackoff(() => 
-                      supabase.rpc('create_analytics_event' as any, {
+                    await retryWithBackoff(async () => {
+                      const { error } = await supabase.rpc('create_analytics_event', {
                         p_event_name: 'user:login',
                         p_device_type: window.innerWidth <= 768 ? 'mobile' : 'desktop',
                         p_route: window.location.pathname,
                         p_meta: { user_id: session.user.id, email: session.user.email }
-                      })
-                    );
+                      });
+                      if (error) throw error;
+                    });
                   } catch (error) {
                     console.error('Error tracking login event:', error);
                   }
@@ -100,14 +101,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             if (event === 'SIGNED_OUT') {
               // Track logout event before cleaning up
               setTimeout(() => {
-                retryWithBackoff(() =>
-                  supabase.rpc('create_analytics_event' as any, {
+                retryWithBackoff(async () => {
+                  const { error } = await supabase.rpc('create_analytics_event', {
                     p_event_name: 'user:logout',
                     p_device_type: window.innerWidth <= 768 ? 'mobile' : 'desktop',
                     p_route: window.location.pathname,
                     p_meta: { timestamp: new Date().toISOString() }
-                  })
-                ).catch(() => {}); // Ignore errors on logout
+                  });
+                  if (error) throw error;
+                }).catch(() => {}); // Ignore errors on logout
               }, 0);
               
               cleanupAuthState();
@@ -231,7 +233,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       return { error: null };
       
     } catch (error) {
-      authLogger.authError('Sign in error', error);
+      authLogger.error('Sign in error', error);
       if (isNetworkError(error)) {
         setNetworkError(true);
       }
@@ -260,7 +262,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       return { error };
       
     } catch (error) {
-      authLogger.authError('Sign up error', error);
+      authLogger.error('Sign up error', error);
       if (isNetworkError(error)) {
         setNetworkError(true);
       }

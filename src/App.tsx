@@ -1,3 +1,4 @@
+
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { ReactQueryDevtools } from '@tanstack/react-query-devtools';
@@ -13,24 +14,24 @@ const Dashboard = lazy(() => import('@/pages/Dashboard'));
 const Auth = lazy(() => import('@/pages/Auth'));
 const LandingPage = lazy(() => import('@/pages/LandingPage'));
 const MarketplaceChannels = lazy(() => import('@/pages/MarketplaceChannels'));
-const Settings = lazy(() => import('@/pages/Settings'));
-const Users = lazy(() => import('@/pages/Users'));
-const UserProfile = lazy(() => import('@/pages/UserProfile'));
+const Configuracoes = lazy(() => import('@/pages/Configuracoes'));
+const AdminUsuarios = lazy(() => import('@/pages/AdminUsuarios'));
+const UserDadosPessoais = lazy(() => import('@/pages/UserDadosPessoais'));
 const Plans = lazy(() => import('@/pages/Plans'));
 const NotFound = lazy(() => import('@/pages/NotFound'));
-const Products = lazy(() => import('@/pages/Products'));
-const Customers = lazy(() => import('@/pages/Customers'));
-const Sales = lazy(() => import('@/pages/Sales'));
-const Finances = lazy(() => import('@/pages/Finances'));
-const Invoices = lazy(() => import('@/pages/Invoices'));
-const Production = lazy(() => import('@/pages/Production'));
+const Produtos = lazy(() => import('@/pages/Produtos'));
+const Clientes = lazy(() => import('@/pages/Clientes'));
+const Vendas = lazy(() => import('@/pages/Vendas'));
+const Financeiro = lazy(() => import('@/pages/Financeiro'));
+const NotasFiscais = lazy(() => import('@/pages/NotasFiscais'));
+const Producao = lazy(() => import('@/pages/Producao'));
 const Contracts = lazy(() => import('@/pages/Contracts'));
 const Tasks = lazy(() => import('@/pages/Tasks'));
 const Project = lazy(() => import('@/pages/Project'));
 const Projects = lazy(() => import('@/pages/Projects'));
 const Workspace = lazy(() => import('@/pages/Workspace'));
 const Workspaces = lazy(() => import('@/pages/Workspaces'));
-const Integrations = lazy(() => import('@/pages/Integrations'));
+const Integracoes = lazy(() => import('@/pages/Integracoes'));
 const ApiBrowser = lazy(() => import('@/pages/ApiBrowser'));
 
 // Create a stable query client with network error handling
@@ -78,22 +79,22 @@ function App() {
                     <Route path="/planos" element={<Plans />} />
                     <Route path="/app" element={<Dashboard />} />
                     <Route path="/app/marketplace-channels" element={<MarketplaceChannels />} />
-                    <Route path="/app/settings" element={<Settings />} />
-                    <Route path="/app/users" element={<Users />} />
-                    <Route path="/app/users/:id" element={<UserProfile />} />
-                    <Route path="/app/products" element={<Products />} />
-                    <Route path="/app/customers" element={<Customers />} />
-                    <Route path="/app/sales" element={<Sales />} />
-                    <Route path="/app/finances" element={<Finances />} />
-                    <Route path="/app/invoices" element={<Invoices />} />
-                    <Route path="/app/production" element={<Production />} />
+                    <Route path="/app/settings" element={<Configuracoes />} />
+                    <Route path="/app/users" element={<AdminUsuarios />} />
+                    <Route path="/app/users/:id" element={<UserDadosPessoais />} />
+                    <Route path="/app/products" element={<Produtos />} />
+                    <Route path="/app/customers" element={<Clientes />} />
+                    <Route path="/app/sales" element={<Vendas />} />
+                    <Route path="/app/finances" element={<Financeiro />} />
+                    <Route path="/app/invoices" element={<NotasFiscais />} />
+                    <Route path="/app/production" element={<Producao />} />
                     <Route path="/app/contracts" element={<Contracts />} />
                     <Route path="/app/tasks" element={<Tasks />} />
                     <Route path="/app/projects/:id" element={<Project />} />
                     <Route path="/app/projects" element={<Projects />} />
                     <Route path="/app/workspaces/:id" element={<Workspace />} />
                     <Route path="/app/workspaces" element={<Workspaces />} />
-                    <Route path="/app/integrations" element={<Integrations />} />
+                    <Route path="/app/integrations" element={<Integracoes />} />
                     <Route path="/app/api-browser" element={<ApiBrowser />} />
                     <Route path="*" element={<NotFound />} />
                   </Routes>
