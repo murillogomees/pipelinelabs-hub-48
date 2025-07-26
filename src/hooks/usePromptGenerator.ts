@@ -40,31 +40,41 @@ export const usePromptGenerator = () => {
   const { data: promptLogs, isLoading: isLoadingLogs } = useQuery({
     queryKey: ['prompt-logs'],
     queryFn: async (): Promise<PromptLog[]> => {
-      const { data, error } = await supabase
-        .from('prompt_logs')
-        .select('*')
-        .order('created_at', { ascending: false })
-        .limit(50);
+      try {
+        const { data, error } = await supabase
+          .from('prompt_logs')
+          .select('*')
+          .order('created_at', { ascending: false })
+          .limit(50);
 
-      if (error) throw error;
-      
-      // Transform the data to match our interface
-      return (data || []).map(item => ({
-        id: item.id,
-        prompt: item.prompt,
-        generated_code: item.generated_code,
-        model_used: item.model_used,
-        temperature: item.temperature,
-        status: item.status as 'pending' | 'applied' | 'error' | 'rolled_back',
-        error_message: item.error_message,
-        applied_files: Array.isArray(item.applied_files) 
-          ? item.applied_files.map(file => String(file))
-          : [],
-        created_at: item.created_at,
-        applied_at: item.applied_at,
-        rolled_back_at: item.rolled_back_at,
-      }));
+        if (error) {
+          console.error('Error fetching prompt logs:', error);
+          throw new Error('Falha ao carregar histórico de prompts');
+        }
+        
+        // Transform the data to match our interface
+        return (data || []).map(item => ({
+          id: item.id,
+          prompt: item.prompt,
+          generated_code: item.generated_code,
+          model_used: item.model_used,
+          temperature: item.temperature,
+          status: item.status as 'pending' | 'applied' | 'error' | 'rolled_back',
+          error_message: item.error_message,
+          applied_files: Array.isArray(item.applied_files) 
+            ? item.applied_files.map(file => String(file))
+            : [],
+          created_at: item.created_at,
+          applied_at: item.applied_at,
+          rolled_back_at: item.rolled_back_at,
+        }));
+      } catch (error) {
+        console.error('Error in promptLogs query:', error);
+        return [];
+      }
     },
+    retry: 1,
+    staleTime: 30000, // 30 seconds
   });
 
   // Gerar código com IA
@@ -78,7 +88,7 @@ export const usePromptGenerator = () => {
       try {
         // Primeiro, salvar o prompt no banco
         const { data: user } = await supabase.auth.getUser();
-        if (!user.user) throw new Error('User not authenticated');
+        if (!user.user) throw new Error('Usuário não autenticado');
 
         const { data: userCompany } = await supabase
           .from('user_companies')
@@ -87,7 +97,7 @@ export const usePromptGenerator = () => {
           .eq('is_active', true)
           .single();
 
-        if (!userCompany) throw new Error('No active company found');
+        if (!userCompany) throw new Error('Nenhuma empresa ativa encontrada');
 
         const { data: promptLog, error: logError } = await supabase
           .from('prompt_logs')
@@ -102,17 +112,44 @@ export const usePromptGenerator = () => {
           .select()
           .single();
 
-        if (logError) throw logError;
+        if (logError) {
+          console.error('Error creating prompt log:', logError);
+          throw new Error('Falha ao salvar prompt no histórico');
+        }
 
         // Chamar a edge function para gerar código
         const { data, error } = await supabase.functions.invoke('prompt-generator', {
           body: { prompt, temperature, model }
         });
 
-        if (error) throw error;
+        if (error) {
+          console.error('Error invoking prompt-generator:', error);
+          
+          // Atualizar o log com erro
+          await supabase
+            .from('prompt_logs')
+            .update({
+              status: 'error',
+              error_message: error.message || 'Erro desconhecido na geração'
+            })
+            .eq('id', promptLog.id);
 
-        if (!data.success) {
-          throw new Error(data.error || 'Failed to generate code');
+          throw new Error(error.message || 'Falha ao gerar código');
+        }
+
+        if (!data || !data.success) {
+          const errorMsg = data?.error || 'Resposta inválida da API';
+          
+          // Atualizar o log com erro
+          await supabase
+            .from('prompt_logs')
+            .update({
+              status: 'error',
+              error_message: errorMsg
+            })
+            .eq('id', promptLog.id);
+
+          throw new Error(errorMsg);
         }
 
         // Atualizar o log com o código gerado
@@ -123,7 +160,10 @@ export const usePromptGenerator = () => {
           })
           .eq('id', promptLog.id);
 
-        if (updateError) throw updateError;
+        if (updateError) {
+          console.error('Error updating prompt log:', updateError);
+          // Não falhar por causa disso, apenas log
+        }
 
         return {
           logId: promptLog.id,
@@ -141,9 +181,11 @@ export const usePromptGenerator = () => {
       });
     },
     onError: (error: any) => {
+      const errorMessage = error.message || 'Erro desconhecido ao gerar código';
+      console.error('Generate code error:', error);
       toast({
         title: 'Erro ao gerar código',
-        description: error.message,
+        description: errorMessage,
         variant: 'destructive'
       });
     }
@@ -161,11 +203,15 @@ export const usePromptGenerator = () => {
           .from('prompt_logs')
           .update({
             status: 'applied',
-            applied_files: ['Simulação - arquivos seriam aplicados aqui']
+            applied_files: ['Simulação - arquivos seriam aplicados aqui'],
+            applied_at: new Date().toISOString()
           })
           .eq('id', logId);
 
-        if (error) throw error;
+        if (error) {
+          console.error('Error applying code:', error);
+          throw new Error('Falha ao aplicar código');
+        }
 
         return { success: true };
       } finally {
@@ -180,9 +226,10 @@ export const usePromptGenerator = () => {
       });
     },
     onError: (error: any) => {
+      console.error('Apply code error:', error);
       toast({
         title: 'Erro ao aplicar código',
-        description: error.message,
+        description: error.message || 'Erro desconhecido ao aplicar código',
         variant: 'destructive'
       });
     }
@@ -194,11 +241,15 @@ export const usePromptGenerator = () => {
       const { error } = await supabase
         .from('prompt_logs')
         .update({
-          status: 'rolled_back'
+          status: 'rolled_back',
+          rolled_back_at: new Date().toISOString()
         })
         .eq('id', logId);
 
-      if (error) throw error;
+      if (error) {
+        console.error('Error rolling back:', error);
+        throw new Error('Falha ao desfazer alterações');
+      }
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['prompt-logs'] });
@@ -208,9 +259,10 @@ export const usePromptGenerator = () => {
       });
     },
     onError: (error: any) => {
+      console.error('Rollback error:', error);
       toast({
         title: 'Erro no rollback',
-        description: error.message,
+        description: error.message || 'Erro desconhecido no rollback',
         variant: 'destructive'
       });
     }
@@ -221,7 +273,15 @@ export const usePromptGenerator = () => {
     isLoadingLogs,
     isGenerating,
     isApplying,
-    generateCode: generateCode.mutate,
+    generateCode: (params: GenerateCodeParams, callbacks?: {
+      onSuccess?: (data: { logId: string; generatedCode: GeneratedCode; }) => void;
+      onError?: (error: any) => void;
+    }) => {
+      generateCode.mutate(params, {
+        onSuccess: callbacks?.onSuccess,
+        onError: callbacks?.onError
+      });
+    },
     applyCode: applyCode.mutate,
     rollbackCode: rollbackCode.mutate
   };

@@ -43,7 +43,8 @@ serve(async (req) => {
       })
     }
 
-    const { prompt, temperature = 0.7, model = 'gpt-4o-mini' } = await req.json()
+    const requestBody = await req.json().catch(() => ({}))
+    const { prompt, temperature = 0.7, model = 'gpt-4o-mini' } = requestBody
 
     if (!prompt) {
       return new Response(JSON.stringify({ error: 'Prompt is required' }), {
@@ -52,11 +53,22 @@ serve(async (req) => {
       })
     }
 
+    // Verificar se a chave da OpenAI está configurada
+    const openaiKey = Deno.env.get('OPENAI_API_KEY')
+    if (!openaiKey) {
+      return new Response(JSON.stringify({ 
+        error: 'OpenAI API key not configured. Please configure OPENAI_API_KEY environment variable.' 
+      }), {
+        status: 500,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      })
+    }
+
     // Chamar OpenAI
     const openaiResponse = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
       headers: {
-        'Authorization': `Bearer ${Deno.env.get('OPENAI_API_KEY')}`,
+        'Authorization': `Bearer ${openaiKey}`,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
@@ -99,15 +111,17 @@ serve(async (req) => {
     })
 
     if (!openaiResponse.ok) {
-      const error = await openaiResponse.text()
-      return new Response(JSON.stringify({ error: `OpenAI API error: ${error}` }), {
+      const errorText = await openaiResponse.text().catch(() => 'Unknown error')
+      return new Response(JSON.stringify({ 
+        error: `OpenAI API error: ${openaiResponse.status} - ${errorText}` 
+      }), {
         status: 500,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       })
     }
 
     const openaiData = await openaiResponse.json()
-    const generatedContent = openaiData.choices[0]?.message?.content
+    const generatedContent = openaiData.choices?.[0]?.message?.content
 
     if (!generatedContent) {
       return new Response(JSON.stringify({ error: 'No content generated' }), {
@@ -146,8 +160,10 @@ serve(async (req) => {
     })
 
   } catch (error) {
-    console.error('Error:', error)
-    return new Response(JSON.stringify({ error: error.message }), {
+    console.error('Error in prompt-generator:', error)
+    return new Response(JSON.stringify({ 
+      error: error.message || 'Internal server error' 
+    }), {
       status: 500,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     })
