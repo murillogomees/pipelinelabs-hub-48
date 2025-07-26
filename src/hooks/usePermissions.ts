@@ -39,28 +39,30 @@ export function usePermissions() {
 
         const userEmail = user.user.email || "";
         
-        // Check for super admin status from database instead of hardcoded email
+        // Verificar status de super admin direto do banco
         const { data: superAdminCheck } = await supabase
           .from("user_companies")
-          .select("user_type")
+          .select("user_type, permissions, specific_permissions, company_id")
           .eq("user_id", user.user.id)
           .eq("user_type", "super_admin")
           .eq("is_active", true)
           .maybeSingle();
         
-        const isSuperAdminByEmail = !!superAdminCheck;
+        const isSuperAdminByDB = !!superAdminCheck;
         
-        // Se for super admin pelo email, retornar permissões completas
-        if (isSuperAdminByEmail) {
+        // Se for super admin, retornar permissões completas imediatamente
+        if (isSuperAdminByDB) {
           return {
             userType: 'super_admin' as UserType,
             isSuperAdmin: true,
             isContratante: false,
             isOperador: false,
             isAdmin: true,
-            companyId: null,
+            companyId: superAdminCheck.company_id,
             department: null,
             specificPermissions: {
+              ...superAdminCheck.permissions,
+              ...superAdminCheck.specific_permissions,
               super_admin: true,
               full_access: true,
               admin_panel: true,
@@ -72,7 +74,7 @@ export function usePermissions() {
           };
         }
 
-        // Buscar dados do usuário com tratamento de erro
+        // Buscar dados do usuário normalmente se não for super admin
         const { data: userCompaniesData, error: companiesError } = await supabase
           .from("user_companies")
           .select("user_type, department, specific_permissions, is_active, company_id, role, permissions")
@@ -84,35 +86,19 @@ export function usePermissions() {
 
         if (companiesError) {
           console.error("Error fetching user companies:", companiesError);
-          
-          // Se der erro mas é super admin, retornar permissões
-          if (isSuperAdminByEmail) {
-            return {
-              userType: 'super_admin' as UserType,
-              isSuperAdmin: true,
-              isContratante: false,
-              isOperador: false,
-              isAdmin: true,
-              companyId: null,
-              department: null,
-              specificPermissions: { super_admin: true, full_access: true },
-              email: userEmail
-            };
-          }
-          
           throw companiesError;
         }
 
         if (!userCompaniesData) {
           return {
             userType: null,
-            isSuperAdmin: isSuperAdminByEmail,
+            isSuperAdmin: false,
             isContratante: false,
             isOperador: false,
-            isAdmin: isSuperAdminByEmail,
+            isAdmin: false,
             companyId: null,
             department: null,
-            specificPermissions: isSuperAdminByEmail ? { super_admin: true } : {},
+            specificPermissions: {},
             email: userEmail
           };
         }
@@ -124,7 +110,7 @@ export function usePermissions() {
         // Combinar permissões específicas e gerais
         const allPermissions = { ...permissions, ...specificPermissions };
         
-        const isSuperAdmin = userType === 'super_admin' || isSuperAdminByEmail || allPermissions.super_admin === true;
+        const isSuperAdmin = userType === 'super_admin' || allPermissions.super_admin === true;
         const isContratante = userType === 'contratante';
         const isOperador = userType === 'operador';
         const isAdmin = isSuperAdmin || isContratante;
@@ -137,43 +123,12 @@ export function usePermissions() {
           isAdmin,
           companyId: userCompaniesData.company_id,
           department: userCompaniesData.department,
-          specificPermissions: isSuperAdminByEmail ? { ...allPermissions, super_admin: true, full_access: true } : allPermissions,
+          specificPermissions: allPermissions,
           email: userEmail
         } as UserPermissions;
       } catch (error) {
         console.error("Error in usePermissions:", error);
-        
-        // Verificar se é super admin pelo email mesmo com erro
-        try {
-          const { data: user } = await supabase.auth.getUser();
-          const userEmail = user.user?.email || "";
-          
-          // Check for super admin status from database
-          const { data: superAdminCheck } = await supabase
-            .from("user_companies")
-            .select("user_type")
-            .eq("user_id", user.user.id)
-            .eq("user_type", "super_admin")
-            .eq("is_active", true)
-            .maybeSingle();
-          
-          const isSuperAdminByEmail = !!superAdminCheck;
-          
-          return {
-            userType: isSuperAdminByEmail ? 'super_admin' as UserType : null,
-            isSuperAdmin: isSuperAdminByEmail,
-            isContratante: false,
-            isOperador: false,
-            isAdmin: isSuperAdminByEmail,
-            companyId: null,
-            department: null,
-            specificPermissions: isSuperAdminByEmail ? { super_admin: true, full_access: true } : {},
-            email: userEmail
-          };
-        } catch (fallbackError) {
-          console.error("Fallback error in usePermissions:", fallbackError);
-          throw error;
-        }
+        throw error;
       }
     },
     refetchOnWindowFocus: false,
@@ -183,7 +138,7 @@ export function usePermissions() {
       if (error?.message?.includes('JWT')) return false;
       return failureCount < 2;
     },
-    staleTime: 2 * 60 * 1000, // 2 minutos
+    staleTime: 1 * 60 * 1000, // 1 minuto - mais agressivo para capturar mudanças
   });
 
   return {

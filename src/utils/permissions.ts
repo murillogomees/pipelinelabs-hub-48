@@ -1,3 +1,4 @@
+
 /**
  * Utilitários para sistema de permissões
  */
@@ -136,4 +137,12 @@ export function hasPermission(
 ): boolean {
   if (isSuperAdmin) return true;
   return userPermissions[permission] === true;
+}
+
+/**
+ * Função para invalidar cache de permissões (útil após mudanças)
+ */
+export function invalidatePermissionsCache() {
+  // Forçar uma nova consulta das permissões
+  window.location.reload();
 }

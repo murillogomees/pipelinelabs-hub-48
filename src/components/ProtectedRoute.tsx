@@ -21,9 +21,24 @@ export function ProtectedRoute({
     isSuperAdmin, 
     isAdmin, 
     isLoading: permissionsLoading,
-    canBypassAllRestrictions 
+    canBypassAllRestrictions,
+    email
   } = usePermissions();
   const location = useLocation();
+
+  // Log para debug
+  React.useEffect(() => {
+    if (!permissionsLoading && email) {
+      console.log('ProtectedRoute Debug:', {
+        email,
+        isSuperAdmin,
+        isAdmin,
+        requireSuperAdmin,
+        requireAdmin,
+        path: location.pathname
+      });
+    }
+  }, [email, isSuperAdmin, isAdmin, requireSuperAdmin, requireAdmin, location.pathname, permissionsLoading]);
 
   // Mostrar loading durante verificação de autenticação
   if (isLoading || permissionsLoading) {
@@ -51,7 +66,7 @@ export function ProtectedRoute({
   }
 
   // Super Admin pode bypassar todas as restrições
-  if (canBypassAllRestrictions) {
+  if (canBypassAllRestrictions || isSuperAdmin) {
     return <>{children}</>;
   }
 
