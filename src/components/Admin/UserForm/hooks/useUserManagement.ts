@@ -20,10 +20,10 @@ export function useUserManagement(onSave?: () => void, onClose?: () => void) {
   const [loading, setLoading] = useState(false);
   const { toast } = useToast();
 
-  // Fetch companies - simplified to avoid type inference issues
-  const companiesQuery = useQuery<SimpleCompany[]>({
+  // Fetch companies - let TypeScript infer the type
+  const companiesQuery = useQuery({
     queryKey: ['companies-for-user-form'],
-    queryFn: async () => {
+    queryFn: async (): Promise<SimpleCompany[]> => {
       const { data, error } = await supabase
         .from('companies')
         .select('id, name')
@@ -39,10 +39,10 @@ export function useUserManagement(onSave?: () => void, onClose?: () => void) {
     }
   });
 
-  // Fetch access levels - simplified to avoid type inference issues  
-  const accessLevelsQuery = useQuery<SimpleAccessLevel[]>({
+  // Fetch access levels - let TypeScript infer the type
+  const accessLevelsQuery = useQuery({
     queryKey: ['access-levels-for-user-form'],
-    queryFn: async () => {
+    queryFn: async (): Promise<SimpleAccessLevel[]> => {
       const { data, error } = await supabase
         .from('access_levels')
         .select('id, name, display_name, permissions')
