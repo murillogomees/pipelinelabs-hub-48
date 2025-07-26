@@ -31,19 +31,6 @@ export function UserAccessFixer() {
 
       console.log('User found:', profile);
 
-      // Verificar se o usuário já tem associação com empresa
-      const { data: userCompanies, error: userCompanyError } = await supabase
-        .from('user_companies')
-        .select('*')
-        .eq('user_id', profile.user_id);
-
-      if (userCompanyError) {
-        console.error('Error fetching user companies:', userCompanyError);
-        throw userCompanyError;
-      }
-
-      console.log('User companies:', userCompanies);
-
       // Buscar empresa Pipeline Labs ou primeira empresa disponível
       const { data: companies, error: companiesError } = await supabase
         .from('companies')
@@ -51,7 +38,9 @@ export function UserAccessFixer() {
         .or('name.eq.Pipeline Labs,name.ilike.%pipeline%')
         .limit(1);
 
-      if (companiesError || !companies || companies.length === 0) {
+      let targetCompany = companies?.[0];
+
+      if (!targetCompany) {
         // Fallback: buscar qualquer empresa
         const { data: fallbackCompanies } = await supabase
           .from('companies')
@@ -62,14 +51,13 @@ export function UserAccessFixer() {
           setFixResult('Nenhuma empresa encontrada no sistema');
           return;
         }
-        companies[0] = fallbackCompanies[0];
+        targetCompany = fallbackCompanies[0];
       }
 
-      const targetCompany = companies[0];
       console.log('Target company:', targetCompany);
 
       // Buscar nível de acesso de super_admin
-      const { data: accessLevels, error: accessLevelsError } = await supabase
+      let { data: accessLevels } = await supabase
         .from('access_levels')
         .select('id, name, display_name, permissions')
         .eq('name', 'super_admin')
@@ -127,8 +115,6 @@ export function UserAccessFixer() {
         console.log('Created super admin access level:', superAdminAccessLevel);
       }
 
-      const existingUserCompany = userCompanies?.find(uc => uc.company_id === targetCompany.id);
-
       const superAdminPermissions = {
         dashboard: true,
         vendas: true,
@@ -156,6 +142,14 @@ export function UserAccessFixer() {
         company_management: true
       };
 
+      // Verificar se já existe associação com empresa
+      const { data: existingUserCompany } = await supabase
+        .from('user_companies')
+        .select('*')
+        .eq('user_id', profile.user_id)
+        .eq('company_id', targetCompany.id)
+        .single();
+
       if (existingUserCompany) {
         // Atualizar associação existente
         const { error: updateError } = await supabase
@@ -166,8 +160,7 @@ export function UserAccessFixer() {
             is_active: true,
             role: 'super_admin',
             permissions: superAdminPermissions,
-            specific_permissions: superAdminPermissions,
-            updated_at: new Date().toISOString()
+            specific_permissions: superAdminPermissions
           })
           .eq('id', existingUserCompany.id);
 
@@ -177,7 +170,6 @@ export function UserAccessFixer() {
         }
 
         console.log('Updated existing user company association');
-        setFixResult(`Acesso atualizado para ${profile.email}. Empresa: ${targetCompany.name}, Tipo: Super Admin`);
       } else {
         // Criar nova associação
         const { error: insertError } = await supabase
@@ -199,7 +191,6 @@ export function UserAccessFixer() {
         }
 
         console.log('Created new user company association');
-        setFixResult(`Acesso criado para ${profile.email}. Empresa: ${targetCompany.name}, Tipo: Super Admin`);
       }
 
       // Ativar o perfil do usuário também
@@ -208,16 +199,7 @@ export function UserAccessFixer() {
         .update({ is_active: true })
         .eq('user_id', profile.user_id);
 
-      // Usar a função RPC para configurar super admin se existir
-      try {
-        await supabase.rpc('setup_initial_super_admin', {
-          p_email: 'murilloggomes@gmail.com'
-        });
-        console.log('RPC setup_initial_super_admin executed successfully');
-      } catch (rpcError) {
-        console.warn('RPC setup_initial_super_admin not available or failed:', rpcError);
-        // Não é crítico se o RPC falhar
-      }
+      setFixResult(`Acesso configurado com sucesso para ${profile.email}. Empresa: ${targetCompany.name}, Tipo: Super Admin`);
 
       toast({
         title: 'Sucesso',
@@ -259,10 +241,6 @@ export function UserAccessFixer() {
         .eq('user_id', currentUser.user?.id);
 
       console.log('Current user permissions:', userPermissions);
-
-      // Testar função RPC is_super_admin
-      const { data: isSuperAdmin } = await supabase.rpc('is_super_admin');
-      console.log('is_super_admin RPC result:', isSuperAdmin);
 
       setFixResult(`Teste executado - Verifique o console do navegador para detalhes das permissões atuais`);
     } catch (error) {

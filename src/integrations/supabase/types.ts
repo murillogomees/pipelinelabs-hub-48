@@ -3741,6 +3741,7 @@ export type Database = {
           permissions: Json | null
           role: string
           specific_permissions: Json | null
+          updated_at: string | null
           user_id: string
           user_type: Database["public"]["Enums"]["user_type"] | null
         }
@@ -3754,6 +3755,7 @@ export type Database = {
           permissions?: Json | null
           role?: string
           specific_permissions?: Json | null
+          updated_at?: string | null
           user_id: string
           user_type?: Database["public"]["Enums"]["user_type"] | null
         }
@@ -3767,6 +3769,7 @@ export type Database = {
           permissions?: Json | null
           role?: string
           specific_permissions?: Json | null
+          updated_at?: string | null
           user_id?: string
           user_type?: Database["public"]["Enums"]["user_type"] | null
         }
