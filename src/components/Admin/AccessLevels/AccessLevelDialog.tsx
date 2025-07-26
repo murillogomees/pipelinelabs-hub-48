@@ -1,4 +1,5 @@
-import React, { useState, useEffect, useCallback, useMemo } from 'react';
+
+import React, { useState, useCallback, useMemo } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -92,39 +93,37 @@ const permissionCategories = [
 ];
 
 export function AccessLevelDialog({ open, onOpenChange, accessLevel, onSave }: AccessLevelDialogProps) {
-  const defaultFormData = useMemo(() => ({
-    name: '',
-    display_name: '',
-    description: '',
-    is_active: true,
-    permissions: {} as Record<string, boolean>
-  }), []);
-
-  const [formData, setFormData] = useState(defaultFormData);
-  const [loading, setLoading] = useState(false);
   const { toast } = useToast();
 
-  // Memoize the access level ID to prevent unnecessary re-renders
-  const accessLevelId = useMemo(() => accessLevel?.id, [accessLevel?.id]);
-
-  // Initialize form data based on access level, but only when the dialog opens or accessLevel changes
-  useEffect(() => {
-    if (open) {
-      if (accessLevelId && accessLevel) {
-        console.log('Setting form data for access level:', accessLevelId);
-        setFormData({
-          name: accessLevel.name || '',
-          display_name: accessLevel.display_name || '',
-          description: accessLevel.description || '',
-          is_active: accessLevel.is_active ?? true,
-          permissions: accessLevel.permissions || {}
-        });
-      } else {
-        console.log('Resetting form data to defaults');
-        setFormData(defaultFormData);
-      }
+  // Use useMemo to create initial form data based on accessLevel
+  const initialFormData = useMemo(() => {
+    if (accessLevel) {
+      return {
+        name: accessLevel.name || '',
+        display_name: accessLevel.display_name || '',
+        description: accessLevel.description || '',
+        is_active: accessLevel.is_active ?? true,
+        permissions: accessLevel.permissions || {}
+      };
     }
-  }, [open, accessLevelId, accessLevel, defaultFormData]);
+    return {
+      name: '',
+      display_name: '',
+      description: '',
+      is_active: true,
+      permissions: {} as Record<string, boolean>
+    };
+  }, [accessLevel?.id, accessLevel?.name, accessLevel?.display_name, accessLevel?.description, accessLevel?.is_active, JSON.stringify(accessLevel?.permissions || {})]);
+
+  const [formData, setFormData] = useState(initialFormData);
+  const [loading, setLoading] = useState(false);
+
+  // Reset form data when dialog opens or accessLevel changes
+  const resetFormData = useMemo(() => {
+    if (open) {
+      setFormData(initialFormData);
+    }
+  }, [open, initialFormData]);
 
   const handlePermissionChange = useCallback((permission: string, value: boolean) => {
     setFormData(prev => ({
