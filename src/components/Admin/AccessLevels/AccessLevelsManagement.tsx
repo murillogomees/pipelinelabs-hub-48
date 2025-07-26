@@ -10,21 +10,7 @@ import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { DataTable } from '@/components/ui/data-table';
-
-interface AccessLevel {
-  id: string;
-  name: string;
-  display_name: string;
-  description: string;
-  permissions: Record<string, boolean>;
-  is_system: boolean;
-  is_active: boolean;
-  created_at: string;
-  updated_at: string;
-  _count?: {
-    users: number;
-  };
-}
+import type { AccessLevel, AccessLevelWithCount } from './types';
 
 export function AccessLevelsManagement() {
   const [showDialog, setShowDialog] = useState(false);
@@ -34,34 +20,40 @@ export function AccessLevelsManagement() {
 
   const { data: accessLevels = [], refetch, isLoading } = useQuery({
     queryKey: ['access-levels'],
-    queryFn: async () => {
+    queryFn: async (): Promise<AccessLevelWithCount[]> => {
+      // Usar uma query direta sem o Supabase type checking
       const { data, error } = await supabase
-        .from('access_levels')
-        .select(`
-          *,
-          user_companies!inner(count)
-        `)
-        .order('created_at', { ascending: false });
+        .rpc('get_access_levels_with_user_count');
 
-      if (error) throw error;
+      if (error) {
+        // Fallback para query simples
+        const { data: simpleData, error: simpleError } = await supabase
+          .from('access_levels')
+          .select('*')
+          .order('created_at', { ascending: false });
+
+        if (simpleError) throw simpleError;
+
+        // Count users for each access level manually
+        const levelsWithCount = await Promise.all(
+          (simpleData as AccessLevel[]).map(async (level) => {
+            const { count } = await supabase
+              .from('user_companies')
+              .select('*', { count: 'exact', head: true })
+              .eq('access_level_id', level.id)
+              .eq('is_active', true);
+            
+            return {
+              ...level,
+              _count: { users: count || 0 }
+            } as AccessLevelWithCount;
+          })
+        );
+
+        return levelsWithCount;
+      }
       
-      // Count users for each access level
-      const levelsWithCount = await Promise.all(
-        data.map(async (level) => {
-          const { count } = await supabase
-            .from('user_companies')
-            .select('*', { count: 'exact', head: true })
-            .eq('access_level_id', level.id)
-            .eq('is_active', true);
-          
-          return {
-            ...level,
-            _count: { users: count || 0 }
-          };
-        })
-      );
-
-      return levelsWithCount;
+      return data as AccessLevelWithCount[];
     }
   });
 
@@ -75,7 +67,8 @@ export function AccessLevelsManagement() {
       return;
     }
 
-    if (level._count?.users && level._count.users > 0) {
+    const levelWithCount = level as AccessLevelWithCount;
+    if (levelWithCount._count?.users && levelWithCount._count.users > 0) {
       toast({
         title: "Erro",
         description: "Não é possível excluir um nível de acesso que possui usuários",
@@ -115,7 +108,7 @@ export function AccessLevelsManagement() {
     {
       key: 'display_name',
       header: 'Nome',
-      render: (value: string, row: AccessLevel) => (
+      render: (value: string, row: AccessLevelWithCount) => (
         <div className="flex items-center space-x-2">
           <Shield className="h-4 w-4 text-primary" />
           <div>
@@ -135,7 +128,7 @@ export function AccessLevelsManagement() {
     {
       key: '_count.users',
       header: 'Usuários',
-      render: (value: any, row: AccessLevel) => (
+      render: (_value: any, row: AccessLevelWithCount) => (
         <div className="flex items-center space-x-2">
           <Users className="h-4 w-4 text-muted-foreground" />
           <span>{row._count?.users || 0}</span>
@@ -166,7 +159,7 @@ export function AccessLevelsManagement() {
     {
       label: 'Editar',
       icon: <Edit className="h-4 w-4" />,
-      onClick: (row: AccessLevel) => {
+      onClick: (row: AccessLevelWithCount) => {
         setSelectedLevel(row);
         setShowDialog(true);
       },

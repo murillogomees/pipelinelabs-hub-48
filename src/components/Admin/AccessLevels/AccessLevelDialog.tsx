@@ -11,16 +11,7 @@ import { Badge } from '@/components/ui/badge';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { Shield, Settings, Activity } from 'lucide-react';
-
-interface AccessLevel {
-  id: string;
-  name: string;
-  display_name: string;
-  description: string;
-  permissions: Record<string, boolean>;
-  is_system: boolean;
-  is_active: boolean;
-}
+import type { AccessLevel } from './types';
 
 interface AccessLevelDialogProps {
   open: boolean;

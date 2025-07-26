@@ -2,7 +2,7 @@ import React from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import LandingPage from '@/pages/LandingPage';
 import Auth from '@/pages/Auth';
-import MainLayout from '@/components/Layout/MainLayout';
+import { MainLayout } from '@/components/Layout/MainLayout';
 import Dashboard from '@/pages/Dashboard';
 import Vendas from '@/pages/Vendas';
 import Produtos from '@/pages/Produtos';

@@ -6,6 +6,7 @@ import { Badge } from '@/components/ui/badge';
 import { Shield, Crown, User, Settings } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
+import type { AccessLevel } from '../../AccessLevels/types';
 
 interface AccessLevelSelectorProps {
   value: string;
@@ -30,7 +31,7 @@ const getIconForLevel = (name: string) => {
 export function AccessLevelSelector({ value, onChange, disabled = false, isRequired = true }: AccessLevelSelectorProps) {
   const { data: accessLevels = [] } = useQuery({
     queryKey: ['access-levels-for-select'],
-    queryFn: async () => {
+    queryFn: async (): Promise<AccessLevel[]> => {
       const { data, error } = await supabase
         .from('access_levels')
         .select('*')
@@ -38,7 +39,7 @@ export function AccessLevelSelector({ value, onChange, disabled = false, isRequi
         .order('name');
 
       if (error) throw error;
-      return data;
+      return data as AccessLevel[];
     }
   });
 
