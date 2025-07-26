@@ -116,7 +116,7 @@ export function AccessLevelDialog({ open, onOpenChange, accessLevel, onSave }: A
   const { register, handleSubmit, watch, setValue, reset, formState: { isSubmitting } } = form;
 
   // Initialize form when dialog opens
-  useEffect(() => {
+ 
     if (open) {
       if (accessLevel) {
         reset({
@@ -136,7 +136,7 @@ export function AccessLevelDialog({ open, onOpenChange, accessLevel, onSave }: A
         });
       }
     }
-  }, [open, accessLevel?.id, reset]);
+ 
 
   const formData = watch();
 
