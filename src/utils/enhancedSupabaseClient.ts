@@ -21,7 +21,7 @@ export const enhancedSupabase = {
           single: async () => {
             try {
               const result = await retryWithBackoff(
-                () => originalSelect.single(),
+                async () => await originalSelect.single(),
                 { maxRetries: 2 }
               );
               return result;
@@ -34,7 +34,7 @@ export const enhancedSupabase = {
           maybeSingle: async () => {
             try {
               const result = await retryWithBackoff(
-                () => originalSelect.maybeSingle(),
+                async () => await originalSelect.maybeSingle(),
                 { maxRetries: 2 }
               );
               return result;
@@ -44,14 +44,17 @@ export const enhancedSupabase = {
             }
           },
           
-          then: (onFulfilled?: any, onRejected?: any) => {
-            return retryWithBackoff(
-              () => originalSelect,
-              { maxRetries: 2 }
-            ).then(onFulfilled, onRejected).catch(error => {
+          then: async (onFulfilled?: any, onRejected?: any) => {
+            try {
+              const result = await retryWithBackoff(
+                async () => await originalSelect,
+                { maxRetries: 2 }
+              );
+              return Promise.resolve(result).then(onFulfilled, onRejected);
+            } catch (error) {
               logger.error(`Failed to fetch records from ${String(table)}`, error);
-              throw error;
-            });
+              return Promise.reject(error).then(onFulfilled, onRejected);
+            }
           }
         };
       },
@@ -59,7 +62,7 @@ export const enhancedSupabase = {
       insert: async (values: any) => {
         try {
           const result = await retryWithBackoff(
-            () => originalFrom.insert(values),
+            async () => await originalFrom.insert(values),
             { maxRetries: 1 }
           );
           return result;
@@ -77,7 +80,7 @@ export const enhancedSupabase = {
           eq: async (column: string, value: any) => {
             try {
               const result = await retryWithBackoff(
-                () => originalUpdate.eq(column, value),
+                async () => await originalUpdate.eq(column, value),
                 { maxRetries: 1 }
               );
               return result;
@@ -97,7 +100,7 @@ export const enhancedSupabase = {
           eq: async (column: string, value: any) => {
             try {
               const result = await retryWithBackoff(
-                () => originalDelete.eq(column, value),
+                async () => await originalDelete.eq(column, value),
                 { maxRetries: 1 }
               );
               return result;
@@ -116,7 +119,7 @@ export const enhancedSupabase = {
     signInWithPassword: async (credentials: any) => {
       try {
         const result = await retryWithBackoff(
-          () => supabase.auth.signInWithPassword(credentials),
+          async () => await supabase.auth.signInWithPassword(credentials),
           { maxRetries: 2 }
         );
         return result;
@@ -129,7 +132,7 @@ export const enhancedSupabase = {
     signUp: async (credentials: any) => {
       try {
         const result = await retryWithBackoff(
-          () => supabase.auth.signUp(credentials),
+          async () => await supabase.auth.signUp(credentials),
           { maxRetries: 2 }
         );
         return result;
@@ -142,7 +145,7 @@ export const enhancedSupabase = {
     signOut: async (options?: any) => {
       try {
         const result = await retryWithBackoff(
-          () => supabase.auth.signOut(options),
+          async () => await supabase.auth.signOut(options),
           { maxRetries: 2 }
         );
         return result;
@@ -156,7 +159,7 @@ export const enhancedSupabase = {
   rpc: async <T extends keyof Database['public']['Functions']>(fnName: T, params?: any) => {
     try {
       const result = await retryWithBackoff(
-        () => supabase.rpc(fnName, params),
+        async () => await supabase.rpc(fnName, params),
         { maxRetries: 1 }
       );
       return result;
