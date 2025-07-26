@@ -40,7 +40,17 @@ export function AccessLevelSelector({ value, onChange, disabled = false, isRequi
           .order('name');
 
         if (error) throw error;
-        return (data || []) as AccessLevel[];
+        return (data || []).map((item: any) => ({
+          id: item.id,
+          name: item.name,
+          display_name: item.display_name,
+          description: item.description || '',
+          permissions: item.permissions || {},
+          is_system: item.is_system || false,
+          is_active: item.is_active || false,
+          created_at: item.created_at,
+          updated_at: item.updated_at
+        })) as AccessLevel[];
       } catch (error) {
         console.error('Error fetching access levels:', error);
         return [];

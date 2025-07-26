@@ -63,7 +63,17 @@ export function UserForm({ user, onSubmit, loading }: UserFormProps) {
           .eq('is_active', true);
 
         if (error) throw error;
-        return (data || []) as AccessLevel[];
+        return (data || []).map((item: any) => ({
+          id: item.id,
+          name: item.name,
+          display_name: item.display_name,
+          description: item.description || '',
+          permissions: item.permissions || {},
+          is_system: item.is_system || false,
+          is_active: item.is_active || false,
+          created_at: item.created_at,
+          updated_at: item.updated_at
+        })) as AccessLevel[];
       } catch (error) {
         console.error('Error fetching access levels:', error);
         return [];
@@ -141,6 +151,26 @@ export function UserForm({ user, onSubmit, loading }: UserFormProps) {
     setFormData(prev => ({ ...prev, [field]: value }));
   };
 
+  const mergePermissions = (basePermissions: UserFormData['permissions'], newPermissions: Record<string, boolean>): UserFormData['permissions'] => {
+    return {
+      dashboard: newPermissions.dashboard ?? basePermissions.dashboard,
+      vendas: newPermissions.vendas ?? basePermissions.vendas,
+      produtos: newPermissions.produtos ?? basePermissions.produtos,
+      clientes: newPermissions.clientes ?? basePermissions.clientes,
+      compras: newPermissions.compras ?? basePermissions.compras,
+      estoque: newPermissions.estoque ?? basePermissions.estoque,
+      financeiro: newPermissions.financeiro ?? basePermissions.financeiro,
+      notas_fiscais: newPermissions.notas_fiscais ?? basePermissions.notas_fiscais,
+      producao: newPermissions.producao ?? basePermissions.producao,
+      contratos: newPermissions.contratos ?? basePermissions.contratos,
+      relatorios: newPermissions.relatorios ?? basePermissions.relatorios,
+      analytics: newPermissions.analytics ?? basePermissions.analytics,
+      marketplace_canais: newPermissions.marketplace_canais ?? basePermissions.marketplace_canais,
+      integracoes: newPermissions.integracoes ?? basePermissions.integracoes,
+      configuracoes: newPermissions.configuracoes ?? basePermissions.configuracoes,
+    };
+  };
+
   const handleAccessLevelChange = (accessLevelId: string) => {
     const selectedLevel = accessLevels.find(level => level.id === accessLevelId);
     const currentLevel = accessLevels.find(level => level.id === formData.access_level_id);
@@ -161,11 +191,17 @@ export function UserForm({ user, onSubmit, loading }: UserFormProps) {
     
     // Aplicar mudança diretamente
     if (selectedLevel) {
+      const newUserType = selectedLevel.name === 'super_admin' 
+        ? 'super_admin' 
+        : selectedLevel.name === 'contratante' 
+        ? 'contratante' 
+        : 'operador';
+
       setFormData(prev => ({
         ...prev,
         access_level_id: accessLevelId,
-        user_type: selectedLevel.name as 'contratante' | 'operador',
-        permissions: selectedLevel.permissions || prev.permissions
+        user_type: newUserType,
+        permissions: mergePermissions(prev.permissions, selectedLevel.permissions || {})
       }));
     }
   };
@@ -174,11 +210,17 @@ export function UserForm({ user, onSubmit, loading }: UserFormProps) {
     if (pendingAccessLevel) {
       const selectedLevel = accessLevels.find(level => level.id === pendingAccessLevel);
       if (selectedLevel) {
+        const newUserType = selectedLevel.name === 'super_admin' 
+          ? 'super_admin' 
+          : selectedLevel.name === 'contratante' 
+          ? 'contratante' 
+          : 'operador';
+
         setFormData(prev => ({
           ...prev,
           access_level_id: pendingAccessLevel,
-          user_type: selectedLevel.name as 'contratante' | 'operador',
-          permissions: selectedLevel.permissions || prev.permissions
+          user_type: newUserType,
+          permissions: mergePermissions(prev.permissions, selectedLevel.permissions || {})
         }));
       }
       setPendingAccessLevel(null);

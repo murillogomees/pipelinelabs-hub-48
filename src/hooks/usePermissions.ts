@@ -46,7 +46,7 @@ export function usePermissions() {
 
         const userEmail = user.user.email || "";
         
-        // Buscar dados do usuário com nível de acesso
+        // Buscar dados do usuário
         const { data: userCompaniesData, error: companiesError } = await supabase
           .from("user_companies")
           .select(`
@@ -57,12 +57,7 @@ export function usePermissions() {
             company_id, 
             role, 
             permissions,
-            access_levels!inner(
-              id,
-              name,
-              display_name,
-              permissions
-            )
+            access_level_id
           `)
           .eq("user_id", user.user.id)
           .eq("is_active", true)
@@ -90,11 +85,33 @@ export function usePermissions() {
           };
         }
 
+        // Buscar access level separadamente se existir
+        let accessLevel = null;
+        if (userCompaniesData.access_level_id) {
+          try {
+            const { data: accessLevelData } = await supabase
+              .from('access_levels' as any)
+              .select('id, name, display_name, permissions')
+              .eq('id', userCompaniesData.access_level_id)
+              .single();
+            
+            if (accessLevelData) {
+              accessLevel = {
+                id: accessLevelData.id,
+                name: accessLevelData.name,
+                display_name: accessLevelData.display_name,
+                permissions: accessLevelData.permissions || {}
+              };
+            }
+          } catch (error) {
+            console.error('Error fetching access level:', error);
+          }
+        }
+
         const userType = userCompaniesData.user_type as UserType;
-        const accessLevel = userCompaniesData.access_levels;
         const specificPermissions = (userCompaniesData.specific_permissions as Record<string, any>) || {};
         const permissions = (userCompaniesData.permissions as Record<string, any>) || {};
-        const accessLevelPermissions = (accessLevel?.permissions as Record<string, any>) || {};
+        const accessLevelPermissions = accessLevel?.permissions || {};
         
         // Combinar permissões: nível de acesso + específicas + gerais
         const allPermissions = { 
@@ -103,7 +120,7 @@ export function usePermissions() {
           ...specificPermissions 
         };
         
-        const isSuperAdmin = accessLevel?.name === 'super_admin' || allPermissions.super_admin === true;
+        const isSuperAdmin = accessLevel?.name === 'super_admin' || allPermissions.super_admin === true || userType === 'super_admin';
         const isContratante = accessLevel?.name === 'contratante' || userType === 'contratante';
         const isOperador = accessLevel?.name === 'operador' || userType === 'operador';
         const isAdmin = isSuperAdmin || isContratante;
@@ -118,12 +135,7 @@ export function usePermissions() {
           department: userCompaniesData.department,
           specificPermissions: allPermissions,
           email: userEmail,
-          accessLevel: accessLevel ? {
-            id: accessLevel.id,
-            name: accessLevel.name,
-            display_name: accessLevel.display_name,
-            permissions: accessLevelPermissions
-          } : null
+          accessLevel
         } as UserPermissions;
       } catch (error) {
         console.error("Error in usePermissions:", error);

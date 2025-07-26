@@ -1,341 +1,151 @@
-import {
-  BarChart3,
-  Bell,
-  Bot,
-  Clock,
-  Database,
-  FileText,
-  GitBranch,
-  Globe,
-  HardDrive,
-  Home,
-  ListChecks,
-  Lock,
-  Mail,
-  MessageSquare,
-  Minimize2,
-  Package,
-  Settings,
+
+import { 
+  LayoutDashboard, 
+  ShoppingCart, 
+  Package, 
+  Users, 
+  Building2, 
+  Warehouse, 
+  CreditCard, 
+  FileText, 
+  Wrench, 
+  ClipboardList, 
+  BarChart3, 
+  Link, 
+  Settings, 
   Shield,
-  ShoppingBag,
-  ShoppingCart,
-  TrendingUp,
-  Users,
-  Zap,
-  Activity,
-  Search,
-} from 'lucide-react';
+  UserCheck,
+  Building
+} from "lucide-react";
+import type { MenuItem } from "./types";
 
-export type MenuItem = {
-  id: string;
-  label: string;
-  icon: keyof typeof ICONS;
-  href: string;
-  order: number;
-  disabled?: boolean;
-  external?: boolean;
-  submenu?: Omit<MenuItem, 'submenu'>[];
-};
-
-const ICONS = {
-  Home,
-  Settings,
-  Package,
-  ShoppingCart,
-  ShoppingBag,
-  TrendingUp,
-  Users,
-  Zap,
-  Shield,
-  BarChart3,
-  Lock,
-  HardDrive,
-  Database,
-  Minimize2,
-  GitBranch,
-  Globe,
-  Bot,
-  FileText,
-  Search,
-  Clock,
-  Bell,
-  Activity,
-  ListChecks,
-  Mail,
-  MessageSquare,
-};
-
-export const MENU_ITEMS: MenuItem[] = [
+export const menuItems: MenuItem[] = [
   {
-    id: 'dashboard',
-    label: 'Dashboard',
-    icon: 'Home',
-    href: '/app/dashboard',
-    order: 1,
+    id: "dashboard",
+    label: "Dashboard",
+    icon: LayoutDashboard,
+    href: "/app/dashboard",
+    order: 1
   },
   {
-    id: 'vendas',
-    label: 'Vendas',
-    icon: 'ShoppingCart',
-    href: '/app/vendas',
-    order: 2,
+    id: "vendas",
+    label: "Vendas",
+    icon: ShoppingCart,
+    href: "/app/vendas",
+    order: 2
   },
   {
-    id: 'produtos',
-    label: 'Produtos',
-    icon: 'Package',
-    href: '/app/produtos',
-    order: 3,
+    id: "produtos",
+    label: "Produtos",
+    icon: Package,
+    href: "/app/produtos",
+    order: 3
   },
   {
-    id: 'clientes',
-    label: 'Clientes',
-    icon: 'Users',
-    href: '/app/clientes',
-    order: 4,
+    id: "clientes",
+    label: "Clientes",
+    icon: Users,
+    href: "/app/clientes",
+    order: 4
   },
   {
-    id: 'compras',
-    label: 'Compras',
-    icon: 'ShoppingBag',
-    href: '/app/compras',
-    order: 5,
+    id: "compras",
+    label: "Compras",
+    icon: ShoppingCart,
+    href: "/app/compras",
+    order: 5
   },
   {
-    id: 'estoque',
-    label: 'Estoque',
-    icon: 'Package',
-    href: '/app/estoque',
-    order: 6,
+    id: "estoque",
+    label: "Estoque",
+    icon: Warehouse,
+    href: "/app/estoque",
+    order: 6
   },
   {
-    id: 'financeiro',
-    label: 'Financeiro',
-    icon: 'TrendingUp',
-    href: '/app/financeiro',
-    order: 7,
+    id: "financeiro",
+    label: "Financeiro",
+    icon: CreditCard,
+    href: "/app/financeiro",
+    order: 7
   },
   {
-    id: 'notas-fiscais',
-    label: 'Notas Fiscais',
-    icon: 'FileText',
-    href: '/app/notas-fiscais',
-    order: 8,
+    id: "notas_fiscais",
+    label: "Notas Fiscais",
+    icon: FileText,
+    href: "/app/notas-fiscais",
+    order: 8
   },
   {
-    id: 'producao',
-    label: 'Produção',
-    icon: 'Package',
-    href: '/app/producao',
-    order: 9,
+    id: "producao",
+    label: "Produção",
+    icon: Wrench,
+    href: "/app/producao",
+    order: 9
   },
   {
-    id: 'relatorios',
-    label: 'Relatórios',
-    icon: 'TrendingUp',
-    href: '/app/relatorios',
-    order: 10,
+    id: "contratos",
+    label: "Contratos",
+    icon: ClipboardList,
+    href: "/app/contratos",
+    order: 10
   },
   {
-    id: 'configuracoes',
-    label: 'Configurações',
-    icon: 'Settings',
-    href: '/app/configuracoes',
-    order: 11,
+    id: "relatorios",
+    label: "Relatórios",
+    icon: BarChart3,
+    href: "/app/relatorios",
+    order: 11
   },
   {
-    id: 'integracoes',
-    label: 'Integrações',
-    icon: 'Zap',
-    href: '/app/integracoes',
-    order: 12,
+    id: "analytics",
+    label: "Analytics",
+    icon: BarChart3,
+    href: "/app/analytics",
+    order: 12
   },
   {
-    id: 'marketplace-channels',
-    label: 'Marketplace Channels',
-    icon: 'Zap',
-    href: '/app/marketplace-channels',
-    order: 13,
+    id: "marketplace_canais",
+    label: "Marketplace Canais",
+    icon: Link,
+    href: "/app/marketplace-channels",
+    order: 13
   },
   {
-    id: 'analytics',
-    label: 'Analytics',
-    icon: 'TrendingUp',
-    href: '/app/analytics',
-    order: 14,
+    id: "integracoes",
+    label: "Integrações",
+    icon: Link,
+    href: "/app/integracoes",
+    order: 14
   },
   {
-    id: 'notificacoes',
-    label: 'Notificações',
-    icon: 'Bell',
-    href: '/app/notificacoes',
-    order: 15,
+    id: "configuracoes",
+    label: "Configurações",
+    icon: Settings,
+    href: "/app/configuracoes",
+    order: 15
   },
   {
-    id: 'dados-pessoais',
-    label: 'Dados Pessoais',
-    icon: 'Users',
-    href: '/app/dados-pessoais',
-    order: 16,
-  },
-];
-
-export const ADMIN_MENU_ITEMS: MenuItem[] = [
-  {
-    id: 'admin-overview',
-    label: 'Painel Principal',
-    icon: 'BarChart3',
-    href: '/app/admin',
-    order: 1,
-  },
-  {
-    id: 'admin-users',
-    label: 'Usuários & Empresas',
-    icon: 'Users',
-    href: '/app/admin/usuarios',
-    order: 2,
-  },
-  {
-    id: 'admin-access-levels',
-    label: 'Níveis de Acesso',
-    icon: 'Shield',
-    href: '/app/admin/niveis-acesso',
-    order: 3,
-  },
-  {
-    id: 'admin-integrations',
-    label: 'Integrações',
-    icon: 'Zap',
-    href: '/app/admin/integracoes',
-    order: 4,
-  },
-  {
-    id: 'admin-monitoring',
-    label: 'Monitoramento',
-    icon: 'Activity',
-    href: '/app/admin/monitoramento',
-    order: 5,
-  },
-  {
-    id: 'admin-security',
-    label: 'Segurança',
-    icon: 'Lock',
-    href: '/app/admin/seguranca',
-    order: 6,
+    id: "admin",
+    label: "Administração",
+    icon: Shield,
+    href: "#",
+    order: 100,
     submenu: [
       {
-        id: 'admin-security-overview',
-        label: 'Visão Geral',
-        href: '/app/admin/seguranca',
-        order: 1,
+        id: "admin-usuarios",
+        label: "Usuários e Empresas",
+        icon: UserCheck,
+        href: "/app/admin/usuarios",
+        order: 1
       },
       {
-        id: 'admin-security-config',
-        label: 'Configurações',
-        href: '/app/admin/seguranca/config',
-        order: 2,
-      },
-    ],
-  },
-  {
-    id: 'admin-backup',
-    label: 'Backup & Restore',
-    icon: 'HardDrive',
-    href: '/app/admin/backup',
-    order: 7,
-  },
-  {
-    id: 'admin-cache',
-    label: 'Cache',
-    icon: 'Database',
-    href: '/app/admin/cache',
-    order: 8,
-  },
-  {
-    id: 'admin-compression',
-    label: 'Compressão',
-    icon: 'Minimize2',
-    href: '/app/admin/compressao',
-    order: 9,
-  },
-  {
-    id: 'admin-versions',
-    label: 'Versões',
-    icon: 'GitBranch',
-    href: '/app/admin/versions',
-    order: 10,
-  },
-  {
-    id: 'admin-landing-page',
-    label: 'Landing Page',
-    icon: 'Globe',
-    href: '/app/admin/landing-page',
-    order: 11,
-  },
-  {
-    id: 'admin-prompt-generator',
-    label: 'Gerador de Prompts',
-    icon: 'Bot',
-    href: '/app/admin/prompt-generator',
-    order: 12,
-  },
-  {
-    id: 'admin-nfe-config',
-    label: 'Configuração NFe',
-    icon: 'FileText',
-    href: '/app/admin/nfe-config',
-    order: 13,
-  },
-  {
-    id: 'admin-audit-logs',
-    label: 'Logs de Auditoria',
-    icon: 'Search',
-    href: '/app/admin/audit-logs',
-    order: 14,
-  },
-  {
-    id: 'admin-sla',
-    label: 'SLA',
-    icon: 'Clock',
-    href: '/app/admin/sla',
-    order: 15,
-  },
-  {
-    id: 'admin-notifications',
-    label: 'Notificações',
-    icon: 'Bell',
-    href: '/app/admin/notificacoes',
-    order: 16,
-  },
-];
-
-export const ACCOUNT_MENU_ITEMS: MenuItem[] = [
-  {
-    id: 'account-profile',
-    label: 'Meu Perfil',
-    icon: 'Users',
-    href: '/app/dados-pessoais',
-    order: 1,
-  },
-  {
-    id: 'account-notifications',
-    label: 'Notificações',
-    icon: 'Bell',
-    href: '/app/notificacoes',
-    order: 2,
-  },
-  {
-    id: 'account-help',
-    label: 'Ajuda & Suporte',
-    icon: 'Mail',
-    href: '/app/notificacoes',
-    order: 3,
-  },
-  {
-    id: 'account-feedback',
-    label: 'Feedback',
-    icon: 'MessageSquare',
-    href: '/app/notificacoes',
-    order: 4,
-  },
+        id: "admin-niveis-acesso",
+        label: "Níveis de Acesso",
+        icon: Shield,
+        href: "/app/admin/niveis-acesso",
+        order: 2
+      }
+    ]
+  }
 ];

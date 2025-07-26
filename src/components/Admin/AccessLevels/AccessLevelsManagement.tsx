@@ -40,7 +40,15 @@ export function AccessLevelsManagement() {
               .eq('is_active', true);
             
             return {
-              ...level,
+              id: level.id,
+              name: level.name,
+              display_name: level.display_name,
+              description: level.description || '',
+              permissions: level.permissions || {},
+              is_system: level.is_system || false,
+              is_active: level.is_active || false,
+              created_at: level.created_at,
+              updated_at: level.updated_at,
               _count: { users: count || 0 }
             } as AccessLevelWithCount;
           })
