@@ -17,7 +17,6 @@ const MarketplaceChannels = lazy(() => import('@/pages/MarketplaceChannels'));
 const Configuracoes = lazy(() => import('@/pages/Configuracoes'));
 const AdminUsuarios = lazy(() => import('@/pages/AdminUsuarios'));
 const UserDadosPessoais = lazy(() => import('@/pages/UserDadosPessoais'));
-const Plans = lazy(() => import('@/pages/Plans'));
 const NotFound = lazy(() => import('@/pages/NotFound'));
 const Produtos = lazy(() => import('@/pages/Produtos'));
 const Clientes = lazy(() => import('@/pages/Clientes'));
@@ -25,14 +24,7 @@ const Vendas = lazy(() => import('@/pages/Vendas'));
 const Financeiro = lazy(() => import('@/pages/Financeiro'));
 const NotasFiscais = lazy(() => import('@/pages/NotasFiscais'));
 const Producao = lazy(() => import('@/pages/Producao'));
-const Contracts = lazy(() => import('@/pages/Contracts'));
-const Tasks = lazy(() => import('@/pages/Tasks'));
-const Project = lazy(() => import('@/pages/Project'));
-const Projects = lazy(() => import('@/pages/Projects'));
-const Workspace = lazy(() => import('@/pages/Workspace'));
-const Workspaces = lazy(() => import('@/pages/Workspaces'));
 const Integracoes = lazy(() => import('@/pages/Integracoes'));
-const ApiBrowser = lazy(() => import('@/pages/ApiBrowser'));
 
 // Create a stable query client with network error handling
 const queryClient = new QueryClient({
@@ -76,7 +68,6 @@ function App() {
                   <Routes>
                     <Route path="/" element={<LandingPage />} />
                     <Route path="/auth" element={<Auth />} />
-                    <Route path="/planos" element={<Plans />} />
                     <Route path="/app" element={<Dashboard />} />
                     <Route path="/app/marketplace-channels" element={<MarketplaceChannels />} />
                     <Route path="/app/settings" element={<Configuracoes />} />
@@ -88,14 +79,7 @@ function App() {
                     <Route path="/app/finances" element={<Financeiro />} />
                     <Route path="/app/invoices" element={<NotasFiscais />} />
                     <Route path="/app/production" element={<Producao />} />
-                    <Route path="/app/contracts" element={<Contracts />} />
-                    <Route path="/app/tasks" element={<Tasks />} />
-                    <Route path="/app/projects/:id" element={<Project />} />
-                    <Route path="/app/projects" element={<Projects />} />
-                    <Route path="/app/workspaces/:id" element={<Workspace />} />
-                    <Route path="/app/workspaces" element={<Workspaces />} />
                     <Route path="/app/integrations" element={<Integracoes />} />
-                    <Route path="/app/api-browser" element={<ApiBrowser />} />
                     <Route path="*" element={<NotFound />} />
                   </Routes>
                 </Suspense>

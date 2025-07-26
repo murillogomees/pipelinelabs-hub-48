@@ -2,6 +2,7 @@
 import { supabase } from '@/integrations/supabase/client';
 import { retryWithBackoff, shouldRetryError } from './networkRetry';
 import { createLogger } from './logger';
+import type { Database } from '@/integrations/supabase/types';
 
 const logger = createLogger('EnhancedSupabase');
 
@@ -17,54 +18,74 @@ export const enhancedSupabase = {
         
         return {
           ...originalSelect,
-          single: () => retryWithBackoff(
-            () => originalSelect.single(),
-            { maxRetries: 2 }
-          ).catch(error => {
-            logger.error(`Failed to fetch single record from ${table}`, error);
-            throw error;
-          }),
+          single: async () => {
+            try {
+              const result = await retryWithBackoff(
+                () => originalSelect.single(),
+                { maxRetries: 2 }
+              );
+              return result;
+            } catch (error) {
+              logger.error(`Failed to fetch single record from ${String(table)}`, error);
+              throw error;
+            }
+          },
           
-          maybeSingle: () => retryWithBackoff(
-            () => originalSelect.maybeSingle(),
-            { maxRetries: 2 }
-          ).catch(error => {
-            logger.error(`Failed to fetch single record from ${table}`, error);
-            throw error;
-          }),
+          maybeSingle: async () => {
+            try {
+              const result = await retryWithBackoff(
+                () => originalSelect.maybeSingle(),
+                { maxRetries: 2 }
+              );
+              return result;
+            } catch (error) {
+              logger.error(`Failed to fetch single record from ${String(table)}`, error);
+              throw error;
+            }
+          },
           
           then: (onFulfilled?: any, onRejected?: any) => {
             return retryWithBackoff(
               () => originalSelect,
               { maxRetries: 2 }
             ).then(onFulfilled, onRejected).catch(error => {
-              logger.error(`Failed to fetch records from ${table}`, error);
+              logger.error(`Failed to fetch records from ${String(table)}`, error);
               throw error;
             });
           }
         };
       },
       
-      insert: (values: any) => retryWithBackoff(
-        () => originalFrom.insert(values),
-        { maxRetries: 1 }
-      ).catch(error => {
-        logger.error(`Failed to insert into ${table}`, error);
-        throw error;
-      }),
+      insert: async (values: any) => {
+        try {
+          const result = await retryWithBackoff(
+            () => originalFrom.insert(values),
+            { maxRetries: 1 }
+          );
+          return result;
+        } catch (error) {
+          logger.error(`Failed to insert into ${String(table)}`, error);
+          throw error;
+        }
+      },
       
       update: (values: any) => {
         const originalUpdate = originalFrom.update(values);
         
         return {
           ...originalUpdate,
-          eq: (column: string, value: any) => retryWithBackoff(
-            () => originalUpdate.eq(column, value),
-            { maxRetries: 1 }
-          ).catch(error => {
-            logger.error(`Failed to update ${table}`, error);
-            throw error;
-          })
+          eq: async (column: string, value: any) => {
+            try {
+              const result = await retryWithBackoff(
+                () => originalUpdate.eq(column, value),
+                { maxRetries: 1 }
+              );
+              return result;
+            } catch (error) {
+              logger.error(`Failed to update ${String(table)}`, error);
+              throw error;
+            }
+          }
         };
       },
       
@@ -73,13 +94,18 @@ export const enhancedSupabase = {
         
         return {
           ...originalDelete,
-          eq: (column: string, value: any) => retryWithBackoff(
-            () => originalDelete.eq(column, value),
-            { maxRetries: 1 }
-          ).catch(error => {
-            logger.error(`Failed to delete from ${table}`, error);
-            throw error;
-          })
+          eq: async (column: string, value: any) => {
+            try {
+              const result = await retryWithBackoff(
+                () => originalDelete.eq(column, value),
+                { maxRetries: 1 }
+              );
+              return result;
+            } catch (error) {
+              logger.error(`Failed to delete from ${String(table)}`, error);
+              throw error;
+            }
+          }
         };
       }
     };
@@ -87,39 +113,56 @@ export const enhancedSupabase = {
 
   auth: {
     ...supabase.auth,
-    signInWithPassword: (credentials: any) => retryWithBackoff(
-      () => supabase.auth.signInWithPassword(credentials),
-      { maxRetries: 2 }
-    ).catch(error => {
-      logger.error('Failed to sign in', error);
-      throw error;
-    }),
+    signInWithPassword: async (credentials: any) => {
+      try {
+        const result = await retryWithBackoff(
+          () => supabase.auth.signInWithPassword(credentials),
+          { maxRetries: 2 }
+        );
+        return result;
+      } catch (error) {
+        logger.error('Failed to sign in', error);
+        throw error;
+      }
+    },
     
-    signUp: (credentials: any) => retryWithBackoff(
-      () => supabase.auth.signUp(credentials),
-      { maxRetries: 2 }
-    ).catch(error => {
-      logger.error('Failed to sign up', error);
-      throw error;
-    }),
+    signUp: async (credentials: any) => {
+      try {
+        const result = await retryWithBackoff(
+          () => supabase.auth.signUp(credentials),
+          { maxRetries: 2 }
+        );
+        return result;
+      } catch (error) {
+        logger.error('Failed to sign up', error);
+        throw error;
+      }
+    },
     
-    signOut: (options?: any) => retryWithBackoff(
-      () => supabase.auth.signOut(options),
-      { maxRetries: 2 }
-    ).catch(error => {
-      logger.error('Failed to sign out', error);
-      throw error;
-    })
+    signOut: async (options?: any) => {
+      try {
+        const result = await retryWithBackoff(
+          () => supabase.auth.signOut(options),
+          { maxRetries: 2 }
+        );
+        return result;
+      } catch (error) {
+        logger.error('Failed to sign out', error);
+        throw error;
+      }
+    }
   },
 
-  rpc: <T extends keyof Database['public']['Functions']>(fnName: T, params?: any) => retryWithBackoff(
-    () => supabase.rpc(fnName, params),
-    { maxRetries: 1 }
-  ).catch(error => {
-    logger.error(`Failed to call RPC function ${String(fnName)}`, error);
-    throw error;
-  })
+  rpc: async <T extends keyof Database['public']['Functions']>(fnName: T, params?: any) => {
+    try {
+      const result = await retryWithBackoff(
+        () => supabase.rpc(fnName, params),
+        { maxRetries: 1 }
+      );
+      return result;
+    } catch (error) {
+      logger.error(`Failed to call RPC function ${String(fnName)}`, error);
+      throw error;
+    }
+  }
 };
-
-// Import Database type
-import type { Database } from '@/integrations/supabase/types';
