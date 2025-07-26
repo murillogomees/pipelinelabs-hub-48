@@ -13,6 +13,7 @@ interface AccessLevelSelectorProps {
   onChange: (value: string) => void;
   disabled?: boolean;
   isRequired?: boolean;
+  userType: 'contratante' | 'operador';
 }
 
 const getIconForLevel = (name: string) => {
@@ -28,7 +29,13 @@ const getIconForLevel = (name: string) => {
   }
 };
 
-export function AccessLevelSelector({ value, onChange, disabled = false, isRequired = true }: AccessLevelSelectorProps) {
+export function AccessLevelSelector({ 
+  value, 
+  onChange, 
+  disabled = false, 
+  isRequired = true,
+  userType
+}: AccessLevelSelectorProps) {
   const { data: accessLevels = [] } = useQuery({
     queryKey: ['access-levels-for-select'],
     queryFn: async (): Promise<AccessLevel[]> => {
@@ -58,7 +65,15 @@ export function AccessLevelSelector({ value, onChange, disabled = false, isRequi
     }
   });
 
-  const selectedLevel = accessLevels.find(level => level.id === value);
+  // Filter access levels based on user type
+  const filteredAccessLevels = accessLevels.filter(level => {
+    if (userType === 'contratante') {
+      return level.name === 'contratante';
+    }
+    return level.name === 'operador';
+  });
+
+  const selectedLevel = filteredAccessLevels.find(level => level.id === value);
 
   return (
     <div className="space-y-2">
@@ -80,7 +95,7 @@ export function AccessLevelSelector({ value, onChange, disabled = false, isRequi
           </SelectValue>
         </SelectTrigger>
         <SelectContent>
-          {accessLevels.map((level) => (
+          {filteredAccessLevels.map((level) => (
             <SelectItem key={level.id} value={level.id}>
               <div className="flex items-center space-x-2 w-full">
                 {getIconForLevel(level.name)}

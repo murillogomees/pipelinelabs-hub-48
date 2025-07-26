@@ -17,9 +17,19 @@ interface BasicInfoFieldsProps {
   };
   onChange: (field: string, value: string | boolean) => void;
   isEditing?: boolean;
+  userType: 'super_admin' | 'contratante' | 'operador';
+  onUserTypeChange: (userType: 'super_admin' | 'contratante' | 'operador') => void;
+  errors?: Partial<{ display_name: string; email: string; }>;
 }
 
-export function BasicInfoFields({ formData, onChange, isEditing = false }: BasicInfoFieldsProps) {
+export function BasicInfoFields({ 
+  formData, 
+  onChange, 
+  isEditing = false,
+  userType,
+  onUserTypeChange,
+  errors = {}
+}: BasicInfoFieldsProps) {
   const { isSuperAdmin, isContratante } = usePermissions();
   
   // Determinar tipos disponíveis baseado nas permissões
@@ -70,9 +80,12 @@ export function BasicInfoFields({ formData, onChange, isEditing = false }: Basic
               value={formData.display_name}
               onChange={(e) => onChange('display_name', e.target.value)}
               placeholder="Nome completo do usuário"
-              className="h-11"
+              className={`h-11 ${errors.display_name ? 'border-red-500' : ''}`}
               required
             />
+            {errors.display_name && (
+              <p className="text-sm text-red-600">{errors.display_name}</p>
+            )}
           </div>
 
           <div className="space-y-2">
@@ -89,10 +102,13 @@ export function BasicInfoFields({ formData, onChange, isEditing = false }: Basic
               value={formData.email}
               onChange={(e) => onChange('email', e.target.value)}
               placeholder="usuario@empresa.com"
-              className="h-11"
+              className={`h-11 ${errors.email ? 'border-red-500' : ''}`}
               required
               disabled={isEditing}
             />
+            {errors.email && (
+              <p className="text-sm text-red-600">{errors.email}</p>
+            )}
           </div>
         </div>
 
@@ -102,8 +118,8 @@ export function BasicInfoFields({ formData, onChange, isEditing = false }: Basic
             <Label htmlFor="user_type" className="text-sm font-medium">Tipo de Usuário</Label>
           </div>
           <SearchableSelect
-            value={formData.user_type}
-            onValueChange={(value) => onChange('user_type', value)}
+            value={userType}
+            onValueChange={onUserTypeChange}
             placeholder="Selecione o tipo de usuário..."
             searchPlaceholder="Buscar tipo..."
             staticOptions={availableTypes.map(type => ({
@@ -114,9 +130,9 @@ export function BasicInfoFields({ formData, onChange, isEditing = false }: Basic
             emptyMessage="Nenhum tipo encontrado"
             className="h-11"
           />
-          {formData.user_type && (
+          {userType && (
             <p className="text-xs text-muted-foreground mt-1">
-              {availableTypes.find(type => type.value === formData.user_type)?.description}
+              {availableTypes.find(type => type.value === userType)?.description}
             </p>
           )}
         </div>

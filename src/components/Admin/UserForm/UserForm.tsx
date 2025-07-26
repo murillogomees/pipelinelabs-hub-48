@@ -41,7 +41,8 @@ export function UserForm({ user, onSubmit, onCancel, isLoading }: UserFormProps)
     companies,
     accessLevels,
     isLoadingCompanies,
-    isLoadingAccessLevels
+    isLoadingAccessLevels,
+    handleSubmit
   } = useUserManagement();
 
   const [formData, setFormData] = useState<UserFormData>(() => {
@@ -110,7 +111,7 @@ export function UserForm({ user, onSubmit, onCancel, isLoading }: UserFormProps)
     return Object.keys(newErrors).length === 0;
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleFormSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
     if (!validateForm()) {
@@ -149,14 +150,16 @@ export function UserForm({ user, onSubmit, onCancel, isLoading }: UserFormProps)
         userType = 'super_admin';
       }
 
+      const newPermissions = {
+        ...defaultPermissions,
+        ...(selectedLevel.permissions || {}),
+      };
+
       setFormData(prev => ({
         ...prev,
         access_level_id: accessLevelId,
         user_type: userType,
-        permissions: {
-          ...defaultPermissions,
-          ...(selectedLevel.permissions || {}),
-        },
+        permissions: newPermissions,
       }));
     }
   };
@@ -212,7 +215,7 @@ export function UserForm({ user, onSubmit, onCancel, isLoading }: UserFormProps)
   }
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-6">
+    <form onSubmit={handleFormSubmit} className="space-y-6">
       {showAccessLevelAlert && (
         <Alert variant="destructive">
           <AlertTriangle className="h-4 w-4" />
@@ -227,6 +230,9 @@ export function UserForm({ user, onSubmit, onCancel, isLoading }: UserFormProps)
         formData={formData}
         onChange={handleFieldChange}
         isEditing={!!user}
+        userType={formData.user_type}
+        onUserTypeChange={handleUserTypeChange}
+        errors={errors}
       />
 
       <CompanySelector
@@ -234,6 +240,7 @@ export function UserForm({ user, onSubmit, onCancel, isLoading }: UserFormProps)
         onChange={(company_id) => setFormData(prev => ({ ...prev, company_id }))}
         disabled={false}
         isRequired={true}
+        error={errors.company_id}
       />
 
       {formData.user_type !== 'super_admin' && (
@@ -242,6 +249,7 @@ export function UserForm({ user, onSubmit, onCancel, isLoading }: UserFormProps)
           onChange={handleAccessLevelChange}
           disabled={false}
           isRequired={true}
+          userType={formData.user_type}
         />
       )}
 
@@ -257,6 +265,7 @@ export function UserForm({ user, onSubmit, onCancel, isLoading }: UserFormProps)
           value={formData.password || ''}
           onChange={(password) => setFormData(prev => ({ ...prev, password }))}
           isEditing={false}
+          error={errors.password}
         />
       )}
 

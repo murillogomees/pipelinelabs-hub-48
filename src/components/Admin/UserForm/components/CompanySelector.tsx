@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState } from 'react';
 import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
@@ -12,13 +13,15 @@ interface CompanySelectorProps {
   onChange: (value: string) => void;
   disabled?: boolean;
   isRequired?: boolean;
+  error?: string;
 }
 
 export function CompanySelector({ 
   value, 
   onChange, 
   disabled = false, 
-  isRequired = false 
+  isRequired = false,
+  error
 }: CompanySelectorProps) {
   const { loadCompanies } = useCompaniesWithSearch();
   const [defaultOption, setDefaultOption] = useState<SearchableOption | null>(null);
@@ -80,6 +83,7 @@ export function CompanySelector({
             staticOptions={staticOptions}
             emptyMessage="Nenhuma empresa encontrada"
             pageSize={10}
+            className={error ? 'border-red-500' : ''}
           />
         </div>
         <Button
@@ -93,6 +97,10 @@ export function CompanySelector({
           <Plus className="h-4 w-4" />
         </Button>
       </div>
+
+      {error && (
+        <p className="text-sm text-red-600">{error}</p>
+      )}
 
       <CompanyDialog
         open={showCompanyDialog}

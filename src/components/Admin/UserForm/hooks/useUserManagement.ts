@@ -1,9 +1,20 @@
-
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { UserFormData } from '../types';
+
+interface Company {
+  id: string;
+  name: string;
+}
+
+interface AccessLevel {
+  id: string;
+  name: string;
+  display_name: string;
+  permissions: Record<string, boolean>;
+}
 
 export function useUserManagement(onSave?: () => void, onClose?: () => void) {
   const [loading, setLoading] = useState(false);
@@ -12,7 +23,7 @@ export function useUserManagement(onSave?: () => void, onClose?: () => void) {
   // Fetch companies
   const { data: companies = [], isLoading: isLoadingCompanies } = useQuery({
     queryKey: ['companies-for-user-form'],
-    queryFn: async () => {
+    queryFn: async (): Promise<Company[]> => {
       const { data, error } = await supabase
         .from('companies')
         .select('id, name')
@@ -27,7 +38,7 @@ export function useUserManagement(onSave?: () => void, onClose?: () => void) {
   // Fetch access levels
   const { data: accessLevels = [], isLoading: isLoadingAccessLevels } = useQuery({
     queryKey: ['access-levels-for-user-form'],
-    queryFn: async () => {
+    queryFn: async (): Promise<AccessLevel[]> => {
       const { data, error } = await supabase
         .from('access_levels')
         .select('*')
