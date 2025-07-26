@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -21,45 +20,33 @@ export function AccessLevelsManagement() {
   const { data: accessLevels = [], refetch, isLoading } = useQuery({
     queryKey: ['access-levels'],
     queryFn: async (): Promise<AccessLevelWithCount[]> => {
-      try {
-        // Query access levels directly
-        const { data: levelsData, error: levelsError } = await supabase
-          .from('access_levels')
-          .select('*')
-          .order('created_at', { ascending: false });
+      const { data: levelsData, error: levelsError } = await supabase
+        .from('access_levels')
+        .select('*')
+        .order('created_at', { ascending: false });
 
-        if (levelsError) throw levelsError;
+      if (levelsError) throw levelsError;
 
-        // Count users for each access level manually
-        const levelsWithCount = await Promise.all(
-          (levelsData || []).map(async (level: any) => {
-            const { count } = await supabase
-              .from('user_companies')
-              .select('*', { count: 'exact', head: true })
-              .eq('access_level_id', level.id)
-              .eq('is_active', true);
-            
-            return {
-              id: level.id,
-              name: level.name,
-              display_name: level.display_name,
-              description: level.description || '',
-              permissions: level.permissions || {},
-              is_system: level.is_system || false,
-              is_active: level.is_active || false,
-              created_at: level.created_at,
-              updated_at: level.updated_at,
-              _count: { users: count || 0 }
-            } as AccessLevelWithCount;
-          })
-        );
+      // Count users for each access level
+      const levelsWithCount = await Promise.all(
+        (levelsData || []).map(async (level: any) => {
+          const { count } = await supabase
+            .from('user_companies')
+            .select('*', { count: 'exact', head: true })
+            .eq('access_level_id', level.id)
+            .eq('is_active', true);
+          
+          return {
+            ...level,
+            _count: { users: count || 0 }
+          } as AccessLevelWithCount;
+        })
+      );
 
-        return levelsWithCount;
-      } catch (error) {
-        console.error('Error fetching access levels:', error);
-        return [];
-      }
-    }
+      return levelsWithCount;
+    },
+    staleTime: 5 * 60 * 1000, // 5 minutes
+    cacheTime: 10 * 60 * 1000, // 10 minutes
   });
 
   const handleDelete = async (level: AccessLevel) => {

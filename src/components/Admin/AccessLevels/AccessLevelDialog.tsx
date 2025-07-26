@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
@@ -104,7 +103,7 @@ export function AccessLevelDialog({ open, onOpenChange, accessLevel, onSave }: A
   const { toast } = useToast();
 
   useEffect(() => {
-    if (accessLevel) {
+    if (accessLevel?.id) {
       setFormData({
         name: accessLevel.name,
         display_name: accessLevel.display_name,
@@ -112,7 +111,7 @@ export function AccessLevelDialog({ open, onOpenChange, accessLevel, onSave }: A
         is_active: accessLevel.is_active,
         permissions: accessLevel.permissions || {}
       });
-    } else {
+    } else if (!accessLevel) {
       setFormData({
         name: '',
         display_name: '',
@@ -121,7 +120,7 @@ export function AccessLevelDialog({ open, onOpenChange, accessLevel, onSave }: A
         permissions: {}
       });
     }
-  }, [accessLevel]);
+  }, [accessLevel?.id]);
 
   const handlePermissionChange = (permission: string, value: boolean) => {
     setFormData(prev => ({
