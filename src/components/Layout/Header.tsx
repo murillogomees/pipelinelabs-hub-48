@@ -1,40 +1,43 @@
+
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
-import { Bell, Search, Settings, User, LogOut, Menu, CreditCard, Shield } from 'lucide-react';
+import { Settings, User, LogOut, Menu } from 'lucide-react';
 import { useAuth } from '@/components/Auth/AuthProvider';
 import { NotificationDropdown } from '@/components/Notifications/NotificationDropdown';
 import { GlobalSearchTrigger } from '@/components/Search/GlobalSearchTrigger';
-import { MobileSidebar } from './MobileSidebar';
-import { useMobileSidebar } from '@/hooks/useMobileSidebar';
 import { Link, useNavigate } from 'react-router-dom';
 
-export function Header() {
-  const { user, logout } = useAuth();
-  const [isSearchOpen, setIsSearchOpen] = useState(false);
-  const { isOpen, onOpen, onClose } = useMobileSidebar();
+interface HeaderProps {
+  onToggleSidebar?: () => void;
+}
+
+export function Header({ onToggleSidebar }: HeaderProps) {
+  const { user, signOut } = useAuth();
   const navigate = useNavigate();
 
   const handleLogout = async () => {
-    await logout();
+    await signOut();
     navigate('/auth');
   };
+
+  // Get user display info with fallbacks
+  const userName = user?.user_metadata?.name || user?.email?.split('@')[0] || 'Usuário';
+  const userInitial = userName.charAt(0).toUpperCase();
 
   return (
     <div className="border-b bg-background sticky top-0 z-50">
       <div className="flex h-16 items-center px-4">
         {/* Mobile Menu Button */}
-        <Button variant="ghost" size="icon" onClick={onOpen} className="mr-2 lg:hidden">
-          <Menu className="h-5 w-5" />
-        </Button>
-
-        {/* Mobile Sidebar */}
-        <MobileSidebar isOpen={isOpen} onClose={onClose} />
+        {onToggleSidebar && (
+          <Button variant="ghost" size="icon" onClick={onToggleSidebar} className="mr-2 lg:hidden">
+            <Menu className="h-5 w-5" />
+          </Button>
+        )}
 
         {/* Global Search Trigger */}
-        <GlobalSearchTrigger isSearchOpen={isSearchOpen} setIsSearchOpen={setIsSearchOpen} />
+        <GlobalSearchTrigger />
 
         <div className="ml-auto flex items-center space-x-4">
           {/* Notification Dropdown */}
@@ -45,8 +48,8 @@ export function Header() {
             <DropdownMenuTrigger asChild>
               <Button variant="ghost" className="h-8 w-8 p-0 rounded-full">
                 <Avatar className="h-8 w-8">
-                  <AvatarImage src={user?.avatar} alt={user?.name} />
-                  <AvatarFallback>{user?.name?.charAt(0).toUpperCase()}</AvatarFallback>
+                  <AvatarImage src={user?.user_metadata?.avatar_url} alt={userName} />
+                  <AvatarFallback>{userInitial}</AvatarFallback>
                 </Avatar>
               </Button>
             </DropdownMenuTrigger>

@@ -5,7 +5,6 @@ import { Header } from './Header';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { Sheet, SheetContent } from '@/components/ui/sheet';
 import { EnvironmentBanner } from "@/components/Admin/VersionManagement/EnvironmentBanner";
-import { NotificationDropdown } from '@/components/Notifications/NotificationDropdown';
 
 interface MainLayoutProps {
   children: React.ReactNode;
@@ -54,10 +53,7 @@ export function MainLayout({ children }: MainLayoutProps) {
       
       <div className="flex-1 flex flex-col h-full overflow-hidden">
         <header className="flex-shrink-0 border-b bg-background">
-          <div className="flex items-center justify-between h-16 px-4">
-            <Header onToggleSidebar={toggleSidebar} />
-            <NotificationDropdown />
-          </div>
+          <Header onToggleSidebar={toggleSidebar} />
           <EnvironmentBanner />
         </header>
         

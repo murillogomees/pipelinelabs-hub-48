@@ -1,18 +1,29 @@
+
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { PersonaCard } from '@/components/ui/persona-card';
-import { SystemMockups } from '@/components/ui/SystemMockups';
 import { CheckCircle, ArrowRight, Star, Users, TrendingUp, Shield } from 'lucide-react';
 import { useLandingPageContent } from '@/hooks/useLandingPageContent';
 import { useLandingPagePlans } from '@/hooks/useLandingPagePlans';
 
+// Simple SystemMockups component as fallback
+const SystemMockups = () => (
+  <div className="bg-gradient-to-r from-primary/20 to-secondary/20 rounded-lg p-8 flex items-center justify-center">
+    <div className="text-center">
+      <div className="w-24 h-24 bg-primary/20 rounded-lg mx-auto mb-4 flex items-center justify-center">
+        <TrendingUp className="w-12 h-12 text-primary" />
+      </div>
+      <p className="text-muted-foreground">Sistema Pipeline Labs</p>
+    </div>
+  </div>
+);
+
 export default function LandingPage() {
   const { content, isLoading: isContentLoading } = useLandingPageContent();
   const { plans, isLoading: isPlansLoading } = useLandingPagePlans();
-  const [selectedPlan, setSelectedPlan] = useState(null);
 
   if (isContentLoading || isPlansLoading) {
     return (
@@ -116,7 +127,7 @@ export default function LandingPage() {
               <PersonaCard
                 key={index}
                 name={testimonial.name}
-                title={testimonial.title}
+                role={testimonial.title}
                 avatar={testimonial.avatar}
                 description={testimonial.comment}
               />
@@ -149,9 +160,6 @@ export default function LandingPage() {
                       R$ {plan.price}
                       <span className="text-sm text-muted-foreground font-normal">/mês</span>
                     </div>
-                    <p className="text-muted-foreground">
-                      {plan.price_description}
-                    </p>
                   </div>
                   <ul className="space-y-2">
                     {plan.features.map((feature, index) => (

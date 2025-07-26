@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { EnhancedButton as Button } from '@/components/ui/enhanced-button';
 import { Plus, LayoutGrid } from 'lucide-react';
@@ -16,7 +15,7 @@ import { MobileWidgetList } from '@/components/Dashboard/MobileWidgetList';
 
 const ResponsiveGridLayout = WidthProvider(Responsive);
 
-export function Dashboard() {
+export default function Dashboard() {
   const { user } = useAuth();
   const { data: dashboardConfig } = useDashboard();
   const updateDashboard = useUpdateDashboard();
@@ -197,13 +196,11 @@ export function Dashboard() {
       {/* Grid Layout */}
       {widgets.length > 0 ? (
         isMobile && widgets.length > 4 ? (
-          // Para mobile com muitos widgets, usar lista simples
           <MobileWidgetList 
             widgets={widgets} 
             onRemove={handleRemoveWidget} 
           />
         ) : (
-          // Grid responsivo normal
           <ResponsiveGridLayout
             className="layout"
             layouts={{ lg: gridLayout }}
