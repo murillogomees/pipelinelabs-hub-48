@@ -21,22 +21,18 @@ export function AccessLevelsManagement() {
   const { data: accessLevels = [], refetch, isLoading } = useQuery({
     queryKey: ['access-levels'],
     queryFn: async (): Promise<AccessLevelWithCount[]> => {
-      // Usar uma query direta sem o Supabase type checking
-      const { data, error } = await supabase
-        .rpc('get_access_levels_with_user_count');
-
-      if (error) {
-        // Fallback para query simples
-        const { data: simpleData, error: simpleError } = await supabase
-          .from('access_levels')
+      try {
+        // Query access levels directly
+        const { data: levelsData, error: levelsError } = await supabase
+          .from('access_levels' as any)
           .select('*')
           .order('created_at', { ascending: false });
 
-        if (simpleError) throw simpleError;
+        if (levelsError) throw levelsError;
 
         // Count users for each access level manually
         const levelsWithCount = await Promise.all(
-          (simpleData as AccessLevel[]).map(async (level) => {
+          (levelsData || []).map(async (level: any) => {
             const { count } = await supabase
               .from('user_companies')
               .select('*', { count: 'exact', head: true })
@@ -51,9 +47,10 @@ export function AccessLevelsManagement() {
         );
 
         return levelsWithCount;
+      } catch (error) {
+        console.error('Error fetching access levels:', error);
+        return [];
       }
-      
-      return data as AccessLevelWithCount[];
     }
   });
 
@@ -77,26 +74,27 @@ export function AccessLevelsManagement() {
       return;
     }
 
-    const { error } = await supabase
-      .from('access_levels')
-      .delete()
-      .eq('id', level.id);
+    try {
+      const { error } = await supabase
+        .from('access_levels' as any)
+        .delete()
+        .eq('id', level.id);
 
-    if (error) {
+      if (error) throw error;
+
+      toast({
+        title: "Sucesso",
+        description: "Nível de acesso excluído com sucesso",
+      });
+
+      refetch();
+    } catch (error) {
       toast({
         title: "Erro",
         description: "Falha ao excluir nível de acesso",
         variant: "destructive",
       });
-      return;
     }
-
-    toast({
-      title: "Sucesso",
-      description: "Nível de acesso excluído com sucesso",
-    });
-
-    refetch();
   };
 
   const filteredLevels = accessLevels.filter(level => 

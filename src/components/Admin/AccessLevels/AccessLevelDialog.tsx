@@ -145,14 +145,14 @@ export function AccessLevelDialog({ open, onOpenChange, accessLevel, onSave }: A
 
       if (accessLevel) {
         const { error } = await supabase
-          .from('access_levels')
+          .from('access_levels' as any)
           .update(data)
           .eq('id', accessLevel.id);
 
         if (error) throw error;
       } else {
         const { error } = await supabase
-          .from('access_levels')
+          .from('access_levels' as any)
           .insert([data]);
 
         if (error) throw error;

@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import LandingPage from '@/pages/LandingPage';
@@ -16,10 +17,10 @@ import Relatorios from '@/pages/Relatorios';
 import Configuracoes from '@/pages/Configuracoes';
 import ConfiguracoesIntegracoes from '@/pages/ConfiguracoesIntegracoes';
 import ConfiguracaoNFe from '@/pages/ConfiguracaoNFe';
-import Integracoes from '@/pages/Integracoes';
+import { Integracoes } from '@/pages/Integracoes';
 import MarketplaceChannels from '@/pages/MarketplaceChannels';
 import Analytics from '@/pages/Analytics';
-import Notificacoes from '@/pages/Notificacoes';
+import { Notificacoes } from '@/pages/Notificacoes';
 import UserDadosPessoais from '@/pages/UserDadosPessoais';
 import Admin from '@/pages/Admin';
 import AdminUsuarios from '@/pages/AdminUsuarios';
@@ -38,7 +39,7 @@ import AdminAuditLogs from '@/pages/AdminAuditLogs';
 import AdminSLA from '@/pages/AdminSLA';
 import AdminNotificacoes from '@/pages/AdminNotificacoes';
 import NotFound from '@/pages/NotFound';
-import BreakpointTest from '@/pages/BreakpointTest';
+import { BreakpointTest } from '@/pages/BreakpointTest';
 import { ProtectedRoute } from '@/components/ProtectedRoute';
 import SLA from '@/pages/SLA';
 import TermosDeUso from '@/pages/TermosDeUso';

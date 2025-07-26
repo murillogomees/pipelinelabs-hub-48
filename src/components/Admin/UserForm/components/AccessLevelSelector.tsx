@@ -32,14 +32,19 @@ export function AccessLevelSelector({ value, onChange, disabled = false, isRequi
   const { data: accessLevels = [] } = useQuery({
     queryKey: ['access-levels-for-select'],
     queryFn: async (): Promise<AccessLevel[]> => {
-      const { data, error } = await supabase
-        .from('access_levels')
-        .select('*')
-        .eq('is_active', true)
-        .order('name');
+      try {
+        const { data, error } = await supabase
+          .from('access_levels' as any)
+          .select('*')
+          .eq('is_active', true)
+          .order('name');
 
-      if (error) throw error;
-      return data as AccessLevel[];
+        if (error) throw error;
+        return (data || []) as AccessLevel[];
+      } catch (error) {
+        console.error('Error fetching access levels:', error);
+        return [];
+      }
     }
   });
 

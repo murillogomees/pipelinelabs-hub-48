@@ -10,6 +10,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { usePermissions } from '@/hooks/usePermissions';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import { useQuery } from '@tanstack/react-query';
+import type { AccessLevel } from '../AccessLevels/types';
 
 interface UserFormProps {
   user?: User;
@@ -54,14 +55,19 @@ export function UserForm({ user, onSubmit, loading }: UserFormProps) {
   // Buscar níveis de acesso para mapear permissões
   const { data: accessLevels = [] } = useQuery({
     queryKey: ['access-levels'],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from('access_levels')
-        .select('*')
-        .eq('is_active', true);
+    queryFn: async (): Promise<AccessLevel[]> => {
+      try {
+        const { data, error } = await supabase
+          .from('access_levels' as any)
+          .select('*')
+          .eq('is_active', true);
 
-      if (error) throw error;
-      return data;
+        if (error) throw error;
+        return (data || []) as AccessLevel[];
+      } catch (error) {
+        console.error('Error fetching access levels:', error);
+        return [];
+      }
     }
   });
 
