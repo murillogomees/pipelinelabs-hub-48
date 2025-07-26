@@ -2,22 +2,22 @@
 import React from 'react';
 import { AdminPageLayout } from '@/components/Admin/AdminPageLayout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Zap } from 'lucide-react';
+import { Link } from 'lucide-react';
 
-export default function AdminCache() {
+export default function AdminIntegrations() {
   return (
     <AdminPageLayout
-      title="Gerenciamento de Cache"
-      description="Monitore e gerencie o sistema de cache"
-      icon={<Zap className="h-6 w-6" />}
+      title="Integrações Administrativas"
+      description="Gerencie integrações do sistema e APIs externas"
+      icon={<Link className="h-6 w-6" />}
     >
       <Card>
         <CardHeader>
-          <CardTitle>Sistema de Cache</CardTitle>
+          <CardTitle>Integrações do Sistema</CardTitle>
         </CardHeader>
         <CardContent>
           <p className="text-muted-foreground">
-            Módulo de gerenciamento de cache em desenvolvimento...
+            Módulo de integrações administrativas em desenvolvimento...
           </p>
         </CardContent>
       </Card>
