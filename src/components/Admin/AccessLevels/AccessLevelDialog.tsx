@@ -1,4 +1,3 @@
-
 import React, { useEffect, useCallback } from 'react';
 import { useForm } from 'react-hook-form';
 import { BaseDialog } from '@/components/Base/BaseDialog';
@@ -116,33 +115,28 @@ export function AccessLevelDialog({ open, onOpenChange, accessLevel, onSave }: A
 
   const { register, handleSubmit, watch, setValue, reset, formState: { isSubmitting } } = form;
 
-  // Initialize form data when dialog opens or accessLevel changes
-  const initializeForm = useCallback(() => {
-    if (accessLevel) {
-      reset({
-        name: accessLevel.name,
-        display_name: accessLevel.display_name,
-        description: accessLevel.description || '',
-        is_active: accessLevel.is_active,
-        permissions: accessLevel.permissions || {}
-      });
-    } else {
-      reset({
-        name: '',
-        display_name: '',
-        description: '',
-        is_active: true,
-        permissions: {}
-      });
-    }
-  }, [accessLevel, reset]);
-
-  // Only initialize when dialog opens or accessLevel ID changes
+  // Initialize form when dialog opens
   useEffect(() => {
     if (open) {
-      initializeForm();
+      if (accessLevel) {
+        reset({
+          name: accessLevel.name,
+          display_name: accessLevel.display_name,
+          description: accessLevel.description || '',
+          is_active: accessLevel.is_active,
+          permissions: accessLevel.permissions || {}
+        });
+      } else {
+        reset({
+          name: '',
+          display_name: '',
+          description: '',
+          is_active: true,
+          permissions: {}
+        });
+      }
     }
-  }, [open, accessLevel?.id, initializeForm]);
+  }, [open, accessLevel?.id, reset]);
 
   const formData = watch();
 
