@@ -3,7 +3,6 @@ import React, { createContext, useContext, useEffect, useState } from 'react';
 import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
 import { createLogger } from '@/utils/logger';
-import { setUserContext } from '@/lib/sentry';
 import { retryWithBackoff, isNetworkError } from '@/utils/networkRetry';
 
 interface AuthContextType {
@@ -74,11 +73,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
               setTimeout(async () => {
                 if (mounted) {
                   authLogger.info('User signed in successfully');
-                  // Set Sentry user context
-                  setUserContext({
-                    id: session.user.id,
-                    email: session.user.email,
-                  });
                   
                   // Track login event with retry
                   try {
@@ -113,8 +107,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
               }, 0);
               
               cleanupAuthState();
-              // Clear Sentry user context
-              setUserContext({ id: '' });
             }
           }
         );
@@ -135,14 +127,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           setSession(session);
           setUser(session?.user ?? null);
           setLoading(false);
-          
-          // Set Sentry user context if session exists
-          if (session?.user) {
-            setUserContext({
-              id: session.user.id,
-              email: session.user.email,
-            });
-          }
         }
 
         return () => subscription.unsubscribe();
