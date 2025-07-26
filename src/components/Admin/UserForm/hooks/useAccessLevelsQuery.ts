@@ -10,9 +10,9 @@ interface AccessLevelOption {
 }
 
 export function useAccessLevelsQuery() {
-  return useQuery({
+  return useQuery<AccessLevelOption[], Error>({
     queryKey: ['access-levels-for-user-form'],
-    queryFn: async () => {
+    queryFn: async (): Promise<AccessLevelOption[]> => {
       const { data, error } = await supabase
         .from('access_levels')
         .select('id, name, display_name, permissions')
@@ -28,7 +28,7 @@ export function useAccessLevelsQuery() {
         permissions: (item.permissions && typeof item.permissions === 'object') 
           ? item.permissions as Record<string, boolean>
           : {}
-      })) as AccessLevelOption[];
+      }));
     }
   });
 }

@@ -8,18 +8,17 @@ interface CompanyOption {
 }
 
 export function useCompaniesQuery() {
-  return useQuery({
+  return useQuery<CompanyOption[], Error>({
     queryKey: ['companies-for-user-form'],
-    queryFn: async () => {
+    queryFn: async (): Promise<CompanyOption[]> => {
       const { data, error } = await supabase
         .from('companies')
         .select('id, name')
-        .eq('is_active', true)
         .order('name');
       
       if (error) throw error;
       
-      return (data || []) as CompanyOption[];
+      return (data || []);
     }
   });
 }
