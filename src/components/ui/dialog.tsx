@@ -1,3 +1,4 @@
+
 import * as React from "react"
 import * as DialogPrimitive from "@radix-ui/react-dialog"
 import { X } from "lucide-react"
@@ -51,7 +52,7 @@ const DialogContent = React.forwardRef<
 ))
 DialogContent.displayName = DialogPrimitive.Content.displayName
 
-const DialogHeader = ({
+const DialogHeader = React.memo(({
   className,
   ...props
 }: React.HTMLAttributes<HTMLDivElement>) => (
@@ -62,10 +63,10 @@ const DialogHeader = ({
     )}
     {...props}
   />
-)
+))
 DialogHeader.displayName = "DialogHeader"
 
-const DialogFooter = ({
+const DialogFooter = React.memo(({
   className,
   ...props
 }: React.HTMLAttributes<HTMLDivElement>) => (
@@ -76,7 +77,7 @@ const DialogFooter = ({
     )}
     {...props}
   />
-)
+))
 DialogFooter.displayName = "DialogFooter"
 
 const DialogTitle = React.forwardRef<
