@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { BaseDialog } from '@/components/Base/BaseDialog';
 import { Button } from '@/components/ui/button';
@@ -104,24 +104,45 @@ type FormData = {
 export function AccessLevelDialog({ open, onOpenChange, accessLevel, onSave }: AccessLevelDialogProps) {
   const { toast } = useToast();
 
-  // Inicialização simples dos valores padrão
-  const getDefaultValues = (): FormData => ({
-    name: accessLevel?.name || '',
-    display_name: accessLevel?.display_name || '',
-    description: accessLevel?.description || '',
-    is_active: accessLevel?.is_active ?? true,
-    permissions: accessLevel?.permissions || {}
-  });
-
   const {
     register,
     handleSubmit,
     watch,
     setValue,
+    reset,
     formState: { isSubmitting }
   } = useForm<FormData>({
-    defaultValues: getDefaultValues()
+    defaultValues: {
+      name: '',
+      display_name: '',
+      description: '',
+      is_active: true,
+      permissions: {}
+    }
   });
+
+  // Reset form when accessLevel or open state changes
+  useEffect(() => {
+    if (open) {
+      if (accessLevel) {
+        reset({
+          name: accessLevel.name,
+          display_name: accessLevel.display_name,
+          description: accessLevel.description || '',
+          is_active: accessLevel.is_active,
+          permissions: accessLevel.permissions || {}
+        });
+      } else {
+        reset({
+          name: '',
+          display_name: '',
+          description: '',
+          is_active: true,
+          permissions: {}
+        });
+      }
+    }
+  }, [accessLevel, open, reset]);
 
   const formData = watch();
 
@@ -165,8 +186,10 @@ export function AccessLevelDialog({ open, onOpenChange, accessLevel, onSave }: A
 
   const handleDisplayNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
-    setValue('display_name', value, { shouldValidate: false });
-    setValue('name', value.toLowerCase().replace(/\s+/g, '_'), { shouldValidate: false });
+    setValue('display_name', value);
+    if (!accessLevel) {
+      setValue('name', value.toLowerCase().replace(/\s+/g, '_'));
+    }
   };
 
   const handlePermissionToggle = (permission: string) => {
@@ -174,7 +197,7 @@ export function AccessLevelDialog({ open, onOpenChange, accessLevel, onSave }: A
     setValue('permissions', {
       ...currentPermissions,
       [permission]: !currentPermissions[permission]
-    }, { shouldValidate: false });
+    });
   };
 
   const enabledPermissions = Object.values(formData.permissions || {}).filter(Boolean).length;
@@ -208,7 +231,7 @@ export function AccessLevelDialog({ open, onOpenChange, accessLevel, onSave }: A
                 value={formData.name}
                 disabled={accessLevel?.is_system}
                 placeholder="Ex: admin_empresa"
-                readOnly
+                readOnly={!!accessLevel}
               />
             </div>
           </div>
@@ -220,13 +243,14 @@ export function AccessLevelDialog({ open, onOpenChange, accessLevel, onSave }: A
               {...register('description')}
               placeholder="Descreva as responsabilidades deste nível de acesso"
               rows={3}
+              value={formData.description}
             />
           </div>
 
           <div className="flex items-center space-x-2">
             <Switch
               checked={formData.is_active}
-              onCheckedChange={(checked) => setValue('is_active', checked, { shouldValidate: false })}
+              onCheckedChange={(checked) => setValue('is_active', checked)}
             />
             <Label>Nível de acesso ativo</Label>
           </div>
