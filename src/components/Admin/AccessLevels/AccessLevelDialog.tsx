@@ -1,6 +1,5 @@
 
 import React, { useEffect, useCallback, useMemo } from 'react';
-import { useForm } from 'react-hook-form';
 import { BaseDialog } from '@/components/Base/BaseDialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -10,8 +9,8 @@ import { Switch } from '@/components/ui/switch';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { supabase } from '@/integrations/supabase/client';
-import { useToast } from '@/hooks/use-toast';
-import { Shield, Settings, Activity } from 'lucide-react';
+import { useBaseForm } from '@/hooks/useBaseForm';
+import { Settings, Activity } from 'lucide-react';
 import type { AccessLevel } from './types';
 
 interface AccessLevelDialogProps {
@@ -102,8 +101,6 @@ type FormData = {
 };
 
 export function AccessLevelDialog({ open, onOpenChange, accessLevel, onSave }: AccessLevelDialogProps) {
-  const { toast } = useToast();
-
   const defaultValues = useMemo(() => ({
     name: '',
     display_name: '',
@@ -112,11 +109,44 @@ export function AccessLevelDialog({ open, onOpenChange, accessLevel, onSave }: A
     permissions: {}
   }), []);
 
-  const form = useForm<FormData>({
-    defaultValues
+  const onSubmit = useCallback(async (data: FormData) => {
+    const submitData = {
+      ...data,
+      name: data.name.toLowerCase().replace(/\s+/g, '_')
+    };
+
+    if (accessLevel) {
+      const { error } = await supabase
+        .from('access_levels')
+        .update(submitData)
+        .eq('id', accessLevel.id);
+
+      if (error) throw error;
+    } else {
+      const { error } = await supabase
+        .from('access_levels')
+        .insert([submitData]);
+
+      if (error) throw error;
+    }
+
+    onSave();
+    onOpenChange(false);
+  }, [accessLevel, onSave, onOpenChange]);
+
+  const {
+    form,
+    handleSubmit,
+    isSubmitting
+  } = useBaseForm<FormData>({
+    defaultValues,
+    onSubmit,
+    successMessage: `Nível de acesso ${accessLevel ? 'atualizado' : 'criado'} com sucesso`,
+    errorMessage: `Falha ao ${accessLevel ? 'atualizar' : 'criar'} nível de acesso`
   });
 
-  const { register, handleSubmit, watch, setValue, reset, formState: { isSubmitting } } = form;
+  const { watch, setValue, reset } = form;
+  const formData = watch();
 
   // Initialize form when dialog opens or accessLevel changes
   useEffect(() => {
@@ -134,46 +164,6 @@ export function AccessLevelDialog({ open, onOpenChange, accessLevel, onSave }: A
       }
     }
   }, [open, accessLevel?.id, reset, defaultValues]);
-
-  const formData = watch();
-
-  const onSubmit = useCallback(async (data: FormData) => {
-    try {
-      const submitData = {
-        ...data,
-        name: data.name.toLowerCase().replace(/\s+/g, '_')
-      };
-
-      if (accessLevel) {
-        const { error } = await supabase
-          .from('access_levels')
-          .update(submitData)
-          .eq('id', accessLevel.id);
-
-        if (error) throw error;
-      } else {
-        const { error } = await supabase
-          .from('access_levels')
-          .insert([submitData]);
-
-        if (error) throw error;
-      }
-
-      toast({
-        title: 'Sucesso',
-        description: `Nível de acesso ${accessLevel ? 'atualizado' : 'criado'} com sucesso`,
-      });
-
-      onSave();
-      onOpenChange(false);
-    } catch (error: any) {
-      toast({
-        title: 'Erro',
-        description: `Falha ao ${accessLevel ? 'atualizar' : 'criar'} nível de acesso`,
-        variant: 'destructive',
-      });
-    }
-  }, [accessLevel, toast, onSave, onOpenChange]);
 
   const handleDisplayNameChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
@@ -208,7 +198,7 @@ export function AccessLevelDialog({ open, onOpenChange, accessLevel, onSave }: A
       maxWidth="lg"
     >
       <div className="max-h-[80vh] overflow-y-auto">
-        <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+        <form onSubmit={handleSubmit} className="space-y-6">
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label htmlFor="display_name">Nome de Exibição</Label>
@@ -236,10 +226,10 @@ export function AccessLevelDialog({ open, onOpenChange, accessLevel, onSave }: A
             <Label htmlFor="description">Descrição</Label>
             <Textarea
               id="description"
-              {...register('description')}
+              value={formData.description || ''}
+              onChange={(e) => setValue('description', e.target.value)}
               placeholder="Descreva as responsabilidades deste nível de acesso"
               rows={3}
-              value={formData.description || ''}
             />
           </div>
 
