@@ -209,7 +209,7 @@ function Propostas() {
 }
 
 // Componente principal Vendas
-export function Vendas() {
+export default function Vendas() {
   const location = useLocation();
   
   const getActiveTab = () => {

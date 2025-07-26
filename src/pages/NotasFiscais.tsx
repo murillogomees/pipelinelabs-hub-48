@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Routes, Route, NavLink, useLocation } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -174,7 +175,7 @@ function NFSe() {
 }
 
 // Componente principal Notas Fiscais
-export function NotasFiscais() {
+export default function NotasFiscais() {
   const location = useLocation();
 
   // Determina a aba ativa baseada na URL

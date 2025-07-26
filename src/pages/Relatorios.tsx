@@ -1,10 +1,11 @@
+
 import { useState } from "react";
 import { ReportsHeader } from "@/components/Reports/ReportsHeader";
 import { ReportsList } from "@/components/Reports/ReportsList";
 import { ReportBuilder } from "@/components/Reports/ReportBuilder";
 import { ReportViewer } from "@/components/Reports/ReportViewer";
 
-export function Relatorios() {
+export default function Relatorios() {
   const [currentView, setCurrentView] = useState<'list' | 'builder' | 'viewer'>('list');
   const [selectedReportId, setSelectedReportId] = useState<string | null>(null);
 

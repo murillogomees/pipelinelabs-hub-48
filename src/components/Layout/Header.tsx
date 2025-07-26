@@ -1,109 +1,78 @@
-
-import React, { useState } from 'react';
-import { User, Menu, LogOut, Settings, Crown, Users } from 'lucide-react';
+import { useState } from 'react';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+import { Bell, Search, Settings, User, LogOut, Menu, CreditCard, Shield } from 'lucide-react';
 import { useAuth } from '@/components/Auth/AuthProvider';
-import { usePermissions } from '@/hooks/usePermissions';
-
+import { NotificationDropdown } from '@/components/Notifications/NotificationDropdown';
 import { GlobalSearchTrigger } from '@/components/Search/GlobalSearchTrigger';
-import { UserProfileDialog } from '@/components/User/UserProfileDialog';
+import { MobileSidebar } from './MobileSidebar';
+import { useMobileSidebar } from '@/hooks/useMobileSidebar';
+import { Link, useNavigate } from 'react-router-dom';
 
-import { PlanSubscriptionDialog } from '@/components/User/PlanSubscriptionDialog';
-import { cleanupAuthState } from '@/utils/security';
-import { supabase } from '@/integrations/supabase/client';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
+export function Header() {
+  const { user, logout } = useAuth();
+  const [isSearchOpen, setIsSearchOpen] = useState(false);
+  const { isOpen, onOpen, onClose } = useMobileSidebar();
+  const navigate = useNavigate();
 
-interface HeaderProps {
-  onToggleSidebar: () => void;
-}
-
-export function Header({ onToggleSidebar }: HeaderProps) {
-  const { user, signOut } = useAuth();
-  const { isSuperAdmin, email } = usePermissions();
-  const [profileOpen, setProfileOpen] = useState(false);
-  const [planOpen, setPlanOpen] = useState(false);
-
-  const handleSecureSignOut = async () => {
-    try {
-      // Clean up auth state first
-      cleanupAuthState();
-      
-      // Attempt global sign out
-      await supabase.auth.signOut({ scope: 'global' });
-      
-      // Force page reload for complete cleanup
-      window.location.href = '/auth';
-    } catch (error) {
-      // Even if signOut fails, redirect to auth page
-      window.location.href = '/auth';
-    }
+  const handleLogout = async () => {
+    await logout();
+    navigate('/auth');
   };
 
   return (
-    <header className="bg-background border-b border-border px-6 py-4">
-      <div className="flex items-center justify-between">
-        <div className="flex items-center space-x-4">
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={onToggleSidebar}
-            className="p-2"
-          >
-            <Menu className="w-5 h-5" />
-          </Button>
-          
-          <GlobalSearchTrigger />
-        </div>
+    <div className="border-b bg-background sticky top-0 z-50">
+      <div className="flex h-16 items-center px-4">
+        {/* Mobile Menu Button */}
+        <Button variant="ghost" size="icon" onClick={onOpen} className="mr-2 lg:hidden">
+          <Menu className="h-5 w-5" />
+        </Button>
 
-        <div className="flex items-center space-x-4">
-          
+        {/* Mobile Sidebar */}
+        <MobileSidebar isOpen={isOpen} onClose={onClose} />
+
+        {/* Global Search Trigger */}
+        <GlobalSearchTrigger isSearchOpen={isSearchOpen} setIsSearchOpen={setIsSearchOpen} />
+
+        <div className="ml-auto flex items-center space-x-4">
+          {/* Notification Dropdown */}
+          <NotificationDropdown />
+
+          {/* User Dropdown Menu */}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="ghost" className="flex items-center space-x-2">
-                <div className="p-2 rounded-lg bg-primary/10">
-                  <User className="h-4 w-4 text-primary" />
-                </div>
-                <div className="text-sm text-left">
-                  <p className="font-medium text-foreground">{user?.email}</p>
-                  <p className="text-muted-foreground">
-                    {isSuperAdmin ? "Super Admin" : "Pipeline Labs"}
-                  </p>
-                </div>
+              <Button variant="ghost" className="h-8 w-8 p-0 rounded-full">
+                <Avatar className="h-8 w-8">
+                  <AvatarImage src={user?.avatar} alt={user?.name} />
+                  <AvatarFallback>{user?.name?.charAt(0).toUpperCase()}</AvatarFallback>
+                </Avatar>
               </Button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-56">
-              <DropdownMenuItem onClick={() => setProfileOpen(true)}>
-                <User className="w-4 h-4 mr-2" />
-                Meu Perfil
+            <DropdownMenuContent align="end">
+              <DropdownMenuLabel>Minha Conta</DropdownMenuLabel>
+              <DropdownMenuItem asChild>
+                <Link to="/app/user/dados-pessoais" className="flex items-center gap-2">
+                  <User className="h-4 w-4 mr-2" />
+                  <span>Perfil</span>
+                </Link>
               </DropdownMenuItem>
-              
-              <DropdownMenuItem onClick={() => setPlanOpen(true)}>
-                <Crown className="w-4 h-4 mr-2" />
-                Plano e Assinatura
+              <DropdownMenuItem asChild>
+                <Link to="/app/configuracoes" className="flex items-center gap-2">
+                  <Settings className="h-4 w-4 mr-2" />
+                  <span>Configurações</span>
+                </Link>
               </DropdownMenuItem>
-              
-              
               <DropdownMenuSeparator />
-              
-              <DropdownMenuItem onClick={handleSecureSignOut}>
-                <LogOut className="w-4 h-4 mr-2" />
+              <DropdownMenuItem onClick={handleLogout} className="cursor-pointer">
+                <LogOut className="h-4 w-4 mr-2" />
                 Sair
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
         </div>
       </div>
-
-      {/* Dialogs */}
-      <UserProfileDialog open={profileOpen} onOpenChange={setProfileOpen} />
-      
-      <PlanSubscriptionDialog open={planOpen} onOpenChange={setPlanOpen} />
-    </header>
+    </div>
   );
 }
