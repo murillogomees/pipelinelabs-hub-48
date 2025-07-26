@@ -35,6 +35,7 @@ export function useEnhancedAuthForm({ onSuccess }: UseEnhancedAuthFormProps = {}
       companyName?: string;
       document?: string;
       phone?: string;
+      documentType?: 'cpf' | 'cnpj';
     }
   ) => {
     const userIdentifier = `auth_${formData.email}`;
@@ -65,8 +66,9 @@ export function useEnhancedAuthForm({ onSuccess }: UseEnhancedAuthFormProps = {}
     }
 
     try {
-      // Call the original auth handler
-      await baseAuthForm.handleAuth(isSignUp, formData);
+      // Call the original auth handler (without documentType as it's not used in the base handler)
+      const { documentType, ...baseFormData } = formData;
+      await baseAuthForm.handleAuth(isSignUp, baseFormData);
       
       // Log successful auth attempt
       await logAuthAttempt(formData.email, true);

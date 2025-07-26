@@ -46,10 +46,7 @@ export function AuthForm() {
       return;
     }
 
-    await handleAuth(isSignUp, {
-      ...formData,
-      documentType: formData.documentType
-    });
+    await handleAuth(isSignUp, formData);
   };
 
   const handleFormDataChange = (updates: Partial<typeof formData>) => {
