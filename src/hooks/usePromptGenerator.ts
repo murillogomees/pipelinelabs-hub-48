@@ -47,7 +47,21 @@ export const usePromptGenerator = () => {
         .limit(50);
 
       if (error) throw error;
-      return data || [];
+      
+      // Transform the data to match our interface
+      return (data || []).map(item => ({
+        id: item.id,
+        prompt: item.prompt,
+        generated_code: item.generated_code,
+        model_used: item.model_used,
+        temperature: item.temperature,
+        status: item.status as 'pending' | 'applied' | 'error' | 'rolled_back',
+        error_message: item.error_message,
+        applied_files: Array.isArray(item.applied_files) ? item.applied_files : [],
+        created_at: item.created_at,
+        applied_at: item.applied_at,
+        rolled_back_at: item.rolled_back_at,
+      }));
     },
   });
 
