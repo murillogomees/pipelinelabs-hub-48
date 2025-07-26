@@ -55,8 +55,8 @@ function App() {
     <SentryErrorBoundary>
       <QueryClientProvider client={queryClient}>
         <AuthProvider>
-          <AnalyticsProvider>
-            <Router>
+          <Router>
+            <AnalyticsProvider>
               <div className="App">
                 <NetworkStatusIndicator />
                 
@@ -86,8 +86,8 @@ function App() {
                 
                 <Toaster />
               </div>
-            </Router>
-          </AnalyticsProvider>
+            </AnalyticsProvider>
+          </Router>
         </AuthProvider>
         
         {import.meta.env.DEV && <ReactQueryDevtools initialIsOpen={false} />}
