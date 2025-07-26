@@ -1,60 +1,20 @@
-import React, { createContext, useContext, useEffect, useState, ReactNode } from 'react';
-import { generateCSRFToken, setCSRFToken, getCSRFToken } from '@/utils/security';
 
-interface CSRFContextType {
-  token: string | null;
-  refreshToken: () => void;
-}
+import { useEffect, useState } from 'react';
 
-const CSRFContext = createContext<CSRFContextType>({
-  token: null,
-  refreshToken: () => {},
-});
-
-interface CSRFProviderProps {
-  children: ReactNode;
-}
-
-export function CSRFProvider({ children }: CSRFProviderProps) {
-  const [token, setToken] = useState<string | null>(null);
-
-  const refreshToken = () => {
-    const newToken = setCSRFToken();
-    setToken(newToken);
-  };
+export function CSRFToken() {
+  const [csrfToken, setCsrfToken] = useState<string>('');
 
   useEffect(() => {
-    // Initialize or get existing CSRF token
-    let existingToken = getCSRFToken();
-    if (!existingToken) {
-      existingToken = setCSRFToken();
-    }
-    setToken(existingToken);
+    // Generate a simple CSRF token
+    const token = btoa(Math.random().toString()).substring(0, 32);
+    setCsrfToken(token);
   }, []);
 
   return (
-    <CSRFContext.Provider value={{ token, refreshToken }}>
-      {children}
-    </CSRFContext.Provider>
+    <input
+      type="hidden"
+      name="csrfToken"
+      value={csrfToken}
+    />
   );
-}
-
-export function useCSRF(): CSRFContextType {
-  const context = useContext(CSRFContext);
-  if (!context) {
-    throw new Error('useCSRF must be used within a CSRFProvider');
-  }
-  return context;
-}
-
-interface CSRFTokenProps {
-  name?: string;
-}
-
-export function CSRFToken({ name = '_token' }: CSRFTokenProps) {
-  const { token } = useCSRF();
-  
-  if (!token) return null;
-  
-  return <input type="hidden" name={name} value={token} />;
 }

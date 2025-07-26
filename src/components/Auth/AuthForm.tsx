@@ -20,7 +20,8 @@ export function AuthForm() {
     lastName: '',
     companyName: '',
     document: '',
-    phone: ''
+    phone: '',
+    documentType: 'cpf' // Add the missing documentType property
   });
 
   const { 

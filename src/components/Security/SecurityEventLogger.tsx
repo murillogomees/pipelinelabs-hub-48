@@ -24,7 +24,8 @@ class SecurityEventLogger {
     userAgent?: string
   ) {
     try {
-      await supabase.rpc('log_security_event_enhanced', {
+      // Use the existing log_security_event function instead of the enhanced one
+      await supabase.rpc('log_security_event', {
         p_event_type: eventType,
         p_risk_level: riskLevel,
         p_event_data: eventData,

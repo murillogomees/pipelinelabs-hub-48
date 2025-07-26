@@ -37,13 +37,8 @@ export function PasswordStrengthValidator({
     const validatePassword = async () => {
       setIsLoading(true);
       try {
-        const { data, error } = await supabase.rpc('validate_password_strength', {
-          password
-        });
-
-        if (error) throw error;
-
-        const passwordStrength = data as PasswordStrength;
+        // Use a direct validation function instead of RPC call for now
+        const passwordStrength = validatePasswordClient(password);
         setStrength(passwordStrength);
         onValidationChange?.(passwordStrength.is_valid, passwordStrength);
       } catch (error) {
@@ -58,6 +53,84 @@ export function PasswordStrengthValidator({
     const debounceTimer = setTimeout(validatePassword, 300);
     return () => clearTimeout(debounceTimer);
   }, [password, onValidationChange]);
+
+  // Client-side password validation function
+  const validatePasswordClient = (password: string): PasswordStrength => {
+    let score = 0;
+    const feedback: string[] = [];
+
+    // Check password length
+    if (password.length >= 12) {
+      score += 2;
+    } else if (password.length >= 8) {
+      score += 1;
+    } else {
+      feedback.push('Use pelo menos 8 caracteres (12+ recomendado)');
+    }
+
+    // Check for lowercase letters
+    if (password.match(/[a-z]/)) {
+      score += 1;
+    } else {
+      feedback.push('Inclua letras minúsculas');
+    }
+
+    // Check for uppercase letters
+    if (password.match(/[A-Z]/)) {
+      score += 1;
+    } else {
+      feedback.push('Inclua letras maiúsculas');
+    }
+
+    // Check for numbers
+    if (password.match(/[0-9]/)) {
+      score += 1;
+    } else {
+      feedback.push('Inclua números');
+    }
+
+    // Check for special characters
+    if (password.match(/[^A-Za-z0-9]/)) {
+      score += 1;
+    } else {
+      feedback.push('Inclua caracteres especiais');
+    }
+
+    // Check for common patterns
+    if (password.toLowerCase().match(/(password|123456|qwerty|admin|user|login)/)) {
+      score -= 2;
+      feedback.push('Evite senhas comuns');
+    }
+
+    // Check for repeated characters
+    if (password.match(/(.)\1{2,}/)) {
+      score -= 1;
+      feedback.push('Evite caracteres repetidos');
+    }
+
+    const finalScore = Math.max(score, 0);
+    let strength: PasswordStrength['strength'];
+    
+    if (finalScore >= 5) {
+      strength = 'very_strong';
+    } else if (finalScore >= 4) {
+      strength = 'strong';
+    } else if (finalScore >= 3) {
+      strength = 'medium';
+    } else if (finalScore >= 2) {
+      strength = 'weak';
+    } else {
+      strength = 'very_weak';
+    }
+
+    return {
+      score: finalScore,
+      max_score: 6,
+      strength,
+      is_valid: finalScore >= 3,
+      feedback
+    };
+  };
 
   if (!password || !strength) return null;
 
