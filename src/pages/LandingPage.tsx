@@ -16,7 +16,6 @@ import { PersonaCard } from '@/components/ui/persona-card';
 
 // Import the advanced mockup components (mantido para seção hero)
 import { MockupDashboard, MockupPDV, MockupNFe, MockupInventory, MockupFinancial, MockupNotifications, MockupDailySales } from '@/components/ui/SystemMockups';
-// PersonaCard removido - implementação inline
 
 // Icon mapping helper
 const getIcon = (iconName: string) => {
@@ -51,6 +50,7 @@ const getIcon = (iconName: string) => {
   };
   return iconMap[iconName] || <Star className="h-8 w-8 text-primary" />;
 };
+
 export function LandingPage() {
   const navigate = useNavigate();
   const { plans: billingPlans, isLoading: plansLoading } = useLandingPagePlans();
@@ -60,6 +60,131 @@ export function LandingPage() {
     isLoading,
     getSection
   } = useLandingPageContent();
+
+  // Dados estáticos das personas para garantir que sempre sejam exibidas
+  const defaultPersonas = [
+    {
+      name: "Ana Costa",
+      age: 34,
+      location: "São Paulo, SP",
+      business: "Loja de roupas femininas",
+      image: "/placeholder.svg",
+      problems: [
+        "Controle de estoque desorganizado em planilhas",
+        "Perda de vendas por falta de produtos",
+        "Dificuldade para emitir notas fiscais",
+        "Não sabe qual produto vende mais"
+      ],
+      solutions: [
+        "Estoque automatizado com alertas",
+        "Emissão de NFe integrada",
+        "Relatórios de vendas detalhados",
+        "Dashboard com métricas em tempo real"
+      ],
+      result: "Aumentou as vendas em 35% e reduziu o tempo de gestão em 60% com automação completa do estoque e vendas."
+    },
+    {
+      name: "Lucas Silva",
+      age: 28,
+      location: "Rio de Janeiro, RJ",
+      business: "Vendedor em marketplaces",
+      image: "/placeholder.svg",
+      problems: [
+        "Gestão manual de múltiplos canais",
+        "Controle de estoque descentralizado",
+        "Dificuldade para precificar produtos",
+        "Perda de pedidos por desorganização"
+      ],
+      solutions: [
+        "Integração com Mercado Livre e outros",
+        "Estoque unificado multicanal",
+        "Sistema de precificação inteligente",
+        "Central de pedidos automatizada"
+      ],
+      result: "Triplicou as vendas online e automatizou 80% dos processos com gestão multicanal integrada."
+    },
+    {
+      name: "Carla Santos",
+      age: 41,
+      location: "Belo Horizonte, MG",
+      business: "Pequena fábrica de salgados",
+      image: "/placeholder.svg",
+      problems: [
+        "Controle de produção manual",
+        "Dificuldade no controle financeiro",
+        "Falta de visibilidade dos custos",
+        "Gestão de pedidos desorganizada"
+      ],
+      solutions: [
+        "Ordens de produção automatizadas",
+        "Dashboard financeiro completo",
+        "Controle de custos detalhado",
+        "Sistema de pedidos integrado"
+      ],
+      result: "Organizou completamente a produção e aumentou a margem de lucro em 45% com controle financeiro preciso."
+    },
+    {
+      name: "Eduardo Martins",
+      age: 38,
+      location: "Curitiba, PR",
+      business: "Distribuidor de bebidas",
+      image: "/placeholder.svg",
+      problems: [
+        "Logística complexa e manual",
+        "Controle de estoque em múltiplos depósitos",
+        "Pedidos grandes com muitos erros",
+        "Dificuldade no controle de entregas"
+      ],
+      solutions: [
+        "Sistema de separação inteligente",
+        "Controle multi-depósito",
+        "Etiquetas e código de barras",
+        "Integração com transportadoras"
+      ],
+      result: "Reduziu erros de entrega em 90% e otimizou a logística com sistema automatizado de distribuição."
+    },
+    {
+      name: "Patrícia Lima",
+      age: 32,
+      location: "Fortaleza, CE",
+      business: "Prestadora de serviços",
+      image: "/placeholder.svg",
+      problems: [
+        "Emissão manual de NFSe",
+        "Controle financeiro precário",
+        "Dificuldade para acompanhar recebimentos",
+        "Gestão de clientes desorganizada"
+      ],
+      solutions: [
+        "NFSe automática integrada",
+        "Dashboard financeiro",
+        "Controle de recebimentos",
+        "CRM para gestão de clientes"
+      ],
+      result: "Automatizou 100% da emissão fiscal e melhorou o controle financeiro, aumentando a produtividade em 50%."
+    },
+    {
+      name: "João Santos",
+      age: 45,
+      location: "Porto Alegre, RS",
+      business: "Comércio atacadista",
+      image: "/placeholder.svg",
+      problems: [
+        "Volume alto de pedidos manuais",
+        "Controle de crédito inadequado",
+        "Dificuldade na gestão de representantes",
+        "Relatórios financeiros demorados"
+      ],
+      solutions: [
+        "Automatização de pedidos",
+        "Sistema de crédito integrado",
+        "Portal para representantes",
+        "Relatórios automáticos"
+      ],
+      result: "Aumentou a capacidade de vendas em 200% e reduziu inadimplência em 60% com controle de crédito automatizado."
+    }
+  ];
+
   if (isLoading) {
     return <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="text-center">
@@ -68,14 +193,15 @@ export function LandingPage() {
         </div>
       </div>;
   }
+
   const heroSection = getSection('hero');
   const personasSection = getSection('personas');
   const featuresSection = getSection('features');
   const testimonialsSection = getSection('testimonials');
   const securitySection = getSection('security');
-  
   const pricingSection = getSection('pricing');
   const finalCtaSection = getSection('final_cta');
+
   return <div className="min-h-screen bg-background">
       {/* Header */}
       <header className="border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
@@ -122,7 +248,6 @@ export function LandingPage() {
                 {getIcon('rocket')}
                 {heroSection.content_data?.button_text || 'Começar Agora'}
               </Button>
-              
             </div>
             
             {/* Demonstração do Sistema */}
@@ -141,17 +266,9 @@ export function LandingPage() {
                 <div className="grid lg:grid-cols-2 gap-8 mb-8">
                   <div className="space-y-6">
                     <MockupDashboard className="transform hover:scale-105 transition-transform" />
-                    <div className="text-center">
-                      
-                      
-                    </div>
                   </div>
                   <div className="space-y-6">
                     <MockupNotifications className="transform hover:scale-105 transition-transform" />
-                    <div className="text-center">
-                      
-                      
-                    </div>
                   </div>
                 </div>
 
@@ -159,24 +276,12 @@ export function LandingPage() {
                 <div className="grid lg:grid-cols-3 gap-8 mb-8">
                   <div className="space-y-6">
                     <MockupDailySales className="transform hover:scale-105 transition-transform" />
-                    <div className="text-center">
-                      
-                      
-                    </div>
                   </div>
                   <div className="space-y-6">
                     <MockupPDV className="transform hover:scale-105 transition-transform" />
-                    <div className="text-center">
-                      
-                      
-                    </div>
                   </div>
                   <div className="space-y-6">
                     <MockupNFe className="transform hover:scale-105 transition-transform" />
-                    <div className="text-center">
-                      
-                      
-                    </div>
                   </div>
                 </div>
 
@@ -184,71 +289,56 @@ export function LandingPage() {
                 <div className="grid md:grid-cols-2 gap-8 mb-6">
                   <div className="space-y-6">
                     <MockupInventory className="transform hover:scale-105 transition-transform" />
-                    <div className="text-center">
-                      
-                      
-                    </div>
                   </div>
                   <div className="space-y-6">
                     <MockupFinancial className="transform hover:scale-105 transition-transform" />
-                    <div className="text-center">
-                      
-                      
-                    </div>
                   </div>
                 </div>
-
-                {/* Features destacadas */}
-                {heroSection.content_data?.mockup_features && <div className="grid md:grid-cols-3 gap-4">
-                    {heroSection.content_data.mockup_features.map((feature: string, index: number) => {})}
-                  </div>}
               </div>
             </div>
           </div>
         </section>}
 
-
-      {/* Pain/Personas Section */}
-      {personasSection && (
-        <section className="py-20 px-4 bg-muted/50">
-          <div className="container mx-auto">
-            <div className="text-center mb-16">
-              <h2 className="text-3xl md:text-4xl font-bold mb-4">
-                {personasSection.title}
-              </h2>
-              <p className="text-xl text-muted-foreground">
-                {personasSection.subtitle}
-              </p>
-            </div>
-
-            {/* Cards de personas com novo layout responsivo */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8 max-w-7xl mx-auto px-4">
-              {personasSection.content_data?.personas?.map((persona: any, index: number) => (
-                <div 
-                  key={index} 
-                  className="animate-fade-in hover-scale"
-                  style={{
-                    animationDelay: `${index * 0.1}s`,
-                    animationFillMode: 'both'
-                  }}
-                >
-                  <PersonaCard
-                    name={persona.name}
-                    age={persona.age}
-                    location={persona.location}
-                    business={persona.business}
-                    image={persona.image}
-                    problems={persona.problems}
-                    solutions={persona.solutions}
-                    result={persona.result}
-                    className="h-full transition-all duration-300 hover:shadow-xl"
-                  />
-                </div>
-              ))}
-            </div>
+      {/* Personas Section - SEMPRE HABILITADA */}
+      <section className="py-20 px-4 bg-muted/50">
+        <div className="container mx-auto">
+          <div className="text-center mb-16">
+            <h2 className="text-3xl md:text-4xl font-bold mb-4">
+              {personasSection?.title || "Conheça quem já transformou seu negócio"}
+            </h2>
+            <p className="text-xl text-muted-foreground">
+              {personasSection?.subtitle || "Histórias reais de empreendedores que superaram seus desafios"}
+            </p>
           </div>
-        </section>
-       )}
+
+          {/* Cards de personas com layout responsivo */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8 max-w-7xl mx-auto px-4">
+            {/* Usar personas do CMS se disponível, senão usar as estáticas */}
+            {(personasSection?.content_data?.personas || defaultPersonas).map((persona: any, index: number) => (
+              <div 
+                key={index} 
+                className="animate-fade-in hover-scale"
+                style={{
+                  animationDelay: `${index * 0.1}s`,
+                  animationFillMode: 'both'
+                }}
+              >
+                <PersonaCard
+                  name={persona.name}
+                  age={persona.age}
+                  location={persona.location}
+                  business={persona.business}
+                  image={persona.image}
+                  problems={persona.problems}
+                  solutions={persona.solutions}
+                  result={persona.result}
+                  className="h-full transition-all duration-300 hover:shadow-xl"
+                />
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
 
       {/* ERP Modules Section */}
       <section className="py-20 px-4 bg-muted/30">
@@ -446,66 +536,6 @@ export function LandingPage() {
           </div>
         </div>
       </section>
-
-      {/* Features Section - DISABLED */}
-      {false && featuresSection && <section className="py-20 px-4">
-          <div className="container mx-auto">
-            <div className="text-center mb-16">
-              <h2 className="text-3xl md:text-4xl font-bold mb-4">
-                {featuresSection.title}
-              </h2>
-              <p className="text-xl text-muted-foreground">
-                {featuresSection.subtitle}
-              </p>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 max-w-screen-xl mx-auto mb-12">
-              {featuresSection.content_data?.features?.map((feature: any, index: number) => (
-                <div 
-                  key={index} 
-                  className="group rounded-xl shadow-lg overflow-hidden relative bg-white hover:shadow-xl transition-all duration-300 hover:scale-105"
-                  aria-label={`Card de Módulo ${feature.title}`}
-                >
-                  {/* Container da Imagem com Overlay */}
-                  <div className="relative aspect-[4/3] overflow-hidden">
-                    <img
-                      src={feature.image_url || "/placeholder.svg"}
-                      alt={`Tela do módulo ${feature.title} do ERP`}
-                      className="w-full h-full object-cover"
-                      loading="lazy"
-                    />
-                    {/* Overlay Gradient */}
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-black/30 to-transparent"></div>
-                    
-                    {/* Título Sobreposto */}
-                    <div className="absolute bottom-4 left-4 flex items-center text-white">
-                      {getIcon(feature.icon)}
-                      <h3 className="ml-2 text-xl md:text-2xl font-semibold drop-shadow-md">
-                        {feature.title}
-                      </h3>
-                    </div>
-                  </div>
-                  
-                  {/* Descrição Abaixo da Imagem */}
-                  <div className="mt-4 px-4 pb-6">
-                    <p className="text-base md:text-lg text-gray-800 font-medium leading-relaxed">
-                      {feature.description}
-                    </p>
-                  </div>
-                </div>
-              ))}
-            </div>
-
-            {/* Call to Action */}
-            {featuresSection.content_data?.cta_text && <div className="text-center bg-gradient-to-r from-primary/5 to-primary/10 rounded-2xl p-8 border border-primary/20">
-                <p className="text-lg mb-4">{featuresSection.content_data.cta_text}</p>
-                <Button size="lg" onClick={() => navigate('/auth')}>
-                  {featuresSection.content_data.cta_button || 'Começar Agora'}
-                  <ArrowRight className="ml-2 h-5 w-5" />
-                </Button>
-              </div>}
-          </div>
-        </section>}
 
       {/* Security Section - Nova implementação completa */}
       <section className="py-20 px-4 bg-background">
