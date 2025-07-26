@@ -2286,6 +2286,65 @@ export type Database = {
         }
         Relationships: []
       }
+      prompt_logs: {
+        Row: {
+          applied_at: string | null
+          applied_files: Json | null
+          company_id: string
+          created_at: string | null
+          error_message: string | null
+          generated_code: Json | null
+          id: string
+          model_used: string | null
+          prompt: string
+          rollback_data: Json | null
+          rolled_back_at: string | null
+          status: string | null
+          temperature: number | null
+          user_id: string
+        }
+        Insert: {
+          applied_at?: string | null
+          applied_files?: Json | null
+          company_id: string
+          created_at?: string | null
+          error_message?: string | null
+          generated_code?: Json | null
+          id?: string
+          model_used?: string | null
+          prompt: string
+          rollback_data?: Json | null
+          rolled_back_at?: string | null
+          status?: string | null
+          temperature?: number | null
+          user_id: string
+        }
+        Update: {
+          applied_at?: string | null
+          applied_files?: Json | null
+          company_id?: string
+          created_at?: string | null
+          error_message?: string | null
+          generated_code?: Json | null
+          id?: string
+          model_used?: string | null
+          prompt?: string
+          rollback_data?: Json | null
+          rolled_back_at?: string | null
+          status?: string | null
+          temperature?: number | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "prompt_logs_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       proposals: {
         Row: {
           accepted_at: string | null

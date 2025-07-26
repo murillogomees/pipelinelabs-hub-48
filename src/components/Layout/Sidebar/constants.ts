@@ -23,7 +23,8 @@ import {
   Activity,
   GitBranch,
   Code2,
-  Brain
+  Brain,
+  Wand2
 } from 'lucide-react';
 
 export const menuItems = [
@@ -99,7 +100,6 @@ export const menuItems = [
     path: '/app/configuracoes',
     submenu: [
       { title: 'Empresa', path: '/app/configuracoes', icon: Building2 },
-      
       { title: 'Meus Dados (LGPD)', path: '/app/user/dados-pessoais' }
     ]
   },
@@ -110,7 +110,6 @@ export const menuItems = [
     adminOnly: true,
     submenu: [
       { title: 'Usuários', path: '/app/admin/usuarios' },
-      
       { title: 'Integrações', path: '/app/admin/integracoes' },
       { title: 'Notificações', path: '/app/admin/notificacoes' },
       { title: 'Backup', path: '/app/admin/backup' },
@@ -120,8 +119,7 @@ export const menuItems = [
       { title: 'Versões', path: '/app/admin/versions', icon: GitBranch },
       { title: 'Logs de Auditoria', path: '/app/admin/audit-logs' },
       { title: 'Landing Page', path: '/app/admin/landing-page' },
-      { title: 'Engineering Insights', path: '/app/admin/engineering-notes', icon: Brain },
-      
+      { title: 'Painel Técnico IA', path: '/app/admin/prompt-generator', icon: Wand2 },
     ]
   }
 ];
