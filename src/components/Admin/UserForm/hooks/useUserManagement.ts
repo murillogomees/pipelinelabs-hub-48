@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { useToast } from '@/hooks/use-toast';
@@ -21,10 +20,10 @@ export function useUserManagement(onSave?: () => void, onClose?: () => void) {
   const [loading, setLoading] = useState(false);
   const { toast } = useToast();
 
-  // Fetch companies with explicit typing
+  // Fetch companies with simple query
   const companiesQuery = useQuery({
     queryKey: ['companies-for-user-form'],
-    queryFn: async (): Promise<SimpleCompany[]> => {
+    queryFn: async () => {
       const { data, error } = await supabase
         .from('companies')
         .select('id, name')
@@ -32,14 +31,14 @@ export function useUserManagement(onSave?: () => void, onClose?: () => void) {
         .order('name');
       
       if (error) throw error;
-      return data || [];
+      return data as SimpleCompany[];
     }
   });
 
-  // Fetch access levels with explicit typing
+  // Fetch access levels with simple query
   const accessLevelsQuery = useQuery({
     queryKey: ['access-levels-for-user-form'],
-    queryFn: async (): Promise<SimpleAccessLevel[]> => {
+    queryFn: async () => {
       const { data, error } = await supabase
         .from('access_levels')
         .select('*')
@@ -48,22 +47,16 @@ export function useUserManagement(onSave?: () => void, onClose?: () => void) {
       
       if (error) throw error;
       
-      // Explicitly transform the data to avoid type inference issues
-      const transformedData: SimpleAccessLevel[] = [];
-      if (data) {
-        for (const item of data) {
-          transformedData.push({
-            id: item.id,
-            name: item.name,
-            display_name: item.display_name,
-            permissions: typeof item.permissions === 'object' && item.permissions !== null 
-              ? item.permissions as Record<string, boolean>
-              : {}
-          });
-        }
-      }
+      const result: SimpleAccessLevel[] = (data || []).map(item => ({
+        id: item.id,
+        name: item.name,
+        display_name: item.display_name,
+        permissions: (item.permissions && typeof item.permissions === 'object') 
+          ? item.permissions as Record<string, boolean>
+          : {}
+      }));
       
-      return transformedData;
+      return result;
     }
   });
 
