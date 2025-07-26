@@ -1,6 +1,6 @@
+
 // Centralized exports for UI components
 
-// Base shadcn-ui components
 // Enhanced UI Components - Optimized for Pipeline Labs
 export * from './responsive-layout';
 export { OptimizedCard, StatsCard as OptimizedStatsCard, FeatureCard } from './optimized-card';
