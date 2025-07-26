@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
@@ -14,10 +15,11 @@ interface Column<T> {
 
 interface Action<T> {
   label: string;
-  icon?: React.ReactNode;
+  icon?: React.ReactNode | ((row: T) => React.ReactNode);
   onClick: (row: T) => void;
   variant?: 'default' | 'outline' | 'destructive' | 'secondary' | 'ghost' | 'link';
-  className?: string;
+  className?: string | ((row: T) => string);
+  show?: (row: T) => boolean;
 }
 
 interface DataTableProps<T> {
@@ -70,7 +72,7 @@ export function DataTable<T extends Record<string, any>>({
                     <TableCell>
                       <div className="flex space-x-2">
                         {actions.map((_, actionIndex) => (
-                          <Skeleton key={actionIndex} className="h-8 w-8" />
+                          <Skeleton key={actionIndex} className="h-8 w-20" />
                         ))}
                       </div>
                     </TableCell>
@@ -87,64 +89,83 @@ export function DataTable<T extends Record<string, any>>({
   return (
     <Card className={className}>
       <CardContent className="p-0">
-        <Table>
-          <TableHeader>
-            <TableRow>
-              {columns.map((column, index) => (
-                <TableHead key={index} className={column.className}>
-                  {column.header}
-                </TableHead>
-              ))}
-              {actions && actions.length > 0 && <TableHead>Ações</TableHead>}
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {data.length === 0 ? (
+        <div className="overflow-x-auto">
+          <Table>
+            <TableHeader>
               <TableRow>
-                <TableCell
-                  colSpan={columns.length + (actions && actions.length > 0 ? 1 : 0)}
-                  className="text-center py-8 text-muted-foreground"
-                >
-                  {emptyMessage}
-                </TableCell>
+                {columns.map((column, index) => (
+                  <TableHead key={index} className={column.className}>
+                    {column.header}
+                  </TableHead>
+                ))}
+                {actions && actions.length > 0 && (
+                  <TableHead className="text-right min-w-[200px]">Ações</TableHead>
+                )}
               </TableRow>
-            ) : (
-              data.map((row, index) => (
-                <TableRow
-                  key={index}
-                  className={rowClassName ? rowClassName(row) : ''}
-                >
-                  {columns.map((column, colIndex) => (
-                    <TableCell key={colIndex} className={column.className}>
-                      {column.render
-                        ? column.render(getValue(row, column.key as string), row)
-                        : getValue(row, column.key as string)
-                      }
-                    </TableCell>
-                  ))}
-                  {actions && actions.length > 0 && (
-                    <TableCell>
-                      <div className="flex space-x-2">
-                        {actions.map((action, actionIndex) => (
-                          <Button
-                            key={actionIndex}
-                            size="sm"
-                            variant={action.variant || 'outline'}
-                            onClick={() => action.onClick(row)}
-                            className={action.className}
-                            title={action.label}
-                          >
-                            {action.icon}
-                          </Button>
-                        ))}
-                      </div>
-                    </TableCell>
-                  )}
+            </TableHeader>
+            <TableBody>
+              {data.length === 0 ? (
+                <TableRow>
+                  <TableCell
+                    colSpan={columns.length + (actions && actions.length > 0 ? 1 : 0)}
+                    className="text-center py-8 text-muted-foreground"
+                  >
+                    {emptyMessage}
+                  </TableCell>
                 </TableRow>
-              ))
-            )}
-          </TableBody>
-        </Table>
+              ) : (
+                data.map((row, index) => (
+                  <TableRow
+                    key={index}
+                    className={rowClassName ? rowClassName(row) : ''}
+                  >
+                    {columns.map((column, colIndex) => (
+                      <TableCell key={colIndex} className={column.className}>
+                        {column.render
+                          ? column.render(getValue(row, column.key as string), row)
+                          : getValue(row, column.key as string)
+                        }
+                      </TableCell>
+                    ))}
+                    {actions && actions.length > 0 && (
+                      <TableCell className="text-right">
+                        <div className="flex justify-end space-x-1">
+                          {actions
+                            .filter(action => !action.show || action.show(row))
+                            .map((action, actionIndex) => {
+                              const IconComponent = typeof action.icon === 'function' 
+                                ? action.icon(row) 
+                                : action.icon;
+                              
+                              const actionClassName = typeof action.className === 'function'
+                                ? action.className(row)
+                                : action.className;
+
+                              return (
+                                <Button
+                                  key={actionIndex}
+                                  size="sm"
+                                  variant={action.variant || 'outline'}
+                                  onClick={() => action.onClick(row)}
+                                  className={actionClassName}
+                                  title={action.label}
+                                >
+                                  {IconComponent && React.isValidElement(IconComponent) 
+                                    ? IconComponent 
+                                    : React.createElement(IconComponent as React.ComponentType<any>, { className: "h-4 w-4" })
+                                  }
+                                </Button>
+                              );
+                            })}
+                        </div>
+                      </TableCell>
+                    )}
+                  </TableRow>
+                ))
+              )}
+            </TableBody>
+          </Table>
+        </div>
       </CardContent>
     </Card>
   );
