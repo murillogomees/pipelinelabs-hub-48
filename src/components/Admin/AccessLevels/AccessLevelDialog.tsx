@@ -1,5 +1,5 @@
 
-import React, { useEffect } from 'react';
+import React, { useEffect, useCallback } from 'react';
 import { useForm } from 'react-hook-form';
 import { BaseDialog } from '@/components/Base/BaseDialog';
 import { Button } from '@/components/ui/button';
@@ -104,14 +104,7 @@ type FormData = {
 export function AccessLevelDialog({ open, onOpenChange, accessLevel, onSave }: AccessLevelDialogProps) {
   const { toast } = useToast();
 
-  const {
-    register,
-    handleSubmit,
-    watch,
-    setValue,
-    reset,
-    formState: { isSubmitting }
-  } = useForm<FormData>({
+  const form = useForm<FormData>({
     defaultValues: {
       name: '',
       display_name: '',
@@ -121,28 +114,35 @@ export function AccessLevelDialog({ open, onOpenChange, accessLevel, onSave }: A
     }
   });
 
-  // Reset form when accessLevel or open state changes
+  const { register, handleSubmit, watch, setValue, reset, formState: { isSubmitting } } = form;
+
+  // Initialize form data when dialog opens or accessLevel changes
+  const initializeForm = useCallback(() => {
+    if (accessLevel) {
+      reset({
+        name: accessLevel.name,
+        display_name: accessLevel.display_name,
+        description: accessLevel.description || '',
+        is_active: accessLevel.is_active,
+        permissions: accessLevel.permissions || {}
+      });
+    } else {
+      reset({
+        name: '',
+        display_name: '',
+        description: '',
+        is_active: true,
+        permissions: {}
+      });
+    }
+  }, [accessLevel, reset]);
+
+  // Only initialize when dialog opens or accessLevel ID changes
   useEffect(() => {
     if (open) {
-      if (accessLevel) {
-        reset({
-          name: accessLevel.name,
-          display_name: accessLevel.display_name,
-          description: accessLevel.description || '',
-          is_active: accessLevel.is_active,
-          permissions: accessLevel.permissions || {}
-        });
-      } else {
-        reset({
-          name: '',
-          display_name: '',
-          description: '',
-          is_active: true,
-          permissions: {}
-        });
-      }
+      initializeForm();
     }
-  }, [accessLevel, open, reset]);
+  }, [open, accessLevel?.id, initializeForm]);
 
   const formData = watch();
 
