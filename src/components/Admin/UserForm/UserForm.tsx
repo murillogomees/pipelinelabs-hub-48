@@ -1,313 +1,266 @@
-
 import React, { useState, useEffect } from 'react';
-import { UserFormData, User } from './types';
+import { useUserManagement } from './hooks/useUserManagement';
 import { BasicInfoFields } from './components/BasicInfoFields';
 import { CompanySelector } from './components/CompanySelector';
 import { AccessLevelSelector } from './components/AccessLevelSelector';
-import { PasswordField } from './components/PasswordField';
 import { PermissionsSection } from './components/PermissionsSection';
-import { supabase } from '@/integrations/supabase/client';
-import { usePermissions } from '@/hooks/usePermissions';
-import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
-import { useQuery } from '@tanstack/react-query';
-import type { AccessLevel } from '../AccessLevels/types';
+import { PasswordField } from './components/PasswordField';
+import { Button } from '@/components/ui/button';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { AlertTriangle, Loader2 } from 'lucide-react';
+import type { UserFormData, User } from './types';
 
 interface UserFormProps {
   user?: User;
-  onSubmit: (formData: UserFormData) => void;
-  loading: boolean;
+  onSubmit: (data: UserFormData) => Promise<void>;
+  onCancel: () => void;
+  isLoading?: boolean;
 }
 
-const defaultFormData: UserFormData = {
-  display_name: '',
-  email: '',
-  is_active: true,
-  user_type: 'operador',
-  password: '',
-  company_id: '',
-  access_level_id: '',
-  permissions: {
-    dashboard: true,
-    vendas: false,
-    produtos: false,
-    clientes: false,
-    compras: false,
-    estoque: false,
-    financeiro: false,
-    notas_fiscais: false,
-    producao: false,
-    contratos: false,
-    relatorios: false,
-    analytics: false,
-    marketplace_canais: false,
-    integracoes: false,
-    configuracoes: false,
-  },
+const defaultPermissions = {
+  dashboard: true,
+  vendas: true,
+  produtos: true,
+  clientes: true,
+  compras: true,
+  estoque: true,
+  financeiro: false,
+  notas_fiscais: false,
+  producao: true,
+  contratos: false,
+  relatorios: true,
+  analytics: false,
+  marketplace_canais: false,
+  integracoes: false,
+  configuracoes: false,
 };
 
-export function UserForm({ user, onSubmit, loading }: UserFormProps) {
-  const [formData, setFormData] = useState<UserFormData>(defaultFormData);
-  const [defaultCompanyId, setDefaultCompanyId] = useState('');
-  const [showDowngradeAlert, setShowDowngradeAlert] = useState(false);
-  const [pendingAccessLevel, setPendingAccessLevel] = useState<string | null>(null);
-  const { isSuperAdmin, isContratante } = usePermissions();
+export function UserForm({ user, onSubmit, onCancel, isLoading }: UserFormProps) {
+  const {
+    companies,
+    accessLevels,
+    isLoadingCompanies,
+    isLoadingAccessLevels
+  } = useUserManagement();
 
-  // Buscar níveis de acesso para mapear permissões
-  const { data: accessLevels = [] } = useQuery({
-    queryKey: ['access-levels'],
-    queryFn: async (): Promise<AccessLevel[]> => {
-      try {
-        const { data, error } = await supabase
-          .from('access_levels')
-          .select('*')
-          .eq('is_active', true);
-
-        if (error) throw error;
-        return (data || []).map((item: any) => ({
-          id: item.id,
-          name: item.name,
-          display_name: item.display_name,
-          description: item.description || '',
-          permissions: item.permissions || {},
-          is_system: item.is_system || false,
-          is_active: item.is_active || false,
-          created_at: item.created_at,
-          updated_at: item.updated_at
-        })) as AccessLevel[];
-      } catch (error) {
-        console.error('Error fetching access levels:', error);
-        return [];
-      }
+  const [formData, setFormData] = useState<UserFormData>(() => {
+    if (user && user.user_companies.length > 0) {
+      const userCompany = user.user_companies[0];
+      return {
+        display_name: user.display_name,
+        email: user.email,
+        is_active: user.is_active,
+        user_type: userCompany.user_type,
+        access_level_id: userCompany.access_level_id || '',
+        company_id: userCompany.company_id,
+        permissions: userCompany.permissions as UserFormData['permissions'] || defaultPermissions,
+      };
     }
+
+    return {
+      display_name: '',
+      email: '',
+      is_active: true,
+      user_type: 'operador',
+      access_level_id: '',
+      company_id: '',
+      permissions: defaultPermissions,
+    };
   });
 
-  // Carregar empresa padrão
-  useEffect(() => {
-    const loadDefaultCompany = async () => {
-      try {
-        const { data } = await supabase.rpc('get_default_company_id');
-        if (data) {
-          setDefaultCompanyId(String(data));
-        } else {
-          const { data: company } = await supabase
-            .from('companies')
-            .select('id')
-            .eq('name', 'Pipeline Labs')
-            .single();
-          
-          if (company) {
-            setDefaultCompanyId(company.id);
-          }
-        }
-      } catch (error) {
-        // Error loading default company
-      }
-    };
-    loadDefaultCompany();
-  }, []);
+  const [errors, setErrors] = useState<Partial<UserFormData>>({});
+  const [showAccessLevelAlert, setShowAccessLevelAlert] = useState(false);
 
   useEffect(() => {
-    if (user) {
-      const userCompany = user.user_companies && user.user_companies.length > 0 
-        ? user.user_companies[0] 
-        : null;
-        
-      setFormData({
-        display_name: user.display_name || '',
-        email: user.email || '',
-        is_active: user.is_active,
-        user_type: userCompany?.user_type || 'operador',
-        access_level_id: userCompany?.access_level_id || '',
-        password: '',
-        company_id: userCompany?.company_id || '',
-        permissions: {
-          dashboard: true,
-          vendas: false,
-          produtos: false,
-          clientes: false,
-          compras: false,
-          estoque: false,
-          financeiro: false,
-          notas_fiscais: false,
-          producao: false,
-          contratos: false,
-          relatorios: false,
-          analytics: false,
-          marketplace_canais: false,
-          integracoes: false,
-          configuracoes: false,
-          ...(userCompany?.permissions || {})
-        }
-      });
-    } else if (defaultCompanyId) {
-      setFormData({
-        ...defaultFormData,
-        company_id: defaultCompanyId
-      });
+    if (companies.length > 0 && !formData.company_id && !user) {
+      setFormData(prev => ({
+        ...prev,
+        company_id: companies[0].id,
+      }));
     }
-  }, [user, defaultCompanyId]);
+  }, [companies, formData.company_id, user]);
 
-  const handleFieldChange = (field: string, value: string | boolean) => {
-    setFormData(prev => ({ ...prev, [field]: value }));
+  const validateEmail = (email: string): boolean => {
+    return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
   };
 
-  const mergePermissions = (basePermissions: UserFormData['permissions'], newPermissions: Record<string, boolean>): UserFormData['permissions'] => {
-    return {
-      dashboard: newPermissions.dashboard ?? basePermissions.dashboard,
-      vendas: newPermissions.vendas ?? basePermissions.vendas,
-      produtos: newPermissions.produtos ?? basePermissions.produtos,
-      clientes: newPermissions.clientes ?? basePermissions.clientes,
-      compras: newPermissions.compras ?? basePermissions.compras,
-      estoque: newPermissions.estoque ?? basePermissions.estoque,
-      financeiro: newPermissions.financeiro ?? basePermissions.financeiro,
-      notas_fiscais: newPermissions.notas_fiscais ?? basePermissions.notas_fiscais,
-      producao: newPermissions.producao ?? basePermissions.producao,
-      contratos: newPermissions.contratos ?? basePermissions.contratos,
-      relatorios: newPermissions.relatorios ?? basePermissions.relatorios,
-      analytics: newPermissions.analytics ?? basePermissions.analytics,
-      marketplace_canais: newPermissions.marketplace_canais ?? basePermissions.marketplace_canais,
-      integracoes: newPermissions.integracoes ?? basePermissions.integracoes,
-      configuracoes: newPermissions.configuracoes ?? basePermissions.configuracoes,
-    };
+  const validateForm = (): boolean => {
+    const newErrors: Partial<UserFormData> = {};
+
+    if (!formData.display_name.trim()) {
+      newErrors.display_name = 'Nome é obrigatório';
+    }
+
+    if (!formData.email.trim()) {
+      newErrors.email = 'Email é obrigatório';
+    } else if (!validateEmail(formData.email)) {
+      newErrors.email = 'Email inválido';
+    }
+
+    if (!formData.company_id) {
+      newErrors.company_id = 'Empresa é obrigatória';
+    }
+
+    if (!user && !formData.password) {
+      newErrors.password = 'Senha é obrigatória para novos usuários';
+    }
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
   };
 
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+
+    if (!validateForm()) {
+      return;
+    }
+
+    try {
+      await onSubmit(formData);
+    } catch (error) {
+      console.error('Error submitting form:', error);
+    }
+  };
+
+  // Handle access level change
   const handleAccessLevelChange = (accessLevelId: string) => {
     const selectedLevel = accessLevels.find(level => level.id === accessLevelId);
-    const currentLevel = accessLevels.find(level => level.id === formData.access_level_id);
     
-    if (user && currentLevel && selectedLevel) {
-      // Verificar se é downgrade (de super_admin para outro ou de contratante para operador)
-      const isDowngrade = (
-        (currentLevel.name === 'super_admin' && selectedLevel.name !== 'super_admin') ||
-        (currentLevel.name === 'contratante' && selectedLevel.name === 'operador')
-      );
+    if (selectedLevel) {
+      // Check if changing from a higher level to a lower one
+      const currentLevel = accessLevels.find(level => level.id === formData.access_level_id);
+      const isDowngrade = currentLevel && 
+        ((currentLevel.name === 'super_admin' && selectedLevel.name !== 'super_admin') ||
+         (currentLevel.name === 'contratante' && selectedLevel.name === 'operador'));
       
       if (isDowngrade) {
-        setPendingAccessLevel(accessLevelId);
-        setShowDowngradeAlert(true);
-        return;
+        setShowAccessLevelAlert(true);
       }
-    }
-    
-    // Aplicar mudança diretamente
-    if (selectedLevel) {
-      const newUserType: 'super_admin' | 'contratante' | 'operador' = selectedLevel.name === 'super_admin' 
-        ? 'super_admin' 
-        : selectedLevel.name === 'contratante' 
-        ? 'contratante' 
-        : 'operador';
+
+      // Map access level to user type for non-super_admin levels
+      let userType: 'contratante' | 'operador' = 'operador';
+      if (selectedLevel.name === 'contratante') {
+        userType = 'contratante';
+      } else if (selectedLevel.name === 'operador') {
+        userType = 'operador';
+      }
 
       setFormData(prev => ({
         ...prev,
         access_level_id: accessLevelId,
-        user_type: newUserType,
-        permissions: mergePermissions(prev.permissions, selectedLevel.permissions || {})
+        user_type: userType,
+        permissions: {
+          ...defaultPermissions,
+          ...(selectedLevel.permissions || {}),
+        },
       }));
     }
   };
 
-  const confirmDowngrade = () => {
-    if (pendingAccessLevel) {
-      const selectedLevel = accessLevels.find(level => level.id === pendingAccessLevel);
-      if (selectedLevel) {
-        const newUserType: 'super_admin' | 'contratante' | 'operador' = selectedLevel.name === 'super_admin' 
-          ? 'super_admin' 
-          : selectedLevel.name === 'contratante' 
-          ? 'contratante' 
-          : 'operador';
+  // Handle user type change (for super_admin only)
+  const handleUserTypeChange = (userType: 'super_admin' | 'contratante' | 'operador') => {
+    // For super_admin, clear access level since they don't use it
+    const updates: Partial<UserFormData> = {
+      user_type: userType,
+    };
 
-        setFormData(prev => ({
-          ...prev,
-          access_level_id: pendingAccessLevel,
-          user_type: newUserType,
-          permissions: mergePermissions(prev.permissions, selectedLevel.permissions || {})
-        }));
-      }
-      setPendingAccessLevel(null);
+    if (userType === 'super_admin') {
+      updates.access_level_id = '';
+      updates.permissions = {
+        dashboard: true,
+        vendas: true,
+        produtos: true,
+        clientes: true,
+        compras: true,
+        estoque: true,
+        financeiro: true,
+        notas_fiscais: true,
+        producao: true,
+        contratos: true,
+        relatorios: true,
+        analytics: true,
+        marketplace_canais: true,
+        integracoes: true,
+        configuracoes: true,
+      };
     }
-    setShowDowngradeAlert(false);
-  };
 
-  const cancelDowngrade = () => {
-    setPendingAccessLevel(null);
-    setShowDowngradeAlert(false);
-  };
-
-  const handlePermissionChange = (permission: string, value: boolean) => {
     setFormData(prev => ({
       ...prev,
-      permissions: {
-        ...prev.permissions,
-        [permission]: value
-      }
+      ...updates,
     }));
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    onSubmit(formData);
-  };
+  if (isLoadingCompanies || isLoadingAccessLevels) {
+    return (
+      <div className="flex items-center justify-center p-6">
+        <Loader2 className="w-6 h-6 animate-spin" />
+        <span className="ml-2">Carregando...</span>
+      </div>
+    );
+  }
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-4">
-      <BasicInfoFields 
+    <form onSubmit={handleSubmit} className="space-y-6">
+      {showAccessLevelAlert && (
+        <Alert variant="destructive">
+          <AlertTriangle className="h-4 w-4" />
+          <AlertDescription>
+            Atenção: Você está diminuindo o nível de acesso deste usuário. 
+            Isso pode restringir suas permissões atuais.
+          </AlertDescription>
+        </Alert>
+      )}
+
+      <BasicInfoFields
         formData={formData}
-        onChange={handleFieldChange}
-        isEditing={!!user}
+        setFormData={setFormData}
+        errors={errors}
+        userType={formData.user_type}
+        onUserTypeChange={handleUserTypeChange}
       />
 
       <CompanySelector
         value={formData.company_id}
-        onChange={(value) => handleFieldChange('company_id', value)}
-        disabled={!!user}
-        isRequired={!user}
+        onChange={(company_id) => setFormData(prev => ({ ...prev, company_id }))}
+        companies={companies}
+        error={errors.company_id}
       />
 
-      <AccessLevelSelector
-        value={formData.access_level_id}
-        onChange={handleAccessLevelChange}
-        disabled={!!user && user.user_companies?.[0]?.user_type === 'super_admin'}
-      />
-
-      <PasswordField
-        value={formData.password}
-        onChange={(value) => handleFieldChange('password', value)}
-        isEditing={!!user}
-      />
-
-      {(isSuperAdmin || isContratante) && (
-        <PermissionsSection
-          permissions={formData.permissions}
-          onPermissionChange={handlePermissionChange}
+      {formData.user_type !== 'super_admin' && (
+        <AccessLevelSelector
+          value={formData.access_level_id}
+          onChange={handleAccessLevelChange}
+          accessLevels={accessLevels}
           userType={formData.user_type}
         />
       )}
 
-      <div className="flex justify-end space-x-2 pt-4">
-        <button
-          type="submit"
-          disabled={loading}
-          className="px-4 py-2 bg-primary text-primary-foreground rounded-md hover:bg-primary/90 disabled:opacity-50"
-        >
-          {loading ? 'Salvando...' : user ? 'Atualizar' : 'Criar'}
-        </button>
-      </div>
+      <PermissionsSection
+        permissions={formData.permissions}
+        onChange={(permissions) => setFormData(prev => ({ ...prev, permissions }))}
+        userType={formData.user_type}
+        accessLevelId={formData.access_level_id}
+      />
 
-      <AlertDialog open={showDowngradeAlert} onOpenChange={setShowDowngradeAlert}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Confirmar Alteração de Nível</AlertDialogTitle>
-            <AlertDialogDescription>
-              Você está alterando para um nível de acesso com menos privilégios. Isso reduzirá as permissões do usuário.
-              Tem certeza que deseja continuar?
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel onClick={cancelDowngrade}>Cancelar</AlertDialogCancel>
-            <AlertDialogAction onClick={confirmDowngrade}>Confirmar</AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+      {!user && (
+        <PasswordField
+          value={formData.password || ''}
+          onChange={(password) => setFormData(prev => ({ ...prev, password }))}
+          error={errors.password}
+        />
+      )}
+
+      <div className="flex justify-end space-x-2">
+        <Button type="button" variant="outline" onClick={onCancel}>
+          Cancelar
+        </Button>
+        <Button type="submit" disabled={isLoading}>
+          {isLoading && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
+          {user ? 'Atualizar' : 'Criar'} Usuário
+        </Button>
+      </div>
     </form>
   );
 }

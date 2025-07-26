@@ -1,151 +1,178 @@
 
-import { 
-  LayoutDashboard, 
-  ShoppingCart, 
-  Package, 
-  Users, 
-  Building2, 
-  Warehouse, 
-  CreditCard, 
-  FileText, 
-  Wrench, 
-  ClipboardList, 
-  BarChart3, 
-  Link, 
-  Settings, 
+import {
+  LayoutDashboard,
+  ShoppingCart,
+  Package,
+  Users,
+  Building,
+  Warehouse,
+  DollarSign,
+  FileText,
+  Cog,
+  BarChart3,
+  Wrench,
   Shield,
-  UserCheck,
-  Building
-} from "lucide-react";
-import type { MenuItem } from "./types";
+  Store,
+  Link
+} from 'lucide-react';
+import type { MenuItem } from './types';
 
 export const menuItems: MenuItem[] = [
   {
-    id: "dashboard",
-    label: "Dashboard",
+    id: 'dashboard',
+    title: 'Dashboard',
+    path: '/app',
+    href: '/app',
     icon: LayoutDashboard,
-    href: "/app/dashboard",
-    order: 1
+    order: 1,
   },
   {
-    id: "vendas",
-    label: "Vendas",
+    id: 'vendas',
+    title: 'Vendas',
+    path: '/app/vendas',
+    href: '/app/vendas',
     icon: ShoppingCart,
-    href: "/app/vendas",
-    order: 2
+    order: 2,
   },
   {
-    id: "produtos",
-    label: "Produtos",
+    id: 'produtos',
+    title: 'Produtos',
+    path: '/app/produtos',
+    href: '/app/produtos',
     icon: Package,
-    href: "/app/produtos",
-    order: 3
+    order: 3,
   },
   {
-    id: "clientes",
-    label: "Clientes",
+    id: 'clientes',
+    title: 'Clientes',
+    path: '/app/clientes',
+    href: '/app/clientes',
     icon: Users,
-    href: "/app/clientes",
-    order: 4
+    order: 4,
   },
   {
-    id: "compras",
-    label: "Compras",
-    icon: ShoppingCart,
-    href: "/app/compras",
-    order: 5
+    id: 'compras',
+    title: 'Compras',
+    path: '/app/compras',
+    href: '/app/compras',
+    icon: Building,
+    order: 5,
   },
   {
-    id: "estoque",
-    label: "Estoque",
+    id: 'estoque',
+    title: 'Estoque',
+    path: '/app/estoque',
+    href: '/app/estoque',
     icon: Warehouse,
-    href: "/app/estoque",
-    order: 6
+    order: 6,
   },
   {
-    id: "financeiro",
-    label: "Financeiro",
-    icon: CreditCard,
-    href: "/app/financeiro",
-    order: 7
+    id: 'financeiro',
+    title: 'Financeiro',
+    path: '/app/financeiro',
+    href: '/app/financeiro',
+    icon: DollarSign,
+    order: 7,
   },
   {
-    id: "notas_fiscais",
-    label: "Notas Fiscais",
+    id: 'notas_fiscais',
+    title: 'Notas Fiscais',
+    path: '/app/notas-fiscais',
+    href: '/app/notas-fiscais',
     icon: FileText,
-    href: "/app/notas-fiscais",
-    order: 8
+    order: 8,
   },
   {
-    id: "producao",
-    label: "Produção",
+    id: 'producao',
+    title: 'Produção',
+    path: '/app/producao',
+    href: '/app/producao',
     icon: Wrench,
-    href: "/app/producao",
-    order: 9
+    order: 9,
   },
   {
-    id: "contratos",
-    label: "Contratos",
-    icon: ClipboardList,
-    href: "/app/contratos",
-    order: 10
-  },
-  {
-    id: "relatorios",
-    label: "Relatórios",
+    id: 'relatorios',
+    title: 'Relatórios',
+    path: '/app/relatorios',
+    href: '/app/relatorios',
     icon: BarChart3,
-    href: "/app/relatorios",
-    order: 11
+    order: 10,
   },
   {
-    id: "analytics",
-    label: "Analytics",
+    id: 'analytics',
+    title: 'Analytics',
+    path: '/app/analytics',
+    href: '/app/analytics',
     icon: BarChart3,
-    href: "/app/analytics",
-    order: 12
+    order: 11,
   },
   {
-    id: "marketplace_canais",
-    label: "Marketplace Canais",
+    id: 'marketplace_canais',
+    title: 'Marketplace',
+    path: '/app/marketplace-channels',
+    href: '/app/marketplace-channels',
+    icon: Store,
+    order: 12,
+  },
+  {
+    id: 'integracoes',
+    title: 'Integrações',
+    path: '/app/integracoes',
+    href: '/app/integracoes',
     icon: Link,
-    href: "/app/marketplace-channels",
-    order: 13
+    order: 13,
   },
   {
-    id: "integracoes",
-    label: "Integrações",
-    icon: Link,
-    href: "/app/integracoes",
-    order: 14
+    id: 'configuracoes',
+    title: 'Configurações',
+    path: '/app/configuracoes',
+    href: '/app/configuracoes',
+    icon: Cog,
+    order: 14,
   },
   {
-    id: "configuracoes",
-    label: "Configurações",
-    icon: Settings,
-    href: "/app/configuracoes",
-    order: 15
-  },
-  {
-    id: "admin",
-    label: "Administração",
+    id: 'admin',
+    title: 'Administração',
+    path: '/app/admin',
+    href: '/app/admin',
     icon: Shield,
-    href: "#",
-    order: 100,
+    adminOnly: true,
+    order: 15,
     submenu: [
       {
-        id: "admin-usuarios",
-        label: "Usuários e Empresas",
-        icon: UserCheck,
-        href: "/app/admin/usuarios",
-        order: 1
+        id: 'admin_usuarios',
+        title: 'Usuários',
+        path: '/app/admin/usuarios',
+        href: '/app/admin/usuarios',
+        order: 1,
       },
       {
-        id: "admin-niveis-acesso",
-        label: "Níveis de Acesso",
-        icon: Shield,
-        href: "/app/admin/niveis-acesso",
-        order: 2
-      }
-    ]
-  }
+        id: 'admin_niveis_acesso',
+        title: 'Níveis de Acesso',
+        path: '/app/admin/niveis-acesso',
+        href: '/app/admin/niveis-acesso',
+        order: 2,
+      },
+    ],
+  },
+];
+
+// Legacy exports for backward compatibility
+export const adminMenuItems: Omit<MenuItem, "submenu">[] = [
+  {
+    id: 'admin_cache',
+    title: 'Cache',
+    path: '/app/admin/cache',
+    href: '/app/admin/cache',
+    icon: Shield,
+    order: 100,
+  },
+  {
+    id: 'admin_seguranca',
+    title: 'Segurança',
+    path: '/app/admin/seguranca',
+    href: '/app/admin/seguranca',
+    icon: Shield,
+    order: 101,
+  },
 ];

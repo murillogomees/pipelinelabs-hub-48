@@ -1,19 +1,24 @@
 
-import type { LucideIcon } from 'lucide-react';
+export interface MenuItem {
+  id: string;
+  title: string;
+  path: string;
+  href: string;
+  icon: React.ComponentType<any>;
+  adminOnly?: boolean;
+  order: number;
+  submenu?: SubMenuItem[];
+}
 
 export interface SubMenuItem {
   id: string;
-  label: string;
-  icon: LucideIcon;
+  title: string;
+  path: string;
   href: string;
   order: number;
 }
 
-export interface MenuItem {
-  id: string;
-  label: string;
-  icon: LucideIcon;
-  href: string;
-  order: number;
-  submenu?: SubMenuItem[];
+export interface SidebarProps {
+  collapsed: boolean;
+  onNavigate?: () => void;
 }
