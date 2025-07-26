@@ -1,6 +1,6 @@
 
-import React, { useState, useCallback, useMemo } from 'react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
+import React, { useCallback, useMemo } from 'react';
+import { BaseDialog, useDialog } from '@/components/Base/BaseDialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -11,6 +11,7 @@ import { Badge } from '@/components/ui/badge';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { Shield, Settings, Activity } from 'lucide-react';
+import { useBaseForm } from '@/hooks/useBaseForm';
 import type { AccessLevel } from './types';
 
 interface AccessLevelDialogProps {
@@ -92,119 +93,80 @@ const permissionCategories = [
   }
 ];
 
+type FormData = {
+  name: string;
+  display_name: string;
+  description: string;
+  is_active: boolean;
+  permissions: Record<string, boolean>;
+};
+
 export function AccessLevelDialog({ open, onOpenChange, accessLevel, onSave }: AccessLevelDialogProps) {
   const { toast } = useToast();
 
-  // Use useMemo to create initial form data based on accessLevel
-  const initialFormData = useMemo(() => {
-    if (accessLevel) {
-      return {
-        name: accessLevel.name || '',
-        display_name: accessLevel.display_name || '',
-        description: accessLevel.description || '',
-        is_active: accessLevel.is_active ?? true,
-        permissions: accessLevel.permissions || {}
-      };
-    }
-    return {
-      name: '',
-      display_name: '',
-      description: '',
-      is_active: true,
-      permissions: {} as Record<string, boolean>
+  const defaultValues = useMemo<FormData>(() => ({
+    name: accessLevel?.name || '',
+    display_name: accessLevel?.display_name || '',
+    description: accessLevel?.description || '',
+    is_active: accessLevel?.is_active ?? true,
+    permissions: accessLevel?.permissions || {}
+  }), [accessLevel]);
+
+  const handleSubmitData = useCallback(async (data: FormData) => {
+    const submitData = {
+      ...data,
+      name: data.name.toLowerCase().replace(/\s+/g, '_')
     };
-  }, [accessLevel?.id, accessLevel?.name, accessLevel?.display_name, accessLevel?.description, accessLevel?.is_active, JSON.stringify(accessLevel?.permissions || {})]);
 
-  const [formData, setFormData] = useState(initialFormData);
-  const [loading, setLoading] = useState(false);
+    if (accessLevel) {
+      const { error } = await supabase
+        .from('access_levels')
+        .update(submitData)
+        .eq('id', accessLevel.id);
 
-  // Reset form data when dialog opens or accessLevel changes
-  const resetFormData = useMemo(() => {
-    if (open) {
-      setFormData(initialFormData);
+      if (error) throw error;
+    } else {
+      const { error } = await supabase
+        .from('access_levels')
+        .insert([submitData]);
+
+      if (error) throw error;
     }
-  }, [open, initialFormData]);
+
+    onSave();
+    onOpenChange(false);
+  }, [accessLevel, onSave, onOpenChange]);
+
+  const { form, handleSubmit, isSubmitting } = useBaseForm<FormData>({
+    defaultValues,
+    onSubmit: handleSubmitData,
+    successMessage: `Nível de acesso ${accessLevel ? 'atualizado' : 'criado'} com sucesso`,
+    errorMessage: `Falha ao ${accessLevel ? 'atualizar' : 'criar'} nível de acesso`,
+    resetOnSuccess: false
+  });
+
+  const { watch, setValue } = form;
+  const formData = watch();
 
   const handlePermissionChange = useCallback((permission: string, value: boolean) => {
-    setFormData(prev => ({
-      ...prev,
-      permissions: {
-        ...prev.permissions,
-        [permission]: value
-      }
-    }));
-  }, []);
-
-  const handleFieldChange = useCallback((field: string, value: string | boolean) => {
-    setFormData(prev => {
-      if (field === 'display_name' && typeof value === 'string') {
-        return {
-          ...prev,
-          display_name: value,
-          name: value.toLowerCase().replace(/\s+/g, '_')
-        };
-      }
-      if (field === 'is_active' && typeof value === 'boolean') {
-        return {
-          ...prev,
-          is_active: value
-        };
-      }
-      if (typeof value === 'string') {
-        return {
-          ...prev,
-          [field]: value
-        };
-      }
-      return prev;
+    const currentPermissions = formData.permissions || {};
+    setValue('permissions', {
+      ...currentPermissions,
+      [permission]: value
     });
-  }, []);
+  }, [setValue, formData.permissions]);
 
-  const handleSubmit = useCallback(async (e: React.FormEvent) => {
-    e.preventDefault();
-    setLoading(true);
-
-    try {
-      const data = {
-        ...formData,
-        name: formData.name.toLowerCase().replace(/\s+/g, '_')
-      };
-
-      if (accessLevel) {
-        const { error } = await supabase
-          .from('access_levels')
-          .update(data)
-          .eq('id', accessLevel.id);
-
-        if (error) throw error;
-      } else {
-        const { error } = await supabase
-          .from('access_levels')
-          .insert([data]);
-
-        if (error) throw error;
-      }
-
-      toast({
-        title: "Sucesso",
-        description: `Nível de acesso ${accessLevel ? 'atualizado' : 'criado'} com sucesso`,
-      });
-
-      onSave();
-    } catch (error) {
-      console.error('Error saving access level:', error);
-      toast({
-        title: "Erro",
-        description: `Falha ao ${accessLevel ? 'atualizar' : 'criar'} nível de acesso`,
-        variant: "destructive",
-      });
-    } finally {
-      setLoading(false);
+  const handleFieldChange = useCallback((field: keyof FormData, value: string | boolean) => {
+    if (field === 'display_name' && typeof value === 'string') {
+      setValue('display_name', value);
+      setValue('name', value.toLowerCase().replace(/\s+/g, '_'));
+    } else {
+      setValue(field, value);
     }
-  }, [formData, accessLevel, toast, onSave]);
+  }, [setValue]);
 
   const enabledPermissions = useMemo(() => 
-    Object.values(formData.permissions).filter(Boolean).length
+    Object.values(formData.permissions || {}).filter(Boolean).length
   , [formData.permissions]);
 
   const totalPermissions = useMemo(() => 
@@ -212,161 +174,157 @@ export function AccessLevelDialog({ open, onOpenChange, accessLevel, onSave }: A
   , []);
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-4xl max-h-[90vh] overflow-hidden flex flex-col">
-        <DialogHeader className="pb-4 border-b">
-          <DialogTitle className="text-xl font-semibold flex items-center space-x-2">
-            <Shield className="h-5 w-5 text-primary" />
-            <span>{accessLevel ? 'Editar Nível de Acesso' : 'Novo Nível de Acesso'}</span>
-          </DialogTitle>
-        </DialogHeader>
-
-        <form onSubmit={handleSubmit} className="flex-1 overflow-y-auto space-y-6 pr-2">
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="display_name">Nome de Exibição</Label>
-              <Input
-                id="display_name"
-                value={formData.display_name}
-                onChange={(e) => handleFieldChange('display_name', e.target.value)}
-                placeholder="Ex: Administrador da Empresa"
-                required
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="name">Nome Interno</Label>
-              <Input
-                id="name"
-                value={formData.name}
-                onChange={(e) => handleFieldChange('name', e.target.value.toLowerCase().replace(/\s+/g, '_'))}
-                placeholder="Ex: admin_empresa"
-                disabled={accessLevel?.is_system}
-              />
-            </div>
+    <BaseDialog
+      open={open}
+      onOpenChange={onOpenChange}
+      title={accessLevel ? 'Editar Nível de Acesso' : 'Novo Nível de Acesso'}
+      maxWidth="xl"
+    >
+      <form onSubmit={handleSubmit} className="space-y-6">
+        <div className="grid grid-cols-2 gap-4">
+          <div className="space-y-2">
+            <Label htmlFor="display_name">Nome de Exibição</Label>
+            <Input
+              id="display_name"
+              value={formData.display_name}
+              onChange={(e) => handleFieldChange('display_name', e.target.value)}
+              placeholder="Ex: Administrador da Empresa"
+              required
+            />
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="description">Descrição</Label>
-            <Textarea
-              id="description"
-              value={formData.description}
-              onChange={(e) => handleFieldChange('description', e.target.value)}
-              placeholder="Descreva as responsabilidades deste nível de acesso"
-              rows={3}
+            <Label htmlFor="name">Nome Interno</Label>
+            <Input
+              id="name"
+              value={formData.name}
+              onChange={(e) => handleFieldChange('name', e.target.value.toLowerCase().replace(/\s+/g, '_'))}
+              placeholder="Ex: admin_empresa"
+              disabled={accessLevel?.is_system}
             />
           </div>
+        </div>
 
-          <div className="flex items-center space-x-2">
-            <Switch
-              checked={formData.is_active}
-              onCheckedChange={(checked) => handleFieldChange('is_active', checked)}
-            />
-            <Label>Nível de acesso ativo</Label>
-          </div>
+        <div className="space-y-2">
+          <Label htmlFor="description">Descrição</Label>
+          <Textarea
+            id="description"
+            value={formData.description}
+            onChange={(e) => handleFieldChange('description', e.target.value)}
+            placeholder="Descreva as responsabilidades deste nível de acesso"
+            rows={3}
+          />
+        </div>
 
-          <Card className="border-0 shadow-lg bg-gradient-to-br from-background to-muted/20">
-            <CardHeader className="pb-6">
-              <div className="flex items-center space-x-3">
-                <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center">
-                  <Settings className="w-5 h-5 text-primary" />
-                </div>
-                <div>
-                  <CardTitle className="text-xl font-semibold">Permissões de Acesso</CardTitle>
-                  <CardDescription className="text-sm text-muted-foreground mt-1">
-                    Configure os módulos e funcionalidades que este nível pode acessar
-                  </CardDescription>
-                </div>
+        <div className="flex items-center space-x-2">
+          <Switch
+            checked={formData.is_active}
+            onCheckedChange={(checked) => handleFieldChange('is_active', checked)}
+          />
+          <Label>Nível de acesso ativo</Label>
+        </div>
+
+        <Card className="border-0 shadow-lg bg-gradient-to-br from-background to-muted/20">
+          <CardHeader className="pb-6">
+            <div className="flex items-center space-x-3">
+              <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center">
+                <Settings className="w-5 h-5 text-primary" />
               </div>
-            </CardHeader>
-            <CardContent className="space-y-8">
-              {permissionCategories.map((category) => {
-                const categoryPermissions = category.permissions.filter(p => formData.permissions[p.key]);
-                
-                return (
-                  <div key={category.name} className="space-y-4">
-                    <div className="flex items-center justify-between pb-2 border-b border-border/50">
-                      <div className="flex items-center space-x-3">
-                        <Badge 
-                          variant="secondary" 
-                          className="px-3 py-1 text-sm font-medium bg-primary/10 text-primary border-primary/20"
-                        >
-                          {category.name}
-                        </Badge>
-                        <span className="text-xs text-muted-foreground">
-                          {categoryPermissions.length} de {category.permissions.length} habilitados
-                        </span>
-                      </div>
-                    </div>
-                    
-                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-                      {category.permissions.map((permission) => {
-                        const isEnabled = formData.permissions[permission.key] || false;
-                        
-                        return (
-                          <div
-                            key={permission.key}
-                            className={`group relative p-4 rounded-xl border transition-all duration-200 cursor-pointer ${
-                              isEnabled 
-                                ? 'bg-primary/5 border-primary/20 shadow-sm hover:shadow-md' 
-                                : 'bg-card hover:bg-muted/30 border-border hover:border-border/80'
-                            }`}
-                            onClick={() => handlePermissionChange(permission.key, !isEnabled)}
-                          >
-                            <div className="flex items-start space-x-3">
-                              <div className={`w-8 h-8 rounded-lg flex items-center justify-center transition-colors ${
-                                isEnabled 
-                                  ? 'bg-primary/10 text-primary' 
-                                  : 'bg-muted text-muted-foreground group-hover:bg-primary/5 group-hover:text-primary'
-                              }`}>
-                                <Settings className="w-4 h-4" />
-                              </div>
-                              <div className="flex-1 min-w-0">
-                                <div className="flex items-center justify-between mb-1">
-                                  <Label className="text-sm font-medium cursor-pointer leading-none">
-                                    {permission.label}
-                                  </Label>
-                                  <Switch
-                                    checked={isEnabled}
-                                    onCheckedChange={(checked) => handlePermissionChange(permission.key, checked)}
-                                    className="data-[state=checked]:bg-primary scale-90"
-                                  />
-                                </div>
-                                <p className="text-xs text-muted-foreground leading-relaxed">
-                                  {permission.description}
-                                </p>
-                              </div>
-                            </div>
-                          </div>
-                        );
-                      })}
+              <div>
+                <CardTitle className="text-xl font-semibold">Permissões de Acesso</CardTitle>
+                <CardDescription className="text-sm text-muted-foreground mt-1">
+                  Configure os módulos e funcionalidades que este nível pode acessar
+                </CardDescription>
+              </div>
+            </div>
+          </CardHeader>
+          <CardContent className="space-y-8">
+            {permissionCategories.map((category) => {
+              const categoryPermissions = category.permissions.filter(p => formData.permissions?.[p.key]);
+              
+              return (
+                <div key={category.name} className="space-y-4">
+                  <div className="flex items-center justify-between pb-2 border-b border-border/50">
+                    <div className="flex items-center space-x-3">
+                      <Badge 
+                        variant="secondary" 
+                        className="px-3 py-1 text-sm font-medium bg-primary/10 text-primary border-primary/20"
+                      >
+                        {category.name}
+                      </Badge>
+                      <span className="text-xs text-muted-foreground">
+                        {categoryPermissions.length} de {category.permissions.length} habilitados
+                      </span>
                     </div>
                   </div>
-                );
-              })}
-              
-              <div className="mt-8 p-4 rounded-lg bg-muted/30 border border-border/50">
-                <div className="flex items-center space-x-2 text-sm text-muted-foreground">
-                  <Activity className="w-4 h-4" />
-                  <span>
-                    Total: <strong>{enabledPermissions}</strong> de{' '}
-                    <strong>{totalPermissions}</strong> funcionalidades habilitadas
-                  </span>
+                  
+                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                    {category.permissions.map((permission) => {
+                      const isEnabled = formData.permissions?.[permission.key] || false;
+                      
+                      return (
+                        <div
+                          key={permission.key}
+                          className={`group relative p-4 rounded-xl border transition-all duration-200 cursor-pointer ${
+                            isEnabled 
+                              ? 'bg-primary/5 border-primary/20 shadow-sm hover:shadow-md' 
+                              : 'bg-card hover:bg-muted/30 border-border hover:border-border/80'
+                          }`}
+                          onClick={() => handlePermissionChange(permission.key, !isEnabled)}
+                        >
+                          <div className="flex items-start space-x-3">
+                            <div className={`w-8 h-8 rounded-lg flex items-center justify-center transition-colors ${
+                              isEnabled 
+                                ? 'bg-primary/10 text-primary' 
+                                : 'bg-muted text-muted-foreground group-hover:bg-primary/5 group-hover:text-primary'
+                            }`}>
+                              <Settings className="w-4 h-4" />
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <div className="flex items-center justify-between mb-1">
+                                <Label className="text-sm font-medium cursor-pointer leading-none">
+                                  {permission.label}
+                                </Label>
+                                <Switch
+                                  checked={isEnabled}
+                                  onCheckedChange={(checked) => handlePermissionChange(permission.key, checked)}
+                                  className="data-[state=checked]:bg-primary scale-90"
+                                />
+                              </div>
+                              <p className="text-xs text-muted-foreground leading-relaxed">
+                                {permission.description}
+                              </p>
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
                 </div>
+              );
+            })}
+            
+            <div className="mt-8 p-4 rounded-lg bg-muted/30 border border-border/50">
+              <div className="flex items-center space-x-2 text-sm text-muted-foreground">
+                <Activity className="w-4 h-4" />
+                <span>
+                  Total: <strong>{enabledPermissions}</strong> de{' '}
+                  <strong>{totalPermissions}</strong> funcionalidades habilitadas
+                </span>
               </div>
-            </CardContent>
-          </Card>
-        </form>
+            </div>
+          </CardContent>
+        </Card>
 
-        <DialogFooter className="pt-4 border-t mt-4">
+        <div className="flex justify-end space-x-2 pt-4 border-t">
           <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
             Cancelar
           </Button>
-          <Button type="submit" disabled={loading} onClick={handleSubmit}>
-            {loading ? 'Salvando...' : accessLevel ? 'Atualizar' : 'Criar'}
+          <Button type="submit" disabled={isSubmitting}>
+            {isSubmitting ? 'Salvando...' : accessLevel ? 'Atualizar' : 'Criar'}
           </Button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
+        </div>
+      </form>
+    </BaseDialog>
   );
 }
