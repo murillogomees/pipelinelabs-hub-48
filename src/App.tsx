@@ -1,11 +1,10 @@
-
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { ReactQueryDevtools } from '@tanstack/react-query-devtools';
 import { Toaster } from '@/components/ui/toaster';
 import { AuthProvider } from '@/components/Auth/AuthProvider';
 import { AnalyticsProvider } from '@/components/Analytics/AnalyticsProvider';
-import { SentryErrorBoundary } from '@/components/ErrorBoundary/SentryErrorBoundary';
+import { ErrorBoundary } from '@/components/ErrorBoundary/ErrorBoundary';
 import { NetworkStatusIndicator } from '@/components/Network/NetworkStatusIndicator';
 import { MainLayout } from '@/components/Layout/MainLayout';
 import { PrivateRoute } from '@/components/Auth/PrivateRoute';
@@ -73,7 +72,7 @@ const queryClient = new QueryClient({
 
 function App() {
   return (
-    <SentryErrorBoundary>
+    <ErrorBoundary>
       <QueryClientProvider client={queryClient}>
         <AuthProvider>
           <Router>
@@ -336,7 +335,7 @@ function App() {
         
         {import.meta.env.DEV && <ReactQueryDevtools initialIsOpen={false} />}
       </QueryClientProvider>
-    </SentryErrorBoundary>
+    </ErrorBoundary>
   );
 }
 
