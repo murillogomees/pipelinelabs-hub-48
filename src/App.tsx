@@ -16,6 +16,7 @@ import { ErrorBoundary } from '@/components/ErrorBoundary';
 import { SentryErrorBoundary } from '@/components/ErrorBoundary/SentryErrorBoundary';
 
 // Lazy load pages
+const LandingPage = React.lazy(() => import('@/pages/LandingPage'));
 const Auth = React.lazy(() => import('@/pages/Auth'));
 const Dashboard = React.lazy(() => import('@/pages/Dashboard'));
 const Vendas = React.lazy(() => import('@/pages/Vendas'));
@@ -69,7 +70,17 @@ function App() {
                       <PrivacyConsentProvider>
                         <TermsProvider>
                           <Routes>
-                            {/* Public routes */}
+                            {/* Public landing page */}
+                            <Route 
+                              path="/" 
+                              element={
+                                <React.Suspense fallback={<div>Carregando...</div>}>
+                                  <LandingPage />
+                                </React.Suspense>
+                              } 
+                            />
+
+                            {/* Auth route */}
                             <Route 
                               path="/auth" 
                               element={
@@ -85,7 +96,7 @@ function App() {
                                 <MainLayout>
                                   <React.Suspense fallback={<div>Carregando...</div>}>
                                     <Routes>
-                                      <Route index element={<Dashboard />} />
+                                      <Route path="dashboard" element={<Dashboard />} />
                                       <Route path="vendas" element={<Vendas />} />
                                       <Route path="produtos" element={<Produtos />} />
                                       <Route path="clientes" element={<Clientes />} />
@@ -129,14 +140,14 @@ function App() {
                                           <AdminSeguranca />
                                         </ProtectedRoute>
                                       } />
+
+                                      {/* Redirect /app to /app/dashboard */}
+                                      <Route index element={<Navigate to="dashboard" replace />} />
                                     </Routes>
                                   </React.Suspense>
                                 </MainLayout>
                               </ProtectedRoute>
                             } />
-
-                            {/* Root redirect */}
-                            <Route path="/" element={<Navigate to="/app" replace />} />
                             
                             {/* 404 page */}
                             <Route path="*" element={
