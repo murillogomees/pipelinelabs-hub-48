@@ -1,9 +1,10 @@
 
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { EnhancedButton as Button } from '@/components/ui/enhanced-button';
+import { EnhancedButton as Button, buttonVariants } from '@/components/ui/enhanced-button';
 import { ArrowRight, TrendingUp } from 'lucide-react';
 import { ResponsiveContainer, ResponsiveSection } from '@/components/ui/responsive-layout';
+import { cn } from '@/lib/utils';
 
 interface HeroSectionProps {
   title: string;
@@ -27,17 +28,19 @@ export function HeroSection({ title, subtitle }: HeroSectionProps) {
             </div>
 
             <div className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start">
-              <Button asChild size="lg" className="text-base sm:text-lg px-8 py-4">
-                <Link to="/app/dashboard">
-                  Acessar Dashboard
-                  <ArrowRight className="w-5 h-5 ml-2" />
-                </Link>
-              </Button>
-              <Button asChild variant="outline" size="lg" className="text-base sm:text-lg px-8 py-4">
-                <Link to="/auth">
-                  Começar Grátis
-                </Link>
-              </Button>
+              <Link 
+                to="/app/dashboard"
+                className={cn(buttonVariants({ size: "lg" }), "text-base sm:text-lg px-8 py-4")}
+              >
+                Acessar Dashboard
+                <ArrowRight className="w-5 h-5 ml-2" />
+              </Link>
+              <Link 
+                to="/auth"
+                className={cn(buttonVariants({ variant: "outline", size: "lg" }), "text-base sm:text-lg px-8 py-4")}
+              >
+                Começar Grátis
+              </Link>
             </div>
 
             {/* Trust indicators */}

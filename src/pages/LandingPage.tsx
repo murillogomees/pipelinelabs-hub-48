@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { EnhancedButton as Button } from '@/components/ui/enhanced-button';
+import { EnhancedButton as Button, buttonVariants } from '@/components/ui/enhanced-button';
 import { ArrowRight } from 'lucide-react';
 import { HeroSection } from '@/components/LandingPage/HeroSection';
 import { FeaturesSection } from '@/components/LandingPage/FeaturesSection';
@@ -10,6 +10,7 @@ import { PricingSection } from '@/components/LandingPage/PricingSection';
 import { ResponsiveContainer, ResponsiveSection } from '@/components/ui/responsive-layout';
 import { useLandingPageContent } from '@/hooks/useLandingPageContent';
 import { useLandingPagePlans } from '@/hooks/useLandingPagePlans';
+import { cn } from '@/lib/utils';
 
 export default function LandingPage() {
   const { sections, isLoading: isContentLoading, getSection } = useLandingPageContent();
@@ -59,17 +60,19 @@ export default function LandingPage() {
             </div>
             
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <Button asChild size="lg" className="text-lg px-8 py-4">
-                <Link to="/auth">
-                  Começar Grátis
-                  <ArrowRight className="w-5 h-5 ml-2" />
-                </Link>
-              </Button>
-              <Button asChild variant="outline" size="lg" className="text-lg px-8 py-4">
-                <Link to="/app/dashboard">
-                  Ver Demo
-                </Link>
-              </Button>
+              <Link 
+                to="/auth"
+                className={cn(buttonVariants({ size: "lg" }), "text-lg px-8 py-4")}
+              >
+                Começar Grátis
+                <ArrowRight className="w-5 h-5 ml-2" />
+              </Link>
+              <Link 
+                to="/app/dashboard"
+                className={cn(buttonVariants({ variant: "outline", size: "lg" }), "text-lg px-8 py-4")}
+              >
+                Ver Demo
+              </Link>
             </div>
             
             <div className="text-sm text-muted-foreground space-y-2">
