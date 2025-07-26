@@ -10,6 +10,7 @@ import { useEnhancedAuthForm } from './hooks/useEnhancedAuthForm';
 import { PasswordStrengthValidator } from '@/components/Security/PasswordStrengthValidator';
 import { CSRFToken } from '@/components/Security/CSRFProtection';
 import { SecurityBoundary } from '@/components/Security/SecurityBoundary';
+import { cleanDocument } from '@/utils/documentValidation';
 
 export function AuthForm() {
   const [isSignUp, setIsSignUp] = useState(false);
@@ -21,7 +22,7 @@ export function AuthForm() {
     companyName: '',
     document: '',
     phone: '',
-    documentType: 'cpf' as 'cpf' | 'cnpj' // Fix: explicitly type as union type
+    documentType: 'cpf' as 'cpf' | 'cnpj'
   });
 
   const { 
@@ -45,15 +46,19 @@ export function AuthForm() {
       return;
     }
 
-    await handleAuth(isSignUp, formData);
+    await handleAuth(isSignUp, {
+      ...formData,
+      documentType: formData.documentType
+    });
   };
 
-  const handleInputChange = (field: string, value: string) => {
-    if (field === 'documentType') {
-      setFormData(prev => ({ ...prev, [field]: value as 'cpf' | 'cnpj' }));
-    } else {
-      setFormData(prev => ({ ...prev, [field]: value }));
-    }
+  const handleFormDataChange = (updates: Partial<typeof formData>) => {
+    setFormData(prev => ({ ...prev, ...updates }));
+  };
+
+  const handleDocumentChange = (value: string) => {
+    const cleaned = cleanDocument(value);
+    setFormData(prev => ({ ...prev, document: cleaned }));
   };
 
   if (rateLimited) {
@@ -105,7 +110,7 @@ export function AuthForm() {
                     id="email"
                     type="email"
                     value={formData.email}
-                    onChange={(e) => handleInputChange('email', e.target.value)}
+                    onChange={(e) => handleFormDataChange({ email: e.target.value })}
                     required
                     autoComplete="email"
                   />
@@ -117,7 +122,7 @@ export function AuthForm() {
                     id="password"
                     type="password"
                     value={formData.password}
-                    onChange={(e) => handleInputChange('password', e.target.value)}
+                    onChange={(e) => handleFormDataChange({ password: e.target.value })}
                     required
                     autoComplete="current-password"
                   />
@@ -126,8 +131,10 @@ export function AuthForm() {
 
               <TabsContent value="signup" className="space-y-4">
                 <AuthFormFields
+                  isSignUp={isSignUp}
                   formData={formData}
-                  onInputChange={handleInputChange}
+                  onFormDataChange={handleFormDataChange}
+                  onDocumentChange={handleDocumentChange}
                 />
 
                 <PasswordStrengthValidator
