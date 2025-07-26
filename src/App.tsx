@@ -1,4 +1,3 @@
-
 import React, { Suspense } from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
@@ -42,7 +41,6 @@ const AdminMonitoramento = React.lazy(() => import('@/pages/AdminMonitoramento')
 const AdminVersions = React.lazy(() => import('@/pages/AdminVersions'));
 const AdminAuditLogs = React.lazy(() => import('@/pages/AdminAuditLogs'));
 const AdminLandingPage = React.lazy(() => import('@/pages/AdminLandingPage'));
-const AdminEngineeringNotes = React.lazy(() => import('@/pages/AdminEngineeringNotes'));
 const TermosDeUso = React.lazy(() => import('@/pages/TermosDeUso'));
 const Privacidade = React.lazy(() => import('@/pages/Privacidade'));
 const NotFound = React.lazy(() => import('@/pages/NotFound'));
@@ -114,7 +112,6 @@ function App() {
                                   <Route path="admin/versions" element={<AdminVersions />} />
                                   <Route path="admin/audit-logs" element={<AdminAuditLogs />} />
                                   <Route path="admin/landing-page" element={<AdminLandingPage />} />
-                                  <Route path="admin/engineering-notes" element={<AdminEngineeringNotes />} />
                                 </Routes>
                               </ProtectedRoute>
                             } />
