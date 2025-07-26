@@ -1,66 +1,17 @@
+
 import { useState } from 'react';
-import { useQuery } from '@tanstack/react-query';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { UserFormData } from '../types';
-
-interface SimpleCompany {
-  id: string;
-  name: string;
-}
-
-interface SimpleAccessLevel {
-  id: string;
-  name: string;
-  display_name: string;
-  permissions: Record<string, boolean>;
-}
+import { useCompaniesQuery } from './useCompaniesQuery';
+import { useAccessLevelsQuery } from './useAccessLevelsQuery';
 
 export function useUserManagement(onSave?: () => void, onClose?: () => void) {
   const [loading, setLoading] = useState(false);
   const { toast } = useToast();
 
-  // Fetch companies - let TypeScript infer the type
-  const companiesQuery = useQuery({
-    queryKey: ['companies-for-user-form'],
-    queryFn: async (): Promise<SimpleCompany[]> => {
-      const { data, error } = await supabase
-        .from('companies')
-        .select('id, name')
-        .eq('is_active', true)
-        .order('name');
-      
-      if (error) throw error;
-      
-      return (data || []).map(item => ({
-        id: item.id,
-        name: item.name
-      }));
-    }
-  });
-
-  // Fetch access levels - let TypeScript infer the type
-  const accessLevelsQuery = useQuery({
-    queryKey: ['access-levels-for-user-form'],
-    queryFn: async (): Promise<SimpleAccessLevel[]> => {
-      const { data, error } = await supabase
-        .from('access_levels')
-        .select('id, name, display_name, permissions')
-        .eq('is_active', true)
-        .order('name');
-      
-      if (error) throw error;
-      
-      return (data || []).map(item => ({
-        id: item.id,
-        name: item.name,
-        display_name: item.display_name,
-        permissions: (item.permissions && typeof item.permissions === 'object') 
-          ? item.permissions as Record<string, boolean>
-          : {}
-      }));
-    }
-  });
+  const companiesQuery = useCompaniesQuery();
+  const accessLevelsQuery = useAccessLevelsQuery();
 
   const createUser = async (formData: UserFormData) => {
     // Criar o usuário no auth
