@@ -48,14 +48,22 @@ export function useUserManagement(onSave?: () => void, onClose?: () => void) {
       
       if (error) throw error;
       
-      return (data || []).map(item => ({
-        id: item.id,
-        name: item.name,
-        display_name: item.display_name,
-        permissions: typeof item.permissions === 'object' && item.permissions !== null 
-          ? item.permissions as Record<string, boolean>
-          : {}
-      }));
+      // Explicitly transform the data to avoid type inference issues
+      const transformedData: SimpleAccessLevel[] = [];
+      if (data) {
+        for (const item of data) {
+          transformedData.push({
+            id: item.id,
+            name: item.name,
+            display_name: item.display_name,
+            permissions: typeof item.permissions === 'object' && item.permissions !== null 
+              ? item.permissions as Record<string, boolean>
+              : {}
+          });
+        }
+      }
+      
+      return transformedData;
     }
   });
 
