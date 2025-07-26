@@ -5,14 +5,26 @@ import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { UserFormData } from '../types';
 
+interface SimpleCompany {
+  id: string;
+  name: string;
+}
+
+interface SimpleAccessLevel {
+  id: string;
+  name: string;
+  display_name: string;
+  permissions: Record<string, boolean>;
+}
+
 export function useUserManagement(onSave?: () => void, onClose?: () => void) {
   const [loading, setLoading] = useState(false);
   const { toast } = useToast();
 
-  // Fetch companies
-  const { data: companies = [], isLoading: isLoadingCompanies } = useQuery({
+  // Fetch companies with explicit typing
+  const companiesQuery = useQuery({
     queryKey: ['companies-for-user-form'],
-    queryFn: async () => {
+    queryFn: async (): Promise<SimpleCompany[]> => {
       const { data, error } = await supabase
         .from('companies')
         .select('id, name')
@@ -24,10 +36,10 @@ export function useUserManagement(onSave?: () => void, onClose?: () => void) {
     }
   });
 
-  // Fetch access levels
-  const { data: accessLevels = [], isLoading: isLoadingAccessLevels } = useQuery({
+  // Fetch access levels with explicit typing
+  const accessLevelsQuery = useQuery({
     queryKey: ['access-levels-for-user-form'],
-    queryFn: async () => {
+    queryFn: async (): Promise<SimpleAccessLevel[]> => {
       const { data, error } = await supabase
         .from('access_levels')
         .select('*')
@@ -233,10 +245,10 @@ export function useUserManagement(onSave?: () => void, onClose?: () => void) {
 
   return {
     loading,
-    companies,
-    accessLevels,
-    isLoadingCompanies,
-    isLoadingAccessLevels,
+    companies: companiesQuery.data || [],
+    accessLevels: accessLevelsQuery.data || [],
+    isLoadingCompanies: companiesQuery.isLoading,
+    isLoadingAccessLevels: accessLevelsQuery.isLoading,
     handleSubmit
   };
 }
