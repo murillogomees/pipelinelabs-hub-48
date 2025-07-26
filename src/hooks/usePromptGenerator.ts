@@ -57,7 +57,9 @@ export const usePromptGenerator = () => {
         temperature: item.temperature,
         status: item.status as 'pending' | 'applied' | 'error' | 'rolled_back',
         error_message: item.error_message,
-        applied_files: Array.isArray(item.applied_files) ? item.applied_files : [],
+        applied_files: Array.isArray(item.applied_files) 
+          ? item.applied_files.map(file => String(file))
+          : [],
         created_at: item.created_at,
         applied_at: item.applied_at,
         rolled_back_at: item.rolled_back_at,
