@@ -1,3 +1,4 @@
+
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { useToast } from '@/hooks/use-toast';
@@ -23,7 +24,7 @@ export function useUserManagement(onSave?: () => void, onClose?: () => void) {
   // Fetch companies
   const { data: companies = [], isLoading: isLoadingCompanies } = useQuery({
     queryKey: ['companies-for-user-form'],
-    queryFn: async (): Promise<Company[]> => {
+    queryFn: async () => {
       const { data, error } = await supabase
         .from('companies')
         .select('id, name')
@@ -38,7 +39,7 @@ export function useUserManagement(onSave?: () => void, onClose?: () => void) {
   // Fetch access levels
   const { data: accessLevels = [], isLoading: isLoadingAccessLevels } = useQuery({
     queryKey: ['access-levels-for-user-form'],
-    queryFn: async (): Promise<AccessLevel[]> => {
+    queryFn: async () => {
       const { data, error } = await supabase
         .from('access_levels')
         .select('*')
@@ -46,7 +47,15 @@ export function useUserManagement(onSave?: () => void, onClose?: () => void) {
         .order('name');
       
       if (error) throw error;
-      return data || [];
+      
+      return (data || []).map(item => ({
+        id: item.id,
+        name: item.name,
+        display_name: item.display_name,
+        permissions: typeof item.permissions === 'object' && item.permissions !== null 
+          ? item.permissions as Record<string, boolean>
+          : {}
+      }));
     }
   });
 

@@ -42,7 +42,6 @@ export function UserForm({ user, onSubmit, onCancel, isLoading }: UserFormProps)
     accessLevels,
     isLoadingCompanies,
     isLoadingAccessLevels,
-    handleSubmit
   } = useUserManagement();
 
   const [formData, setFormData] = useState<UserFormData>(() => {
@@ -167,35 +166,35 @@ export function UserForm({ user, onSubmit, onCancel, isLoading }: UserFormProps)
   // Handle user type change (for super_admin only)
   const handleUserTypeChange = (userType: 'super_admin' | 'contratante' | 'operador') => {
     // For super_admin, clear access level since they don't use it
-    const updates: Partial<UserFormData> = {
-      user_type: userType,
-    };
-
     if (userType === 'super_admin') {
-      updates.access_level_id = '';
-      updates.permissions = {
-        dashboard: true,
-        vendas: true,
-        produtos: true,
-        clientes: true,
-        compras: true,
-        estoque: true,
-        financeiro: true,
-        notas_fiscais: true,
-        producao: true,
-        contratos: true,
-        relatorios: true,
-        analytics: true,
-        marketplace_canais: true,
-        integracoes: true,
-        configuracoes: true,
-      };
+      setFormData(prev => ({
+        ...prev,
+        user_type: userType,
+        access_level_id: '',
+        permissions: {
+          dashboard: true,
+          vendas: true,
+          produtos: true,
+          clientes: true,
+          compras: true,
+          estoque: true,
+          financeiro: true,
+          notas_fiscais: true,
+          producao: true,
+          contratos: true,
+          relatorios: true,
+          analytics: true,
+          marketplace_canais: true,
+          integracoes: true,
+          configuracoes: true,
+        },
+      }));
+    } else {
+      setFormData(prev => ({
+        ...prev,
+        user_type: userType,
+      }));
     }
-
-    setFormData(prev => ({
-      ...prev,
-      ...updates,
-    }));
   };
 
   const handleFieldChange = (field: string, value: string | boolean) => {
@@ -253,12 +252,15 @@ export function UserForm({ user, onSubmit, onCancel, isLoading }: UserFormProps)
         />
       )}
 
-      <PermissionsSection
-        permissions={formData.permissions}
-        onChange={(permissions) => setFormData(prev => ({ ...prev, permissions }))}
-        userType={formData.user_type}
-        accessLevelId={formData.access_level_id}
-      />
+      {/* Only show PermissionsSection for non-super_admin users */}
+      {formData.user_type !== 'super_admin' && (
+        <PermissionsSection
+          permissions={formData.permissions}
+          onChange={(permissions) => setFormData(prev => ({ ...prev, permissions }))}
+          userType={formData.user_type as 'contratante' | 'operador'}
+          accessLevelId={formData.access_level_id}
+        />
+      )}
 
       {!user && (
         <PasswordField
