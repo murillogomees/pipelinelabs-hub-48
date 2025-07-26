@@ -14,8 +14,8 @@ export default function Producao() {
   const [isServiceDialogOpen, setIsServiceDialogOpen] = useState(false);
   const [selectedOrder, setSelectedOrder] = useState(null);
 
-  const { productionOrders, isLoading: isLoadingProduction } = useProductionOrders();
-  const { serviceOrders, isLoading: isLoadingService } = useServiceOrders();
+  const { orders: productionOrders, loading: isLoadingProduction } = useProductionOrders();
+  const { orders: serviceOrders, loading: isLoadingService } = useServiceOrders();
 
   const productionColumns = [
     { key: 'code', label: 'Código' },
@@ -67,7 +67,7 @@ export default function Producao() {
           <BaseTable
             data={productionOrders || []}
             columns={productionColumns}
-            isLoading={isLoadingProduction}
+            loading={isLoadingProduction}
             onEdit={(order) => {
               setSelectedOrder(order);
               setIsProductionDialogOpen(true);
@@ -86,7 +86,7 @@ export default function Producao() {
           <BaseTable
             data={serviceOrders || []}
             columns={serviceColumns}
-            isLoading={isLoadingService}
+            loading={isLoadingService}
             onEdit={(order) => {
               setSelectedOrder(order);
               setIsServiceDialogOpen(true);

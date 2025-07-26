@@ -11,7 +11,7 @@ export default function Clientes() {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(null);
   
-  const { customers, isLoading } = useCustomers();
+  const { customers, loading, createCustomer, updateCustomer } = useCustomers();
 
   const columns = [
     { key: 'name', label: 'Nome' },
@@ -54,7 +54,7 @@ export default function Clientes() {
       <BaseTable
         data={customers || []}
         columns={columns}
-        isLoading={isLoading}
+        loading={loading}
         onEdit={handleEdit}
       />
 
@@ -62,6 +62,8 @@ export default function Clientes() {
         open={isDialogOpen}
         onOpenChange={handleCloseDialog}
         customer={selectedCustomer}
+        onSave={createCustomer}
+        onUpdate={updateCustomer}
       />
     </div>
   );

@@ -10,7 +10,7 @@ import { ProtectedRoute } from '@/components/ProtectedRoute';
 import type { IntegrationAvailable } from '@/components/Admin/Integrations/types';
 import type { IntegrationFormData } from '@/components/Admin/Integrations/schema';
 
-export function AdminIntegracoes() {
+export default function AdminIntegracoes() {
   const [createDialog, setCreateDialog] = useState(false);
   const [editDialog, setEditDialog] = useState<{open: boolean, integration?: IntegrationAvailable}>({open: false});
   

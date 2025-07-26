@@ -1,7 +1,8 @@
+
 import React from 'react';
 import { CompressionMonitor } from '@/components/Admin/CompressionMonitor';
 
-export function AdminCompressao() {
+export default function AdminCompressao() {
   return (
     <div className="space-y-6">
       <div>

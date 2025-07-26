@@ -22,7 +22,7 @@ const SystemMockups = () => (
 );
 
 export default function LandingPage() {
-  const { content, isLoading: isContentLoading } = useLandingPageContent();
+  const { sections, isLoading: isContentLoading, getSection } = useLandingPageContent();
   const { plans, isLoading: isPlansLoading } = useLandingPagePlans();
 
   if (isContentLoading || isPlansLoading) {
@@ -36,7 +36,13 @@ export default function LandingPage() {
     );
   }
 
-  if (!content || !plans) {
+  const heroSection = getSection('hero');
+  const featuresSection = getSection('features');
+  const testimonialsSection = getSection('testimonials');
+  const pricingSection = getSection('pricing');
+  const ctaSection = getSection('cta');
+
+  if (!heroSection || !plans) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
         <div className="text-center space-y-2">
@@ -54,10 +60,10 @@ export default function LandingPage() {
           <div className="lg:flex items-center justify-between gap-12">
             <div className="lg:w-1/2 text-center lg:text-left">
               <h1 className="text-4xl sm:text-5xl md:text-6xl font-bold text-foreground mb-6">
-                {content.hero_title}
+                {heroSection.title}
               </h1>
               <p className="text-lg text-muted-foreground leading-relaxed mb-8">
-                {content.hero_subtitle}
+                {heroSection.subtitle}
               </p>
               <div className="space-x-4">
                 <Button asChild size="lg">
@@ -85,14 +91,14 @@ export default function LandingPage() {
         <div className="container mx-auto px-4">
           <div className="text-center mb-12">
             <h2 className="text-3xl font-semibold text-foreground mb-4">
-              {content.features_title}
+              {featuresSection?.title || 'Funcionalidades'}
             </h2>
             <p className="text-muted-foreground leading-relaxed max-w-3xl mx-auto">
-              {content.features_subtitle}
+              {featuresSection?.subtitle || 'Conheça nossas principais funcionalidades'}
             </p>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {content.features.map((feature, index) => (
+            {featuresSection?.content?.features?.map((feature: any, index: number) => (
               <Card key={index} className="bg-card/70 backdrop-blur">
                 <CardHeader>
                   <CardTitle className="flex items-center gap-3">
@@ -106,7 +112,7 @@ export default function LandingPage() {
                   </p>
                 </CardContent>
               </Card>
-            ))}
+            )) || []}
           </div>
         </div>
       </section>
@@ -116,22 +122,22 @@ export default function LandingPage() {
         <div className="container mx-auto px-4">
           <div className="text-center mb-12">
             <h2 className="text-3xl font-semibold text-foreground mb-4">
-              {content.testimonials_title}
+              {testimonialsSection?.title || 'Depoimentos'}
             </h2>
             <p className="text-muted-foreground leading-relaxed max-w-3xl mx-auto">
-              {content.testimonials_subtitle}
+              {testimonialsSection?.subtitle || 'Veja o que nossos clientes dizem'}
             </p>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {content.testimonials.map((testimonial, index) => (
+            {testimonialsSection?.content?.testimonials?.map((testimonial: any, index: number) => (
               <PersonaCard
                 key={index}
                 name={testimonial.name}
-                role={testimonial.title}
+                position={testimonial.title}
                 avatar={testimonial.avatar}
                 description={testimonial.comment}
               />
-            ))}
+            )) || []}
           </div>
         </div>
       </section>
@@ -141,10 +147,10 @@ export default function LandingPage() {
         <div className="container mx-auto px-4">
           <div className="text-center mb-12">
             <h2 className="text-3xl font-semibold text-foreground mb-4">
-              {content.pricing_title}
+              {pricingSection?.title || 'Planos e Preços'}
             </h2>
             <p className="text-muted-foreground leading-relaxed max-w-3xl mx-auto">
-              {content.pricing_subtitle}
+              {pricingSection?.subtitle || 'Escolha o plano ideal para seu negócio'}
             </p>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
@@ -184,10 +190,10 @@ export default function LandingPage() {
         <div className="container mx-auto px-4">
           <div className="text-center">
             <h2 className="text-3xl font-semibold text-foreground mb-4">
-              {content.cta_title}
+              {ctaSection?.title || 'Pronto para começar?'}
             </h2>
             <p className="text-muted-foreground leading-relaxed max-w-3xl mx-auto mb-8">
-              {content.cta_subtitle}
+              {ctaSection?.subtitle || 'Comece a usar o Pipeline Labs hoje mesmo'}
             </p>
             <Button asChild size="lg">
               <Link to="/auth">
