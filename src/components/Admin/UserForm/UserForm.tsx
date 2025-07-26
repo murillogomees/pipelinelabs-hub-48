@@ -256,9 +256,17 @@ export function UserForm({ user, onSubmit, onCancel, isLoading }: UserFormProps)
       {formData.user_type !== 'super_admin' && (
         <PermissionsSection
           permissions={formData.permissions}
-          onChange={(permissions) => setFormData(prev => ({ ...prev, permissions }))}
+          onPermissionChange={(permission: string, value: boolean) => {
+            setFormData(prev => ({
+              ...prev,
+              permissions: {
+                ...prev.permissions,
+                [permission]: value,
+              },
+            }));
+          }}
           userType={formData.user_type as 'contratante' | 'operador'}
-          accessLevelId={formData.access_level_id}
+          disabled={false}
         />
       )}
 

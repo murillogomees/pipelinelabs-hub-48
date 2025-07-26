@@ -1,21 +1,8 @@
-
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { UserFormData } from '../types';
-
-interface Company {
-  id: string;
-  name: string;
-}
-
-interface AccessLevel {
-  id: string;
-  name: string;
-  display_name: string;
-  permissions: Record<string, boolean>;
-}
 
 export function useUserManagement(onSave?: () => void, onClose?: () => void) {
   const [loading, setLoading] = useState(false);
