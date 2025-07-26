@@ -21,7 +21,7 @@ export function AuthForm() {
     companyName: '',
     document: '',
     phone: '',
-    documentType: 'cpf' // Add the missing documentType property
+    documentType: 'cpf' as 'cpf' | 'cnpj' // Fix: explicitly type as union type
   });
 
   const { 
@@ -49,7 +49,11 @@ export function AuthForm() {
   };
 
   const handleInputChange = (field: string, value: string) => {
-    setFormData(prev => ({ ...prev, [field]: value }));
+    if (field === 'documentType') {
+      setFormData(prev => ({ ...prev, [field]: value as 'cpf' | 'cnpj' }));
+    } else {
+      setFormData(prev => ({ ...prev, [field]: value }));
+    }
   };
 
   if (rateLimited) {

@@ -15,6 +15,7 @@ interface SecurityConfig {
 
 export function useSecurityConfig() {
   const { toast } = useToast();
+  const queryClient = useQueryClient();
 
   // For now, return mock data since the table doesn't exist in the current schema
   const { data: configs, isLoading, error } = useQuery({
@@ -64,6 +65,7 @@ export function useSecurityConfig() {
       return { success: true };
     },
     onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['security-config'] });
       toast({
         title: 'Sucesso',
         description: 'Configuração de segurança atualizada',
@@ -82,6 +84,12 @@ export function useSecurityConfig() {
     return configs?.find(config => config.config_key === key);
   };
 
+  // Transform data to match the expected structure
+  const transformedData = configs?.reduce((acc, config) => {
+    acc[config.config_key] = config.config_value;
+    return acc;
+  }, {} as Record<string, any>);
+
   return {
     configs: configs || [],
     isLoading,
@@ -89,5 +97,13 @@ export function useSecurityConfig() {
     updateConfig: updateConfigMutation.mutate,
     isUpdating: updateConfigMutation.isPending,
     getConfig,
+    // Add the data property that AdminSegurancaConfig expects
+    data: transformedData
   };
+}
+
+// Export the update function separately
+export function useUpdateSecurityConfig() {
+  const { updateConfig } = useSecurityConfig();
+  return updateConfig;
 }

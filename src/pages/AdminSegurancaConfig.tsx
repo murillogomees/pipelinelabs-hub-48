@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { AdminPageLayout } from '@/components/Admin/AdminPageLayout';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -7,13 +6,12 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { useSecurityConfig, useUpdateSecurityConfig } from '@/hooks/useSecurityConfig';
+import { useSecurityConfig } from '@/hooks/useSecurityConfig';
 import { useToast } from '@/hooks/use-toast';
 import { Shield, Key, Clock, Database, AlertTriangle } from 'lucide-react';
 
 export default function AdminSegurancaConfig() {
-  const { data: securityConfig, isLoading } = useSecurityConfig();
-  const updateConfig = useUpdateSecurityConfig();
+  const { data: securityConfig, isLoading, updateConfig } = useSecurityConfig();
   const { toast } = useToast();
 
   if (isLoading) {
@@ -26,7 +24,7 @@ export default function AdminSegurancaConfig() {
 
   const handleUpdateConfig = async (configKey: string, newValue: any) => {
     try {
-      await updateConfig(configKey as any, newValue);
+      await updateConfig({ configKey, configValue: newValue });
       toast({
         title: 'Sucesso',
         description: 'Configuração de segurança atualizada',
