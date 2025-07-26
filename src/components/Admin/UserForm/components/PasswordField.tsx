@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -8,9 +9,10 @@ interface PasswordFieldProps {
   value: string;
   onChange: (value: string) => void;
   isEditing?: boolean;
+  error?: string;
 }
 
-export function PasswordField({ value, onChange, isEditing = false }: PasswordFieldProps) {
+export function PasswordField({ value, onChange, isEditing = false, error }: PasswordFieldProps) {
   const [showPassword, setShowPassword] = useState(false);
 
   return (
@@ -26,6 +28,7 @@ export function PasswordField({ value, onChange, isEditing = false }: PasswordFi
           onChange={(e) => onChange(e.target.value)}
           placeholder="Digite a senha"
           required={!isEditing}
+          className={error ? "border-red-500" : ""}
         />
         <Button
           type="button"
@@ -41,6 +44,9 @@ export function PasswordField({ value, onChange, isEditing = false }: PasswordFi
           )}
         </Button>
       </div>
+      {error && (
+        <p className="text-sm text-red-600">{error}</p>
+      )}
     </div>
   );
 }

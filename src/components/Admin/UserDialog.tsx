@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
@@ -37,7 +38,8 @@ export function UserDialog({ open, onOpenChange, user, onSave }: UserDialogProps
           <UserForm
             user={user}
             onSubmit={(formData) => handleSubmit(user, formData)}
-            loading={loading}
+            onCancel={() => onOpenChange(false)}
+            isLoading={loading}
           />
         </div>
 

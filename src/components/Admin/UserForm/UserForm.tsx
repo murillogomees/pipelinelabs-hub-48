@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useUserManagement } from './hooks/useUserManagement';
 import { BasicInfoFields } from './components/BasicInfoFields';
@@ -139,11 +140,13 @@ export function UserForm({ user, onSubmit, onCancel, isLoading }: UserFormProps)
       }
 
       // Map access level to user type for non-super_admin levels
-      let userType: 'contratante' | 'operador' = 'operador';
+      let userType: 'contratante' | 'operador' | 'super_admin' = 'operador';
       if (selectedLevel.name === 'contratante') {
         userType = 'contratante';
       } else if (selectedLevel.name === 'operador') {
         userType = 'operador';
+      } else if (selectedLevel.name === 'super_admin') {
+        userType = 'super_admin';
       }
 
       setFormData(prev => ({
@@ -192,6 +195,13 @@ export function UserForm({ user, onSubmit, onCancel, isLoading }: UserFormProps)
     }));
   };
 
+  const handleFieldChange = (field: string, value: string | boolean) => {
+    setFormData(prev => ({
+      ...prev,
+      [field]: value,
+    }));
+  };
+
   if (isLoadingCompanies || isLoadingAccessLevels) {
     return (
       <div className="flex items-center justify-center p-6">
@@ -215,25 +225,23 @@ export function UserForm({ user, onSubmit, onCancel, isLoading }: UserFormProps)
 
       <BasicInfoFields
         formData={formData}
-        setFormData={setFormData}
-        errors={errors}
-        userType={formData.user_type}
-        onUserTypeChange={handleUserTypeChange}
+        onChange={handleFieldChange}
+        isEditing={!!user}
       />
 
       <CompanySelector
         value={formData.company_id}
         onChange={(company_id) => setFormData(prev => ({ ...prev, company_id }))}
-        companies={companies}
-        error={errors.company_id}
+        disabled={false}
+        isRequired={true}
       />
 
       {formData.user_type !== 'super_admin' && (
         <AccessLevelSelector
           value={formData.access_level_id}
           onChange={handleAccessLevelChange}
-          accessLevels={accessLevels}
-          userType={formData.user_type}
+          disabled={false}
+          isRequired={true}
         />
       )}
 
@@ -248,7 +256,7 @@ export function UserForm({ user, onSubmit, onCancel, isLoading }: UserFormProps)
         <PasswordField
           value={formData.password || ''}
           onChange={(password) => setFormData(prev => ({ ...prev, password }))}
-          error={errors.password}
+          isEditing={false}
         />
       )}
 

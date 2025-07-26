@@ -1,12 +1,43 @@
 
 import { useState } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { UserFormData } from '../types';
 
-export function useUserManagement(onSave: () => void, onClose: () => void) {
+export function useUserManagement(onSave?: () => void, onClose?: () => void) {
   const [loading, setLoading] = useState(false);
   const { toast } = useToast();
+
+  // Fetch companies
+  const { data: companies = [], isLoading: isLoadingCompanies } = useQuery({
+    queryKey: ['companies-for-user-form'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('companies')
+        .select('id, name')
+        .eq('is_active', true)
+        .order('name');
+      
+      if (error) throw error;
+      return data || [];
+    }
+  });
+
+  // Fetch access levels
+  const { data: accessLevels = [], isLoading: isLoadingAccessLevels } = useQuery({
+    queryKey: ['access-levels-for-user-form'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('access_levels')
+        .select('*')
+        .eq('is_active', true)
+        .order('name');
+      
+      if (error) throw error;
+      return data || [];
+    }
+  });
 
   const createUser = async (formData: UserFormData) => {
     // Criar o usuário no auth
@@ -93,8 +124,8 @@ export function useUserManagement(onSave: () => void, onClose: () => void) {
       description: "Usuário criado com sucesso",
     });
 
-    onSave();
-    onClose();
+    if (onSave) onSave();
+    if (onClose) onClose();
   };
 
   const updateUser = async (user: any, formData: UserFormData) => {
@@ -159,8 +190,8 @@ export function useUserManagement(onSave: () => void, onClose: () => void) {
       description: "Usuário atualizado com sucesso",
     });
 
-    onSave();
-    onClose();
+    if (onSave) onSave();
+    if (onClose) onClose();
   };
 
   const handleSubmit = async (user: any, formData: UserFormData) => {
@@ -194,6 +225,10 @@ export function useUserManagement(onSave: () => void, onClose: () => void) {
 
   return {
     loading,
+    companies,
+    accessLevels,
+    isLoadingCompanies,
+    isLoadingAccessLevels,
     handleSubmit
   };
 }

@@ -77,7 +77,7 @@ const parseConfigSchema = (schema: any): ConfigField[] => {
   }
 };
 
-export function Integracoes() {
+export default function Integracoes() {
   const [configDialog, setConfigDialog] = useState<{open: boolean, integration?: IntegrationAvailable}>({open: false});
   const { toast } = useToast();
   const queryClient = useQueryClient();
