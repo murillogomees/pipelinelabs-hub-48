@@ -1,23 +1,30 @@
 
 import React from 'react';
-import { Card, CardContent } from '@/components/ui/card';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Skeleton } from '@/components/ui/skeleton';
+import { Loader2, Mail } from 'lucide-react';
+import { cn } from '@/lib/utils';
 
-interface Column<T> {
-  key: keyof T | string;
+export interface Column<T> {
+  key: keyof T;
   header: string;
   render?: (value: any, row: T) => React.ReactNode;
   className?: string;
 }
 
-interface Action<T> {
+export interface Action<T> {
   label: string;
-  icon?: React.ReactNode | ((row: T) => React.ReactNode);
+  icon: React.ComponentType<{ className?: string }>;
   onClick: (row: T) => void;
-  variant?: 'default' | 'outline' | 'destructive' | 'secondary' | 'ghost' | 'link';
+  variant?: 'default' | 'destructive' | 'outline' | 'secondary' | 'ghost' | 'link';
   className?: string | ((row: T) => string);
   show?: (row: T) => boolean;
 }
@@ -29,171 +36,121 @@ interface DataTableProps<T> {
   loading?: boolean;
   emptyMessage?: string;
   className?: string;
-  rowClassName?: (row: T) => string;
 }
 
 export function DataTable<T extends Record<string, any>>({
   data,
   columns,
   actions,
-  loading = false,
-  emptyMessage = 'Nenhum dado encontrado',
-  className,
-  rowClassName,
+  loading,
+  emptyMessage = 'Nenhum item encontrado',
+  className
 }: DataTableProps<T>) {
-  const getValue = (row: T, key: string) => {
-    return key.split('.').reduce((obj, k) => obj?.[k], row);
-  };
-
   if (loading) {
     return (
-      <Card className={className}>
-        <CardContent className="p-0">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                {columns.map((column, index) => (
-                  <TableHead key={index} className={column.className}>
-                    {column.header}
-                  </TableHead>
-                ))}
-                {actions && actions.length > 0 && <TableHead>Ações</TableHead>}
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {[...Array(5)].map((_, index) => (
-                <TableRow key={index}>
-                  {columns.map((_, colIndex) => (
-                    <TableCell key={colIndex}>
-                      <Skeleton className="h-4 w-full" />
-                    </TableCell>
-                  ))}
-                  {actions && actions.length > 0 && (
-                    <TableCell>
-                      <div className="flex space-x-2">
-                        {actions.map((_, actionIndex) => (
-                          <Skeleton key={actionIndex} className="h-8 w-20" />
-                        ))}
-                      </div>
-                    </TableCell>
-                  )}
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </CardContent>
-      </Card>
+      <div className="flex items-center justify-center p-8">
+        <Loader2 className="w-6 h-6 animate-spin mr-2" />
+        <span>Carregando...</span>
+      </div>
     );
   }
 
   return (
-    <Card className={className}>
-      <CardContent className="p-0">
-        <div className="overflow-x-auto">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                {columns.map((column, index) => (
-                  <TableHead key={index} className={column.className}>
-                    {column.header}
-                  </TableHead>
+    <div className={cn('rounded-md border', className)}>
+      <Table>
+        <TableHeader>
+          <TableRow>
+            {columns.map((column) => (
+              <TableHead key={String(column.key)} className={column.className}>
+                {column.header}
+              </TableHead>
+            ))}
+            {actions && actions.length > 0 && (
+              <TableHead className="w-[120px]">Ações</TableHead>
+            )}
+          </TableRow>
+        </TableHeader>
+        <TableBody>
+          {data.length === 0 ? (
+            <TableRow>
+              <TableCell 
+                colSpan={columns.length + (actions ? 1 : 0)} 
+                className="h-24 text-center"
+              >
+                {emptyMessage}
+              </TableCell>
+            </TableRow>
+          ) : (
+            data.map((row, index) => (
+              <TableRow key={index}>
+                {columns.map((column) => (
+                  <TableCell key={String(column.key)} className={column.className}>
+                    {column.render 
+                      ? column.render(row[column.key], row)
+                      : String(row[column.key] || '')
+                    }
+                  </TableCell>
                 ))}
                 {actions && actions.length > 0 && (
-                  <TableHead className="text-right min-w-[200px]">Ações</TableHead>
+                  <TableCell>
+                    <div className="flex space-x-2">
+                      {actions
+                        .filter(action => !action.show || action.show(row))
+                        .map((action, actionIndex) => {
+                          const IconComponent = action.icon;
+                          const className = typeof action.className === 'function' 
+                            ? action.className(row) 
+                            : action.className;
+                          
+                          return (
+                            <Button
+                              key={actionIndex}
+                              variant={action.variant || 'outline'}
+                              size="sm"
+                              onClick={() => action.onClick(row)}
+                              className={className}
+                              title={action.label}
+                            >
+                              <IconComponent className="w-4 h-4" />
+                            </Button>
+                          );
+                        })}
+                    </div>
+                  </TableCell>
                 )}
               </TableRow>
-            </TableHeader>
-            <TableBody>
-              {data.length === 0 ? (
-                <TableRow>
-                  <TableCell
-                    colSpan={columns.length + (actions && actions.length > 0 ? 1 : 0)}
-                    className="text-center py-8 text-muted-foreground"
-                  >
-                    {emptyMessage}
-                  </TableCell>
-                </TableRow>
-              ) : (
-                data.map((row, index) => (
-                  <TableRow
-                    key={index}
-                    className={rowClassName ? rowClassName(row) : ''}
-                  >
-                    {columns.map((column, colIndex) => (
-                      <TableCell key={colIndex} className={column.className}>
-                        {column.render
-                          ? column.render(getValue(row, column.key as string), row)
-                          : getValue(row, column.key as string)
-                        }
-                      </TableCell>
-                    ))}
-                    {actions && actions.length > 0 && (
-                      <TableCell className="text-right">
-                        <div className="flex justify-end space-x-1">
-                          {actions
-                            .filter(action => !action.show || action.show(row))
-                            .map((action, actionIndex) => {
-                              const IconComponent = typeof action.icon === 'function' 
-                                ? action.icon(row) 
-                                : action.icon;
-                              
-                              const actionClassName = typeof action.className === 'function'
-                                ? action.className(row)
-                                : action.className;
-
-                              return (
-                                <Button
-                                  key={actionIndex}
-                                  size="sm"
-                                  variant={action.variant || 'outline'}
-                                  onClick={() => action.onClick(row)}
-                                  className={actionClassName}
-                                  title={action.label}
-                                >
-                                  {IconComponent && React.isValidElement(IconComponent) 
-                                    ? IconComponent 
-                                    : React.createElement(IconComponent as React.ComponentType<any>, { className: "h-4 w-4" })
-                                  }
-                                </Button>
-                              );
-                            })}
-                        </div>
-                      </TableCell>
-                    )}
-                  </TableRow>
-                ))
-              )}
-            </TableBody>
-          </Table>
-        </div>
-      </CardContent>
-    </Card>
+            ))
+          )}
+        </TableBody>
+      </Table>
+    </div>
   );
 }
 
-// Utility components for common renders
-export const renderBadge = (value: string, variant: 'default' | 'secondary' | 'destructive' | 'outline' = 'default') => (
-  <Badge variant={variant}>{value}</Badge>
-);
+// Utility functions for common renders
+export function renderBadge(value: string, variant: 'default' | 'secondary' | 'destructive' | 'outline' = 'default') {
+  return (
+    <Badge variant={variant}>
+      {value}
+    </Badge>
+  );
+}
 
-export const renderStatus = (isActive: boolean) => (
-  <Badge variant={isActive ? 'default' : 'secondary'}>
-    {isActive ? 'Ativo' : 'Inativo'}
-  </Badge>
-);
+export function renderStatus(isActive: boolean) {
+  return (
+    <Badge variant={isActive ? 'default' : 'secondary'}>
+      {isActive ? 'Ativo' : 'Inativo'}
+    </Badge>
+  );
+}
 
-export const renderEmail = (email: string) => (
-  <div className="flex items-center">
-    <span className="truncate max-w-[200px]" title={email}>
-      {email}
-    </span>
-  </div>
-);
-
-export const renderDate = (date: string) => {
-  return new Date(date).toLocaleDateString('pt-BR');
-};
-
-export const renderDateTime = (date: string) => {
-  return new Date(date).toLocaleString('pt-BR');
-};
+export function renderEmail(email: string) {
+  return (
+    <div className="flex items-center space-x-2">
+      <Mail className="w-4 h-4 text-muted-foreground" />
+      <span className="truncate max-w-[200px]" title={email}>
+        {email}
+      </span>
+    </div>
+  );
+}

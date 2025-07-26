@@ -39,8 +39,7 @@ export function UsersManagement() {
           *,
           profiles:user_id (
             display_name, 
-            email,
-            last_sign_in_at
+            email
           ),
           companies:company_id (name),
           access_levels:access_level_id (
@@ -79,7 +78,7 @@ export function UsersManagement() {
         company_id: user.company_id,
         access_level_name: user.access_levels?.display_name,
         created_at: user.created_at,
-        last_login_at: user.profiles?.last_sign_in_at
+        last_login_at: null // Removido temporariamente até corrigir o banco
       })) as UserData[];
     }
   });
@@ -204,11 +203,6 @@ export function UsersManagement() {
       key: 'created_at',
       header: 'Criado em',
       render: (value: string) => new Date(value).toLocaleDateString('pt-BR')
-    },
-    {
-      key: 'last_login_at',
-      header: 'Último Login',
-      render: (value: string) => value ? new Date(value).toLocaleDateString('pt-BR') : 'Nunca'
     }
   ];
 
@@ -221,7 +215,7 @@ export function UsersManagement() {
     },
     {
       label: 'Alternar Status',
-      icon: (user: UserData) => user.is_active ? UserX : UserCheck,
+      icon: UserCheck,
       onClick: handleToggleStatus,
       variant: 'outline' as const,
       className: (user: UserData) => user.is_active ? 'text-red-600 hover:text-red-700' : 'text-green-600 hover:text-green-700'

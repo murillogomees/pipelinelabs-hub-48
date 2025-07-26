@@ -71,18 +71,16 @@ export function UserForm({ user, onSubmit, onCancel, isLoading }: UserFormProps)
 
   const [errors, setErrors] = useState<Partial<UserFormData>>({});
   const [showAccessLevelAlert, setShowAccessLevelAlert] = useState(false);
-  const [defaultCompanySet, setDefaultCompanySet] = useState(false);
 
   // Set default company only once when companies are loaded and no company is selected
   useEffect(() => {
-    if (companies.length > 0 && !formData.company_id && !user && !defaultCompanySet) {
+    if (companies.length > 0 && !formData.company_id && !user) {
       setFormData(prev => ({
         ...prev,
         company_id: companies[0].id,
       }));
-      setDefaultCompanySet(true);
     }
-  }, [companies.length, user, defaultCompanySet]); // Removed formData.company_id from dependencies
+  }, [companies.length, user]); // Removed formData.company_id to prevent infinite loop
 
   const validateEmail = (email: string): boolean => {
     return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
