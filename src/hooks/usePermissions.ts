@@ -14,6 +14,12 @@ interface UserPermissions {
   department: string | null;
   specificPermissions: Record<string, boolean>;
   email: string | null;
+  accessLevel: {
+    id: string;
+    name: string;
+    display_name: string;
+    permissions: Record<string, boolean>;
+  } | null;
 }
 
 export function usePermissions() {
@@ -33,54 +39,31 @@ export function usePermissions() {
             companyId: null,
             department: null,
             specificPermissions: {},
-            email: null
+            email: null,
+            accessLevel: null
           };
         }
 
         const userEmail = user.user.email || "";
         
-        // Verificar status de super admin direto do banco
-        const { data: superAdminCheck } = await supabase
-          .from("user_companies")
-          .select("user_type, permissions, specific_permissions, company_id")
-          .eq("user_id", user.user.id)
-          .eq("user_type", "super_admin")
-          .eq("is_active", true)
-          .maybeSingle();
-        
-        const isSuperAdminByDB = !!superAdminCheck;
-        
-        // Se for super admin, retornar permissões completas imediatamente
-        if (isSuperAdminByDB) {
-          const permissions = (superAdminCheck.permissions as Record<string, any>) || {};
-          const specificPermissions = (superAdminCheck.specific_permissions as Record<string, any>) || {};
-          
-          return {
-            userType: 'super_admin' as UserType,
-            isSuperAdmin: true,
-            isContratante: false,
-            isOperador: false,
-            isAdmin: true,
-            companyId: superAdminCheck.company_id,
-            department: null,
-            specificPermissions: {
-              ...permissions,
-              ...specificPermissions,
-              super_admin: true,
-              full_access: true,
-              admin_panel: true,
-              user_management: true,
-              company_management: true,
-              system_settings: true
-            },
-            email: userEmail
-          };
-        }
-
-        // Buscar dados do usuário normalmente se não for super admin
+        // Buscar dados do usuário com nível de acesso
         const { data: userCompaniesData, error: companiesError } = await supabase
           .from("user_companies")
-          .select("user_type, department, specific_permissions, is_active, company_id, role, permissions")
+          .select(`
+            user_type, 
+            department, 
+            specific_permissions, 
+            is_active, 
+            company_id, 
+            role, 
+            permissions,
+            access_levels!inner(
+              id,
+              name,
+              display_name,
+              permissions
+            )
+          `)
           .eq("user_id", user.user.id)
           .eq("is_active", true)
           .order("created_at", { ascending: false })
@@ -102,20 +85,27 @@ export function usePermissions() {
             companyId: null,
             department: null,
             specificPermissions: {},
-            email: userEmail
+            email: userEmail,
+            accessLevel: null
           };
         }
 
         const userType = userCompaniesData.user_type as UserType;
+        const accessLevel = userCompaniesData.access_levels;
         const specificPermissions = (userCompaniesData.specific_permissions as Record<string, any>) || {};
         const permissions = (userCompaniesData.permissions as Record<string, any>) || {};
+        const accessLevelPermissions = (accessLevel?.permissions as Record<string, any>) || {};
         
-        // Combinar permissões específicas e gerais
-        const allPermissions = { ...permissions, ...specificPermissions };
+        // Combinar permissões: nível de acesso + específicas + gerais
+        const allPermissions = { 
+          ...accessLevelPermissions, 
+          ...permissions, 
+          ...specificPermissions 
+        };
         
-        const isSuperAdmin = userType === 'super_admin' || allPermissions.super_admin === true;
-        const isContratante = userType === 'contratante';
-        const isOperador = userType === 'operador';
+        const isSuperAdmin = accessLevel?.name === 'super_admin' || allPermissions.super_admin === true;
+        const isContratante = accessLevel?.name === 'contratante' || userType === 'contratante';
+        const isOperador = accessLevel?.name === 'operador' || userType === 'operador';
         const isAdmin = isSuperAdmin || isContratante;
 
         return {
@@ -127,7 +117,13 @@ export function usePermissions() {
           companyId: userCompaniesData.company_id,
           department: userCompaniesData.department,
           specificPermissions: allPermissions,
-          email: userEmail
+          email: userEmail,
+          accessLevel: accessLevel ? {
+            id: accessLevel.id,
+            name: accessLevel.name,
+            display_name: accessLevel.display_name,
+            permissions: accessLevelPermissions
+          } : null
         } as UserPermissions;
       } catch (error) {
         console.error("Error in usePermissions:", error);
@@ -137,11 +133,10 @@ export function usePermissions() {
     refetchOnWindowFocus: false,
     refetchOnMount: true,
     retry: (failureCount, error) => {
-      // Não tentar novamente para erros de autenticação
       if (error?.message?.includes('JWT')) return false;
       return failureCount < 2;
     },
-    staleTime: 30 * 1000, // 30 segundos para super admin - mais agressivo
+    staleTime: 30 * 1000,
   });
 
   return {
@@ -155,10 +150,11 @@ export function usePermissions() {
     specificPermissions: permissionsData?.specificPermissions || {},
     permissions: permissionsData?.specificPermissions || {},
     email: permissionsData?.email || null,
+    accessLevel: permissionsData?.accessLevel || null,
     isLoading,
     hasFullAccess: permissionsData?.isSuperAdmin || false,
     
-    // Funções de conveniência específicas por hierarquia - Super Admin pode TUDO
+    // Funções de conveniência específicas por hierarquia
     canManageSystem: permissionsData?.isSuperAdmin || false,
     canManageCompany: permissionsData?.isSuperAdmin || permissionsData?.isContratante || false,
     canManageUsers: permissionsData?.isSuperAdmin || permissionsData?.isContratante || false,
@@ -166,7 +162,7 @@ export function usePermissions() {
     canAccessAdminPanel: permissionsData?.isSuperAdmin || permissionsData?.isContratante || false,
     canViewReports: permissionsData?.isSuperAdmin || permissionsData?.isContratante || permissionsData?.specificPermissions?.reports || false,
     
-    // Super Admin bypass - sempre retorna true para super admin
+    // Super Admin bypass
     canBypassAllRestrictions: permissionsData?.isSuperAdmin || false,
     canAccessAnyCompany: permissionsData?.isSuperAdmin || false,
     canModifyAnyData: permissionsData?.isSuperAdmin || false,
@@ -174,14 +170,12 @@ export function usePermissions() {
     
     // Verificações específicas de permissão por funcionalidade
     hasPermission: (permission: string) => {
-      // Super Admin tem todas as permissões
       if (permissionsData?.isSuperAdmin) return true;
       return permissionsData?.specificPermissions?.[permission] === true;
     },
     
     // Verificações por contexto
     canAccessDepartmentData: (companyId: string, department?: string) => {
-      // Super Admin pode acessar qualquer departamento de qualquer empresa
       if (permissionsData?.isSuperAdmin) return true;
       if (permissionsData?.isContratante && permissionsData?.companyId === companyId) return true;
       if (permissionsData?.isOperador && permissionsData?.companyId === companyId) {
@@ -191,23 +185,19 @@ export function usePermissions() {
     },
     
     canManageCompanyData: (companyId: string) => {
-      // Super Admin pode gerenciar qualquer empresa
       if (permissionsData?.isSuperAdmin) return true;
       return permissionsData?.isContratante && permissionsData?.companyId === companyId;
     },
 
-    // Verificar se pode acessar qualquer rota/página
     canAccessRoute: (route: string) => {
-      // Super Admin pode acessar qualquer rota
       if (permissionsData?.isSuperAdmin) return true;
       
-      // Rotas administrativas só para super admin e contratante
       const adminRoutes = ['/app/admin', '/app/configuracoes'];
       if (adminRoutes.some(adminRoute => route.startsWith(adminRoute))) {
         return permissionsData?.isContratante || false;
       }
       
-      return true; // Outras rotas são acessíveis para usuários autenticados
+      return true;
     },
 
     error

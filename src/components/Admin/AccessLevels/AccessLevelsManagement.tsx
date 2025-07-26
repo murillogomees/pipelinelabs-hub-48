@@ -1,0 +1,232 @@
+
+import React, { useState } from 'react';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import { Input } from '@/components/ui/input';
+import { Plus, Search, Edit, Trash2, Shield, Users } from 'lucide-react';
+import { AccessLevelDialog } from './AccessLevelDialog';
+import { useQuery } from '@tanstack/react-query';
+import { supabase } from '@/integrations/supabase/client';
+import { useToast } from '@/hooks/use-toast';
+import { DataTable } from '@/components/ui/data-table';
+
+interface AccessLevel {
+  id: string;
+  name: string;
+  display_name: string;
+  description: string;
+  permissions: Record<string, boolean>;
+  is_system: boolean;
+  is_active: boolean;
+  created_at: string;
+  updated_at: string;
+  _count?: {
+    users: number;
+  };
+}
+
+export function AccessLevelsManagement() {
+  const [showDialog, setShowDialog] = useState(false);
+  const [selectedLevel, setSelectedLevel] = useState<AccessLevel | undefined>(undefined);
+  const [searchTerm, setSearchTerm] = useState("");
+  const { toast } = useToast();
+
+  const { data: accessLevels = [], refetch, isLoading } = useQuery({
+    queryKey: ['access-levels'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('access_levels')
+        .select(`
+          *,
+          user_companies!inner(count)
+        `)
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+      
+      // Count users for each access level
+      const levelsWithCount = await Promise.all(
+        data.map(async (level) => {
+          const { count } = await supabase
+            .from('user_companies')
+            .select('*', { count: 'exact', head: true })
+            .eq('access_level_id', level.id)
+            .eq('is_active', true);
+          
+          return {
+            ...level,
+            _count: { users: count || 0 }
+          };
+        })
+      );
+
+      return levelsWithCount;
+    }
+  });
+
+  const handleDelete = async (level: AccessLevel) => {
+    if (level.is_system) {
+      toast({
+        title: "Erro",
+        description: "Níveis de acesso do sistema não podem ser excluídos",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (level._count?.users && level._count.users > 0) {
+      toast({
+        title: "Erro",
+        description: "Não é possível excluir um nível de acesso que possui usuários",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    const { error } = await supabase
+      .from('access_levels')
+      .delete()
+      .eq('id', level.id);
+
+    if (error) {
+      toast({
+        title: "Erro",
+        description: "Falha ao excluir nível de acesso",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    toast({
+      title: "Sucesso",
+      description: "Nível de acesso excluído com sucesso",
+    });
+
+    refetch();
+  };
+
+  const filteredLevels = accessLevels.filter(level => 
+    level.display_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    level.name.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
+  const columns = [
+    {
+      key: 'display_name',
+      header: 'Nome',
+      render: (value: string, row: AccessLevel) => (
+        <div className="flex items-center space-x-2">
+          <Shield className="h-4 w-4 text-primary" />
+          <div>
+            <p className="font-medium">{value}</p>
+            <p className="text-sm text-muted-foreground">{row.name}</p>
+          </div>
+        </div>
+      )
+    },
+    {
+      key: 'description',
+      header: 'Descrição',
+      render: (value: string) => (
+        <span className="text-sm text-muted-foreground">{value || 'Sem descrição'}</span>
+      )
+    },
+    {
+      key: '_count.users',
+      header: 'Usuários',
+      render: (value: any, row: AccessLevel) => (
+        <div className="flex items-center space-x-2">
+          <Users className="h-4 w-4 text-muted-foreground" />
+          <span>{row._count?.users || 0}</span>
+        </div>
+      )
+    },
+    {
+      key: 'is_system',
+      header: 'Tipo',
+      render: (value: boolean) => (
+        <Badge variant={value ? 'secondary' : 'default'}>
+          {value ? 'Sistema' : 'Personalizado'}
+        </Badge>
+      )
+    },
+    {
+      key: 'is_active',
+      header: 'Status',
+      render: (value: boolean) => (
+        <Badge variant={value ? 'default' : 'secondary'}>
+          {value ? 'Ativo' : 'Inativo'}
+        </Badge>
+      )
+    }
+  ];
+
+  const actions = [
+    {
+      label: 'Editar',
+      icon: <Edit className="h-4 w-4" />,
+      onClick: (row: AccessLevel) => {
+        setSelectedLevel(row);
+        setShowDialog(true);
+      },
+      variant: 'outline' as const
+    },
+    {
+      label: 'Excluir',
+      icon: <Trash2 className="h-4 w-4" />,
+      onClick: handleDelete,
+      variant: 'outline' as const,
+      className: 'text-destructive hover:text-destructive'
+    }
+  ];
+
+  return (
+    <div className="space-y-6">
+      <div className="flex justify-between items-center">
+        <div>
+          <h2 className="text-2xl font-bold">Níveis de Acesso</h2>
+          <p className="text-muted-foreground">
+            Gerencie os diferentes níveis de acesso e suas permissões
+          </p>
+        </div>
+        <Button onClick={() => {
+          setSelectedLevel(undefined);
+          setShowDialog(true);
+        }}>
+          <Plus className="w-4 h-4 mr-2" />
+          Novo Nível
+        </Button>
+      </div>
+
+      <div className="relative">
+        <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+        <Input
+          placeholder="Buscar níveis de acesso..."
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+          className="pl-10"
+        />
+      </div>
+
+      <DataTable
+        data={filteredLevels}
+        columns={columns}
+        actions={actions}
+        loading={isLoading}
+        emptyMessage="Nenhum nível de acesso encontrado"
+      />
+
+      <AccessLevelDialog
+        open={showDialog}
+        onOpenChange={setShowDialog}
+        accessLevel={selectedLevel}
+        onSave={() => {
+          refetch();
+          setShowDialog(false);
+          setSelectedLevel(undefined);
+        }}
+      />
+    </div>
+  );
+}

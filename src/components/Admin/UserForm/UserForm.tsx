@@ -1,12 +1,15 @@
+
 import React, { useState, useEffect } from 'react';
 import { UserFormData, User } from './types';
 import { BasicInfoFields } from './components/BasicInfoFields';
 import { CompanySelector } from './components/CompanySelector';
+import { AccessLevelSelector } from './components/AccessLevelSelector';
 import { PasswordField } from './components/PasswordField';
 import { PermissionsSection } from './components/PermissionsSection';
 import { supabase } from '@/integrations/supabase/client';
 import { usePermissions } from '@/hooks/usePermissions';
-import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
+import { useQuery } from '@tanstack/react-query';
 
 interface UserFormProps {
   user?: User;
@@ -21,6 +24,7 @@ const defaultFormData: UserFormData = {
   user_type: 'operador',
   password: '',
   company_id: '',
+  access_level_id: '',
   permissions: {
     dashboard: true,
     vendas: false,
@@ -44,8 +48,22 @@ export function UserForm({ user, onSubmit, loading }: UserFormProps) {
   const [formData, setFormData] = useState<UserFormData>(defaultFormData);
   const [defaultCompanyId, setDefaultCompanyId] = useState('');
   const [showDowngradeAlert, setShowDowngradeAlert] = useState(false);
-  const [pendingUserType, setPendingUserType] = useState<'contratante' | 'operador' | null>(null);
+  const [pendingAccessLevel, setPendingAccessLevel] = useState<string | null>(null);
   const { isSuperAdmin, isContratante } = usePermissions();
+
+  // Buscar níveis de acesso para mapear permissões
+  const { data: accessLevels = [] } = useQuery({
+    queryKey: ['access-levels'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('access_levels')
+        .select('*')
+        .eq('is_active', true);
+
+      if (error) throw error;
+      return data;
+    }
+  });
 
   // Carregar empresa padrão
   useEffect(() => {
@@ -55,7 +73,6 @@ export function UserForm({ user, onSubmit, loading }: UserFormProps) {
         if (data) {
           setDefaultCompanyId(String(data));
         } else {
-          // Fallback: buscar Pipeline Labs diretamente
           const { data: company } = await supabase
             .from('companies')
             .select('id')
@@ -84,6 +101,7 @@ export function UserForm({ user, onSubmit, loading }: UserFormProps) {
         email: user.email || '',
         is_active: user.is_active,
         user_type: userCompany?.user_type || 'operador',
+        access_level_id: userCompany?.access_level_id || '',
         password: '',
         company_id: userCompany?.company_id || '',
         permissions: {
@@ -106,41 +124,64 @@ export function UserForm({ user, onSubmit, loading }: UserFormProps) {
         }
       });
     } else if (defaultCompanyId) {
-      // Só definir o formulário padrão quando temos o ID da empresa
       setFormData({
         ...defaultFormData,
-        company_id: defaultCompanyId // Definir Pipeline Labs como padrão
+        company_id: defaultCompanyId
       });
     }
   }, [user, defaultCompanyId]);
 
   const handleFieldChange = (field: string, value: string | boolean) => {
-    // Verificar se é mudança de tipo de usuário que requer confirmação
-    if (field === 'user_type' && user) {
-      const currentUserType = user.user_companies?.[0]?.user_type;
-      const newUserType = value as 'contratante' | 'operador';
+    setFormData(prev => ({ ...prev, [field]: value }));
+  };
+
+  const handleAccessLevelChange = (accessLevelId: string) => {
+    const selectedLevel = accessLevels.find(level => level.id === accessLevelId);
+    const currentLevel = accessLevels.find(level => level.id === formData.access_level_id);
+    
+    if (user && currentLevel && selectedLevel) {
+      // Verificar se é downgrade (de super_admin para outro ou de contratante para operador)
+      const isDowngrade = (
+        (currentLevel.name === 'super_admin' && selectedLevel.name !== 'super_admin') ||
+        (currentLevel.name === 'contratante' && selectedLevel.name === 'operador')
+      );
       
-      // Se for downgrade de contratante para operador, mostrar alerta
-      if (currentUserType === 'contratante' && newUserType === 'operador') {
-        setPendingUserType(newUserType);
+      if (isDowngrade) {
+        setPendingAccessLevel(accessLevelId);
         setShowDowngradeAlert(true);
         return;
       }
     }
     
-    setFormData(prev => ({ ...prev, [field]: value }));
+    // Aplicar mudança diretamente
+    if (selectedLevel) {
+      setFormData(prev => ({
+        ...prev,
+        access_level_id: accessLevelId,
+        user_type: selectedLevel.name as 'contratante' | 'operador',
+        permissions: selectedLevel.permissions || prev.permissions
+      }));
+    }
   };
 
   const confirmDowngrade = () => {
-    if (pendingUserType) {
-      setFormData(prev => ({ ...prev, user_type: pendingUserType }));
-      setPendingUserType(null);
+    if (pendingAccessLevel) {
+      const selectedLevel = accessLevels.find(level => level.id === pendingAccessLevel);
+      if (selectedLevel) {
+        setFormData(prev => ({
+          ...prev,
+          access_level_id: pendingAccessLevel,
+          user_type: selectedLevel.name as 'contratante' | 'operador',
+          permissions: selectedLevel.permissions || prev.permissions
+        }));
+      }
+      setPendingAccessLevel(null);
     }
     setShowDowngradeAlert(false);
   };
 
   const cancelDowngrade = () => {
-    setPendingUserType(null);
+    setPendingAccessLevel(null);
     setShowDowngradeAlert(false);
   };
 
@@ -174,13 +215,18 @@ export function UserForm({ user, onSubmit, loading }: UserFormProps) {
         isRequired={!user}
       />
 
+      <AccessLevelSelector
+        value={formData.access_level_id}
+        onChange={handleAccessLevelChange}
+        disabled={!!user && user.user_companies?.[0]?.user_type === 'super_admin'}
+      />
+
       <PasswordField
         value={formData.password}
         onChange={(value) => handleFieldChange('password', value)}
         isEditing={!!user}
       />
 
-      {/* Só mostrar permissões para administradores */}
       {(isSuperAdmin || isContratante) && (
         <PermissionsSection
           permissions={formData.permissions}
@@ -199,13 +245,12 @@ export function UserForm({ user, onSubmit, loading }: UserFormProps) {
         </button>
       </div>
 
-      {/* Alert de confirmação para downgrade */}
       <AlertDialog open={showDowngradeAlert} onOpenChange={setShowDowngradeAlert}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Confirmar Alteração de Perfil</AlertDialogTitle>
+            <AlertDialogTitle>Confirmar Alteração de Nível</AlertDialogTitle>
             <AlertDialogDescription>
-              Você está alterando o perfil de "Contratante" para "Operador". Isso reduzirá as permissões do usuário.
+              Você está alterando para um nível de acesso com menos privilégios. Isso reduzirá as permissões do usuário.
               Tem certeza que deseja continuar?
             </AlertDialogDescription>
           </AlertDialogHeader>

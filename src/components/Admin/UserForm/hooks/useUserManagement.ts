@@ -1,3 +1,4 @@
+
 import { useState } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
@@ -37,10 +38,9 @@ export function useUserManagement(onSave: () => void, onClose: () => void) {
       return;
     }
 
-    // Aguardar um pouco para o trigger criar o perfil
     await new Promise(resolve => setTimeout(resolve, 1000));
 
-    // Atualizar o perfil com os dados do formulário
+    // Atualizar o perfil
     const { error: profileError } = await supabase
       .from('profiles')
       .update({
@@ -50,7 +50,6 @@ export function useUserManagement(onSave: () => void, onClose: () => void) {
       .eq('user_id', authData.user.id);
 
     if (profileError) {
-      // Error updating profile
       toast({
         title: "Aviso",
         description: "Usuário criado, mas falha ao atualizar perfil",
@@ -58,7 +57,7 @@ export function useUserManagement(onSave: () => void, onClose: () => void) {
       });
     }
 
-    // Obter a empresa do usuário atual para fallback
+    // Obter empresa do usuário atual para fallback
     const { data: currentUserCompany } = await supabase
       .from('user_companies')
       .select('company_id')
@@ -66,21 +65,21 @@ export function useUserManagement(onSave: () => void, onClose: () => void) {
       .single();
 
     if (currentUserCompany) {
-    // Criar associação do novo usuário com a empresa selecionada
-    const { error: companyError } = await supabase
-      .from('user_companies')
-      .insert({
-        user_id: authData.user.id,
-        company_id: formData.company_id || currentUserCompany.company_id,
-        user_type: formData.user_type,
-        permissions: formData.permissions,
-        specific_permissions: formData.permissions,
-        role: formData.user_type === 'contratante' ? 'admin' : 'user',
-        is_active: formData.is_active
-      });
+      // Criar associação com empresa e nível de acesso
+      const { error: companyError } = await supabase
+        .from('user_companies')
+        .insert({
+          user_id: authData.user.id,
+          company_id: formData.company_id || currentUserCompany.company_id,
+          user_type: formData.user_type,
+          access_level_id: formData.access_level_id,
+          permissions: formData.permissions,
+          specific_permissions: formData.permissions,
+          role: formData.user_type === 'contratante' ? 'admin' : 'user',
+          is_active: formData.is_active
+        });
 
       if (companyError) {
-        // Error associating user to company
         toast({
           title: "Aviso",
           description: "Usuário criado, mas falha ao associar à empresa",
@@ -122,6 +121,7 @@ export function useUserManagement(onSave: () => void, onClose: () => void) {
       .from('user_companies')
       .update({
         user_type: formData.user_type,
+        access_level_id: formData.access_level_id,
         permissions: formData.permissions,
         specific_permissions: formData.permissions,
         role: formData.user_type === 'contratante' ? 'admin' : 'user',
@@ -138,7 +138,7 @@ export function useUserManagement(onSave: () => void, onClose: () => void) {
       return;
     }
 
-    // Se foi fornecida uma nova senha, atualizar
+    // Atualizar senha se fornecida
     if (formData.password) {
       const { error: passwordError } = await supabase.auth.admin.updateUserById(
         user.user_id,
@@ -164,11 +164,10 @@ export function useUserManagement(onSave: () => void, onClose: () => void) {
   };
 
   const handleSubmit = async (user: any, formData: UserFormData) => {
-    // Validar se empresa foi selecionada para novos usuários
-    if (!user && !formData.company_id) {
+    if (!user && (!formData.company_id || !formData.access_level_id)) {
       toast({
         title: "Erro",
-        description: "Selecione uma empresa para o usuário",
+        description: "Selecione uma empresa e nível de acesso para o usuário",
         variant: "destructive",
       });
       return;
@@ -183,7 +182,6 @@ export function useUserManagement(onSave: () => void, onClose: () => void) {
         await createUser(formData);
       }
     } catch (error) {
-      // Error saving user
       toast({
         title: "Erro",
         description: "Falha ao salvar usuário",
