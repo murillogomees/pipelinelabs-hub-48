@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { Navigate } from 'react-router-dom';
+import { Navigate, useLocation } from 'react-router-dom';
 import { useAuth } from '@/components/Auth/AuthProvider';
 import { usePermissions } from '@/hooks/usePermissions';
 import { Loader2 } from 'lucide-react';
@@ -23,6 +23,7 @@ export function ProtectedRoute({
     isLoading: permissionsLoading,
     canBypassAllRestrictions 
   } = usePermissions();
+  const location = useLocation();
 
   // Mostrar loading durante verificação de autenticação
   if (isLoading || permissionsLoading) {
@@ -41,12 +42,12 @@ export function ProtectedRoute({
   // Se houver erro e não estiver autenticado, redirecionar para auth
   if (error && !isAuthenticated) {
     console.error('Auth error:', error);
-    return <Navigate to="/auth" replace />;
+    return <Navigate to="/auth" state={{ from: location }} replace />;
   }
 
   // Se não estiver autenticado, redirecionar para auth
   if (!isAuthenticated) {
-    return <Navigate to="/auth" replace />;
+    return <Navigate to="/auth" state={{ from: location }} replace />;
   }
 
   // Super Admin pode bypassar todas as restrições
@@ -63,7 +64,10 @@ export function ProtectedRoute({
             Acesso Restrito
           </h2>
           <p className="text-muted-foreground">
-            Você não tem permissão para acessar esta área.
+            Você não tem permissão para acessar esta área administrativa.
+          </p>
+          <p className="text-sm text-muted-foreground mt-2">
+            Entre em contato com um administrador do sistema.
           </p>
         </div>
       </div>
