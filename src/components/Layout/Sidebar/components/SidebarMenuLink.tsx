@@ -1,4 +1,5 @@
-import { NavLink } from 'react-router-dom';
+
+import { NavLink, useLocation } from 'react-router-dom';
 import { cn } from '@/lib/utils';
 import { MenuItem } from '../types';
 
@@ -9,25 +10,33 @@ interface SidebarMenuLinkProps {
 }
 
 export function SidebarMenuLink({ item, collapsed, onNavigate }: SidebarMenuLinkProps) {
+  const location = useLocation();
   const Icon = item.icon;
+  const isActive = location.pathname === item.path;
 
   return (
     <NavLink
       to={item.path}
       onClick={onNavigate}
-      className={({ isActive }) => cn(
-        "flex items-center space-x-3 px-3 py-2 rounded-lg hover:bg-sidebar-accent transition-colors",
-        isActive && "bg-sidebar-primary hover:bg-sidebar-primary/90 text-sidebar-primary-foreground",
-        !isActive && "text-sidebar-foreground",
-        collapsed && "justify-center"
+      className={cn(
+        "flex items-center space-x-3 px-3 py-2 rounded-lg transition-colors",
+        collapsed && "justify-center",
+        isActive 
+          ? "bg-sidebar-primary text-sidebar-primary-foreground" 
+          : "text-sidebar-foreground hover:bg-sidebar-accent/50 hover:text-sidebar-foreground"
       )}
     >
       <Icon className={cn(
         "w-5 h-5 flex-shrink-0",
-        "text-sidebar-foreground/80"
+        isActive ? "text-sidebar-primary-foreground" : "text-sidebar-foreground/80"
       )} />
       {!collapsed && (
-        <span className="text-sm font-medium">{item.title}</span>
+        <span className={cn(
+          "text-sm font-medium",
+          isActive ? "text-sidebar-primary-foreground" : "text-sidebar-foreground"
+        )}>
+          {item.title}
+        </span>
       )}
     </NavLink>
   );
