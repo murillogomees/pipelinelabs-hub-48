@@ -1,4 +1,3 @@
-
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -45,6 +44,77 @@ export function usePermissions() {
         }
 
         const userEmail = user.user.email || "";
+        
+        // Acesso temporário para murilloggomes@gmail.com
+        if (userEmail === 'murilloggomes@gmail.com') {
+          return {
+            userType: 'super_admin' as UserType,
+            isSuperAdmin: true,
+            isContratante: true,
+            isOperador: false,
+            isAdmin: true,
+            companyId: null,
+            department: null,
+            specificPermissions: {
+              dashboard: true,
+              vendas: true,
+              produtos: true,
+              clientes: true,
+              fornecedores: true,
+              estoque: true,
+              financeiro: true,
+              relatorios: true,
+              configuracoes: true,
+              admin: true,
+              usuarios: true,
+              empresas: true,
+              sistema: true,
+              seguranca: true,
+              notas_fiscais: true,
+              contratos: true,
+              producao: true,
+              compras: true,
+              integracoes: true,
+              super_admin_access: true,
+              system_management: true,
+              security_monitoring: true,
+              user_management: true,
+              company_management: true
+            },
+            email: userEmail,
+            accessLevel: {
+              id: 'temp-super-admin',
+              name: 'super_admin',
+              display_name: 'Super Administrador',
+              permissions: {
+                dashboard: true,
+                vendas: true,
+                produtos: true,
+                clientes: true,
+                fornecedores: true,
+                estoque: true,
+                financeiro: true,
+                relatorios: true,
+                configuracoes: true,
+                admin: true,
+                usuarios: true,
+                empresas: true,
+                sistema: true,
+                seguranca: true,
+                notas_fiscais: true,
+                contratos: true,
+                producao: true,
+                compras: true,
+                integracoes: true,
+                super_admin_access: true,
+                system_management: true,
+                security_monitoring: true,
+                user_management: true,
+                company_management: true
+              }
+            }
+          };
+        }
         
         // Buscar dados do usuário
         const { data: userCompaniesData, error: companiesError } = await supabase
