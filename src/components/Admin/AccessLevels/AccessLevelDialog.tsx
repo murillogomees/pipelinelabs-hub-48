@@ -1,4 +1,5 @@
-import React, { useCallback } from 'react';
+
+import React, { useEffect, useCallback, useMemo } from 'react';
 import { useForm } from 'react-hook-form';
 import { BaseDialog } from '@/components/Base/BaseDialog';
 import { Button } from '@/components/ui/button';
@@ -103,20 +104,22 @@ type FormData = {
 export function AccessLevelDialog({ open, onOpenChange, accessLevel, onSave }: AccessLevelDialogProps) {
   const { toast } = useToast();
 
+  const defaultValues = useMemo(() => ({
+    name: '',
+    display_name: '',
+    description: '',
+    is_active: true,
+    permissions: {}
+  }), []);
+
   const form = useForm<FormData>({
-    defaultValues: {
-      name: '',
-      display_name: '',
-      description: '',
-      is_active: true,
-      permissions: {}
-    }
+    defaultValues
   });
 
   const { register, handleSubmit, watch, setValue, reset, formState: { isSubmitting } } = form;
 
-  // Initialize form when dialog opens
- 
+  // Initialize form when dialog opens or accessLevel changes
+  useEffect(() => {
     if (open) {
       if (accessLevel) {
         reset({
@@ -127,20 +130,14 @@ export function AccessLevelDialog({ open, onOpenChange, accessLevel, onSave }: A
           permissions: accessLevel.permissions || {}
         });
       } else {
-        reset({
-          name: '',
-          display_name: '',
-          description: '',
-          is_active: true,
-          permissions: {}
-        });
+        reset(defaultValues);
       }
     }
- 
+  }, [open, accessLevel?.id, reset, defaultValues]);
 
   const formData = watch();
 
-  const onSubmit = async (data: FormData) => {
+  const onSubmit = useCallback(async (data: FormData) => {
     try {
       const submitData = {
         ...data,
@@ -176,26 +173,31 @@ export function AccessLevelDialog({ open, onOpenChange, accessLevel, onSave }: A
         variant: 'destructive',
       });
     }
-  };
+  }, [accessLevel, toast, onSave, onOpenChange]);
 
-  const handleDisplayNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleDisplayNameChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
     setValue('display_name', value);
     if (!accessLevel) {
       setValue('name', value.toLowerCase().replace(/\s+/g, '_'));
     }
-  };
+  }, [setValue, accessLevel]);
 
-  const handlePermissionToggle = (permission: string) => {
+  const handlePermissionToggle = useCallback((permission: string) => {
     const currentPermissions = formData.permissions || {};
     setValue('permissions', {
       ...currentPermissions,
       [permission]: !currentPermissions[permission]
     });
-  };
+  }, [formData.permissions, setValue]);
 
-  const enabledPermissions = Object.values(formData.permissions || {}).filter(Boolean).length;
-  const totalPermissions = permissionCategories.reduce((acc, cat) => acc + cat.permissions.length, 0);
+  const enabledPermissions = useMemo(() => {
+    return Object.values(formData.permissions || {}).filter(Boolean).length;
+  }, [formData.permissions]);
+
+  const totalPermissions = useMemo(() => {
+    return permissionCategories.reduce((acc, cat) => acc + cat.permissions.length, 0);
+  }, []);
 
   return (
     <BaseDialog
@@ -212,7 +214,7 @@ export function AccessLevelDialog({ open, onOpenChange, accessLevel, onSave }: A
               <Label htmlFor="display_name">Nome de Exibição</Label>
               <Input
                 id="display_name"
-                value={formData.display_name}
+                value={formData.display_name || ''}
                 onChange={handleDisplayNameChange}
                 placeholder="Ex: Administrador da Empresa"
               />
@@ -222,7 +224,7 @@ export function AccessLevelDialog({ open, onOpenChange, accessLevel, onSave }: A
               <Label htmlFor="name">Nome Interno</Label>
               <Input
                 id="name"
-                value={formData.name}
+                value={formData.name || ''}
                 disabled={accessLevel?.is_system}
                 placeholder="Ex: admin_empresa"
                 readOnly={!!accessLevel}
@@ -237,7 +239,7 @@ export function AccessLevelDialog({ open, onOpenChange, accessLevel, onSave }: A
               {...register('description')}
               placeholder="Descreva as responsabilidades deste nível de acesso"
               rows={3}
-              value={formData.description}
+              value={formData.description || ''}
             />
           </div>
 
