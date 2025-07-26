@@ -3,10 +3,10 @@ import React, { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { SuperAdminGuard } from '@/components/PermissionGuard';
-import { DataTable, renderBadge, renderStatus, renderEmail } from '@/components/ui/data-table';
+import { DataTable, renderBadge, renderStatus, renderEmail, Column, Action } from '@/components/ui/data-table';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Plus, Search, Edit, Trash2, UserCheck, UserX } from 'lucide-react';
+import { Plus, Search, Edit, Trash2, UserCheck } from 'lucide-react';
 import { UserDialog } from './UserDialog';
 import { useToast } from '@/hooks/use-toast';
 
@@ -21,7 +21,6 @@ interface UserData {
   company_id: string;
   access_level_name?: string;
   created_at: string;
-  last_login_at?: string;
 }
 
 export function UsersManagement() {
@@ -77,8 +76,7 @@ export function UsersManagement() {
         company_name: user.companies?.name || 'Sem empresa',
         company_id: user.company_id,
         access_level_name: user.access_levels?.display_name,
-        created_at: user.created_at,
-        last_login_at: null // Removido temporariamente até corrigir o banco
+        created_at: user.created_at
       })) as UserData[];
     }
   });
@@ -163,21 +161,21 @@ export function UsersManagement() {
     }
   };
 
-  const columns = [
+  const columns: Column<UserData>[] = [
     {
-      key: 'display_name',
+      key: 'display_name' as keyof UserData,
       header: 'Nome',
       render: (value: string) => (
         <div className="font-medium">{value}</div>
       )
     },
     {
-      key: 'email',
+      key: 'email' as keyof UserData,
       header: 'Email',
       render: (value: string) => renderEmail(value)
     },
     {
-      key: 'user_type',
+      key: 'user_type' as keyof UserData,
       header: 'Tipo',
       render: (value: string) => {
         const variant = value === 'super_admin' ? 'destructive' : 
@@ -186,27 +184,27 @@ export function UsersManagement() {
       }
     },
     {
-      key: 'company_name',
+      key: 'company_name' as keyof UserData,
       header: 'Empresa'
     },
     {
-      key: 'access_level_name',
+      key: 'access_level_name' as keyof UserData,
       header: 'Nível de Acesso',
       render: (value: string) => value || 'N/A'
     },
     {
-      key: 'is_active',
+      key: 'is_active' as keyof UserData,
       header: 'Status',
       render: (value: boolean) => renderStatus(value)
     },
     {
-      key: 'created_at',
+      key: 'created_at' as keyof UserData,
       header: 'Criado em',
       render: (value: string) => new Date(value).toLocaleDateString('pt-BR')
     }
   ];
 
-  const actions = [
+  const actions: Action<UserData>[] = [
     {
       label: 'Editar',
       icon: Edit,

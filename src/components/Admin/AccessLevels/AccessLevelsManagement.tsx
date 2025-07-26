@@ -9,7 +9,7 @@ import { AccessLevelDialog } from './AccessLevelDialog';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
-import { DataTable } from '@/components/ui/data-table';
+import { DataTable, Column, Action } from '@/components/ui/data-table';
 import type { AccessLevel, AccessLevelWithCount } from './types';
 
 export function AccessLevelsManagement() {
@@ -49,7 +49,7 @@ export function AccessLevelsManagement() {
     staleTime: 5 * 60 * 1000, // 5 minutes
   });
 
-  const handleDelete = async (level: AccessLevel) => {
+  const handleDelete = async (level: AccessLevelWithCount) => {
     if (level.is_system) {
       toast({
         title: "Erro",
@@ -59,8 +59,7 @@ export function AccessLevelsManagement() {
       return;
     }
 
-    const levelWithCount = level as AccessLevelWithCount;
-    if (levelWithCount._count?.users && levelWithCount._count.users > 0) {
+    if (level._count?.users && level._count.users > 0) {
       toast({
         title: "Erro",
         description: "Não é possível excluir um nível de acesso que possui usuários",
@@ -97,9 +96,9 @@ export function AccessLevelsManagement() {
     level.name.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  const columns = [
+  const columns: Column<AccessLevelWithCount>[] = [
     {
-      key: 'display_name',
+      key: 'display_name' as keyof AccessLevelWithCount,
       header: 'Nome',
       render: (value: string, row: AccessLevelWithCount) => (
         <div className="flex items-center space-x-2">
@@ -112,14 +111,14 @@ export function AccessLevelsManagement() {
       )
     },
     {
-      key: 'description',
+      key: 'description' as keyof AccessLevelWithCount,
       header: 'Descrição',
       render: (value: string) => (
         <span className="text-sm text-muted-foreground">{value || 'Sem descrição'}</span>
       )
     },
     {
-      key: '_count.users',
+      key: '_count' as keyof AccessLevelWithCount,
       header: 'Usuários',
       render: (_value: any, row: AccessLevelWithCount) => (
         <div className="flex items-center space-x-2">
@@ -129,7 +128,7 @@ export function AccessLevelsManagement() {
       )
     },
     {
-      key: 'is_system',
+      key: 'is_system' as keyof AccessLevelWithCount,
       header: 'Tipo',
       render: (value: boolean) => (
         <Badge variant={value ? 'secondary' : 'default'}>
@@ -138,7 +137,7 @@ export function AccessLevelsManagement() {
       )
     },
     {
-      key: 'is_active',
+      key: 'is_active' as keyof AccessLevelWithCount,
       header: 'Status',
       render: (value: boolean) => (
         <Badge variant={value ? 'default' : 'secondary'}>
@@ -148,10 +147,10 @@ export function AccessLevelsManagement() {
     }
   ];
 
-  const actions = [
+  const actions: Action<AccessLevelWithCount>[] = [
     {
       label: 'Editar',
-      icon: <Edit className="h-4 w-4" />,
+      icon: Edit,
       onClick: (row: AccessLevelWithCount) => {
         setSelectedLevel(row);
         setShowDialog(true);
@@ -160,7 +159,7 @@ export function AccessLevelsManagement() {
     },
     {
       label: 'Excluir',
-      icon: <Trash2 className="h-4 w-4" />,
+      icon: Trash2,
       onClick: handleDelete,
       variant: 'outline' as const,
       className: 'text-destructive hover:text-destructive'
