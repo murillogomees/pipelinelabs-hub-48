@@ -1,5 +1,5 @@
 
-import React, { useEffect, useCallback, useMemo } from 'react';
+import React, { useMemo, useCallback } from 'react';
 import { BaseDialog } from '@/components/Base/BaseDialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -101,13 +101,26 @@ type FormData = {
 };
 
 export function AccessLevelDialog({ open, onOpenChange, accessLevel, onSave }: AccessLevelDialogProps) {
-  const defaultValues = useMemo(() => ({
-    name: '',
-    display_name: '',
-    description: '',
-    is_active: true,
-    permissions: {}
-  }), []);
+  // Prepare initial values based on accessLevel
+  const initialValues = useMemo((): FormData => {
+    if (accessLevel) {
+      return {
+        name: accessLevel.name || '',
+        display_name: accessLevel.display_name || '',
+        description: accessLevel.description || '',
+        is_active: accessLevel.is_active || false,
+        permissions: accessLevel.permissions || {}
+      };
+    }
+    
+    return {
+      name: '',
+      display_name: '',
+      description: '',
+      is_active: true,
+      permissions: {}
+    };
+  }, [accessLevel?.id, accessLevel?.name, accessLevel?.display_name, accessLevel?.description, accessLevel?.is_active, accessLevel?.permissions]);
 
   const onSubmit = useCallback(async (data: FormData) => {
     const submitData = {
@@ -132,38 +145,32 @@ export function AccessLevelDialog({ open, onOpenChange, accessLevel, onSave }: A
 
     onSave();
     onOpenChange(false);
-  }, [accessLevel, onSave, onOpenChange]);
+  }, [accessLevel?.id, onSave, onOpenChange]);
 
   const {
     form,
     handleSubmit,
-    isSubmitting
+    isSubmitting,
+    resetForm
   } = useBaseForm<FormData>({
-    defaultValues,
+    defaultValues: initialValues,
     onSubmit,
+    resetOnSuccess: false,
     successMessage: `Nível de acesso ${accessLevel ? 'atualizado' : 'criado'} com sucesso`,
     errorMessage: `Falha ao ${accessLevel ? 'atualizar' : 'criar'} nível de acesso`
   });
 
-  const { watch, setValue, reset } = form;
+  const { watch, setValue } = form;
   const formData = watch();
 
-  // Initialize form when dialog opens or accessLevel changes
-  useEffect(() => {
-    if (open) {
-      if (accessLevel) {
-        reset({
-          name: accessLevel.name,
-          display_name: accessLevel.display_name,
-          description: accessLevel.description || '',
-          is_active: accessLevel.is_active,
-          permissions: accessLevel.permissions || {}
-        });
-      } else {
-        reset(defaultValues);
-      }
+  // Reset form when dialog opens with new data
+  const handleDialogChange = useCallback((newOpen: boolean) => {
+    if (newOpen && open !== newOpen) {
+      // Dialog is opening, reset form with current values
+      resetForm();
     }
-  }, [open, accessLevel?.id, reset, defaultValues]);
+    onOpenChange(newOpen);
+  }, [open, onOpenChange, resetForm]);
 
   const handleDisplayNameChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
@@ -171,7 +178,7 @@ export function AccessLevelDialog({ open, onOpenChange, accessLevel, onSave }: A
     if (!accessLevel) {
       setValue('name', value.toLowerCase().replace(/\s+/g, '_'));
     }
-  }, [setValue, accessLevel]);
+  }, [setValue, accessLevel?.id]);
 
   const handlePermissionToggle = useCallback((permission: string) => {
     const currentPermissions = formData.permissions || {};
@@ -192,7 +199,7 @@ export function AccessLevelDialog({ open, onOpenChange, accessLevel, onSave }: A
   return (
     <BaseDialog
       open={open}
-      onOpenChange={onOpenChange}
+      onOpenChange={handleDialogChange}
       title={accessLevel ? 'Editar Nível de Acesso' : 'Novo Nível de Acesso'}
       description="Configure os níveis de permissão e funcionalidades que este acesso pode gerenciar"
       maxWidth="lg"
