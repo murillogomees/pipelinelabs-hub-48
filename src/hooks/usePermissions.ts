@@ -52,6 +52,9 @@ export function usePermissions() {
         
         // Se for super admin, retornar permissões completas imediatamente
         if (isSuperAdminByDB) {
+          const permissions = (superAdminCheck.permissions as Record<string, any>) || {};
+          const specificPermissions = (superAdminCheck.specific_permissions as Record<string, any>) || {};
+          
           return {
             userType: 'super_admin' as UserType,
             isSuperAdmin: true,
@@ -61,8 +64,8 @@ export function usePermissions() {
             companyId: superAdminCheck.company_id,
             department: null,
             specificPermissions: {
-              ...superAdminCheck.permissions,
-              ...superAdminCheck.specific_permissions,
+              ...permissions,
+              ...specificPermissions,
               super_admin: true,
               full_access: true,
               admin_panel: true,
@@ -138,7 +141,7 @@ export function usePermissions() {
       if (error?.message?.includes('JWT')) return false;
       return failureCount < 2;
     },
-    staleTime: 1 * 60 * 1000, // 1 minuto - mais agressivo para capturar mudanças
+    staleTime: 30 * 1000, // 30 segundos para super admin - mais agressivo
   });
 
   return {
