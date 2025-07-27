@@ -1,237 +1,331 @@
 
-import React from 'react';
-import { AdminPageLayout } from '@/components/Admin/AdminPageLayout';
+import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Separator } from '@/components/ui/separator';
 import { 
   Activity, 
   Users, 
-  Database, 
-  Server, 
-  AlertCircle, 
+  Building, 
+  AlertTriangle, 
   CheckCircle, 
-  TrendingUp,
-  RefreshCw,
-  Eye
+  Clock,
+  Database,
+  Server,
+  Zap,
+  RefreshCw
 } from 'lucide-react';
+import { useSystemHealth } from '@/hooks/useSystemHealth';
+import { useCompanies } from '@/hooks/useCompanies';
+import { useQuery } from '@tanstack/react-query';
+import { supabase } from '@/integrations/supabase/client';
+import { ProtectedRoute } from '@/components/ProtectedRoute';
 
-// Mock data para demonstração
-const mockSystemMetrics = {
-  activeUsers: 127,
-  totalCompanies: 45,
-  dbConnections: 8,
-  serverHealth: 'healthy',
-  uptime: '99.9%',
-  responseTime: '245ms'
-};
+export default function AdminMonitoramento() {
+  const [refreshing, setRefreshing] = useState(false);
+  const { systemHealth, isLoading: healthLoading, refetch: refetchHealth } = useSystemHealth();
+  const { companies, isLoading: companiesLoading } = useCompanies();
 
-const mockEvents = [
-  {
-    id: '1',
-    user_id: 'user1',
-    event_name: 'user_login',
-    route: '/app/dashboard',
-    duration_ms: 1200,
-    created_at: '2024-01-20T10:00:00Z',
-    meta: { ip: '192.168.1.1' }
-  },
-  {
-    id: '2',
-    user_id: 'user2',
-    event_name: 'product_created',
-    route: '/app/produtos',
-    duration_ms: 800,
-    created_at: '2024-01-20T09:30:00Z',
-    meta: { product_id: 'prod123' }
-  }
-];
+  const { data: systemStats, isLoading: statsLoading } = useQuery({
+    queryKey: ['system-stats'],
+    queryFn: async () => {
+      // Mock system stats for now
+      return {
+        totalUsers: 0,
+        activeUsers: 0,
+        totalCompanies: companies?.length || 0,
+        activeCompanies: companies?.filter(c => c.is_active !== false).length || 0,
+        totalSales: 0,
+        totalInvoices: 0,
+        systemUptime: '99.9%',
+        avgResponseTime: '120ms'
+      };
+    },
+    enabled: !companiesLoading
+  });
 
-const mockCompanies = [
-  {
-    id: '1',
-    name: 'Empresa A',
-    document: '12345678901',
-    email: 'contato@empresaa.com',
-    phone: '11999999999',
-    created_at: '2024-01-01T00:00:00Z',
-    city: 'São Paulo',
-    state: 'SP',
-    address: 'Rua A, 123',
-    zipcode: '01000-000',
-    fiscal_email: 'fiscal@empresaa.com',
-    legal_name: 'Empresa A Ltda',
-    legal_representative: 'João Silva',
-    municipal_registration: '123456',
-    state_registration: '123456789',
-    tax_regime: 'simples_nacional',
-    trade_name: 'Empresa A'
-  }
-];
+  const handleRefresh = async () => {
+    setRefreshing(true);
+    await refetchHealth();
+    setRefreshing(false);
+  };
 
-const AdminMonitoramento: React.FC = () => {
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case 'ok': return 'success';
+      case 'warning': return 'warning';
+      case 'error': return 'destructive';
+      default: return 'secondary';
+    }
+  };
+
+  const getStatusIcon = (status: string) => {
+    switch (status) {
+      case 'ok': return <CheckCircle className="h-4 w-4" />;
+      case 'warning': return <AlertTriangle className="h-4 w-4" />;
+      case 'error': return <AlertTriangle className="h-4 w-4" />;
+      default: return <Clock className="h-4 w-4" />;
+    }
+  };
+
   return (
-    <AdminPageLayout
-      title="Monitoramento do Sistema"
-      description="Monitore a saúde e performance do sistema em tempo real"
-    >
-      <div className="space-y-6">
-        {/* Métricas Principais */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Usuários Ativos</CardTitle>
-              <Users className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{mockSystemMetrics.activeUsers}</div>
-              <p className="text-xs text-muted-foreground">
-                +12% em relação ao mês anterior
+    <ProtectedRoute requireSuperAdmin>
+      <div className="container mx-auto py-8 space-y-6">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <Activity className="h-8 w-8 text-primary" />
+            <div>
+              <h1 className="text-3xl font-bold">Monitoramento do Sistema</h1>
+              <p className="text-muted-foreground">
+                Acompanhe a saúde e performance do sistema
               </p>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Empresas Ativas</CardTitle>
-              <Server className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{mockSystemMetrics.totalCompanies}</div>
-              <p className="text-xs text-muted-foreground">
-                +3 novas empresas este mês
-              </p>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Conexões DB</CardTitle>
-              <Database className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{mockSystemMetrics.dbConnections}</div>
-              <p className="text-xs text-muted-foreground">
-                De 20 conexões máximas
-              </p>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Tempo de Resposta</CardTitle>
-              <Activity className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{mockSystemMetrics.responseTime}</div>
-              <p className="text-xs text-muted-foreground">
-                Média das últimas 24h
-              </p>
-            </CardContent>
-          </Card>
+            </div>
+          </div>
+          <Button 
+            onClick={handleRefresh} 
+            disabled={refreshing}
+            variant="outline"
+          >
+            <RefreshCw className={`h-4 w-4 mr-2 ${refreshing ? 'animate-spin' : ''}`} />
+            Atualizar
+          </Button>
         </div>
 
-        {/* Status do Sistema */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <CheckCircle className="h-5 w-5 text-green-600" />
-              Status do Sistema
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="flex items-center justify-between">
-                <span className="text-sm font-medium">Servidor Principal</span>
-                <Badge className="bg-green-100 text-green-800">Online</Badge>
-              </div>
-              <div className="flex items-center justify-between">
-                <span className="text-sm font-medium">Banco de Dados</span>
-                <Badge className="bg-green-100 text-green-800">Conectado</Badge>
-              </div>
-              <div className="flex items-center justify-between">
-                <span className="text-sm font-medium">Cache Redis</span>
-                <Badge className="bg-green-100 text-green-800">Ativo</Badge>
-              </div>
-              <div className="flex items-center justify-between">
-                <span className="text-sm font-medium">API Externa</span>
-                <Badge className="bg-yellow-100 text-yellow-800">Lento</Badge>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
+        <Tabs defaultValue="overview" className="w-full">
+          <TabsList className="grid w-full grid-cols-4">
+            <TabsTrigger value="overview">Visão Geral</TabsTrigger>
+            <TabsTrigger value="services">Serviços</TabsTrigger>
+            <TabsTrigger value="companies">Empresas</TabsTrigger>
+            <TabsTrigger value="performance">Performance</TabsTrigger>
+          </TabsList>
 
-        {/* Eventos Recentes */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <TrendingUp className="h-5 w-5" />
-              Eventos Recentes
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-3">
-              {mockEvents.map((event) => (
-                <div key={event.id} className="flex items-center justify-between p-3 bg-muted rounded-lg">
-                  <div className="flex-1">
+          <TabsContent value="overview" className="space-y-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+              <Card>
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                  <CardTitle className="text-sm font-medium">Total de Usuários</CardTitle>
+                  <Users className="h-4 w-4 text-muted-foreground" />
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold">{systemStats?.totalUsers || 0}</div>
+                  <p className="text-xs text-muted-foreground">
+                    {systemStats?.activeUsers || 0} ativos
+                  </p>
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                  <CardTitle className="text-sm font-medium">Empresas</CardTitle>
+                  <Building className="h-4 w-4 text-muted-foreground" />
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold">{systemStats?.totalCompanies || 0}</div>
+                  <p className="text-xs text-muted-foreground">
+                    {systemStats?.activeCompanies || 0} ativas
+                  </p>
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                  <CardTitle className="text-sm font-medium">Uptime</CardTitle>
+                  <Server className="h-4 w-4 text-muted-foreground" />
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold">{systemStats?.systemUptime || '99.9%'}</div>
+                  <p className="text-xs text-muted-foreground">
+                    Últimas 24h
+                  </p>
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                  <CardTitle className="text-sm font-medium">Tempo de Resposta</CardTitle>
+                  <Zap className="h-4 w-4 text-muted-foreground" />
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold">{systemStats?.avgResponseTime || '120ms'}</div>
+                  <p className="text-xs text-muted-foreground">
+                    Média
+                  </p>
+                </CardContent>
+              </Card>
+            </div>
+
+            <Card>
+              <CardHeader>
+                <CardTitle>Status Geral do Sistema</CardTitle>
+              </CardHeader>
+              <CardContent>
+                {healthLoading ? (
+                  <div className="flex items-center justify-center p-8">
+                    <RefreshCw className="h-8 w-8 animate-spin" />
+                  </div>
+                ) : (
+                  <div className="space-y-4">
                     <div className="flex items-center gap-2">
-                      <Badge variant="outline">{event.event_name}</Badge>
-                      <span className="text-sm text-muted-foreground">{event.route}</span>
+                      <Badge variant={getStatusColor(systemHealth?.overall_status || 'unknown')}>
+                        {systemHealth?.overall_status || 'unknown'}
+                      </Badge>
+                      <span className="text-sm text-muted-foreground">
+                        Última verificação: {systemHealth?.last_check ? new Date(systemHealth.last_check).toLocaleString() : 'N/A'}
+                      </span>
                     </div>
-                    <div className="text-xs text-muted-foreground mt-1">
-                      {event.duration_ms}ms • {new Date(event.created_at).toLocaleString()}
+                    
+                    <Alert>
+                      <AlertTriangle className="h-4 w-4" />
+                      <AlertDescription>
+                        Sistema de monitoramento em desenvolvimento. Alguns dados podem ser simulados.
+                      </AlertDescription>
+                    </Alert>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="services" className="space-y-6">
+            <Card>
+              <CardHeader>
+                <CardTitle>Status dos Serviços</CardTitle>
+              </CardHeader>
+              <CardContent>
+                {healthLoading ? (
+                  <div className="flex items-center justify-center p-8">
+                    <RefreshCw className="h-8 w-8 animate-spin" />
+                  </div>
+                ) : (
+                  <div className="space-y-4">
+                    {systemHealth?.services && Object.keys(systemHealth.services).length > 0 ? (
+                      Object.entries(systemHealth.services).map(([serviceName, service]: [string, any]) => (
+                        <div key={serviceName} className="flex items-center justify-between p-3 border rounded-lg">
+                          <div className="flex items-center gap-3">
+                            {getStatusIcon(service.status)}
+                            <div>
+                              <div className="font-medium">{serviceName}</div>
+                              <div className="text-sm text-muted-foreground">
+                                Última verificação: {service.last_check ? new Date(service.last_check).toLocaleString() : 'N/A'}
+                              </div>
+                            </div>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <Badge variant={getStatusColor(service.status)}>
+                              {service.status}
+                            </Badge>
+                            {service.response_time_ms && (
+                              <span className="text-sm text-muted-foreground">
+                                {service.response_time_ms}ms
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                      ))
+                    ) : (
+                      <div className="text-center p-8 text-muted-foreground">
+                        Nenhum serviço monitorado encontrado
+                      </div>
+                    )}
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="companies" className="space-y-6">
+            <Card>
+              <CardHeader>
+                <CardTitle>Empresas Cadastradas</CardTitle>
+              </CardHeader>
+              <CardContent>
+                {companiesLoading ? (
+                  <div className="flex items-center justify-center p-8">
+                    <RefreshCw className="h-8 w-8 animate-spin" />
+                  </div>
+                ) : (
+                  <div className="space-y-4">
+                    {companies && companies.length > 0 ? (
+                      companies.map((company) => (
+                        <div key={company.id} className="flex items-center justify-between p-3 border rounded-lg">
+                          <div>
+                            <div className="font-medium">{company.name}</div>
+                            <div className="text-sm text-muted-foreground">
+                              CNPJ: {company.document || 'N/A'}
+                            </div>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <Badge variant={(company.is_active ?? true) ? 'default' : 'secondary'}>
+                              {(company.is_active ?? true) ? 'Ativa' : 'Inativa'}
+                            </Badge>
+                            <span className="text-sm text-muted-foreground">
+                              {company.state || 'SP'}
+                            </span>
+                          </div>
+                        </div>
+                      ))
+                    ) : (
+                      <div className="text-center p-8 text-muted-foreground">
+                        Nenhuma empresa cadastrada
+                      </div>
+                    )}
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="performance" className="space-y-6">
+            <Card>
+              <CardHeader>
+                <CardTitle>Métricas de Performance</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div className="space-y-4">
+                    <h3 className="font-medium">Banco de Dados</h3>
+                    <div className="space-y-2">
+                      <div className="flex justify-between">
+                        <span>Conexões ativas</span>
+                        <span className="font-mono">15/100</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span>Tempo de resposta médio</span>
+                        <span className="font-mono">45ms</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span>Queries/seg</span>
+                        <span className="font-mono">1,234</span>
+                      </div>
                     </div>
                   </div>
-                  <Button size="sm" variant="ghost">
-                    <Eye className="h-3 w-3" />
-                  </Button>
-                </div>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Empresas Cadastradas */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Server className="h-5 w-5" />
-              Empresas Cadastradas
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-3">
-              {mockCompanies.map((company) => (
-                <div key={company.id} className="flex items-center justify-between p-3 bg-muted rounded-lg">
-                  <div className="flex-1">
-                    <div className="flex items-center gap-2">
-                      <span className="font-medium">{company.name}</span>
-                      <Badge variant="outline">{company.document}</Badge>
-                    </div>
-                    <div className="text-xs text-muted-foreground mt-1">
-                      {company.city}, {company.state} • {company.email}
+                  
+                  <div className="space-y-4">
+                    <h3 className="font-medium">Aplicação</h3>
+                    <div className="space-y-2">
+                      <div className="flex justify-between">
+                        <span>Uso de memória</span>
+                        <span className="font-mono">512MB</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span>CPU</span>
+                        <span className="font-mono">23%</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span>Uptime</span>
+                        <span className="font-mono">5d 12h</span>
+                      </div>
                     </div>
                   </div>
-                  <Button size="sm" variant="ghost">
-                    <Eye className="h-3 w-3" />
-                  </Button>
                 </div>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Alertas */}
-        <Alert>
-          <AlertCircle className="h-4 w-4" />
-          <AlertDescription>
-            <strong>Alerta:</strong> Detectada lentidão na API externa. Monitorando...
-          </AlertDescription>
-        </Alert>
+              </CardContent>
+            </Card>
+          </TabsContent>
+        </Tabs>
       </div>
-    </AdminPageLayout>
+    </ProtectedRoute>
   );
-};
-
-export default AdminMonitoramento;
+}

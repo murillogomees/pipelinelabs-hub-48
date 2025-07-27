@@ -1,51 +1,37 @@
 
-import { useDashboard } from '@/hooks/useDashboard';
+import React from 'react';
+import { useQuery } from '@tanstack/react-query';
+import { supabase } from '@/integrations/supabase/client';
 import { useUserCompany } from '@/hooks/useUserCompany';
 
-export const CachedDashboardData = () => {
-  const { userCompany, isLoading: isLoadingCompany } = useUserCompany();
-  const { dashboardData, isLoading: isLoadingDashboard } = useDashboard();
+interface CachedDashboardDataProps {
+  children: (data: any) => React.ReactNode;
+}
 
-  if (isLoadingCompany || isLoadingDashboard) {
-    return (
-      <div className="flex items-center justify-center p-8">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
-      </div>
-    );
+export const CachedDashboardData: React.FC<CachedDashboardDataProps> = ({ children }) => {
+  const { userCompany } = useUserCompany();
+
+  const { data: dashboardData, isLoading } = useQuery({
+    queryKey: ['dashboard-data', userCompany?.company_id],
+    queryFn: async () => {
+      if (!userCompany?.company_id) return null;
+
+      // Mock dashboard data for now
+      return {
+        sales: { count: 0, total: 0 },
+        customers: { count: 0 },
+        products: { count: 0 },
+        invoices: { count: 0 }
+      };
+    },
+    enabled: !!userCompany?.company_id,
+    staleTime: 5 * 60 * 1000, // 5 minutes
+    cacheTime: 10 * 60 * 1000, // 10 minutes
+  });
+
+  if (isLoading) {
+    return <div>Carregando dados do dashboard...</div>;
   }
 
-  if (!userCompany) {
-    return (
-      <div className="p-8 text-center">
-        <p className="text-muted-foreground">
-          Nenhuma empresa encontrada para o usuário atual.
-        </p>
-      </div>
-    );
-  }
-
-  return (
-    <div className="space-y-6">
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-        <div className="bg-white p-6 rounded-lg shadow">
-          <h3 className="font-semibold mb-2">Empresa</h3>
-          <p className="text-sm text-muted-foreground">{userCompany.company?.name}</p>
-        </div>
-        
-        <div className="bg-white p-6 rounded-lg shadow">
-          <h3 className="font-semibold mb-2">Vendas</h3>
-          <p className="text-sm text-muted-foreground">
-            {dashboardData.sales?.length || 0} vendas
-          </p>
-        </div>
-        
-        <div className="bg-white p-6 rounded-lg shadow">
-          <h3 className="font-semibold mb-2">Produtos</h3>
-          <p className="text-sm text-muted-foreground">
-            {dashboardData.products?.length || 0} produtos
-          </p>
-        </div>
-      </div>
-    </div>
-  );
+  return <>{children(dashboardData)}</>;
 };

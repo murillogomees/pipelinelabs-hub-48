@@ -86,12 +86,16 @@ export const useNFeIntegration = () => {
   });
 
   const validateCertificate = useMutation({
-    mutationFn: async (file: File, password: string) => {
+    mutationFn: async (file?: File, password?: string) => {
       // Mock validation
       return {
         is_valid: true,
         days_until_expiry: 30,
-        valid_to: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString()
+        valid_to: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
+        subject: 'Mock Certificate Subject',
+        issuer: 'Mock Certificate Issuer',
+        serial_number: '123456789',
+        valid_from: new Date().toISOString()
       };
     }
   });
@@ -103,7 +107,6 @@ export const useNFeIntegration = () => {
     }
   });
 
-  // Mock additional properties
   const issueNFe = useMutation({
     mutationFn: async (data: any) => {
       return { success: true, nfe_id: '123' };
@@ -122,6 +125,15 @@ export const useNFeIntegration = () => {
     nfeList: []
   };
 
+  // Additional properties needed by components
+  const saveNFeConfig = updateConfig.mutate;
+  const getConfig = () => nfeConfig || mockNFeConfig;
+  const isConfigured = !!nfeConfig?.api_token;
+  const isActive = nfeConfig?.is_active || false;
+  const isSaving = updateConfig.isPending;
+  const testingConnection = testConnection.isPending;
+  const hasValidConfig = () => !!nfeConfig?.certificate_file;
+
   return {
     nfeConfig: nfeConfig || mockNFeConfig,
     isLoading,
@@ -135,6 +147,14 @@ export const useNFeIntegration = () => {
     uploadingCertificate: uploadCertificate.isPending,
     issueNFe: issueNFe.mutate,
     issueNFeProduct: issueNFeProduct.mutate,
-    nfeIntegration
+    nfeIntegration,
+    // Additional properties for compatibility
+    saveNFeConfig,
+    getConfig,
+    isConfigured,
+    isActive,
+    isSaving,
+    testingConnection,
+    hasValidConfig
   };
 };

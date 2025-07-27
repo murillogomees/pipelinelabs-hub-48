@@ -74,7 +74,7 @@ export const PromptGeneratorDashboard: React.FC = () => {
     company_id: log.company_id || '',
     model_used: log.model_used || 'gpt-4',
     temperature: log.temperature || 0.7,
-    applied_files: Array.isArray(log.applied_files) ? log.applied_files : [],
+    applied_files: Array.isArray(log.applied_files) ? log.applied_files.map(f => String(f)) : [],
     rollback_data: log.rollback_data
   }));
 
