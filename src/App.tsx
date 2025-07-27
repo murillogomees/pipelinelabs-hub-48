@@ -89,13 +89,16 @@ function App() {
               <Route path="/breakpoint-test" element={<BreakpointTester />} />
 
               {/* Protected App Routes */}
-              <Route path="/app" element={
-                <ProtectedRoute>
-                  <MainLayout>
-                    <Outlet />
-                  </MainLayout>
-                </ProtectedRoute>
-              }>
+              <Route 
+                path="/app" 
+                element={
+                  <ProtectedRoute>
+                    <MainLayout>
+                      <Outlet />
+                    </MainLayout>
+                  </ProtectedRoute>
+                }
+              >
                 <Route index element={<Navigate to="/app/dashboard" replace />} />
                 <Route path="dashboard" element={<Dashboard />} />
                 <Route path="clientes" element={<Clientes />} />

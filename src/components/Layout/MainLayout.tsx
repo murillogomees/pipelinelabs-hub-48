@@ -1,9 +1,8 @@
 
-import React, { useState } from 'react';
-import { Sidebar } from './Sidebar';
+import React from 'react';
 import { Header } from './Header';
-import { useIsMobile } from '@/hooks/use-mobile';
-import { Sheet, SheetContent } from '@/components/ui/sheet';
+import { AppSidebar } from './AppSidebar';
+import { SidebarProvider, SidebarInset } from '@/components/ui/sidebar';
 import { EnvironmentBanner } from "@/components/Admin/VersionManagement/EnvironmentBanner";
 
 interface MainLayoutProps {
@@ -11,58 +10,22 @@ interface MainLayoutProps {
 }
 
 export function MainLayout({ children }: MainLayoutProps) {
-  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const isMobile = useIsMobile();
-
-  const toggleSidebar = () => {
-    if (isMobile) {
-      setMobileMenuOpen(!mobileMenuOpen);
-    } else {
-      setSidebarCollapsed(!sidebarCollapsed);
-    }
-  };
-
-  const closeMobileMenu = () => {
-    setMobileMenuOpen(false);
-  };
-
   return (
-    <div className="h-screen w-full bg-background flex overflow-hidden">
-      {/* Desktop Sidebar */}
-      {!isMobile && (
-        <Sidebar 
-          collapsed={sidebarCollapsed} 
-          onNavigate={closeMobileMenu}
-        />
-      )}
-      
-      {/* Mobile Sidebar */}
-      {isMobile && (
-        <Sheet open={mobileMenuOpen} onOpenChange={setMobileMenuOpen}>
-          <SheetContent side="left" className="w-64 p-0">
-            <Sidebar 
-              collapsed={false} 
-              onNavigate={closeMobileMenu}
-            />
-          </SheetContent>
-        </Sheet>
-      )}
-      
-      <div className="flex-1 flex flex-col h-full overflow-hidden">
-        <header className="flex-shrink-0 border-b bg-background">
-          <Header onToggleSidebar={toggleSidebar} />
-          <EnvironmentBanner />
-        </header>
-        
-        <main className="flex-1 overflow-y-auto bg-background">
-          <div className="h-full w-full">
-            <div className="p-4 sm:p-6 lg:p-8 max-w-full">
-              {children}
+    <SidebarProvider>
+      <div className="min-h-screen flex w-full">
+        <AppSidebar />
+        <SidebarInset>
+          <header className="flex h-16 shrink-0 items-center gap-2 transition-[width,height] ease-linear group-has-[[data-collapsible=icon]]/sidebar-wrapper:h-12">
+            <div className="flex items-center gap-2 px-4 w-full">
+              <Header />
             </div>
-          </div>
-        </main>
+          </header>
+          <EnvironmentBanner />
+          <main className="flex flex-1 flex-col gap-4 p-4 pt-0">
+            {children}
+          </main>
+        </SidebarInset>
       </div>
-    </div>
+    </SidebarProvider>
   );
 }
