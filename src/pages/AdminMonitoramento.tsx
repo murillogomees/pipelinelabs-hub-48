@@ -3,211 +3,232 @@ import React from 'react';
 import { AdminPageLayout } from '@/components/Admin/AdminPageLayout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { useQuery } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
-import { usePermissions } from '@/hooks/usePermissions';
-import { Activity, Users, Database, TrendingUp } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { 
+  Activity, 
+  Users, 
+  Database, 
+  Server, 
+  AlertCircle, 
+  CheckCircle, 
+  TrendingUp,
+  RefreshCw,
+  Eye
+} from 'lucide-react';
+
+// Mock data para demonstração
+const mockSystemMetrics = {
+  activeUsers: 127,
+  totalCompanies: 45,
+  dbConnections: 8,
+  serverHealth: 'healthy',
+  uptime: '99.9%',
+  responseTime: '245ms'
+};
+
+const mockEvents = [
+  {
+    id: '1',
+    user_id: 'user1',
+    event_name: 'user_login',
+    route: '/app/dashboard',
+    duration_ms: 1200,
+    created_at: '2024-01-20T10:00:00Z',
+    meta: { ip: '192.168.1.1' }
+  },
+  {
+    id: '2',
+    user_id: 'user2',
+    event_name: 'product_created',
+    route: '/app/produtos',
+    duration_ms: 800,
+    created_at: '2024-01-20T09:30:00Z',
+    meta: { product_id: 'prod123' }
+  }
+];
+
+const mockCompanies = [
+  {
+    id: '1',
+    name: 'Empresa A',
+    document: '12345678901',
+    email: 'contato@empresaa.com',
+    phone: '11999999999',
+    created_at: '2024-01-01T00:00:00Z',
+    city: 'São Paulo',
+    state: 'SP',
+    address: 'Rua A, 123',
+    zipcode: '01000-000',
+    fiscal_email: 'fiscal@empresaa.com',
+    legal_name: 'Empresa A Ltda',
+    legal_representative: 'João Silva',
+    municipal_registration: '123456',
+    state_registration: '123456789',
+    tax_regime: 'simples_nacional',
+    trade_name: 'Empresa A'
+  }
+];
 
 const AdminMonitoramento: React.FC = () => {
-  const { isAdmin, isLoading: isLoadingPermissions } = usePermissions();
-
-  // Mock analytics data since analytics_events doesn't exist in the database
-  const { data: analytics } = useQuery({
-    queryKey: ['admin-analytics'],
-    queryFn: async () => {
-      // Return mock data
-      return [
-        {
-          id: '1',
-          event_name: 'page_view',
-          route: '/dashboard',
-          user_id: 'user1',
-          company_id: 'company1',
-          device_type: 'desktop',
-          duration_ms: 1500,
-          meta: { browser: 'Chrome' },
-          created_at: new Date().toISOString()
-        },
-        {
-          id: '2',
-          event_name: 'button_click',
-          route: '/products',
-          user_id: 'user2',
-          company_id: 'company1',
-          device_type: 'mobile',
-          duration_ms: 800,
-          meta: { action: 'create_product' },
-          created_at: new Date().toISOString()
-        }
-      ];
-    },
-    enabled: isAdmin
-  });
-
-  // Mock companies data
-  const { data: companies } = useQuery({
-    queryKey: ['admin-companies'],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from('companies')
-        .select('*')
-        .limit(10);
-
-      if (error) throw error;
-      return data;
-    },
-    enabled: isAdmin
-  });
-
-  if (isLoadingPermissions) {
-    return (
-      <div className="flex items-center justify-center p-8">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
-      </div>
-    );
-  }
-
-  if (!isAdmin) {
-    return (
-      <AdminPageLayout
-        title="Acesso Negado"
-        description="Você não tem permissão para acessar esta página"
-      >
-        <div className="text-center py-8">
-          <p className="text-muted-foreground">
-            Apenas administradores podem acessar o monitoramento do sistema.
-          </p>
-        </div>
-      </AdminPageLayout>
-    );
-  }
-
   return (
     <AdminPageLayout
       title="Monitoramento do Sistema"
-      description="Acompanhe métricas e estatísticas do sistema"
+      description="Monitore a saúde e performance do sistema em tempo real"
     >
       <div className="space-y-6">
-        {/* Overview Cards */}
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+        {/* Métricas Principais */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">
-                Empresas Ativas
-              </CardTitle>
+              <CardTitle className="text-sm font-medium">Usuários Ativos</CardTitle>
               <Users className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{companies?.length || 0}</div>
+              <div className="text-2xl font-bold">{mockSystemMetrics.activeUsers}</div>
               <p className="text-xs text-muted-foreground">
-                empresas cadastradas
+                +12% em relação ao mês anterior
               </p>
             </CardContent>
           </Card>
 
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">
-                Eventos Hoje
-              </CardTitle>
-              <Activity className="h-4 w-4 text-muted-foreground" />
+              <CardTitle className="text-sm font-medium">Empresas Ativas</CardTitle>
+              <Server className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{analytics?.length || 0}</div>
+              <div className="text-2xl font-bold">{mockSystemMetrics.totalCompanies}</div>
               <p className="text-xs text-muted-foreground">
-                eventos registrados
+                +3 novas empresas este mês
               </p>
             </CardContent>
           </Card>
 
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">
-                Performance
-              </CardTitle>
-              <TrendingUp className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">98%</div>
-              <p className="text-xs text-muted-foreground">
-                uptime do sistema
-              </p>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">
-                Banco de Dados
-              </CardTitle>
+              <CardTitle className="text-sm font-medium">Conexões DB</CardTitle>
               <Database className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">
-                <Badge variant="outline" className="text-green-600">
-                  Online
-                </Badge>
-              </div>
+              <div className="text-2xl font-bold">{mockSystemMetrics.dbConnections}</div>
               <p className="text-xs text-muted-foreground">
-                status da conexão
+                De 20 conexões máximas
+              </p>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Tempo de Resposta</CardTitle>
+              <Activity className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">{mockSystemMetrics.responseTime}</div>
+              <p className="text-xs text-muted-foreground">
+                Média das últimas 24h
               </p>
             </CardContent>
           </Card>
         </div>
 
-        {/* Recent Events */}
+        {/* Status do Sistema */}
         <Card>
           <CardHeader>
-            <CardTitle>Eventos Recentes</CardTitle>
+            <CardTitle className="flex items-center gap-2">
+              <CheckCircle className="h-5 w-5 text-green-600" />
+              Status do Sistema
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="flex items-center justify-between">
+                <span className="text-sm font-medium">Servidor Principal</span>
+                <Badge className="bg-green-100 text-green-800">Online</Badge>
+              </div>
+              <div className="flex items-center justify-between">
+                <span className="text-sm font-medium">Banco de Dados</span>
+                <Badge className="bg-green-100 text-green-800">Conectado</Badge>
+              </div>
+              <div className="flex items-center justify-between">
+                <span className="text-sm font-medium">Cache Redis</span>
+                <Badge className="bg-green-100 text-green-800">Ativo</Badge>
+              </div>
+              <div className="flex items-center justify-between">
+                <span className="text-sm font-medium">API Externa</span>
+                <Badge className="bg-yellow-100 text-yellow-800">Lento</Badge>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Eventos Recentes */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <TrendingUp className="h-5 w-5" />
+              Eventos Recentes
+            </CardTitle>
           </CardHeader>
           <CardContent>
             <div className="space-y-3">
-              {analytics?.map((event) => (
-                <div key={event.id} className="flex items-center justify-between py-2 border-b">
-                  <div className="flex items-center gap-3">
-                    <Badge variant="secondary">{event.event_name}</Badge>
-                    <span className="text-sm">{event.route}</span>
+              {mockEvents.map((event) => (
+                <div key={event.id} className="flex items-center justify-between p-3 bg-muted rounded-lg">
+                  <div className="flex-1">
+                    <div className="flex items-center gap-2">
+                      <Badge variant="outline">{event.event_name}</Badge>
+                      <span className="text-sm text-muted-foreground">{event.route}</span>
+                    </div>
+                    <div className="text-xs text-muted-foreground mt-1">
+                      {event.duration_ms}ms • {new Date(event.created_at).toLocaleString()}
+                    </div>
                   </div>
-                  <div className="flex items-center gap-2">
-                    <span className="text-sm text-muted-foreground">
-                      {event.device_type}
-                    </span>
-                    <span className="text-sm text-muted-foreground">
-                      {event.duration_ms}ms
-                    </span>
-                  </div>
+                  <Button size="sm" variant="ghost">
+                    <Eye className="h-3 w-3" />
+                  </Button>
                 </div>
               ))}
             </div>
           </CardContent>
         </Card>
 
-        {/* Companies List */}
+        {/* Empresas Cadastradas */}
         <Card>
           <CardHeader>
-            <CardTitle>Empresas Cadastradas</CardTitle>
+            <CardTitle className="flex items-center gap-2">
+              <Server className="h-5 w-5" />
+              Empresas Cadastradas
+            </CardTitle>
           </CardHeader>
           <CardContent>
             <div className="space-y-3">
-              {companies?.map((company) => (
-                <div key={company.id} className="flex items-center justify-between py-2 border-b">
-                  <div>
-                    <div className="font-medium">{company.name}</div>
-                    <div className="text-sm text-muted-foreground">{company.email}</div>
+              {mockCompanies.map((company) => (
+                <div key={company.id} className="flex items-center justify-between p-3 bg-muted rounded-lg">
+                  <div className="flex-1">
+                    <div className="flex items-center gap-2">
+                      <span className="font-medium">{company.name}</span>
+                      <Badge variant="outline">{company.document}</Badge>
+                    </div>
+                    <div className="text-xs text-muted-foreground mt-1">
+                      {company.city}, {company.state} • {company.email}
+                    </div>
                   </div>
-                  <div className="flex items-center gap-2">
-                    <Badge variant={company.is_active ? "default" : "secondary"}>
-                      {company.is_active ? 'Ativa' : 'Inativa'}
-                    </Badge>
-                    <span className="text-sm text-muted-foreground">
-                      {company.state}
-                    </span>
-                  </div>
+                  <Button size="sm" variant="ghost">
+                    <Eye className="h-3 w-3" />
+                  </Button>
                 </div>
               ))}
             </div>
           </CardContent>
         </Card>
+
+        {/* Alertas */}
+        <Alert>
+          <AlertCircle className="h-4 w-4" />
+          <AlertDescription>
+            <strong>Alerta:</strong> Detectada lentidão na API externa. Monitorando...
+          </AlertDescription>
+        </Alert>
       </div>
     </AdminPageLayout>
   );

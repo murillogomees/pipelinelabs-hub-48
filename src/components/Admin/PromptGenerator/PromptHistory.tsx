@@ -38,7 +38,7 @@ interface PromptLog {
   rolled_back_at?: string;
 }
 
-interface PromptHistoryProps {
+export interface PromptHistoryProps {
   promptLogs: PromptLog[];
   onRollback: (logId: string) => void;
   onApplyCode: (logId: string) => void;

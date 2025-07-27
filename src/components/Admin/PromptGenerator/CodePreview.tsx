@@ -1,163 +1,106 @@
 
-import React, { useState } from 'react';
-import { Button } from '@/components/ui/button';
+import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { AlertTriangle, CheckCircle, Copy, Play } from 'lucide-react';
-import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Code, Play, FileText, Database } from 'lucide-react';
 
-interface GeneratedCode {
-  files: Record<string, string>;
-  sql: string[];
-  description: string;
-  rawContent?: string;
-}
-
-interface CodePreviewProps {
-  generatedCode: GeneratedCode;
-  logId: string;
+export interface CodePreviewProps {
+  generatedCode: any;
   onApply: (logId: string) => void;
   isApplying: boolean;
+  logId?: string;
 }
 
 export const CodePreview: React.FC<CodePreviewProps> = ({
   generatedCode,
-  logId,
   onApply,
-  isApplying
+  isApplying,
+  logId
 }) => {
-  const [activeTab, setActiveTab] = useState('description');
+  if (!generatedCode) {
+    return (
+      <Card>
+        <CardContent className="py-8">
+          <div className="text-center text-muted-foreground">
+            <Code className="h-12 w-12 mx-auto mb-4 opacity-50" />
+            <p>Nenhum código gerado ainda</p>
+            <p className="text-sm">Use o gerador para criar código</p>
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
 
-  const copyToClipboard = (text: string) => {
-    navigator.clipboard.writeText(text);
-  };
-
-  const fileCount = Object.keys(generatedCode.files || {}).length;
-  const sqlCount = (generatedCode.sql || []).length;
+  const { files, sql, description } = generatedCode;
 
   return (
-    <Card className="mt-4">
+    <Card>
       <CardHeader>
-        <CardTitle className="flex items-center justify-between">
-          <span>Código Gerado</span>
-          <div className="flex gap-2">
-            {fileCount > 0 && (
-              <Badge variant="secondary">
-                {fileCount} arquivo{fileCount > 1 ? 's' : ''}
-              </Badge>
-            )}
-            {sqlCount > 0 && (
-              <Badge variant="secondary">
-                {sqlCount} SQL{sqlCount > 1 ? 's' : ''}
-              </Badge>
-            )}
-          </div>
+        <CardTitle className="flex items-center gap-2">
+          <Code className="h-5 w-5" />
+          Prévia do Código Gerado
         </CardTitle>
       </CardHeader>
-      <CardContent>
-        <Tabs value={activeTab} onValueChange={setActiveTab}>
-          <TabsList className="grid w-full grid-cols-4">
-            <TabsTrigger value="description">Descrição</TabsTrigger>
-            <TabsTrigger value="files">Arquivos ({fileCount})</TabsTrigger>
-            <TabsTrigger value="sql">SQL ({sqlCount})</TabsTrigger>
-            <TabsTrigger value="raw">Raw</TabsTrigger>
-          </TabsList>
+      <CardContent className="space-y-4">
+        {description && (
+          <div className="bg-muted p-3 rounded-lg">
+            <p className="text-sm">{description}</p>
+          </div>
+        )}
 
-          <TabsContent value="description" className="space-y-4">
-            <div className="p-4 bg-muted rounded-lg">
-              <p className="text-sm">{generatedCode.description}</p>
-            </div>
-            
-            <Alert>
-              <AlertTriangle className="h-4 w-4" />
-              <AlertDescription>
-                <strong>Atenção:</strong> Revise cuidadosamente o código antes de aplicar.
-                Esta ação irá modificar arquivos do projeto e executar comandos SQL.
-              </AlertDescription>
-            </Alert>
+        {files && Object.keys(files).length > 0 && (
+          <div className="space-y-3">
+            <h4 className="font-medium flex items-center gap-2">
+              <FileText className="h-4 w-4" />
+              Arquivos ({Object.keys(files).length})
+            </h4>
+            {Object.entries(files).map(([filePath, content]) => (
+              <div key={filePath} className="border rounded-lg">
+                <div className="bg-muted px-3 py-2 text-sm font-mono">
+                  {filePath}
+                </div>
+                <ScrollArea className="h-32 p-3">
+                  <pre className="text-xs text-muted-foreground">
+                    {String(content).substring(0, 500)}...
+                  </pre>
+                </ScrollArea>
+              </div>
+            ))}
+          </div>
+        )}
 
-            <Button
-              onClick={() => onApply(logId)}
-              disabled={isApplying}
-              className="w-full"
-              variant="default"
-            >
-              {isApplying ? (
-                <>
-                  <CheckCircle className="h-4 w-4 mr-2 animate-spin" />
-                  Aplicando ao projeto...
-                </>
-              ) : (
-                <>
-                  <Play className="h-4 w-4 mr-2" />
-                  Aplicar no Projeto
-                </>
-              )}
-            </Button>
-          </TabsContent>
+        {sql && sql.length > 0 && (
+          <div className="space-y-3">
+            <h4 className="font-medium flex items-center gap-2">
+              <Database className="h-4 w-4" />
+              SQL Commands ({sql.length})
+            </h4>
+            {sql.map((sqlCmd: string, index: number) => (
+              <div key={index} className="border rounded-lg">
+                <div className="bg-muted px-3 py-2 text-sm font-mono">
+                  SQL Command {index + 1}
+                </div>
+                <ScrollArea className="h-24 p-3">
+                  <pre className="text-xs text-muted-foreground">
+                    {sqlCmd}
+                  </pre>
+                </ScrollArea>
+              </div>
+            ))}
+          </div>
+        )}
 
-          <TabsContent value="files">
-            <ScrollArea className="h-96">
-              {Object.entries(generatedCode.files || {}).map(([filePath, content]) => (
-                <Card key={filePath} className="mb-4">
-                  <CardHeader className="pb-2">
-                    <div className="flex items-center justify-between">
-                      <Badge variant="outline">{filePath}</Badge>
-                      <Button
-                        size="sm"
-                        variant="ghost"
-                        onClick={() => copyToClipboard(content)}
-                      >
-                        <Copy className="h-4 w-4" />
-                      </Button>
-                    </div>
-                  </CardHeader>
-                  <CardContent>
-                    <pre className="text-xs bg-muted p-3 rounded overflow-x-auto">
-                      <code>{content}</code>
-                    </pre>
-                  </CardContent>
-                </Card>
-              ))}
-            </ScrollArea>
-          </TabsContent>
-
-          <TabsContent value="sql">
-            <ScrollArea className="h-96">
-              {(generatedCode.sql || []).map((sqlQuery, index) => (
-                <Card key={index} className="mb-4">
-                  <CardHeader className="pb-2">
-                    <div className="flex items-center justify-between">
-                      <Badge variant="outline">SQL {index + 1}</Badge>
-                      <Button
-                        size="sm"
-                        variant="ghost"
-                        onClick={() => copyToClipboard(sqlQuery)}
-                      >
-                        <Copy className="h-4 w-4" />
-                      </Button>
-                    </div>
-                  </CardHeader>
-                  <CardContent>
-                    <pre className="text-xs bg-muted p-3 rounded overflow-x-auto">
-                      <code>{sqlQuery}</code>
-                    </pre>
-                  </CardContent>
-                </Card>
-              ))}
-            </ScrollArea>
-          </TabsContent>
-
-          <TabsContent value="raw">
-            <ScrollArea className="h-96">
-              <pre className="text-xs bg-muted p-3 rounded overflow-x-auto">
-                <code>{generatedCode.rawContent || JSON.stringify(generatedCode, null, 2)}</code>
-              </pre>
-            </ScrollArea>
-          </TabsContent>
-        </Tabs>
+        <div className="flex justify-end">
+          <Button
+            onClick={() => onApply(logId || '')}
+            disabled={isApplying || !logId}
+          >
+            <Play className="h-4 w-4 mr-2" />
+            {isApplying ? 'Aplicando...' : 'Aplicar Código'}
+          </Button>
+        </div>
       </CardContent>
     </Card>
   );

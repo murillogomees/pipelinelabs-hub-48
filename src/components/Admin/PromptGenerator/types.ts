@@ -44,6 +44,7 @@ export interface ConversationState {
   implementationReport?: ImplementationReport;
   originalPrompt: string;
   logId?: string;
+  learningContext?: LearningContext;
 }
 
 export interface PromptLog {
@@ -59,6 +60,70 @@ export interface PromptLog {
   company_id: string;
   model_used: string;
   temperature: number;
-  applied_files?: any;
+  applied_files?: string[];
   rollback_data?: any;
+}
+
+// Novas interfaces para aprendizado contínuo
+export interface LearningContext {
+  similarSolutions: SimilarSolution[];
+  knowledgeBase: KnowledgeEntry[];
+  patterns: Pattern[];
+  suggestions: string[];
+}
+
+export interface SimilarSolution {
+  id: string;
+  prompt: string;
+  solution: string;
+  tags: string[];
+  similarity: number;
+  usage_count: number;
+  last_used: string;
+  effectiveness_score: number;
+}
+
+export interface KnowledgeEntry {
+  id: string;
+  title: string;
+  description: string;
+  category: string;
+  tags: string[];
+  code_snippet: string;
+  files_affected: string[];
+  solution_type: string;
+  created_at: string;
+  updated_at: string;
+  usage_count: number;
+  success_rate: number;
+}
+
+export interface Pattern {
+  id: string;
+  pattern_type: 'architectural' | 'security' | 'performance' | 'code_style';
+  description: string;
+  trigger_keywords: string[];
+  recommended_solution: string;
+  confidence_score: number;
+  examples: string[];
+}
+
+export interface BuildResult {
+  success: boolean;
+  errors: string[];
+  warnings: string[];
+  timestamp: string;
+  build_time_ms: number;
+}
+
+export interface LearningSession {
+  id: string;
+  prompt: string;
+  context: LearningContext;
+  analysis: TechnicalAnalysis;
+  implementation: ImplementationReport;
+  build_result: BuildResult;
+  user_feedback?: 'positive' | 'negative';
+  improvements_made: string[];
+  created_at: string;
 }

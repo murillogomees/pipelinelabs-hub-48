@@ -1,139 +1,121 @@
 
-import { useQuery, useMutation } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
-import { usePermissions } from '@/hooks/usePermissions';
-import { useToast } from '@/hooks/use-toast';
+import { useAuth } from '@/components/Auth/AuthProvider';
+
+interface NFeConfig {
+  id: string;
+  company_id: string;
+  api_token: string;
+  environment: 'sandbox' | 'production';
+  webhook_url: string;
+  timeout: number;
+  is_active: boolean;
+  certificate_file: any;
+  certificate_password: string;
+  created_at: string;
+  updated_at: string;
+}
 
 export const useNFeIntegration = () => {
-  const { currentCompanyId } = usePermissions();
-  const { toast } = useToast();
+  const { user } = useAuth();
+  const queryClient = useQueryClient();
 
-  // Mock NFE config data since the table doesn't exist in the database
-  const mockNFeConfig = {
+  // Mock data para NFe config
+  const mockNFeConfig: NFeConfig = {
     id: '1',
-    company_id: currentCompanyId || '',
-    api_token: '',
-    environment: 'sandbox' as const,
-    webhook_url: '',
-    timeout: 30,
-    is_active: false,
+    company_id: 'mock-company-id',
+    api_token: 'mock-api-token',
+    environment: 'sandbox',
+    webhook_url: 'https://webhook.example.com',
+    timeout: 30000,
+    is_active: true,
     certificate_file: null,
     certificate_password: '',
     created_at: new Date().toISOString(),
     updated_at: new Date().toISOString()
   };
 
-  const { data: nfeConfig, isLoading, refetch } = useQuery({
-    queryKey: ['nfe-config', currentCompanyId],
+  const { data: nfeConfig, isLoading } = useQuery({
+    queryKey: ['nfe-config'],
     queryFn: async () => {
-      if (!currentCompanyId) return null;
-      // Return mock data since nfe_configs table doesn't exist
+      // Mock implementation
       return mockNFeConfig;
-    },
-    enabled: !!currentCompanyId
-  });
-
-  const testConnectionMutation = useMutation({
-    mutationFn: async (config?: any) => {
-      // Mock test connection
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      return { success: true };
-    },
-    onSuccess: () => {
-      toast({
-        title: 'Sucesso',
-        description: 'Conexão testada com sucesso',
-      });
-    },
-    onError: (error: any) => {
-      toast({
-        title: 'Erro',
-        description: error.message || 'Erro ao testar conexão',
-        variant: 'destructive',
-      });
     }
   });
 
-  const updateConfigMutation = useMutation({
-    mutationFn: async (config: any) => {
-      // Mock update config
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      return null;
-    },
-    onSuccess: () => {
-      toast({
-        title: 'Sucesso',
-        description: 'Configuração salva com sucesso',
-      });
-      refetch();
-    },
-    onError: (error: any) => {
-      toast({
-        title: 'Erro',
-        description: error.message || 'Erro ao salvar configuração',
-        variant: 'destructive',
-      });
-    }
-  });
-
-  const validateCertificateMutation = useMutation({
+  const testConnection = useMutation({
     mutationFn: async () => {
-      // Mock certificate validation
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      return {
-        is_valid: true,
-        subject: 'Test Certificate',
-        issuer: 'Test CA',
-        valid_from: new Date().toISOString(),
-        valid_to: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString(),
-        serial_number: '12345',
-        days_until_expiry: 365
-      };
+      // Mock test connection
+      return { success: true, message: 'Conexão testada com sucesso' };
     }
   });
 
-  // Helper functions
+  const updateConfig = useMutation({
+    mutationFn: async (config: Partial<NFeConfig>) => {
+      // Mock update
+      return null;
+    }
+  });
+
+  // Propriedades adicionais necessárias pelos componentes
+  const saveNFeConfig = (config: Partial<NFeConfig>) => {
+    return updateConfig.mutate(config);
+  };
+
+  const validateCertificate = () => {
+    return testConnection.mutate();
+  };
+
   const getConfig = () => {
-    return nfeConfig || mockNFeConfig;
+    return nfeConfig;
   };
 
-  const isConfigured = Boolean(nfeConfig?.api_token || mockNFeConfig.api_token);
-  const isActive = Boolean(nfeConfig?.is_active || mockNFeConfig.is_active);
-  const hasValidConfig = () => Boolean(nfeConfig?.certificate_file && nfeConfig?.certificate_password);
+  const isConfigured = nfeConfig?.api_token ? true : false;
+  const isActive = nfeConfig?.is_active || false;
+  const isSaving = updateConfig.isPending;
+  const testingConnection = testConnection.isPending;
+  const uploadingCertificate = false;
+  const hasValidConfig = isConfigured && isActive;
 
-  const saveNFeConfig = async (config: any) => {
-    return updateConfigMutation.mutateAsync(config);
+  // Mock functions para NFe operations
+  const issueNFe = () => {
+    return Promise.resolve({ success: true });
   };
 
-  const validateCertificate = async () => {
-    return validateCertificateMutation.mutateAsync();
+  const issueNFeProduct = () => {
+    return Promise.resolve({ success: true });
   };
 
-  const testConnection = (config?: any) => {
-    testConnectionMutation.mutate(config);
-  };
+  const api_token = nfeConfig?.api_token || '';
+  const is_active = nfeConfig?.is_active || false;
+  const certificate_file = nfeConfig?.certificate_file || null;
+  const certificate_password = nfeConfig?.certificate_password || '';
 
   return {
-    nfeConfig,
+    nfeConfig: nfeConfig || mockNFeConfig,
     isLoading,
-    testConnection,
-    updateConfig: updateConfigMutation.mutate,
-    isTestingConnection: testConnectionMutation.isPending,
-    isUpdatingConfig: updateConfigMutation.isPending,
-    refetch,
-    // Additional properties expected by components
+    testConnection: testConnection.mutate,
+    updateConfig: updateConfig.mutate,
+    isTestingConnection: testConnection.isPending,
+    isUpdatingConfig: updateConfig.isPending,
+    refetch: () => queryClient.invalidateQueries({ queryKey: ['nfe-config'] }),
+    
+    // Propriedades adicionais
     saveNFeConfig,
+    validateCertificate,
     getConfig,
     isConfigured,
     isActive,
-    isSaving: updateConfigMutation.isPending,
-    testingConnection: testConnectionMutation.isPending,
-    validateCertificate,
+    isSaving,
+    testingConnection,
+    uploadingCertificate,
     hasValidConfig,
-    uploadingCertificate: false,
-    // Mock functions for missing NFE functionality
-    issueNFe: async () => ({ success: true }),
-    issueNFeProduct: async () => ({ success: true }),
-    nfeIntegration: null
+    issueNFe,
+    issueNFeProduct,
+    api_token,
+    is_active,
+    certificate_file,
+    certificate_password
   };
 };

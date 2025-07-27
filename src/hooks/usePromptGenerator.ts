@@ -28,19 +28,19 @@ export const usePromptGenerator = () => {
     queryFn: async () => {
       if (!user?.id) return null;
 
-      const { data: profile, error } = await supabase
-        .from('profiles')
+      const { data: userCompanyData, error } = await supabase
+        .from('user_companies')
         .select('company_id')
         .eq('user_id', user.id)
         .single();
 
-      if (error || !profile?.company_id) {
+      if (error || !userCompanyData?.company_id) {
         return null;
       }
 
       return {
-        company_id: profile.company_id,
-        company: { id: profile.company_id, name: 'Company' }
+        company_id: userCompanyData.company_id,
+        company: { id: userCompanyData.company_id, name: 'Company' }
       };
     },
     enabled: !!user?.id

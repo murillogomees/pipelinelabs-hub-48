@@ -3,47 +3,37 @@ import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/components/Auth/AuthProvider';
 
-export function useUserCompany() {
+export const useUserCompany = () => {
   const { user } = useAuth();
 
-  const { data: userCompany, isLoading } = useQuery({
+  const { data: userCompany, isLoading, error } = useQuery({
     queryKey: ['user-company', user?.id],
     queryFn: async () => {
       if (!user?.id) return null;
 
-      // Get user profile to find company association
-      const { data: profile, error } = await supabase
-        .from('profiles')
-        .select('company_id')
+      const { data: userCompanyData, error } = await supabase
+        .from('user_companies')
+        .select(`
+          company_id,
+          company:companies(*)
+        `)
         .eq('user_id', user.id)
+        .eq('is_active', true)
         .single();
 
-      if (error || !profile?.company_id) {
+      if (error) {
+        console.error('Error fetching user company:', error);
         return null;
       }
 
-      // Get company details
-      const { data: company, error: companyError } = await supabase
-        .from('companies')
-        .select('*')
-        .eq('id', profile.company_id)
-        .single();
-
-      if (companyError) {
-        console.error('Error fetching company:', companyError);
-        return null;
-      }
-
-      return {
-        company_id: company.id,
-        company: company
-      };
+      return userCompanyData;
     },
     enabled: !!user?.id
   });
 
   return {
     userCompany,
-    isLoading
+    isLoading,
+    error
   };
-}
+};
