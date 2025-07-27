@@ -91,6 +91,19 @@ export function AccessLevelsManagement() {
     }
   };
 
+  const filteredLevels = accessLevels.filter(level => 
+    level.display_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    level.name.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
+    const { data: levels, error: lError } = await supabase
+            .from('access_levels')
+            .select('*')
+            .order('created_at', { ascending: false });
+
+        
+        
+      
 
   const columns: Column<AccessLevelWithCount>[] = [
     {
@@ -100,12 +113,8 @@ export function AccessLevelsManagement() {
         <div className="flex items-center space-x-2">
           <Shield className="h-4 w-4 text-primary" />
           <div>
-            <p className="font-medium">{accessLevels.filter(level => level.display_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-              level.name.toLowerCase().includes(searchTerm.toLowerCase())
-            )}</p>
-            <p className="text-sm text-muted-foreground">{accessLevels.filter(level => level.display_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-              level.name.toLowerCase().includes(searchTerm.toLowerCase())
-            )}</p>
+            <p className="font-medium">{levels.data.display_name}</p>
+            <p className="text-sm text-muted-foreground">{filteredLevels}</p>
           </div>
         </div>
       )
@@ -195,9 +204,7 @@ export function AccessLevelsManagement() {
       </div>
 
       <DataTable
-        data={accessLevels.filter(level => level.display_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          level.name.toLowerCase().includes(searchTerm.toLowerCase())
-        )}
+        data={filteredLevels}
         columns={columns}
         actions={actions}
         loading={isLoading}
