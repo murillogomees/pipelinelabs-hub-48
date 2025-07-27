@@ -64,30 +64,6 @@ export function useProfile() {
     enabled: true,
   });
 
-  const { data: userCompanies } = useQuery({
-    queryKey: ['user-companies'],
-    queryFn: async () => {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return [];
-
-      const { data, error } = await supabase
-        .from('user_companies')
-        .select(`
-          id,
-          company_id,
-          companies (
-            id,
-            name
-          )
-        `)
-        .eq('user_id', user.id)
-        .eq('is_active', true);
-
-      if (error) throw error;
-      return data || [];
-    },
-  });
-
   const isSuperAdmin = profile?.access_levels?.name === 'super_admin';
 
   const needsSubscriptionRedirect = (): boolean => {
@@ -100,12 +76,17 @@ export function useProfile() {
     if (isSuperAdmin) return true;
     
     const permissions = profile?.access_levels?.permissions || [];
-    // Handle Json[] type properly
-    const permissionStrings = Array.isArray(permissions) ? 
-      permissions.map(p => String(p)) : 
-      [];
+    // Handle permissions array properly
+    if (Array.isArray(permissions)) {
+      return permissions.some(p => {
+        if (typeof p === 'string') {
+          return p === permission;
+        }
+        return false;
+      });
+    }
     
-    return permissionStrings.includes(permission);
+    return false;
   };
 
   const canAccessRoute = (route: string): boolean => {
@@ -136,9 +117,6 @@ export function useProfile() {
     return hasPermission(requiredPermission);
   };
 
-  // Get company_id from user_companies if available
-  const userCompanyId = userCompanies?.[0]?.company_id;
-
   const transformedProfile: Profile | null = profile ? {
     id: profile.id,
     user_id: profile.user_id,
@@ -154,8 +132,8 @@ export function useProfile() {
     avatar_url: profile.avatar_url,
     is_active: profile.is_active,
     access_level_id: profile.access_level_id,
-    company_id: userCompanyId,
-    stripe_customer_id: profile.stripe_customer_id,
+    company_id: undefined, // Will be set by useCurrentCompany
+    stripe_customer_id: undefined, // Will be set by subscription logic
     created_at: profile.created_at,
     updated_at: profile.updated_at,
     access_levels: {
@@ -167,10 +145,7 @@ export function useProfile() {
         : []
     },
     is_super_admin: isSuperAdmin,
-    companies: userCompanies?.map(uc => ({
-      id: uc.company_id || '',
-      name: uc.companies?.name || ''
-    })) || [],
+    companies: [], // Will be populated by useCurrentCompany
   } : null;
 
   return {
@@ -179,7 +154,7 @@ export function useProfile() {
     error,
     isSuperAdmin,
     needsSubscriptionRedirect,
-    userCompanies,
+    userCompanies: [],
     hasPermission,
     canAccessRoute,
   };

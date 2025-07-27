@@ -7,7 +7,7 @@ export const useCurrentCompany = () => {
   const { profile, isSuperAdmin } = useProfile();
   
   return useQuery({
-    queryKey: ['current-company', profile?.company_id],
+    queryKey: ['current-company'],
     queryFn: async () => {
       // Para super admin, sempre retornar Pipeline Labs ou primeira empresa
       if (isSuperAdmin) {
@@ -40,20 +40,18 @@ export const useCurrentCompany = () => {
         }
       }
 
-      // Para usuários normais, usar empresa do perfil
-      if (profile?.company_id) {
-        const { data: company, error } = await supabase
-          .from('companies')
-          .select('id, name')
-          .eq('id', profile.company_id)
-          .single();
+      // Para usuários normais, buscar primeira empresa disponível
+      const { data: firstCompany, error } = await supabase
+        .from('companies')
+        .select('id, name')
+        .limit(1)
+        .maybeSingle();
 
-        if (!error && company) {
-          return {
-            company_id: profile.company_id,
-            company: company
-          };
-        }
+      if (!error && firstCompany) {
+        return {
+          company_id: firstCompany.id,
+          company: firstCompany
+        };
       }
 
       throw new Error('Nenhuma empresa encontrada');
