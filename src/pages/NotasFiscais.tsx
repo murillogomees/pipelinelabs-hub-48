@@ -22,7 +22,6 @@ import {
 
 const NotasFiscais: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState('');
-  const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [selectedNFe, setSelectedNFe] = useState<any>(null);
 
   const { nfeData, isLoading, createNFe, updateNFe, deleteNFe, isCreating, isUpdating, isDeleting } = useNFe();
@@ -72,14 +71,8 @@ const NotasFiscais: React.FC = () => {
     }
   };
 
-  const handleCreateNFe = () => {
-    setSelectedNFe(null);
-    setIsDialogOpen(true);
-  };
-
   const handleEditNFe = (nfe: any) => {
     setSelectedNFe(nfe);
-    setIsDialogOpen(true);
   };
 
   const handleSendNFe = (nfe: any) => {
@@ -119,10 +112,14 @@ const NotasFiscais: React.FC = () => {
             Gerencie suas notas fiscais eletrônicas
           </p>
         </div>
-        <Button onClick={handleCreateNFe}>
-          <Plus className="h-4 w-4 mr-2" />
-          Nova NFe
-        </Button>
+        <RealNFeDialog
+          trigger={
+            <Button>
+              <Plus className="h-4 w-4 mr-2" />
+              Nova NFe
+            </Button>
+          }
+        />
       </div>
 
       {/* Search */}
@@ -154,10 +151,14 @@ const NotasFiscais: React.FC = () => {
               <p className="text-muted-foreground mb-4">
                 Comece criando sua primeira nota fiscal eletrônica
               </p>
-              <Button onClick={handleCreateNFe}>
-                <Plus className="h-4 w-4 mr-2" />
-                Criar Nova NFe
-              </Button>
+              <RealNFeDialog
+                trigger={
+                  <Button>
+                    <Plus className="h-4 w-4 mr-2" />
+                    Criar Nova NFe
+                  </Button>
+                }
+              />
             </div>
           ) : (
             <div className="space-y-4">
@@ -223,22 +224,6 @@ const NotasFiscais: React.FC = () => {
           )}
         </CardContent>
       </Card>
-
-      {/* NFe Dialog */}
-      <RealNFeDialog
-        isOpen={isDialogOpen}
-        onClose={() => setIsDialogOpen(false)}
-        nfe={selectedNFe}
-        onSave={(data) => {
-          if (selectedNFe) {
-            updateNFe({ id: selectedNFe.id, ...data });
-          } else {
-            createNFe(data);
-          }
-          setIsDialogOpen(false);
-        }}
-        isLoading={isCreating || isUpdating}
-      />
     </div>
   );
 };
