@@ -4,7 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
-import { type ImplementationReport as IImplementationReport } from './types';
+import { ImplementationReport as IImplementationReport } from './types';
 import { FileText, Code, Database, Zap, ArrowRight } from 'lucide-react';
 
 export interface ImplementationReportProps {
@@ -29,7 +29,7 @@ export const ImplementationReport: React.FC<ImplementationReportProps> = ({
     }
   };
 
-  const totalLines = Object.values(report.linesChanged).reduce((sum, lines) => sum + lines, 0);
+  const totalLines = Object.values(report.linesChanged).reduce((sum, lines) => sum + (lines || 0), 0);
 
   return (
     <div className="space-y-6">

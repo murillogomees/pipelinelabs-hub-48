@@ -8,7 +8,9 @@ import {
   KnowledgeEntry, 
   Pattern,
   LearningSession,
-  BuildResult
+  BuildResult,
+  TechnicalAnalysis,
+  ImplementationReport
 } from '@/components/Admin/PromptGenerator/types';
 
 export const useLearningSystem = () => {
@@ -108,10 +110,28 @@ export const useLearningSystem = () => {
   });
 
   const saveLearningSession = useMutation({
-    mutationFn: async (session: Omit<LearningSession, 'id' | 'created_at'>) => {
+    mutationFn: async (sessionData: {
+      prompt: string;
+      context: LearningContext;
+      analysis: TechnicalAnalysis;
+      implementation: ImplementationReport;
+      build_result: BuildResult;
+      improvements_made: string[];
+    }) => {
       // Mock implementation
-      console.log('Saving learning session:', session);
-      return { id: '1', ...session, created_at: new Date().toISOString() };
+      console.log('Saving learning session:', sessionData);
+      return { 
+        id: '1', 
+        session_id: 'session-1',
+        user_id: 'user-1',
+        company_id: 'company-1',
+        query: sessionData.prompt,
+        response: 'Mock response',
+        context: sessionData.context,
+        tags: [],
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
+      };
     }
   });
 
@@ -196,33 +216,4 @@ function generateSuggestions(
   }
 
   return suggestions;
-}
-
-function calculateEffectivenessScore(session: Omit<LearningSession, 'id' | 'created_at'>): number {
-  let score = 0.5; // Base score
-
-  // Build success increases score
-  if (session.build_result.success) {
-    score += 0.3;
-  }
-
-  // Fewer errors increase score
-  if (session.build_result.errors.length === 0) {
-    score += 0.2;
-  }
-
-  // User feedback affects score
-  if (session.user_feedback === 'positive') {
-    score += 0.2;
-  } else if (session.user_feedback === 'negative') {
-    score -= 0.2;
-  }
-
-  return Math.max(0, Math.min(1, score));
-}
-
-function generateSolutionSummary(implementation: any): string {
-  const { modifiedFiles, functionsCreated, databaseChanges } = implementation;
-  
-  return `Modificados ${modifiedFiles.length} arquivos, criadas ${functionsCreated.length} funções, alteradas ${databaseChanges.tables.length} tabelas`;
 }

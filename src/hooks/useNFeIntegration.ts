@@ -96,7 +96,7 @@ export const useNFeIntegration = () => {
   });
 
   const validateCertificate = useMutation({
-    mutationFn: async (file?: File, password?: string): Promise<CertificateValidationResult> => {
+    mutationFn: async (params: { file?: File; password?: string } = {}): Promise<CertificateValidationResult> => {
       // Mock validation
       return {
         is_valid: true,

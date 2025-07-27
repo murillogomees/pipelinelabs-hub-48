@@ -20,16 +20,59 @@ export interface PromptLog {
 
 export interface ConversationStep {
   id: string;
-  type: 'user' | 'ai' | 'system';
+  type: 'user' | 'ai' | 'system' | 'initial_query' | 'technical_approval' | 'implementation' | 'build_verification';
   content: string;
   timestamp: string;
+  status?: 'pending' | 'completed' | 'failed';
   metadata?: {
     prompt?: string;
     generated_code?: any;
     build_status?: 'pending' | 'success' | 'error';
     build_errors?: string[];
     suggestions?: string[];
+    hasLearningContext?: boolean;
+    reusedSolution?: SimilarSolution;
+    appliedKnowledge?: KnowledgeEntry;
+    appliedPattern?: Pattern;
   };
+}
+
+export interface ConversationState {
+  currentStep: ConversationStep['type'];
+  steps: ConversationStep[];
+  originalPrompt: string;
+  technicalAnalysis?: TechnicalAnalysis;
+  implementationReport?: ImplementationReport;
+  learningContext?: LearningContext;
+}
+
+export interface TechnicalAnalysis {
+  affectedFiles: string[];
+  impactType: 'performance' | 'security' | 'clean_code' | 'database' | 'architectural';
+  impactDescription: string;
+  justification: string;
+  estimatedChanges: {
+    files: string[];
+    functions: string[];
+    tables: string[];
+    edgeFunctions: string[];
+  };
+}
+
+export interface ImplementationReport {
+  modifiedFiles: string[];
+  linesChanged: Record<string, number>;
+  functionsCreated: string[];
+  functionsModified: string[];
+  functionsRemoved: string[];
+  databaseChanges: {
+    tables: string[];
+    fields: string[];
+    indexes: string[];
+  };
+  edgeFunctions: string[];
+  buildStatus: 'success' | 'failed' | 'running';
+  buildErrors: string[];
 }
 
 export interface LearningSession {
@@ -45,6 +88,12 @@ export interface LearningSession {
   tags: string[];
   created_at: string;
   updated_at: string;
+  prompt?: string;
+  analysis?: TechnicalAnalysis;
+  implementation?: ImplementationReport;
+  build_result?: BuildResult;
+  user_feedback?: 'positive' | 'negative';
+  improvements_made?: string[];
 }
 
 export interface KnowledgeBase {
@@ -95,4 +144,56 @@ export interface PromptGeneratorConfig {
   enableBuildVerification: boolean;
   enableLearning: boolean;
   enableSimilarityCheck: boolean;
+}
+
+// Learning System Types
+export interface LearningContext {
+  similarSolutions: SimilarSolution[];
+  knowledgeBase: KnowledgeEntry[];
+  patterns: Pattern[];
+  suggestions: string[];
+}
+
+export interface SimilarSolution {
+  id: string;
+  prompt: string;
+  solution: string;
+  tags: string[];
+  similarity: number;
+  usage_count: number;
+  last_used: string;
+  effectiveness_score: number;
+}
+
+export interface KnowledgeEntry {
+  id: string;
+  title: string;
+  description: string;
+  category: string;
+  tags: string[];
+  code_snippet: string;
+  files_affected: string[];
+  solution_type: string;
+  created_at: string;
+  updated_at: string;
+  usage_count: number;
+  success_rate: number;
+}
+
+export interface Pattern {
+  id: string;
+  pattern_type: 'architectural' | 'performance' | 'security';
+  description: string;
+  trigger_keywords: string[];
+  recommended_solution: string;
+  confidence_score: number;
+  examples: string[];
+}
+
+export interface BuildResult {
+  success: boolean;
+  errors: string[];
+  warnings: string[];
+  timestamp: string;
+  build_time_ms: number;
 }
