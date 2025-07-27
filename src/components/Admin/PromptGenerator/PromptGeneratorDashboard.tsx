@@ -5,15 +5,16 @@ import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
 import { ConversationalDashboard } from './ConversationalDashboard';
+import { EnhancedPromptGenerator } from './EnhancedPromptGenerator';
 import { PromptEditor } from './PromptEditor';
 import { CodePreview } from './CodePreview';
 import { PromptHistory } from './PromptHistory';
 import { usePromptGenerator } from '@/hooks/usePromptGenerator';
-import { Bot, Code, History, MessageSquare, Zap } from 'lucide-react';
+import { Bot, Code, History, MessageSquare, Zap, Brain, Sparkles } from 'lucide-react';
 import { type PromptLog } from './types';
 
 export const PromptGeneratorDashboard: React.FC = () => {
-  const [mode, setMode] = useState<'conversational' | 'traditional'>('conversational');
+  const [mode, setMode] = useState<'conversational' | 'traditional' | 'enhanced'>('enhanced');
   const [generatedCode, setGeneratedCode] = useState<any>(null);
   const [selectedLog, setSelectedLog] = useState<string | null>(null);
   
@@ -60,6 +61,14 @@ export const PromptGeneratorDashboard: React.FC = () => {
     );
   }
 
+  if (mode === 'enhanced') {
+    return (
+      <EnhancedPromptGenerator 
+        onBackToSimple={() => setMode('traditional')}
+      />
+    );
+  }
+
   // Transform prompt logs to match PromptLog interface
   const transformedPromptLogs: PromptLog[] = (promptLogs || []).map(log => ({
     id: log.id,
@@ -92,6 +101,14 @@ export const PromptGeneratorDashboard: React.FC = () => {
           </div>
         </div>
         <div className="flex items-center gap-2">
+          <Button 
+            variant="outline" 
+            onClick={() => setMode('enhanced')}
+            className="flex items-center gap-2"
+          >
+            <Brain className="h-4 w-4" />
+            Modo Inteligente
+          </Button>
           <Button 
             variant="outline" 
             onClick={() => setMode('conversational')}
