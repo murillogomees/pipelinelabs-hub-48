@@ -4,11 +4,11 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
-import { ImplementationReport } from './types';
+import { type ImplementationReport as IImplementationReport } from './types';
 import { FileText, Code, Database, Zap, ArrowRight } from 'lucide-react';
 
 export interface ImplementationReportProps {
-  report: ImplementationReport;
+  report: IImplementationReport;
   onNext: () => void;
 }
 

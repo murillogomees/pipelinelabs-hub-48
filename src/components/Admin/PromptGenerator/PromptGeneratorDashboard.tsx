@@ -26,9 +26,9 @@ export const PromptGeneratorDashboard: React.FC = () => {
     isApplying 
   } = usePromptGenerator();
 
-  const handleGenerateCode = ({ prompt, temperature, model }: { prompt: string; temperature: number; model: string }) => {
+  const handleGenerateCode = (params: { prompt: string; temperature: number; model: string }) => {
     generateCode(
-      { prompt, temperature, model },
+      params,
       {
         onSuccess: (data) => {
           setGeneratedCode(data);
@@ -67,15 +67,15 @@ export const PromptGeneratorDashboard: React.FC = () => {
     generated_code: log.generated_code,
     status: (log.status as 'pending' | 'applied' | 'rolled_back' | 'error') || 'pending',
     created_at: log.created_at,
-    applied_at: log.applied_at,
-    rolled_back_at: log.rolled_back_at,
-    error_message: log.error_message,
+    applied_at: log.applied_at || undefined,
+    rolled_back_at: log.rolled_back_at || undefined,
+    error_message: log.error_message || undefined,
     user_id: log.user_id,
     company_id: log.company_id || '',
     model_used: log.model_used || 'gpt-4',
     temperature: log.temperature || 0.7,
-    applied_files: log.applied_files,
-    rollback_data: log.rollback_data
+    applied_files: log.applied_files || undefined,
+    rollback_data: log.rollback_data || undefined
   }));
 
   return (
@@ -144,7 +144,6 @@ export const PromptGeneratorDashboard: React.FC = () => {
               <CodePreview 
                 generatedCode={generatedCode}
                 onApply={handleApplyCode}
-                onRollback={handleRollbackCode}
                 isApplying={isApplying}
               />
             </CardContent>

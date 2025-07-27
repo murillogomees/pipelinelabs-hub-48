@@ -7,15 +7,15 @@ import { Label } from '@/components/ui/label';
 import { MessageSquare, Send } from 'lucide-react';
 
 export interface InitialQueryProps {
-  onSubmit: (prompt: string) => void;
+  onQuery: (prompt: string) => void;
 }
 
-export const InitialQuery: React.FC<InitialQueryProps> = ({ onSubmit }) => {
+export const InitialQuery: React.FC<InitialQueryProps> = ({ onQuery }) => {
   const [prompt, setPrompt] = useState('');
 
   const handleSubmit = () => {
     if (prompt.trim()) {
-      onSubmit(prompt);
+      onQuery(prompt);
     }
   };
 

@@ -22,7 +22,7 @@ export const ConversationalDashboard: React.FC<ConversationalDashboardProps> = (
 }) => {
   const { conversationState, updateConversationState, resetConversation } = useConversationFlow();
   const { promptLogs, generateCode, applyCode, isGenerating, isApplying } = usePromptGenerator();
-  const [buildStatus, setBuildStatus] = useState<'pending' | 'running' | 'success' | 'failed'>('pending');
+  const [buildStatus, setBuildStatus] = useState<'success' | 'failed' | 'running'>('success');
 
   const handleInitialQuery = (prompt: string) => {
     // Simulate AI understanding and analysis
@@ -73,7 +73,7 @@ export const ConversationalDashboard: React.FC<ConversationalDashboardProps> = (
         indexes: ['idx_products_name']
       },
       edgeFunctions: ['product-optimizer'],
-      buildStatus: 'running',
+      buildStatus: 'success',
       buildErrors: []
     };
 
@@ -164,20 +164,21 @@ export const ConversationalDashboard: React.FC<ConversationalDashboardProps> = (
   const renderCurrentStep = () => {
     switch (conversationState.currentStep) {
       case 'initial_query':
-        return <InitialQuery onSubmit={handleInitialQuery} />;
+        return <InitialQuery onQuery={handleInitialQuery} />;
       case 'technical_approval':
         return (
           <TechnicalApproval
             analysis={conversationState.technicalAnalysis!}
             onApprove={handleTechnicalApproval}
             onReject={resetConversation}
+            isProcessing={false}
           />
         );
       case 'implementation':
         return (
           <ImplementationReport
             report={conversationState.implementationReport!}
-            onContinue={handleBuildVerification}
+            onNext={handleBuildVerification}
           />
         );
       case 'build_verification':
@@ -199,17 +200,17 @@ export const ConversationalDashboard: React.FC<ConversationalDashboardProps> = (
     id: log.id,
     prompt: log.prompt,
     generated_code: log.generated_code,
-    status: log.status as 'pending' | 'applied' | 'rolled_back' | 'error',
+    status: (log.status as 'pending' | 'applied' | 'rolled_back' | 'error') || 'pending',
     created_at: log.created_at,
-    applied_at: log.applied_at,
-    rolled_back_at: log.rolled_back_at,
-    error_message: log.error_message,
+    applied_at: log.applied_at || undefined,
+    rolled_back_at: log.rolled_back_at || undefined,
+    error_message: log.error_message || undefined,
     user_id: log.user_id,
-    company_id: log.company_id,
-    model_used: log.model_used,
-    temperature: log.temperature,
-    applied_files: log.applied_files,
-    rollback_data: log.rollback_data
+    company_id: log.company_id || '',
+    model_used: log.model_used || 'gpt-4',
+    temperature: log.temperature || 0.7,
+    applied_files: log.applied_files || undefined,
+    rollback_data: log.rollback_data || undefined
   }));
 
   return (
