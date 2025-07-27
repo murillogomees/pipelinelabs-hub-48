@@ -152,7 +152,7 @@ export function CertificadoTab() {
           ) : (
             <div className="space-y-4">
               {certificates.map((cert) => {
-                const statusInfo = getCertificateStatus(cert.expires_at);
+                const statusInfo = getCertificateStatus(cert.certificate_expires_at);
                 
                 return (
                   <div key={cert.id} className="border rounded-lg p-4">
@@ -163,7 +163,7 @@ export function CertificadoTab() {
                           <h3 className="font-medium">{cert.certificate_cn}</h3>
                         </div>
                         <p className="text-sm text-muted-foreground">
-                          Válido até: {new Date(cert.expires_at).toLocaleDateString('pt-BR')}
+                          Válido até: {new Date(cert.certificate_expires_at).toLocaleDateString('pt-BR')}
                         </p>
                       </div>
                       <div className="flex items-center space-x-2">

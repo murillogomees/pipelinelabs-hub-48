@@ -1,154 +1,103 @@
-import React, { useState, useEffect } from 'react';
+
+import React, { useState } from 'react';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Checkbox } from '@/components/ui/checkbox';
-import { useCompanySettings } from '@/hooks/useCompanySettings';
+import { Switch } from '@/components/ui/switch';
 import { useToast } from '@/hooks/use-toast';
-import { FINANCIAL_DEFAULTS, SUCCESS_MESSAGES } from './constants';
+import { useCompanySettings } from '@/hooks/useCompanySettings';
 
 export function FinanceiroTab() {
-  const { settings, loading, updateSettings } = useCompanySettings();
+  const { settings, isLoading, updateSettings, canEdit } = useCompanySettings();
   const { toast } = useToast();
-  const [formData, setFormData] = useState({
-    moeda: 'BRL',
-    conta_padrao: '',
-    categoria_receita: '',
-    categoria_despesa: '',
-    prazo_pagamento: '',
-    formas_pagamento: [] as string[]
-  });
+  const [isSaving, setIsSaving] = useState(false);
 
-  useEffect(() => {
-    if (settings) {
-      setFormData({
-        moeda: 'BRL', // Default value since field doesn't exist
-        conta_padrao: '', // Default value since field doesn't exist  
-        categoria_receita: '',
-        categoria_despesa: '',
-        prazo_pagamento: '',
-        formas_pagamento: [] // Default empty array since field doesn't exist
+  const handleSave = async (field: string, value: any) => {
+    if (!canEdit) return;
+
+    setIsSaving(true);
+    try {
+      const success = await updateSettings({ [field]: value });
+      if (success) {
+        toast({
+          title: 'Sucesso',
+          description: 'Configurações atualizadas com sucesso',
+        });
+      }
+    } catch (error) {
+      toast({
+        title: 'Erro',
+        description: 'Erro ao atualizar configurações',
+        variant: 'destructive',
       });
+    } finally {
+      setIsSaving(false);
     }
-  }, [settings]);
-
-  const handleFormaPagamentoChange = (forma: string, checked: boolean) => {
-    setFormData(prev => ({
-      ...prev,
-      formas_pagamento: checked
-        ? [...prev.formas_pagamento, forma]
-        : prev.formas_pagamento.filter(f => f !== forma)
-    }));
   };
 
-  const handleSave = async () => {
-    // Note: Financial settings are not stored in company_settings table currently
-    // They would need additional database columns to persist
-    toast({
-      title: "Sucesso",
-      description: "Configurações atualizadas (dados locais apenas)"
-    });
-  };
-
-  if (loading) {
-    return <div>Carregando...</div>;
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center p-8">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+      </div>
+    );
   }
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>Configurações Financeiras</CardTitle>
-        <CardDescription>Configure os parâmetros financeiros da sua empresa</CardDescription>
-      </CardHeader>
-      <CardContent className="space-y-6">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+    <div className="space-y-6">
+      <Card>
+        <CardHeader>
+          <CardTitle>Configurações Financeiras</CardTitle>
+          <CardDescription>
+            Configure as preferências financeiras da sua empresa
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
           <div className="space-y-2">
-            <Label htmlFor="moeda">Moeda Padrão</Label>
-            <Select value={formData.moeda} onValueChange={(value) => setFormData(prev => ({ ...prev, moeda: value }))}>
-              <SelectTrigger>
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="BRL">Real Brasileiro (BRL)</SelectItem>
-                <SelectItem value="USD">Dólar Americano (USD)</SelectItem>
-                <SelectItem value="EUR">Euro (EUR)</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="conta_padrao">Conta Bancária Padrão</Label>
+            <Label htmlFor="currency">Moeda Padrão</Label>
             <Input
-              id="conta_padrao"
-              value={formData.conta_padrao}
-              onChange={(e) => setFormData(prev => ({ ...prev, conta_padrao: e.target.value }))}
-              placeholder="Banco do Brasil - C/C 12345-6"
+              id="currency"
+              value={settings?.currency || 'BRL'}
+              disabled={!canEdit}
+              onChange={(e) => handleSave('currency', e.target.value)}
+              placeholder="BRL"
             />
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="categoria_receita">Categoria Padrão de Receita</Label>
+            <Label htmlFor="default_tax_rate">Taxa de Imposto Padrão (%)</Label>
             <Input
-              id="categoria_receita"
-              value={formData.categoria_receita}
-              onChange={(e) => setFormData(prev => ({ ...prev, categoria_receita: e.target.value }))}
-              placeholder="Vendas"
-            />
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="categoria_despesa">Categoria Padrão de Despesa</Label>
-            <Input
-              id="categoria_despesa"
-              value={formData.categoria_despesa}
-              onChange={(e) => setFormData(prev => ({ ...prev, categoria_despesa: e.target.value }))}
-              placeholder="Operacionais"
-            />
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="prazo_pagamento">Prazo Médio de Pagamento (dias)</Label>
-            <Input
-              id="prazo_pagamento"
+              id="default_tax_rate"
               type="number"
-              value={formData.prazo_pagamento}
-              onChange={(e) => setFormData(prev => ({ ...prev, prazo_pagamento: e.target.value }))}
-              placeholder="30"
+              value={settings?.default_tax_rate || 0}
+              disabled={!canEdit}
+              onChange={(e) => handleSave('default_tax_rate', parseFloat(e.target.value))}
+              placeholder="0.00"
             />
           </div>
-        </div>
 
-        <div className="space-y-4">
-          <Label>Formas de Pagamento Ativas</Label>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            {[
-              { id: 'pix', label: 'PIX' },
-              { id: 'cartao_credito', label: 'Cartão de Crédito' },
-              { id: 'cartao_debito', label: 'Cartão de Débito' },
-              { id: 'boleto', label: 'Boleto' },
-              { id: 'dinheiro', label: 'Dinheiro' },
-              { id: 'transferencia', label: 'Transferência' },
-              { id: 'cheque', label: 'Cheque' },
-              { id: 'crediario', label: 'Crediário' }
-            ].map((forma) => (
-              <div key={forma.id} className="flex items-center space-x-2">
-                <Checkbox
-                  id={forma.id}
-                  checked={formData.formas_pagamento.includes(forma.id)}
-                  onCheckedChange={(checked) => handleFormaPagamentoChange(forma.id, !!checked)}
-                />
-                <Label htmlFor={forma.id}>{forma.label}</Label>
-              </div>
-            ))}
+          <div className="flex items-center space-x-2">
+            <Switch
+              id="fiscal_notifications"
+              disabled={!canEdit}
+              defaultChecked={true}
+              onCheckedChange={(checked) => handleSave('fiscal_notifications', checked)}
+            />
+            <Label htmlFor="fiscal_notifications">
+              Notificações fiscais ativadas
+            </Label>
           </div>
-        </div>
 
-        <Button onClick={handleSave} className="w-full">
-          Salvar Configurações Financeiras
-        </Button>
-      </CardContent>
-    </Card>
+          <Button 
+            onClick={() => handleSave('updated_at', new Date().toISOString())}
+            disabled={!canEdit || isSaving}
+            className="w-full"
+          >
+            {isSaving ? 'Salvando...' : 'Salvar Configurações'}
+          </Button>
+        </CardContent>
+      </Card>
+    </div>
   );
 }

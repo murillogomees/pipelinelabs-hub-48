@@ -28,18 +28,18 @@ export function useCertificateManager() {
   const [isValidating, setIsValidating] = useState(false);
   const { toast } = useToast();
   const queryClient = useQueryClient();
-  const { companyId, isSuperAdmin, isContratante } = usePermissions();
+  const { currentCompanyId, isSuperAdmin, isContratante } = usePermissions();
 
   // Buscar certificados da empresa
-  const { data: certificates = [], isLoading, error } = useQuery({
-    queryKey: ['certificates', companyId],
+  const { data: certificates = [], isLoading, error, refetch } = useQuery({
+    queryKey: ['certificates', currentCompanyId],
     queryFn: async () => {
-      if (!companyId) return [];
+      if (!currentCompanyId) return [];
 
       const { data, error } = await supabase
         .from('company_settings')
         .select('*')
-        .eq('company_id', companyId)
+        .eq('company_id', currentCompanyId)
         .single();
 
       if (error && error.code !== 'PGRST116') {
@@ -48,7 +48,7 @@ export function useCertificateManager() {
 
       return data ? [data] : [];
     },
-    enabled: !!companyId,
+    enabled: !!currentCompanyId,
   });
 
   // Upload de certificado
@@ -56,7 +56,7 @@ export function useCertificateManager() {
     file: File,
     password: string
   ): Promise<CertificateUploadResult> => {
-    if (!companyId) {
+    if (!currentCompanyId) {
       return {
         success: false,
         message: 'Empresa não identificada'
@@ -76,7 +76,7 @@ export function useCertificateManager() {
       const formData = new FormData();
       formData.append('file', file);
       formData.append('password', password);
-      formData.append('company_id', companyId);
+      formData.append('company_id', currentCompanyId);
 
       // Aqui você faria o upload real do certificado
       // Por agora, vamos simular um upload bem-sucedido
@@ -87,7 +87,7 @@ export function useCertificateManager() {
         message: 'Certificado enviado com sucesso',
         data: {
           id: '1',
-          company_id: companyId,
+          company_id: currentCompanyId,
           certificate_file: file.name,
           certificate_cn: 'CN=Exemplo',
           certificate_expires_at: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString(),
@@ -103,7 +103,7 @@ export function useCertificateManager() {
         description: result.message,
       });
 
-      queryClient.invalidateQueries({ queryKey: ['certificates', companyId] });
+      queryClient.invalidateQueries({ queryKey: ['certificates', currentCompanyId] });
 
       return result;
     } catch (error: any) {
@@ -124,11 +124,11 @@ export function useCertificateManager() {
     } finally {
       setIsUploading(false);
     }
-  }, [companyId, isSuperAdmin, isContratante, toast, queryClient]);
+  }, [currentCompanyId, isSuperAdmin, isContratante, toast, queryClient]);
 
   // Validar certificado
   const validateCertificate = useCallback(async (certificateId: string) => {
-    if (!companyId) {
+    if (!currentCompanyId) {
       toast({
         title: 'Erro',
         description: 'Empresa não identificada',
@@ -162,11 +162,11 @@ export function useCertificateManager() {
     } finally {
       setIsValidating(false);
     }
-  }, [companyId, toast]);
+  }, [currentCompanyId, toast]);
 
   // Remover certificado
   const removeCertificate = useCallback(async (certificateId: string) => {
-    if (!companyId) {
+    if (!currentCompanyId) {
       toast({
         title: 'Erro',
         description: 'Empresa não identificada',
@@ -198,7 +198,7 @@ export function useCertificateManager() {
           certificate_cn: null,
           certificate_fingerprint: null,
         })
-        .eq('company_id', companyId);
+        .eq('company_id', currentCompanyId);
 
       if (error) throw error;
 
@@ -207,7 +207,7 @@ export function useCertificateManager() {
         description: 'Certificado removido com sucesso',
       });
 
-      queryClient.invalidateQueries({ queryKey: ['certificates', companyId] });
+      queryClient.invalidateQueries({ queryKey: ['certificates', currentCompanyId] });
 
       return true;
     } catch (error: any) {
@@ -221,7 +221,7 @@ export function useCertificateManager() {
 
       return false;
     }
-  }, [companyId, isSuperAdmin, isContratante, toast, queryClient]);
+  }, [currentCompanyId, isSuperAdmin, isContratante, toast, queryClient]);
 
   return {
     certificates,
@@ -232,5 +232,6 @@ export function useCertificateManager() {
     uploadCertificate,
     validateCertificate,
     removeCertificate,
+    refetch,
   };
 }

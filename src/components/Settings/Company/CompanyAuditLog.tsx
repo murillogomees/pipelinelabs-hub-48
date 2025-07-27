@@ -4,23 +4,25 @@ import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Button } from '@/components/ui/button';
-import { Search, Download, Eye, Shield, User, Crown } from 'lucide-react';
+import { Calendar, Filter, Search, User, Clock, AlertTriangle, CheckCircle } from 'lucide-react';
 import { usePermissions } from '@/hooks/usePermissions';
-import { DataTable, Column } from '@/components/ui/data-table';
+import { format } from 'date-fns';
+import { ptBR } from 'date-fns/locale';
 
 interface AuditLogEntry {
   id: string;
   action: string;
   resource_type: string;
   resource_id: string;
-  user_id: string;
-  details: any;
+  old_values: any;
+  new_values: any;
   created_at: string;
   severity: string;
   status: string;
+  user_id: string;
   profiles?: {
     display_name?: string;
     email?: string;
@@ -32,19 +34,22 @@ interface AuditLogEntry {
 }
 
 export function CompanyAuditLog() {
+  const { currentCompanyId, canAccessCompanyData } = usePermissions();
   const [searchTerm, setSearchTerm] = useState('');
   const [actionFilter, setActionFilter] = useState('all');
   const [severityFilter, setSeverityFilter] = useState('all');
-  const { isContratante, isSuperAdmin } = usePermissions();
+  const [selectedEntry, setSelectedEntry] = useState<AuditLogEntry | null>(null);
 
   const { data: auditLogs = [], isLoading } = useQuery({
-    queryKey: ['company-audit-logs', actionFilter, severityFilter],
+    queryKey: ['company-audit-logs', currentCompanyId, searchTerm, actionFilter, severityFilter],
     queryFn: async () => {
+      if (!currentCompanyId || !canAccessCompanyData) return [];
+
       let query = supabase
         .from('audit_logs')
         .select(`
           *,
-          profiles (
+          profiles!inner (
             display_name,
             email,
             access_levels (
@@ -53,7 +58,12 @@ export function CompanyAuditLog() {
             )
           )
         `)
+        .eq('company_id', currentCompanyId)
         .order('created_at', { ascending: false });
+
+      if (searchTerm) {
+        query = query.or(`action.ilike.%${searchTerm}%,resource_type.ilike.%${searchTerm}%`);
+      }
 
       if (actionFilter !== 'all') {
         query = query.eq('action', actionFilter);
@@ -63,207 +73,201 @@ export function CompanyAuditLog() {
         query = query.eq('severity', severityFilter);
       }
 
-      const { data, error } = await query;
-      
-      if (error) throw error;
+      const { data, error } = await query.limit(100);
+
+      if (error) {
+        console.error('Error fetching audit logs:', error);
+        return [];
+      }
+
       return data || [];
     },
-    enabled: isContratante || isSuperAdmin,
+    enabled: !!currentCompanyId && canAccessCompanyData
   });
 
-  const getUserTypeIcon = (accessLevel: string) => {
-    switch (accessLevel) {
-      case 'super_admin':
-        return <Crown className="w-4 h-4 text-amber-500" />;
-      case 'contratante':
-        return <Shield className="w-4 h-4 text-blue-500" />;
-      case 'operador':
-        return <User className="w-4 h-4 text-green-500" />;
-      default:
-        return <User className="w-4 h-4 text-gray-500" />;
+  const getSeverityColor = (severity: string) => {
+    switch (severity) {
+      case 'critical': return 'destructive';
+      case 'high': return 'destructive';
+      case 'medium': return 'secondary';
+      case 'low': return 'default';
+      default: return 'default';
     }
   };
 
-  const getSeverityBadge = (severity: string) => {
-    const getVariant = (severity: string) => {
-      switch (severity) {
-        case 'info':
-          return 'default';
-        case 'warning':
-          return 'secondary';
-        case 'error':
-        case 'critical':
-          return 'destructive';
-        default:
-          return 'default';
-      }
-    };
-    
-    return <Badge variant={getVariant(severity)}>{severity}</Badge>;
-  };
-
-  const getStatusBadge = (status: string) => {
-    const getVariant = (status: string) => {
-      switch (status) {
-        case 'success':
-          return 'default';
-        case 'failed':
-          return 'destructive';
-        case 'pending':
-          return 'secondary';
-        default:
-          return 'default';
-      }
-    };
-    
-    return <Badge variant={getVariant(status)}>{status}</Badge>;
-  };
-
-  const filteredLogs = auditLogs.filter(log => {
-    const matchesSearch = 
-      log.action.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      log.resource_type.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      log.profiles?.display_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      log.profiles?.email?.toLowerCase().includes(searchTerm.toLowerCase());
-    
-    return matchesSearch;
-  });
-
-  const columns: Column<AuditLogEntry>[] = [
-    {
-      key: 'created_at',
-      header: 'Data/Hora',
-      render: (value: string) => (
-        <span className="text-sm text-muted-foreground">
-          {new Date(value).toLocaleString('pt-BR')}
-        </span>
-      )
-    },
-    {
-      key: 'profiles',
-      header: 'Usuário',
-      render: (_value: any, row: AuditLogEntry) => (
-        <div className="flex items-center space-x-2">
-          {getUserTypeIcon(row.profiles?.access_levels?.name || '')}
-          <div>
-            <p className="font-medium">{row.profiles?.display_name || 'Usuário Desconhecido'}</p>
-            <p className="text-sm text-muted-foreground">{row.profiles?.email || 'Email não disponível'}</p>
-          </div>
-        </div>
-      )
-    },
-    {
-      key: 'action',
-      header: 'Ação',
-      render: (value: string) => (
-        <Badge variant="outline">{value}</Badge>
-      )
-    },
-    {
-      key: 'resource_type',
-      header: 'Recurso',
-      render: (value: string) => (
-        <span className="text-sm">{value}</span>
-      )
-    },
-    {
-      key: 'severity',
-      header: 'Severidade',
-      render: (value: string) => getSeverityBadge(value)
-    },
-    {
-      key: 'status',
-      header: 'Status',
-      render: (value: string) => getStatusBadge(value)
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case 'success': return 'default';
+      case 'error': return 'destructive';
+      case 'warning': return 'secondary';
+      default: return 'default';
     }
-  ];
-
-  const actions = [
-    {
-      label: 'Detalhes',
-      icon: Eye,
-      onClick: (row: AuditLogEntry) => {
-        console.log('View details:', row);
-      },
-      variant: 'outline' as const
-    }
-  ];
-
-  const handleExport = () => {
-    console.log('Export audit logs');
   };
 
-  if (!isContratante && !isSuperAdmin) {
+  const getActionIcon = (action: string) => {
+    if (action.includes('create')) return <CheckCircle className="h-4 w-4 text-green-600" />;
+    if (action.includes('update')) return <Clock className="h-4 w-4 text-blue-600" />;
+    if (action.includes('delete')) return <AlertTriangle className="h-4 w-4 text-red-600" />;
+    return <User className="h-4 w-4 text-gray-600" />;
+  };
+
+  if (!canAccessCompanyData) {
     return (
-      <Card>
-        <CardContent className="p-6">
-          <div className="text-center text-muted-foreground">
-            Você não tem permissão para visualizar os logs de auditoria.
-          </div>
-        </CardContent>
-      </Card>
+      <div className="text-center py-8">
+        <AlertTriangle className="h-12 w-12 mx-auto mb-4 text-muted-foreground" />
+        <p className="text-muted-foreground">
+          Você não tem permissão para visualizar os logs de auditoria desta empresa.
+        </p>
+      </div>
     );
   }
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle className="flex items-center justify-between">
-          <span>Log de Auditoria</span>
-          <Button onClick={handleExport} variant="outline" size="sm">
-            <Download className="w-4 h-4 mr-2" />
-            Exportar
-          </Button>
-        </CardTitle>
-      </CardHeader>
-      <CardContent className="space-y-4">
-        {/* Filtros */}
-        <div className="flex flex-col sm:flex-row gap-4">
-          <div className="relative flex-1">
-            <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-            <Input
-              placeholder="Buscar por ação, recurso ou usuário..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-10"
-            />
+    <div className="space-y-6">
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Calendar className="h-5 w-5" />
+            Logs de Auditoria da Empresa
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          {/* Filtros */}
+          <div className="flex flex-col md:flex-row gap-4 mb-6">
+            <div className="flex-1">
+              <div className="relative">
+                <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                <Input
+                  placeholder="Buscar por ação ou recurso..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="pl-10"
+                />
+              </div>
+            </div>
+            <Select value={actionFilter} onValueChange={setActionFilter}>
+              <SelectTrigger className="w-full md:w-48">
+                <SelectValue placeholder="Filtrar por ação" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Todas as ações</SelectItem>
+                <SelectItem value="create">Criação</SelectItem>
+                <SelectItem value="update">Atualização</SelectItem>
+                <SelectItem value="delete">Exclusão</SelectItem>
+              </SelectContent>
+            </Select>
+            <Select value={severityFilter} onValueChange={setSeverityFilter}>
+              <SelectTrigger className="w-full md:w-48">
+                <SelectValue placeholder="Filtrar por severidade" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Todas as severidades</SelectItem>
+                <SelectItem value="critical">Crítica</SelectItem>
+                <SelectItem value="high">Alta</SelectItem>
+                <SelectItem value="medium">Média</SelectItem>
+                <SelectItem value="low">Baixa</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
-          <Select value={actionFilter} onValueChange={setActionFilter}>
-            <SelectTrigger className="w-full sm:w-48">
-              <SelectValue placeholder="Filtrar por ação" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">Todas as ações</SelectItem>
-              <SelectItem value="create">Criar</SelectItem>
-              <SelectItem value="update">Atualizar</SelectItem>
-              <SelectItem value="delete">Excluir</SelectItem>
-              <SelectItem value="login">Login</SelectItem>
-              <SelectItem value="logout">Logout</SelectItem>
-            </SelectContent>
-          </Select>
-          <Select value={severityFilter} onValueChange={setSeverityFilter}>
-            <SelectTrigger className="w-full sm:w-48">
-              <SelectValue placeholder="Filtrar por severidade" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">Todas as severidades</SelectItem>
-              <SelectItem value="info">Info</SelectItem>
-              <SelectItem value="warning">Aviso</SelectItem>
-              <SelectItem value="error">Erro</SelectItem>
-              <SelectItem value="critical">Crítico</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
 
-        {/* Tabela */}
-        <DataTable
-          data={filteredLogs}
-          columns={columns}
-          actions={actions}
-          loading={isLoading}
-          emptyMessage="Nenhum log de auditoria encontrado"
-        />
-      </CardContent>
-    </Card>
+          {/* Lista de logs */}
+          <div className="space-y-3">
+            {isLoading ? (
+              <div className="text-center py-8">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto"></div>
+                <p className="mt-2 text-sm text-muted-foreground">Carregando logs...</p>
+              </div>
+            ) : auditLogs.length === 0 ? (
+              <div className="text-center py-8 text-muted-foreground">
+                <Filter className="h-12 w-12 mx-auto mb-4 opacity-50" />
+                <p>Nenhum log de auditoria encontrado</p>
+              </div>
+            ) : (
+              auditLogs.map((log) => (
+                <div
+                  key={log.id}
+                  className="border rounded-lg p-4 hover:bg-muted/50 transition-colors cursor-pointer"
+                  onClick={() => setSelectedEntry(log)}
+                >
+                  <div className="flex items-start justify-between">
+                    <div className="flex-1">
+                      <div className="flex items-center gap-2 mb-2">
+                        {getActionIcon(log.action)}
+                        <h3 className="font-medium">{log.action}</h3>
+                        <Badge variant={getSeverityColor(log.severity) as any}>
+                          {log.severity}
+                        </Badge>
+                        <Badge variant={getStatusColor(log.status) as any}>
+                          {log.status}
+                        </Badge>
+                      </div>
+                      <p className="text-sm text-muted-foreground mb-1">
+                        Recurso: {log.resource_type} {log.resource_id && `(ID: ${log.resource_id})`}
+                      </p>
+                      <p className="text-sm text-muted-foreground">
+                        Usuário: {log.profiles?.display_name || log.profiles?.email || 'N/A'}
+                      </p>
+                    </div>
+                    <div className="text-right">
+                      <p className="text-sm text-muted-foreground">
+                        {format(new Date(log.created_at), 'dd/MM/yyyy HH:mm:ss', { locale: ptBR })}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              ))
+            )}
+          </div>
+
+          {/* Detalhes do log selecionado */}
+          {selectedEntry && (
+            <div className="mt-6 p-4 border rounded-lg bg-muted/20">
+              <h4 className="font-medium mb-2">Detalhes do Log</h4>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+                <div>
+                  <strong>Ação:</strong> {selectedEntry.action}
+                </div>
+                <div>
+                  <strong>Recurso:</strong> {selectedEntry.resource_type}
+                </div>
+                <div>
+                  <strong>Usuário:</strong> {selectedEntry.profiles?.display_name || selectedEntry.profiles?.email || 'N/A'}
+                </div>
+                <div>
+                  <strong>Data:</strong> {format(new Date(selectedEntry.created_at), 'dd/MM/yyyy HH:mm:ss', { locale: ptBR })}
+                </div>
+              </div>
+              
+              {selectedEntry.old_values && (
+                <div className="mt-3">
+                  <strong>Valores anteriores:</strong>
+                  <pre className="mt-1 p-2 bg-muted rounded text-xs overflow-x-auto">
+                    {JSON.stringify(selectedEntry.old_values, null, 2)}
+                  </pre>
+                </div>
+              )}
+              
+              {selectedEntry.new_values && (
+                <div className="mt-3">
+                  <strong>Novos valores:</strong>
+                  <pre className="mt-1 p-2 bg-muted rounded text-xs overflow-x-auto">
+                    {JSON.stringify(selectedEntry.new_values, null, 2)}
+                  </pre>
+                </div>
+              )}
+              
+              <Button 
+                variant="outline" 
+                size="sm" 
+                className="mt-3"
+                onClick={() => setSelectedEntry(null)}
+              >
+                Fechar Detalhes
+              </Button>
+            </div>
+          )}
+        </CardContent>
+      </Card>
+    </div>
   );
 }

@@ -22,33 +22,20 @@ interface CompanySettings {
 
 export function useCompanySettings() {
   const { user } = useAuth();
-  const { isContratante, isSuperAdmin } = usePermissions();
+  const { isContratante, isSuperAdmin, currentCompanyId } = usePermissions();
   const [settings, setSettings] = useState<CompanySettings | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
   const fetchSettings = async () => {
-    if (!user?.id) return;
+    if (!user?.id || !currentCompanyId) return;
 
     try {
       setIsLoading(true);
 
-      // Buscar configurações da primeira empresa disponível
-      const { data: companiesData, error: companiesError } = await supabase
-        .from('companies')
-        .select('id')
-        .limit(1);
-
-      if (companiesError || !companiesData?.[0]) {
-        console.error('Erro ao buscar empresa:', companiesError);
-        return;
-      }
-
-      const companyId = companiesData[0].id;
-
       const { data: settingsData, error: settingsError } = await supabase
         .from('company_settings')
         .select('*')
-        .eq('company_id', companyId)
+        .eq('company_id', currentCompanyId)
         .single();
 
       if (settingsError && settingsError.code !== 'PGRST116') {
@@ -56,7 +43,25 @@ export function useCompanySettings() {
         return;
       }
 
-      setSettings(settingsData);
+      // Convert company_settings to CompanySettings interface
+      if (settingsData) {
+        const companySettings: CompanySettings = {
+          id: settingsData.id,
+          company_id: settingsData.company_id,
+          theme: 'light',
+          language: 'pt-BR',
+          timezone: 'America/Sao_Paulo',
+          currency: 'BRL',
+          date_format: 'DD/MM/YYYY',
+          time_format: '24h',
+          fiscal_year_start: '01/01',
+          default_tax_rate: 0,
+          settings: settingsData || {},
+          created_at: settingsData.created_at,
+          updated_at: settingsData.updated_at
+        };
+        setSettings(companySettings);
+      }
     } catch (error) {
       console.error('Erro inesperado:', error);
     } finally {
@@ -93,7 +98,7 @@ export function useCompanySettings() {
 
   useEffect(() => {
     fetchSettings();
-  }, [user?.id]);
+  }, [user?.id, currentCompanyId]);
 
   return {
     settings,
