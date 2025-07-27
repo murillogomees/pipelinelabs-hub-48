@@ -1,22 +1,16 @@
 
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
-import { usePermissions } from '@/hooks/usePermissions';
+import { useProfile } from './useProfile';
 
 export const useCurrentCompany = () => {
-  const { isSuperAdmin } = usePermissions();
+  const { profile, isSuperAdmin } = useProfile();
   
   return useQuery({
-    queryKey: ['current-company'],
+    queryKey: ['current-company', profile?.company_id],
     queryFn: async () => {
-      const { data: { user }, error: userError } = await supabase.auth.getUser();
-      if (userError || !user) {
-        throw new Error('Usuário não autenticado');
-      }
-
-      // Para administradores, sempre retornar Pipeline Labs ou primeira empresa disponível
+      // Para super admin, sempre retornar Pipeline Labs ou primeira empresa
       if (isSuperAdmin) {
-        // Super admin sempre usa a empresa Pipeline Labs
         const { data: company, error: companyError } = await supabase
           .from('companies')
           .select('id, name')
@@ -30,7 +24,7 @@ export const useCurrentCompany = () => {
           };
         }
 
-        // Fallback para primeira empresa se Pipeline Labs não existir
+        // Fallback para primeira empresa
         const { data: fallbackCompany, error: fallbackError } = await supabase
           .from('companies')
           .select('id, name')
@@ -46,23 +40,17 @@ export const useCurrentCompany = () => {
         }
       }
 
-      // Para usuários normais, usar a primeira empresa disponível
-      const { data: company, error: companyError } = await supabase
-        .from('companies')
-        .select('id, name')
-        .order('created_at')
-        .limit(1)
-        .maybeSingle();
-
-      if (companyError || !company) {
-        throw new Error('Nenhuma empresa encontrada');
+      // Para usuários normais, usar empresa do perfil
+      if (profile?.company_id && profile?.companies) {
+        return {
+          company_id: profile.company_id,
+          company: profile.companies
+        };
       }
 
-      return {
-        company_id: company.id,
-        company: company
-      };
+      throw new Error('Nenhuma empresa encontrada');
     },
+    enabled: !!profile,
     retry: false
   });
 };

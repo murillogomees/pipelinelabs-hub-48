@@ -2,7 +2,7 @@
 import React from 'react';
 import { Navigate, useLocation } from 'react-router-dom';
 import { useAuth } from '@/components/Auth/AuthProvider';
-import { usePermissions } from '@/hooks/usePermissions';
+import { useProfile } from '@/hooks/useProfile';
 import { Loader2 } from 'lucide-react';
 
 interface ProtectedRouteProps {
@@ -16,32 +16,35 @@ export function ProtectedRoute({
   requireAdmin = false, 
   requireSuperAdmin = false 
 }: ProtectedRouteProps) {
-  const { isAuthenticated, isLoading, error } = useAuth();
+  const { isAuthenticated, isLoading: authLoading, error } = useAuth();
   const { 
-    isSuperAdmin, 
-    isAdmin, 
-    isLoading: permissionsLoading,
-    canBypassAllRestrictions,
-    email
-  } = usePermissions();
+    profile,
+    isLoading: profileLoading,
+    isSuperAdmin,
+    needsSubscriptionRedirect,
+    canAccessRoute
+  } = useProfile();
   const location = useLocation();
+
+  const isLoading = authLoading || profileLoading;
 
   // Log para debug
   React.useEffect(() => {
-    if (!permissionsLoading && email) {
+    if (!isLoading && profile) {
       console.log('ProtectedRoute Debug:', {
-        email,
+        email: profile.email,
         isSuperAdmin,
-        isAdmin,
         requireSuperAdmin,
         requireAdmin,
-        path: location.pathname
+        path: location.pathname,
+        hasActiveCompany: !!profile.company_id,
+        hasActiveSubscription: !!profile.stripe_customer_id
       });
     }
-  }, [email, isSuperAdmin, isAdmin, requireSuperAdmin, requireAdmin, location.pathname, permissionsLoading]);
+  }, [profile, isSuperAdmin, requireSuperAdmin, requireAdmin, location.pathname, isLoading]);
 
-  // Mostrar loading durante verificação de autenticação
-  if (isLoading || permissionsLoading) {
+  // Mostrar loading durante verificação
+  if (isLoading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <div className="text-center">
@@ -65,9 +68,19 @@ export function ProtectedRoute({
     return <Navigate to="/auth" state={{ from: location }} replace />;
   }
 
+  // Se não houver profile, redirecionar para auth
+  if (!profile) {
+    return <Navigate to="/auth" state={{ from: location }} replace />;
+  }
+
   // Super Admin pode bypassar todas as restrições
-  if (canBypassAllRestrictions || isSuperAdmin) {
+  if (isSuperAdmin) {
     return <>{children}</>;
+  }
+
+  // Verificar se precisa de assinatura ativa
+  if (needsSubscriptionRedirect()) {
+    return <Navigate to="/app/subscription" replace />;
   }
 
   // Verificar permissões específicas
@@ -89,7 +102,7 @@ export function ProtectedRoute({
     );
   }
 
-  if (requireAdmin && !isAdmin) {
+  if (requireAdmin && !canAccessRoute('/app/admin')) {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <div className="text-center">
@@ -104,6 +117,10 @@ export function ProtectedRoute({
     );
   }
 
-  // Se estiver autenticado e tiver as permissões necessárias, renderizar children
+  // Verificar se pode acessar a rota atual
+  if (!canAccessRoute(location.pathname)) {
+    return <Navigate to="/app/dashboard" replace />;
+  }
+
   return <>{children}</>;
 }
