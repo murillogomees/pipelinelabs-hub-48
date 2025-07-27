@@ -294,6 +294,8 @@ Retorne SEMPRE um JSON válido com esta estrutura exata:
 - Pages: src/pages/[Page].tsx
 
 IMPORTANTE:
+- Revisar e verificar cuidadosamente o contexto do projeto, considerando todas as rotas, funções, tabelas, arquivos e secrets existentes.
+- Confirmar se a modificação ou nova funcionalidade solicitada já existe ou é parcialmente implementada. Caso exista, você deve otimizar ou corrigir sem sobrescrever desnecessariamente o que já funciona.
 - Seja específico e detalhado no código
 - Não use placeholders ou comentários "// TODO"
 - Implemente funcionalidades completas
@@ -302,6 +304,7 @@ IMPORTANTE:
 - Mantenha consistência com o padrão do projeto
 - Use as funções e tabelas Supabase existentes
 - Implemente logs de auditoria para operações críticas
+- Caso a solicitação esteja incompleta ou ambígua, peça mais detalhes antes de agir.
 
 ${isRevision ? `
 
@@ -336,6 +339,7 @@ Prompt do usuário: ${prompt}
 
 Lembre-se:
 - Retorne SEMPRE um JSON válido
+- Trabalhe igual um agent do prompt lovable
 - Implemente código COMPLETO e funcional
 - Use as melhores práticas do React/TypeScript
 - Considere segurança e performance
