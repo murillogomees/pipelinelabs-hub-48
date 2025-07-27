@@ -1,145 +1,241 @@
-import {
-  BarChart3,
-  Building2,
+
+import { 
+  LayoutDashboard, 
+  ShoppingCart, 
+  Package, 
+  Users, 
+  DollarSign, 
+  FileText, 
+  BarChart3, 
+  Settings, 
+  Zap,
+  Factory,
+  Receipt,
+  ShieldCheck,
+  Link,
+  Webhook,
+  Bell,
+  ShoppingBag,
+  TrendingUp,
+  UserCog,
+  Shield,
+  Database,
+  Activity,
+  MessageSquare,
   Calendar,
-  CheckSquare,
-  LayoutDashboard,
-  ListChecks,
-  LucideIcon,
-  Mail,
-  MessagesSquare,
-  Plus,
-  Settings,
-  User,
-  Users,
-  Wallet,
-  FileText,
+  HardDrive,
+  Wrench,
+  Gamepad2,
   Search,
+  Sparkles
 } from 'lucide-react';
 
-type Route = {
-  title: string;
-  path: string;
-  icon: LucideIcon;
-  description: string;
-};
-
-export const appRoutes: Route[] = [
+export const menuItems = [
   {
     title: 'Dashboard',
-    path: '/app',
     icon: LayoutDashboard,
-    description: 'Visão geral da sua empresa',
+    path: '/app/dashboard',
   },
   {
-    title: 'Projetos',
-    path: '/app/projetos',
-    icon: ListChecks,
-    description: 'Gerencie seus projetos',
-  },
-  {
-    title: 'Empresas',
-    path: '/app/empresas',
-    icon: Building2,
-    description: 'Gerencie suas empresas',
-  },
-  {
-    title: 'Leads',
-    path: '/app/leads',
-    icon: Users,
-    description: 'Gerencie seus leads',
+    title: 'Comercial',
+    icon: ShoppingCart,
+    submenu: [
+      {
+        title: 'Vendas',
+        path: '/app/vendas',
+        icon: ShoppingCart,
+      },
+      {
+        title: 'Produtos',
+        path: '/app/produtos',
+        icon: Package,
+      },
+      {
+        title: 'Clientes',
+        path: '/app/clientes',
+        icon: Users,
+      },
+      {
+        title: 'Compras',
+        path: '/app/compras',
+        icon: ShoppingBag,
+      },
+    ],
   },
   {
     title: 'Financeiro',
+    icon: DollarSign,
     path: '/app/financeiro',
-    icon: Wallet,
-    description: 'Gerencie suas finanças',
   },
   {
-    title: 'Checklist',
-    path: '/app/checklist',
-    icon: CheckSquare,
-    description: 'Gerencie suas checklist',
+    title: 'Fiscal',
+    icon: FileText,
+    submenu: [
+      {
+        title: 'Notas Fiscais',
+        path: '/app/notas-fiscais',
+        icon: Receipt,
+      },
+      {
+        title: 'Configuração NFe',
+        path: '/app/configuracao-nfe',
+        icon: ShieldCheck,
+      },
+    ],
   },
   {
-    title: 'Agenda',
-    path: '/app/agenda',
-    icon: Calendar,
-    description: 'Gerencie sua agenda',
+    title: 'Operacional',
+    icon: Factory,
+    submenu: [
+      {
+        title: 'Produção',
+        path: '/app/producao',
+        icon: Factory,
+      },
+      {
+        title: 'Estoque',
+        path: '/app/estoque',
+        icon: Package,
+      },
+    ],
   },
   {
-    title: 'Comunicação',
-    path: '/app/comunicacao',
-    icon: MessagesSquare,
-    description: 'Gerencie sua comunicação',
+    title: 'Relatórios',
+    icon: BarChart3,
+    submenu: [
+      {
+        title: 'Relatórios',
+        path: '/app/relatorios',
+        icon: BarChart3,
+      },
+      {
+        title: 'Analytics',
+        path: '/app/analytics',
+        icon: TrendingUp,
+      },
+    ],
   },
   {
-    title: 'Configurações',
-    path: '/app/configuracoes',
-    icon: Settings,
-    description: 'Gerencie as configurações da sua empresa',
-  },
-];
-
-export const extraRoutes: Route[] = [
-  {
-    title: 'Criar Projeto',
-    path: '/app/projetos/novo',
-    icon: Plus,
-    description: 'Crie um novo projeto',
-  },
-  {
-    title: 'Criar Empresa',
-    path: '/app/empresas/nova',
-    icon: Plus,
-    description: 'Crie uma nova empresa',
-  },
-];
-
-export const ADMIN_MENU_ITEMS = [
-  {
-    title: 'Dashboard',
-    icon: 'BarChart3' as any,
-    path: '/app/admin',
-    description: 'Visão geral do sistema',
+    title: 'Integrações',
+    icon: Link,
+    submenu: [
+      {
+        title: 'Canais de Venda',
+        path: '/app/marketplace-channels',
+        icon: Webhook,
+      },
+      {
+        title: 'Integrações',
+        path: '/app/integracoes',
+        icon: Link,
+      },
+      {
+        title: 'Configurações',
+        path: '/app/configuracoes-integracoes',
+        icon: Settings,
+      },
+    ],
   },
   {
-    title: 'Usuários',
-    icon: 'User' as any,
-    path: '/app/admin/usuarios',
-    description: 'Gerenciamento de usuários',
-  },
-  {
-    title: 'Logs de Auditoria',
-    icon: 'FileText' as any,
-    path: '/app/admin/audit-logs',
-    description: 'Rastreamento de atividades no sistema',
-  },
-  {
-    title: 'Gerador de Prompts',
-    icon: 'Mail' as any,
-    path: '/app/admin/prompt-generator',
-    description: 'Gere e implemente funcionalidades automaticamente usando IA',
-  },
-  {
-    title: 'Auditoria',
-    icon: Search,
-    path: '/app/admin/auditoria',
-    description: 'Auditoria automática de código',
-  },
-];
-
-export const PROFILE_MENU_ITEMS = [
-  {
-    title: 'Perfil',
-    icon: User,
-    path: '/app/perfil',
-    description: 'Visualize e edite seu perfil',
+    title: 'Notificações',
+    icon: Bell,
+    path: '/app/notificacoes',
   },
   {
     title: 'Configurações',
     icon: Settings,
     path: '/app/configuracoes',
-    description: 'Gerencie as configurações da sua conta',
+  },
+  {
+    title: 'Administração',
+    icon: Shield,
+    adminOnly: true,
+    submenu: [
+      {
+        title: 'Painel Admin',
+        path: '/app/admin',
+        icon: Shield,
+      },
+      {
+        title: 'Usuários',
+        path: '/app/admin/usuarios',
+        icon: UserCog,
+      },
+      {
+        title: 'Níveis de Acesso',
+        path: '/app/admin/niveis-acesso',
+        icon: Shield,
+      },
+      {
+        title: 'Logs de Auditoria',
+        path: '/app/admin/audit-logs',
+        icon: Activity,
+      },
+      {
+        title: 'Integrações',
+        path: '/app/admin/integracoes',
+        icon: Link,
+      },
+      {
+        title: 'Configuração NFe',
+        path: '/app/admin/nfe-config',
+        icon: Receipt,
+      },
+      {
+        title: 'Versões',
+        path: '/app/admin/versions',
+        icon: Database,
+      },
+      {
+        title: 'Monitoramento',
+        path: '/app/admin/monitoramento',
+        icon: Activity,
+      },
+      {
+        title: 'SLA',
+        path: '/app/admin/sla',
+        icon: FileText,
+      },
+      {
+        title: 'Segurança',
+        path: '/app/admin/seguranca',
+        icon: Shield,
+      },
+      {
+        title: 'Notificações',
+        path: '/app/admin/notificacoes',
+        icon: Bell,
+      },
+      {
+        title: 'Backup',
+        path: '/app/admin/backup',
+        icon: HardDrive,
+      },
+      {
+        title: 'Cache',
+        path: '/app/admin/cache',
+        icon: Database,
+      },
+      {
+        title: 'Compressão',
+        path: '/app/admin/compressao',
+        icon: Wrench,
+      },
+      {
+        title: 'Prompt Generator',
+        path: '/app/admin/prompt-generator',
+        icon: Sparkles,
+      },
+      {
+        title: 'Landing Page',
+        path: '/app/admin/landing-page',
+        icon: Gamepad2,
+      },
+      {
+        title: 'Auditoria',
+        path: '/app/admin/auditoria',
+        icon: Search,
+      },
+    ],
   },
 ];

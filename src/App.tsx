@@ -1,3 +1,4 @@
+
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider } from '@/components/Auth/AuthProvider';
@@ -5,6 +6,7 @@ import { PermissionProvider } from '@/components/PermissionProvider';
 import { Toaster } from '@/components/ui/sonner';
 import { MainLayout } from '@/components/Layout/MainLayout';
 import { ProtectedRoute } from '@/components/ProtectedRoute';
+import { Outlet } from 'react-router-dom';
 
 // Core Pages
 import LandingPage from '@/pages/LandingPage';
@@ -58,7 +60,7 @@ import SLA from '@/pages/SLA';
 import Privacidade from '@/pages/Privacidade';
 import TermosDeUso from '@/pages/TermosDeUso';
 import NotFound from '@/pages/NotFound';
-import BreakpointTest from '@/pages/BreakpointTest';
+import { BreakpointTester } from '@/components/Testing/BreakpointTester';
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -83,12 +85,14 @@ function App() {
               <Route path="/sla" element={<SLA />} />
               <Route path="/privacidade" element={<Privacidade />} />
               <Route path="/termos" element={<TermosDeUso />} />
-              <Route path="/breakpoint-test" element={<BreakpointTest />} />
+              <Route path="/breakpoint-test" element={<BreakpointTester />} />
 
               {/* Protected App Routes */}
               <Route path="/app" element={
                 <ProtectedRoute>
-                  <MainLayout />
+                  <MainLayout>
+                    <Outlet />
+                  </MainLayout>
                 </ProtectedRoute>
               }>
                 <Route index element={<Navigate to="/app/dashboard" replace />} />

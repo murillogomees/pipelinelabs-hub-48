@@ -193,7 +193,9 @@ export const useAuditoriaProjeto = () => {
 
   // Aplicar sugestões de limpeza
   const aplicarSugestoes = useMutation({
-    mutationFn: async (auditoriaId: string, sugestoes: any[]) => {
+    mutationFn: async (variables: { auditoriaId: string; sugestoes: any[] }) => {
+      const { auditoriaId, sugestoes } = variables;
+      
       const { data, error } = await supabase.functions.invoke('aplicar-sugestoes-auditoria', {
         body: {
           auditoria_id: auditoriaId,

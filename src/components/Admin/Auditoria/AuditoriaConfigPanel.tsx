@@ -1,22 +1,34 @@
 
-import React, { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { Switch } from '@/components/ui/switch';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Switch } from '@/components/ui/switch';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Separator } from '@/components/ui/separator';
+import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
-import { useAuditoriaProjeto } from '@/hooks/useAuditoriaProjeto';
-import { Clock, Mail, Webhook, AlertTriangle, Shield } from 'lucide-react';
+import { Separator } from '@/components/ui/separator';
+import { useAuditoriaProjeto, AuditoriaConfig } from '@/hooks/useAuditoriaProjeto';
+import { 
+  Settings, 
+  Save, 
+  Clock, 
+  Mail, 
+  Shield, 
+  AlertTriangle,
+  Calendar,
+  Database,
+  Trash2,
+  Bell
+} from 'lucide-react';
 
 export function AuditoriaConfigPanel() {
   const { config, updateConfig, isUpdating } = useAuditoriaProjeto();
+  
   const [formData, setFormData] = useState({
-    auditoria_ativa: config?.auditoria_ativa || false,
-    frequencia_cron: config?.frequencia_cron || '0 2 * * *',
-    escopo_padrao: config?.escopo_padrao || {
+    auditoria_ativa: false,
+    frequencia_cron: '0 2 * * *',
+    escopo_padrao: {
       arquivos: true,
       hooks: true,
       componentes: true,
@@ -26,13 +38,13 @@ export function AuditoriaConfigPanel() {
       tabelas: true,
       rotas: true,
     },
-    notificacoes_ativas: config?.notificacoes_ativas || true,
-    email_notificacao: config?.email_notificacao || '',
-    webhook_notificacao: config?.webhook_notificacao || '',
-    limite_problemas_alerta: config?.limite_problemas_alerta || 50,
-    manter_historico_dias: config?.manter_historico_dias || 90,
-    auto_limpeza_segura: config?.auto_limpeza_segura || false,
-    regras_preservacao: config?.regras_preservacao || {
+    notificacoes_ativas: true,
+    email_notificacao: '',
+    webhook_notificacao: '',
+    limite_problemas_alerta: 50,
+    manter_historico_dias: 90,
+    auto_limpeza_segura: false,
+    regras_preservacao: {
       preservar_producao: true,
       preservar_autenticacao: true,
       preservar_paginas_ativas: true,
@@ -40,236 +52,304 @@ export function AuditoriaConfigPanel() {
     },
   });
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
+  useEffect(() => {
+    if (config) {
+      setFormData(prev => ({
+        ...prev,
+        ...config,
+      }));
+    }
+  }, [config]);
+
+  const handleSave = () => {
     updateConfig(formData);
   };
 
   const cronOptions = [
-    { value: '0 2 * * *', label: 'Diário às 2:00' },
-    { value: '0 2 * * 1', label: 'Semanal (Segunda às 2:00)' },
-    { value: '0 2 1 * *', label: 'Mensal (Dia 1 às 2:00)' },
-    { value: '0 2 * * 0', label: 'Semanal (Domingo às 2:00)' },
+    { value: '0 2 * * *', label: 'Diariamente às 2:00' },
+    { value: '0 2 * * 1', label: 'Semanalmente (segunda-feira às 2:00)' },
+    { value: '0 2 1 * *', label: 'Mensalmente (dia 1 às 2:00)' },
   ];
 
+  const handleEscopoChange = (field: string, value: boolean) => {
+    setFormData(prev => ({
+      ...prev,
+      escopo_padrao: {
+        ...prev.escopo_padrao,
+        [field]: value,
+      },
+    }));
+  };
+
+  const handleRegrasChange = (field: string, value: boolean) => {
+    setFormData(prev => ({
+      ...prev,
+      regras_preservacao: {
+        ...prev.regras_preservacao,
+        [field]: value,
+      },
+    }));
+  };
+
   return (
-    <form onSubmit={handleSubmit} className="space-y-6">
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Clock className="h-5 w-5" />
-            Configurações Gerais
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
+    <Card>
+      <CardHeader>
+        <CardTitle className="flex items-center gap-2">
+          <Settings className="h-5 w-5" />
+          Configuração da Auditoria
+        </CardTitle>
+      </CardHeader>
+      <CardContent className="space-y-6">
+        {/* Configurações Gerais */}
+        <div className="space-y-4">
           <div className="flex items-center justify-between">
-            <div className="space-y-1">
-              <Label htmlFor="auditoria_ativa">Auditoria Ativa</Label>
+            <div>
+              <Label htmlFor="auditoria-ativa">Auditoria Automática</Label>
               <p className="text-sm text-muted-foreground">
-                Ativar execução automática de auditorias
+                Ativar execução automática da auditoria
               </p>
             </div>
             <Switch
-              id="auditoria_ativa"
+              id="auditoria-ativa"
               checked={formData.auditoria_ativa}
-              onCheckedChange={(checked) => 
-                setFormData(prev => ({ ...prev, auditoria_ativa: checked }))
+              onCheckedChange={(value) => 
+                setFormData(prev => ({ ...prev, auditoria_ativa: value }))
               }
             />
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="frequencia_cron">Frequência de Execução</Label>
-            <Select
+            <Label htmlFor="frequencia">Frequência de Execução</Label>
+            <select
+              id="frequencia"
               value={formData.frequencia_cron}
-              onValueChange={(value) => 
-                setFormData(prev => ({ ...prev, frequencia_cron: value }))
+              onChange={(e) => 
+                setFormData(prev => ({ ...prev, frequencia_cron: e.target.value }))
               }
+              className="w-full p-2 border rounded-md"
             >
-              <SelectTrigger>
-                <SelectValue placeholder="Selecione a frequência" />
-              </SelectTrigger>
-              <SelectContent>
-                {cronOptions.map((option) => (
-                  <SelectItem key={option.value} value={option.value}>
-                    {option.label}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+              {cronOptions.map(option => (
+                <option key={option.value} value={option.value}>
+                  {option.label}
+                </option>
+              ))}
+            </select>
+          </div>
+        </div>
+
+        <Separator />
+
+        {/* Escopo da Auditoria */}
+        <div className="space-y-4">
+          <div className="flex items-center gap-2">
+            <Database className="h-4 w-4" />
+            <Label>Escopo da Auditoria</Label>
+          </div>
+          
+          <div className="grid grid-cols-2 gap-4">
+            {Object.entries(formData.escopo_padrao).map(([key, value]) => (
+              <div key={key} className="flex items-center justify-between">
+                <Label htmlFor={key} className="capitalize">
+                  {key.replace('_', ' ')}
+                </Label>
+                <Switch
+                  id={key}
+                  checked={value}
+                  onCheckedChange={(checked) => handleEscopoChange(key, checked)}
+                />
+              </div>
+            ))}
+          </div>
+        </div>
+
+        <Separator />
+
+        {/* Notificações */}
+        <div className="space-y-4">
+          <div className="flex items-center gap-2">
+            <Bell className="h-4 w-4" />
+            <Label>Notificações</Label>
+          </div>
+
+          <div className="flex items-center justify-between">
+            <div>
+              <Label htmlFor="notificacoes-ativas">Notificações Ativas</Label>
+              <p className="text-sm text-muted-foreground">
+                Receber notificações sobre auditorias
+              </p>
+            </div>
+            <Switch
+              id="notificacoes-ativas"
+              checked={formData.notificacoes_ativas}
+              onCheckedChange={(value) => 
+                setFormData(prev => ({ ...prev, notificacoes_ativas: value }))
+              }
+            />
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="email-notificacao">Email para Notificações</Label>
+            <Input
+              id="email-notificacao"
+              type="email"
+              placeholder="email@exemplo.com"
+              value={formData.email_notificacao || ''}
+              onChange={(e) => 
+                setFormData(prev => ({ ...prev, email_notificacao: e.target.value }))
+              }
+            />
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="webhook-notificacao">Webhook para Notificações</Label>
+            <Input
+              id="webhook-notificacao"
+              type="url"
+              placeholder="https://exemplo.com/webhook"
+              value={formData.webhook_notificacao || ''}
+              onChange={(e) => 
+                setFormData(prev => ({ ...prev, webhook_notificacao: e.target.value }))
+              }
+            />
+          </div>
+        </div>
+
+        <Separator />
+
+        {/* Configurações Avançadas */}
+        <div className="space-y-4">
+          <div className="flex items-center gap-2">
+            <Shield className="h-4 w-4" />
+            <Label>Configurações Avançadas</Label>
           </div>
 
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label htmlFor="limite_problemas_alerta">Limite para Alertas</Label>
+              <Label htmlFor="limite-problemas">Limite de Problemas para Alerta</Label>
               <Input
-                id="limite_problemas_alerta"
+                id="limite-problemas"
                 type="number"
+                min="1"
                 value={formData.limite_problemas_alerta}
                 onChange={(e) => 
                   setFormData(prev => ({ ...prev, limite_problemas_alerta: parseInt(e.target.value) }))
                 }
-                min="1"
-                max="1000"
               />
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="manter_historico_dias">Manter Histórico (dias)</Label>
+              <Label htmlFor="manter-historico">Manter Histórico (dias)</Label>
               <Input
-                id="manter_historico_dias"
+                id="manter-historico"
                 type="number"
+                min="1"
                 value={formData.manter_historico_dias}
                 onChange={(e) => 
                   setFormData(prev => ({ ...prev, manter_historico_dias: parseInt(e.target.value) }))
                 }
-                min="7"
-                max="365"
               />
             </div>
           </div>
-        </CardContent>
-      </Card>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Escopo de Auditoria</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            {Object.entries(formData.escopo_padrao).map(([key, value]) => (
-              <div key={key} className="flex items-center space-x-2">
+          <div className="flex items-center justify-between">
+            <div>
+              <Label htmlFor="auto-limpeza">Limpeza Automática Segura</Label>
+              <p className="text-sm text-muted-foreground">
+                Aplicar automaticamente limpezas seguras
+              </p>
+            </div>
+            <Switch
+              id="auto-limpeza"
+              checked={formData.auto_limpeza_segura}
+              onCheckedChange={(value) => 
+                setFormData(prev => ({ ...prev, auto_limpeza_segura: value }))
+              }
+            />
+          </div>
+        </div>
+
+        <Separator />
+
+        {/* Regras de Preservação */}
+        <div className="space-y-4">
+          <div className="flex items-center gap-2">
+            <AlertTriangle className="h-4 w-4" />
+            <Label>Regras de Preservação</Label>
+          </div>
+
+          <div className="space-y-3">
+            {Object.entries(formData.regras_preservacao).map(([key, value]) => (
+              <div key={key} className="flex items-center justify-between">
+                <Label htmlFor={key} className="capitalize">
+                  {key.replace('_', ' ')}
+                </Label>
                 <Switch
                   id={key}
                   checked={value}
-                  onCheckedChange={(checked) => 
-                    setFormData(prev => ({
-                      ...prev,
-                      escopo_padrao: { ...prev.escopo_padrao, [key]: checked }
-                    }))
-                  }
+                  onCheckedChange={(checked) => handleRegrasChange(key, checked)}
                 />
-                <Label htmlFor={key} className="text-sm capitalize">
-                  {key.replace('_', ' ')}
-                </Label>
               </div>
             ))}
           </div>
-        </CardContent>
-      </Card>
+        </div>
 
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Mail className="h-5 w-5" />
-            Notificações
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="flex items-center justify-between">
-            <div className="space-y-1">
-              <Label htmlFor="notificacoes_ativas">Notificações Ativas</Label>
-              <p className="text-sm text-muted-foreground">
-                Receber notificações sobre execuções e problemas
-              </p>
+        <Separator />
+
+        {/* Status */}
+        {config && (
+          <div className="space-y-4">
+            <div className="flex items-center gap-2">
+              <Clock className="h-4 w-4" />
+              <Label>Status da Auditoria</Label>
             </div>
-            <Switch
-              id="notificacoes_ativas"
-              checked={formData.notificacoes_ativas}
-              onCheckedChange={(checked) => 
-                setFormData(prev => ({ ...prev, notificacoes_ativas: checked }))
-              }
-            />
-          </div>
 
-          {formData.notificacoes_ativas && (
-            <>
-              <div className="space-y-2">
-                <Label htmlFor="email_notificacao">Email para Notificações</Label>
-                <Input
-                  id="email_notificacao"
-                  type="email"
-                  value={formData.email_notificacao}
-                  onChange={(e) => 
-                    setFormData(prev => ({ ...prev, email_notificacao: e.target.value }))
-                  }
-                  placeholder="admin@empresa.com"
-                />
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="webhook_notificacao">Webhook URL</Label>
-                <Input
-                  id="webhook_notificacao"
-                  type="url"
-                  value={formData.webhook_notificacao}
-                  onChange={(e) => 
-                    setFormData(prev => ({ ...prev, webhook_notificacao: e.target.value }))
-                  }
-                  placeholder="https://webhook.site/your-endpoint"
-                />
-              </div>
-            </>
-          )}
-        </CardContent>
-      </Card>
-
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Shield className="h-5 w-5" />
-            Regras de Preservação
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="flex items-center justify-between">
-            <div className="space-y-1">
-              <Label htmlFor="auto_limpeza_segura">Limpeza Automática Segura</Label>
-              <p className="text-sm text-muted-foreground">
-                Permitir limpeza automática de arquivos não críticos
-              </p>
-            </div>
-            <Switch
-              id="auto_limpeza_segura"
-              checked={formData.auto_limpeza_segura}
-              onCheckedChange={(checked) => 
-                setFormData(prev => ({ ...prev, auto_limpeza_segura: checked }))
-              }
-            />
-          </div>
-
-          <Separator />
-
-          <div className="space-y-3">
-            <Label>Sempre Preservar</Label>
             <div className="grid grid-cols-2 gap-4">
-              {Object.entries(formData.regras_preservacao).map(([key, value]) => (
-                <div key={key} className="flex items-center space-x-2">
-                  <Switch
-                    id={key}
-                    checked={value}
-                    onCheckedChange={(checked) => 
-                      setFormData(prev => ({
-                        ...prev,
-                        regras_preservacao: { ...prev.regras_preservacao, [key]: checked }
-                      }))
-                    }
-                  />
-                  <Label htmlFor={key} className="text-sm capitalize">
-                    {key.replace('preservar_', '').replace('_', ' ')}
-                  </Label>
-                </div>
-              ))}
+              <div>
+                <Label className="text-sm font-medium">Última Execução</Label>
+                <p className="text-sm text-muted-foreground">
+                  {config.ultima_execucao 
+                    ? new Date(config.ultima_execucao).toLocaleString('pt-BR')
+                    : 'Nunca executada'
+                  }
+                </p>
+              </div>
+
+              <div>
+                <Label className="text-sm font-medium">Próxima Execução</Label>
+                <p className="text-sm text-muted-foreground">
+                  {config.proxima_execucao 
+                    ? new Date(config.proxima_execucao).toLocaleString('pt-BR')
+                    : 'Não agendada'
+                  }
+                </p>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-2">
+              <Badge variant={config.auditoria_ativa ? 'default' : 'secondary'}>
+                {config.auditoria_ativa ? 'Ativa' : 'Inativa'}
+              </Badge>
+              {config.notificacoes_ativas && (
+                <Badge variant="outline">
+                  <Mail className="h-3 w-3 mr-1" />
+                  Notificações
+                </Badge>
+              )}
             </div>
           </div>
-        </CardContent>
-      </Card>
+        )}
 
-      <div className="flex justify-end">
-        <Button type="submit" disabled={isUpdating}>
-          {isUpdating ? 'Salvando...' : 'Salvar Configurações'}
-        </Button>
-      </div>
-    </form>
+        <div className="flex justify-end">
+          <Button 
+            onClick={handleSave} 
+            disabled={isUpdating}
+            className="flex items-center gap-2"
+          >
+            <Save className="h-4 w-4" />
+            {isUpdating ? 'Salvando...' : 'Salvar Configurações'}
+          </Button>
+        </div>
+      </CardContent>
+    </Card>
   );
 }
