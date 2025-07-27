@@ -25,15 +25,18 @@ const NotasFiscais: React.FC = () => {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [selectedNFe, setSelectedNFe] = useState<any>(null);
 
-  const { nfeData, isLoading, createNFe, updateNFe, deleteNFe, isCreating, isUpdating } = useNFe();
+  const { nfeData, isLoading, createNFe, updateNFe, deleteNFe, isCreating, isUpdating, isDeleting } = useNFe();
   const { nfeIntegration } = useNFeIntegration();
 
-  // Add missing properties to nfeIntegration
+  // Use nfeData directly from the hook
   const nfeList = nfeData || [];
+
+  // Local implementations for NFe operations
   const sendNFe = (data: any) => {
     console.log('Sending NFe:', data);
     // Implementation for sending NFe
   };
+
   const cancelNFe = (id: string) => {
     console.log('Cancelling NFe:', id);
     // Implementation for cancelling NFe
@@ -85,6 +88,12 @@ const NotasFiscais: React.FC = () => {
 
   const handleCancelNFe = (nfe: any) => {
     cancelNFe(nfe.id);
+  };
+
+  const handleDeleteNFe = (nfe: any) => {
+    if (window.confirm('Tem certeza que deseja excluir esta NFe?')) {
+      deleteNFe(nfe.id);
+    }
   };
 
   const filteredNFes = nfeList.filter((nfe: any) =>
@@ -217,8 +226,8 @@ const NotasFiscais: React.FC = () => {
 
       {/* NFe Dialog */}
       <RealNFeDialog
-        open={isDialogOpen}
-        onOpenChange={setIsDialogOpen}
+        isOpen={isDialogOpen}
+        onClose={() => setIsDialogOpen(false)}
         nfe={selectedNFe}
         onSave={(data) => {
           if (selectedNFe) {

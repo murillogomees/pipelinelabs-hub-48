@@ -60,8 +60,6 @@ const Dashboard: React.FC = () => {
     queryKey: ['dashboard-config', currentCompanyId],
     queryFn: async () => {
       if (!currentCompanyId) return null;
-
-      // Mock dashboard config for now
       return {
         id: 'mock-config',
         company_id: currentCompanyId,
@@ -140,11 +138,41 @@ const Dashboard: React.FC = () => {
       ) : (
         <>
           {(viewMode === 'desktop' && !isMobile) ? (
-            <ResponsiveWidgetContainer
-              widgets={widgets}
-              onLayoutChange={handleLayoutChange}
-              onRemoveWidget={handleRemoveWidget}
-            />
+            <ResponsiveWidgetContainer>
+              <div className="grid grid-cols-12 gap-4">
+                {widgets.map((widget) => (
+                  <div
+                    key={widget.id}
+                    className="col-span-12 md:col-span-6 lg:col-span-4"
+                  >
+                    <Card>
+                      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                        <CardTitle className="text-sm font-medium">
+                          {widget.title}
+                        </CardTitle>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => handleRemoveWidget(widget.id)}
+                        >
+                          ×
+                        </Button>
+                      </CardHeader>
+                      <CardContent>
+                        <div className="text-2xl font-bold">
+                          {widget.data?.length || 0}
+                        </div>
+                        <p className="text-xs text-muted-foreground">
+                          {widget.type === 'sales_overview' && 'Total de vendas'}
+                          {widget.type === 'products_stock' && 'Produtos em estoque'}
+                          {widget.type === 'customers_overview' && 'Clientes cadastrados'}
+                        </p>
+                      </CardContent>
+                    </Card>
+                  </div>
+                ))}
+              </div>
+            </ResponsiveWidgetContainer>
           ) : (
             <MobileWidgetList
               widgets={widgets}

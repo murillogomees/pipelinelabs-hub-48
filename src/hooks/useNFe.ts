@@ -101,12 +101,43 @@ export function useNFe() {
     },
   });
 
+  const deleteNFe = useMutation({
+    mutationFn: async (id: string) => {
+      if (!currentCompanyId) throw new Error('Company ID not found');
+
+      const { error } = await supabase
+        .from('invoices')
+        .delete()
+        .eq('id', id)
+        .eq('company_id', currentCompanyId);
+
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['nfe', currentCompanyId] });
+      toast({
+        title: 'Sucesso',
+        description: 'NF-e excluída com sucesso',
+      });
+    },
+    onError: (error) => {
+      console.error('Error deleting NFe:', error);
+      toast({
+        title: 'Erro',
+        description: 'Erro ao excluir NF-e',
+        variant: 'destructive',
+      });
+    },
+  });
+
   return {
     nfeData,
     isLoading,
     createNFe: createNFe.mutate,
     updateNFe: updateNFe.mutate,
+    deleteNFe: deleteNFe.mutate,
     isCreating: createNFe.isPending,
     isUpdating: updateNFe.isPending,
+    isDeleting: deleteNFe.isPending,
   };
 }
