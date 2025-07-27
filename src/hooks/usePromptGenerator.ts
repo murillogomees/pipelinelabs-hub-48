@@ -1,4 +1,3 @@
-
 import { useState, useCallback, useMemo } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
@@ -22,6 +21,8 @@ interface GenerateCodeParams {
   prompt: string;
   temperature?: number;
   model?: string;
+  isRevision?: boolean;
+  originalCode?: any;
 }
 
 interface GeneratedCode {
@@ -77,7 +78,7 @@ export const usePromptGenerator = () => {
 
   // Gerar código com IA
   const generateCodeMutation = useMutation({
-    mutationFn: async ({ prompt, temperature = 0.7, model = 'gpt-4o-mini' }: GenerateCodeParams) => {
+    mutationFn: async ({ prompt, temperature = 0.7, model = 'gpt-4o-mini', isRevision = false, originalCode = null }: GenerateCodeParams) => {
       console.log('Iniciando geração de código...');
 
       try {
@@ -116,7 +117,13 @@ export const usePromptGenerator = () => {
         console.log('Prompt salvo, chamando edge function...');
         // Chamar a edge function para gerar código
         const { data, error } = await supabase.functions.invoke('prompt-generator', {
-          body: { prompt, temperature, model }
+          body: { 
+            prompt, 
+            temperature, 
+            model,
+            isRevision,
+            originalCode 
+          }
         });
 
         console.log('Resposta da edge function:', data, error);
@@ -278,6 +285,21 @@ export const usePromptGenerator = () => {
     });
   }, [generateCodeMutation]);
 
+  // Função para revisar código
+  const reviseCode = useCallback((prompt: string, originalCode: any, callbacks?: {
+    onSuccess?: (data: { logId: string; generatedCode: GeneratedCode; }) => void;
+    onError?: (error: any) => void;
+  }) => {
+    generateCodeMutation.mutate({
+      prompt,
+      isRevision: true,
+      originalCode
+    }, {
+      onSuccess: callbacks?.onSuccess,
+      onError: callbacks?.onError
+    });
+  }, [generateCodeMutation]);
+
   // Memorizar valores para evitar re-renders desnecessários
   const memoizedReturn = useMemo(() => ({
     promptLogs: promptLogsQuery.data,
@@ -285,6 +307,7 @@ export const usePromptGenerator = () => {
     isGenerating: generateCodeMutation.isPending,
     isApplying: applyCodeMutation.isPending,
     generateCode,
+    reviseCode,
     applyCode: applyCodeMutation.mutate,
     rollbackCode: rollbackCodeMutation.mutate
   }), [
@@ -293,6 +316,7 @@ export const usePromptGenerator = () => {
     generateCodeMutation.isPending,
     applyCodeMutation.isPending,
     generateCode,
+    reviseCode,
     applyCodeMutation.mutate,
     rollbackCodeMutation.mutate
   ]);

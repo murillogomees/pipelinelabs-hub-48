@@ -2,7 +2,7 @@
 import React, { useState, useCallback, useMemo } from 'react';
 import { usePromptGenerator } from '@/hooks/usePromptGenerator';
 import { PromptEditor } from './PromptEditor';
-import { CodePreview } from './CodePreview';
+import { CodeEditor } from './CodeEditor';
 import { PromptHistory } from './PromptHistory';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Shield } from 'lucide-react';
@@ -14,6 +14,7 @@ export const PromptGeneratorDashboard: React.FC = () => {
     isGenerating,
     isApplying,
     generateCode,
+    reviseCode,
     applyCode,
     rollbackCode
   } = usePromptGenerator();
@@ -52,6 +53,30 @@ export const PromptGeneratorDashboard: React.FC = () => {
     }
   }, [generateCode]);
 
+  const handleRevise = useCallback(async (prompt: string, originalCode: any) => {
+    try {
+      const result = await new Promise<{
+        logId: string;
+        generatedCode: any;
+      }>((resolve, reject) => {
+        reviseCode(prompt, originalCode, {
+          onSuccess: (data) => {
+            console.log('Revise success:', data);
+            resolve(data);
+          },
+          onError: (error) => {
+            console.error('Revise error:', error);
+            reject(error);
+          }
+        });
+      });
+      
+      setCurrentGeneration(result);
+    } catch (error) {
+      console.error('Error revising code:', error);
+    }
+  }, [reviseCode]);
+
   const handleApply = useCallback((logId: string) => {
     applyCode(logId);
     setCurrentGeneration(null);
@@ -82,11 +107,13 @@ export const PromptGeneratorDashboard: React.FC = () => {
           />
 
           {currentGeneration && (
-            <CodePreview
+            <CodeEditor
               generatedCode={currentGeneration.generatedCode}
               logId={currentGeneration.logId}
               onApply={handleApply}
+              onRevise={handleRevise}
               isApplying={isApplying}
+              isRevising={isGenerating}
             />
           )}
         </div>
