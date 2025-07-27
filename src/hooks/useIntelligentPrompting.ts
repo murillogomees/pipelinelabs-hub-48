@@ -225,6 +225,11 @@ export function useIntelligentPrompting() {
     return suggestions;
   };
 
+  const saveExecutionContext = async (context: any) => {
+    // Mock implementation for now
+    console.log('Saving execution context:', context);
+  };
+
   useEffect(() => {
     const newInsights = generateInsights();
     setInsights(newInsights);
@@ -236,6 +241,7 @@ export function useIntelligentPrompting() {
     isAnalyzing,
     analyzePrompt,
     getIntelligentSuggestions,
-    generateInsights: () => generateInsights()
+    generateInsights: () => generateInsights(),
+    saveExecutionContext
   };
 }

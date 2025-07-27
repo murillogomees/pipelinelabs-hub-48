@@ -2,147 +2,65 @@
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Badge } from '@/components/ui/badge';
-import { Separator } from '@/components/ui/separator';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { ContinuousLearning } from './ContinuousLearning';
-import { PromptEditor } from './PromptEditor';
-import { CodePreview } from './CodePreview';
-import { useIntelligentPrompting } from '@/hooks/useIntelligentPrompting';
-import { usePromptGenerator } from '@/hooks/usePromptGenerator';
+import { Badge } from '@/components/ui/badge';
+import { Progress } from '@/components/ui/progress';
 import { 
   Brain, 
-  AlertTriangle, 
-  CheckCircle, 
-  Zap,
-  Shield,
-  TrendingUp,
+  Code, 
+  Zap, 
+  ArrowLeft,
+  Sparkles,
   Target,
-  Clock
+  TrendingUp,
+  Clock,
+  FileText,
+  Settings
 } from 'lucide-react';
+import { useProjectHistory } from '@/hooks/useProjectHistory';
+import { useIntelligentPrompting } from '@/hooks/useIntelligentPrompting';
+import { ContinuousLearning } from './ContinuousLearning';
 
 interface EnhancedPromptGeneratorProps {
-  onBackToSimple?: () => void;
+  onBackToSimple: () => void;
 }
 
-export const EnhancedPromptGenerator: React.FC<EnhancedPromptGeneratorProps> = ({
-  onBackToSimple
-}) => {
+export const EnhancedPromptGenerator: React.FC<EnhancedPromptGeneratorProps> = ({ onBackToSimple }) => {
+  const { history, addHistoryEntry } = useProjectHistory();
+  const { analyzePrompt, getIntelligentSuggestions, isAnalyzing } = useIntelligentPrompting();
   const [currentPrompt, setCurrentPrompt] = useState('');
-  const [analysisResult, setAnalysisResult] = useState<any>(null);
-  const [generatedCode, setGeneratedCode] = useState<any>(null);
-  const [selectedTab, setSelectedTab] = useState('input');
-  const [showPreAnalysis, setShowPreAnalysis] = useState(false);
+  const [prediction, setPrediction] = useState<any>(null);
+  const [activeTab, setActiveTab] = useState('generator');
 
-  const { analyzePrompt, saveExecutionContext, isAnalyzing } = useIntelligentPrompting();
-  const { generateCode, isGenerating } = usePromptGenerator();
-
-  // Analisar prompt automaticamente
-  useEffect(() => {
-    if (currentPrompt && currentPrompt.length > 10) {
-      const timeoutId = setTimeout(() => {
-        handleAnalyzePrompt();
-      }, 1000);
-      return () => clearTimeout(timeoutId);
+  const handlePromptChange = (value: string) => {
+    setCurrentPrompt(value);
+    // Auto-analyze on prompt change
+    if (value.length > 10) {
+      analyzePrompt(value).then(setPrediction);
     }
-  }, [currentPrompt]);
+  };
 
-  const handleAnalyzePrompt = async () => {
+  const handleGenerate = async () => {
     if (!currentPrompt.trim()) return;
-    
-    try {
-      const result = await analyzePrompt(currentPrompt);
-      setAnalysisResult(result);
-      setShowPreAnalysis(true);
-    } catch (error) {
-      console.error('Erro na análise:', error);
-    }
-  };
 
-  const handleGenerateCode = async (params: {
-    prompt: string;
-    temperature: number;
-    model: string;
-  }) => {
-    setCurrentPrompt(params.prompt);
-    
-    // Se não há análise prévia, fazer análise primeiro
-    if (!analysisResult) {
-      await handleAnalyzePrompt();
-    }
-    
-    // Verificar se deve prosseguir
-    if (analysisResult && !analysisResult.shouldProceed) {
-      // Mostrar opções para o usuário
-      setSelectedTab('analysis');
-      return;
-    }
-    
-    // Gerar código
-    generateCode(params, {
-      onSuccess: async (data) => {
-        setGeneratedCode(data);
-        setSelectedTab('preview');
-        
-        // Salvar contexto da execução
-        await saveExecutionContext(
-          params.prompt,
-          data,
-          Object.keys(data.files || {}),
-          []
-        );
-      },
-      onError: (error) => {
-        console.error('Erro na geração:', error);
-      }
-    });
-  };
-
-  const handleSuggestionApply = (suggestion: any) => {
-    if (suggestion.type === 'reuse') {
-      setCurrentPrompt(suggestion.data.original_prompt);
-    } else if (suggestion.type === 'prevention') {
-      // Adicionar aviso sobre erro comum
-      setCurrentPrompt(prev => `${prev}\n\n⚠️ Atenção: ${suggestion.data.error}`);
-    }
-  };
-
-  const handlePatternDetected = (patterns: any[]) => {
-    // Atualizar análise com padrões detectados
-    setAnalysisResult(prev => ({
-      ...prev,
-      detectedPatterns: patterns
-    }));
-  };
-
-  const handleForceGenerate = async () => {
-    if (!currentPrompt.trim()) return;
-    
-    await handleGenerateCode({
+    // Add to history
+    await addHistoryEntry({
+      user_id: 'current-user',
+      action_type: 'enhanced_generation',
       prompt: currentPrompt,
-      temperature: 0.7,
-      model: 'gpt-4o-mini'
+      generated_code: 'Generated code would be here',
+      files_modified: prediction?.expectedFiles || [],
+      execution_time: prediction?.estimatedTime || 5000,
+      success: true,
+      context_data: { prediction, enhanced: true }
     });
+
+    // Mock generation
+    console.log('Generating enhanced code for:', currentPrompt);
   };
 
-  const getRiskColor = (level: string) => {
-    switch (level) {
-      case 'high':
-        return 'bg-red-100 text-red-800';
-      case 'medium':
-        return 'bg-yellow-100 text-yellow-800';
-      case 'low':
-        return 'bg-green-100 text-green-800';
-      default:
-        return 'bg-gray-100 text-gray-800';
-    }
-  };
-
-  const getConfidenceColor = (confidence: number) => {
-    if (confidence >= 0.8) return 'text-green-600';
-    if (confidence >= 0.6) return 'text-yellow-600';
-    return 'text-red-600';
+  const getSuggestions = () => {
+    return getIntelligentSuggestions(currentPrompt);
   };
 
   return (
@@ -150,200 +68,180 @@ export const EnhancedPromptGenerator: React.FC<EnhancedPromptGeneratorProps> = (
       {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <Brain className="h-8 w-8 text-primary" />
-          <div>
-            <h1 className="text-3xl font-bold">Gerador Inteligente com IA</h1>
-            <p className="text-muted-foreground">
-              Aprendizado contínuo e análise preditiva
-            </p>
+          <Button 
+            variant="outline" 
+            size="sm" 
+            onClick={onBackToSimple}
+            className="flex items-center gap-2"
+          >
+            <ArrowLeft className="h-4 w-4" />
+            Voltar
+          </Button>
+          <div className="flex items-center gap-2">
+            <Brain className="h-8 w-8 text-primary" />
+            <div>
+              <h1 className="text-2xl font-bold">Gerador Inteligente</h1>
+              <p className="text-sm text-muted-foreground">
+                Com análise preditiva e aprendizado contínuo
+              </p>
+            </div>
           </div>
         </div>
-        <div className="flex items-center gap-2">
-          {onBackToSimple && (
-            <Button variant="outline" onClick={onBackToSimple}>
-              Modo Simples
-            </Button>
-          )}
-          <Badge variant="secondary">Modo Avançado</Badge>
-        </div>
+        <Badge variant="secondary" className="flex items-center gap-2">
+          <Sparkles className="h-4 w-4" />
+          Modo Avançado
+        </Badge>
       </div>
 
-      {/* Análise Prévia */}
-      {showPreAnalysis && analysisResult && (
-        <Card className="border-l-4 border-l-primary">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Shield className="h-5 w-5" />
-              Análise Preditiva
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="flex items-center gap-4">
-              <div className="flex items-center gap-2">
-                <span className="font-medium">Risco:</span>
-                <Badge className={getRiskColor(analysisResult.riskLevel)}>
-                  {analysisResult.riskLevel.toUpperCase()}
-                </Badge>
-              </div>
-              <div className="flex items-center gap-2">
-                <span className="font-medium">Confiança:</span>
-                <span className={`font-bold ${getConfidenceColor(analysisResult.confidence)}`}>
-                  {Math.round(analysisResult.confidence * 100)}%
-                </span>
-              </div>
-            </div>
-            
-            <div className="flex items-start gap-2">
-              {analysisResult.shouldProceed ? (
-                <CheckCircle className="h-5 w-5 text-green-500 mt-0.5" />
-              ) : (
-                <AlertTriangle className="h-5 w-5 text-red-500 mt-0.5" />
-              )}
-              <div className="flex-1">
-                <p className="font-medium">
-                  {analysisResult.shouldProceed ? 'Aprovado para execução' : 'Atenção necessária'}
-                </p>
-                <p className="text-sm text-muted-foreground mt-1">
-                  {analysisResult.reason}
-                </p>
-              </div>
-            </div>
-
-            {analysisResult.suggestions.length > 0 && (
-              <div className="space-y-2">
-                <span className="font-medium">Sugestões:</span>
-                <ul className="list-disc list-inside space-y-1 text-sm">
-                  {analysisResult.suggestions.map((suggestion: string, index: number) => (
-                    <li key={index} className="text-muted-foreground">{suggestion}</li>
-                  ))}
-                </ul>
-              </div>
-            )}
-
-            {!analysisResult.shouldProceed && (
-              <div className="flex gap-2">
-                <Button 
-                  variant="outline" 
-                  size="sm"
-                  onClick={() => setShowPreAnalysis(false)}
-                >
-                  Revisar Prompt
-                </Button>
-                <Button 
-                  size="sm" 
-                  onClick={handleForceGenerate}
-                  disabled={isGenerating}
-                >
-                  <Zap className="h-4 w-4 mr-2" />
-                  Gerar Mesmo Assim
-                </Button>
-              </div>
-            )}
-          </CardContent>
-        </Card>
-      )}
-
-      {/* Tabs principais */}
-      <Tabs value={selectedTab} onValueChange={setSelectedTab}>
+      {/* Main Content */}
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
         <TabsList className="grid w-full grid-cols-4">
-          <TabsTrigger value="input">Entrada</TabsTrigger>
-          <TabsTrigger value="analysis">Análise</TabsTrigger>
-          <TabsTrigger value="preview">Resultado</TabsTrigger>
-          <TabsTrigger value="learning">Aprendizado</TabsTrigger>
+          <TabsTrigger value="generator" className="flex items-center gap-2">
+            <Code className="h-4 w-4" />
+            Gerador
+          </TabsTrigger>
+          <TabsTrigger value="analysis" className="flex items-center gap-2">
+            <Target className="h-4 w-4" />
+            Análise
+          </TabsTrigger>
+          <TabsTrigger value="learning" className="flex items-center gap-2">
+            <Brain className="h-4 w-4" />
+            Aprendizado
+          </TabsTrigger>
+          <TabsTrigger value="settings" className="flex items-center gap-2">
+            <Settings className="h-4 w-4" />
+            Configurações
+          </TabsTrigger>
         </TabsList>
 
-        <TabsContent value="input" className="space-y-6">
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Target className="h-5 w-5" />
-                Prompt Inteligente
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <PromptEditor 
-                onGenerate={handleGenerateCode}
-                isGenerating={isGenerating || isAnalyzing}
-              />
-            </CardContent>
-          </Card>
+        <TabsContent value="generator" className="space-y-6">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            {/* Prompt Input */}
+            <Card>
+              <CardHeader>
+                <CardTitle>Prompt Inteligente</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <textarea
+                  value={currentPrompt}
+                  onChange={(e) => handlePromptChange(e.target.value)}
+                  placeholder="Descreva o que você quer criar..."
+                  className="w-full h-32 p-3 border rounded-lg resize-none"
+                />
+                
+                {/* Intelligent Suggestions */}
+                <div className="space-y-2">
+                  <h4 className="text-sm font-medium">Sugestões Inteligentes:</h4>
+                  <div className="flex flex-wrap gap-2">
+                    {getSuggestions().map((suggestion, index) => (
+                      <Badge key={index} variant="outline" className="text-xs">
+                        {suggestion}
+                      </Badge>
+                    ))}
+                  </div>
+                </div>
+
+                <Button 
+                  onClick={handleGenerate}
+                  disabled={!currentPrompt.trim() || isAnalyzing}
+                  className="w-full"
+                >
+                  {isAnalyzing ? (
+                    <>
+                      <div className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent mr-2" />
+                      Analisando...
+                    </>
+                  ) : (
+                    <>
+                      <Zap className="h-4 w-4 mr-2" />
+                      Gerar Código
+                    </>
+                  )}
+                </Button>
+              </CardContent>
+            </Card>
+
+            {/* Prediction Panel */}
+            <Card>
+              <CardHeader>
+                <CardTitle>Análise Preditiva</CardTitle>
+              </CardHeader>
+              <CardContent>
+                {prediction ? (
+                  <div className="space-y-4">
+                    <div className="flex items-center gap-2">
+                      <span className="text-sm font-medium">Confiança:</span>
+                      <Progress value={prediction.confidence * 100} className="flex-1" />
+                      <Badge variant="outline">
+                        {(prediction.confidence * 100).toFixed(0)}%
+                      </Badge>
+                    </div>
+
+                    <div>
+                      <h4 className="text-sm font-medium mb-2">Arquivos Esperados:</h4>
+                      <div className="space-y-1">
+                        {prediction.expectedFiles.map((file: string, index: number) => (
+                          <div key={index} className="flex items-center gap-2 text-sm">
+                            <FileText className="h-3 w-3" />
+                            {file}
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+
+                    <div className="flex items-center gap-2 text-sm">
+                      <Clock className="h-4 w-4" />
+                      <span>Tempo estimado: {(prediction.estimatedTime / 1000).toFixed(1)}s</span>
+                    </div>
+
+                    <div>
+                      <h4 className="text-sm font-medium mb-2">Raciocínio:</h4>
+                      <p className="text-sm text-muted-foreground">
+                        {prediction.reasoning}
+                      </p>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="text-center py-8 text-muted-foreground">
+                    <Brain className="h-12 w-12 mx-auto mb-4 opacity-50" />
+                    <p>Digite um prompt para ver a análise preditiva</p>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </div>
         </TabsContent>
 
         <TabsContent value="analysis" className="space-y-6">
-          {analysisResult ? (
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <TrendingUp className="h-5 w-5" />
-                  Análise Detalhada
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                  <div className="text-center">
-                    <div className="text-2xl font-bold mb-2">
-                      {analysisResult.riskLevel.toUpperCase()}
-                    </div>
-                    <div className="text-sm text-muted-foreground">Nível de Risco</div>
-                  </div>
-                  <div className="text-center">
-                    <div className="text-2xl font-bold mb-2">
-                      {Math.round(analysisResult.confidence * 100)}%
-                    </div>
-                    <div className="text-sm text-muted-foreground">Confiança</div>
-                  </div>
-                  <div className="text-center">
-                    <div className="text-2xl font-bold mb-2">
-                      {analysisResult.alternatives.length}
-                    </div>
-                    <div className="text-sm text-muted-foreground">Alternativas</div>
-                  </div>
-                </div>
-                
-                <Separator />
-                
-                <div className="space-y-3">
-                  <h4 className="font-medium">Recomendações:</h4>
-                  {analysisResult.suggestions.map((suggestion: string, index: number) => (
-                    <div key={index} className="flex items-start gap-2">
-                      <CheckCircle className="h-4 w-4 text-green-500 mt-0.5 flex-shrink-0" />
-                      <span className="text-sm">{suggestion}</span>
-                    </div>
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
-          ) : (
-            <Alert>
-              <Clock className="h-4 w-4" />
-              <AlertDescription>
-                Digite um prompt para ver a análise preditiva
-              </AlertDescription>
-            </Alert>
-          )}
-        </TabsContent>
-
-        <TabsContent value="preview" className="space-y-6">
           <Card>
             <CardHeader>
-              <CardTitle>Resultado Gerado</CardTitle>
+              <CardTitle>Análise de Padrões</CardTitle>
             </CardHeader>
             <CardContent>
-              <CodePreview 
-                generatedCode={generatedCode}
-                isApplying={false}
-                onApply={() => {}}
-              />
+              <div className="text-center py-8 text-muted-foreground">
+                <TrendingUp className="h-12 w-12 mx-auto mb-4 opacity-50" />
+                <p>Análise detalhada de padrões será exibida aqui</p>
+              </div>
             </CardContent>
           </Card>
         </TabsContent>
 
-        <TabsContent value="learning" className="space-y-6">
-          <ContinuousLearning
-            currentPrompt={currentPrompt}
-            onSuggestionApply={handleSuggestionApply}
-            onPatternDetected={handlePatternDetected}
-          />
+        <TabsContent value="learning">
+          <ContinuousLearning />
+        </TabsContent>
+
+        <TabsContent value="settings" className="space-y-6">
+          <Card>
+            <CardHeader>
+              <CardTitle>Configurações Avançadas</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="text-center py-8 text-muted-foreground">
+                <Settings className="h-12 w-12 mx-auto mb-4 opacity-50" />
+                <p>Configurações avançadas serão implementadas aqui</p>
+              </div>
+            </CardContent>
+          </Card>
         </TabsContent>
       </Tabs>
     </div>

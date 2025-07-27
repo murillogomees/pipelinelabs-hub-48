@@ -130,40 +130,6 @@ export function ContinuousLearning() {
         </Card>
       </div>
 
-      {/* Análise de Padrões */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Brain className="h-5 w-5" />
-            Padrões Identificados
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-4">
-            {Object.entries(learningData.commonPatterns).length > 0 ? (
-              Object.entries(learningData.commonPatterns)
-                .sort(([,a], [,b]) => (b as number) - (a as number))
-                .slice(0, 5)
-                .map(([pattern, count]) => (
-                  <div key={pattern} className="flex items-center justify-between p-3 bg-muted rounded-lg">
-                    <div>
-                      <p className="font-medium">{pattern}</p>
-                      <p className="text-sm text-muted-foreground">Padrão frequente</p>
-                    </div>
-                    <Badge variant="secondary">{count} vezes</Badge>
-                  </div>
-                ))
-            ) : (
-              <div className="text-center py-8 text-muted-foreground">
-                <Brain className="h-12 w-12 mx-auto mb-4 opacity-50" />
-                <p>Nenhum padrão identificado ainda</p>
-                <p className="text-sm">Execute mais prompts para começar o aprendizado</p>
-              </div>
-            )}
-          </div>
-        </CardContent>
-      </Card>
-
       {/* Insights e Recomendações */}
       <Card>
         <CardHeader>
