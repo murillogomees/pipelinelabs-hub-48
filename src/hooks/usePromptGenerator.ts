@@ -1,111 +1,157 @@
 
-import { useMutation, useQuery } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
-import { useAuth } from '@/components/Auth/AuthProvider';
+import { useToast } from '@/hooks/use-toast';
+import { useProfile } from './useProfile';
 
-export const usePromptGenerator = () => {
-  const { user } = useAuth();
+interface PromptGeneratorParams {
+  prompt: string;
+  temperature: number;
+  model: string;
+}
 
-  const { data: promptLogs, isLoading: isLoadingLogs, refetch } = useQuery({
-    queryKey: ['prompt-logs'],
+interface PromptResponse {
+  success: boolean;
+  data: any;
+  rawContent: string;
+  usage?: any;
+}
+
+export function usePromptGenerator() {
+  const { profile, isSuperAdmin } = useProfile();
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
+
+  // Fetch prompt logs
+  const { data: promptLogs, isLoading: isLoadingLogs } = useQuery({
+    queryKey: ['prompt-logs', profile?.company_id],
     queryFn: async () => {
-      // Mock data for now since table doesn't exist
-      return [];
-    }
-  });
+      if (!profile?.company_id) return [];
 
-  const { data: userCompany } = useQuery({
-    queryKey: ['user-profile', user?.id],
-    queryFn: async () => {
-      if (!user?.id) return null;
+      const { data, error } = await supabase
+        .from('prompt_logs')
+        .select('*')
+        .eq('company_id', profile.company_id)
+        .order('created_at', { ascending: false })
+        .limit(50);
 
-      // Mock implementation for now
-      return {
-        company_id: 'mock-company-id',
-        company: { id: 'mock-company-id', name: 'Mock Company' }
-      };
+      if (error) throw error;
+      return data;
     },
-    enabled: !!user?.id
+    enabled: !!profile?.company_id && isSuperAdmin,
   });
 
-  const generateCodeMutation = useMutation({
-    mutationFn: async (params: { prompt: string; temperature: number; model: string }) => {
+  // Generate code mutation
+  const generateCode = useMutation({
+    mutationFn: async (params: PromptGeneratorParams) => {
+      if (!isSuperAdmin) {
+        throw new Error('Acesso negado. Apenas super administradores podem gerar código.');
+      }
+
       const { data, error } = await supabase.functions.invoke('prompt-generator', {
         body: {
-          action: 'generate',
           prompt: params.prompt,
           temperature: params.temperature,
-          model: params.model
+          model: params.model,
         }
       });
 
       if (error) throw error;
-      return data;
-    }
-  });
-
-  const reviseCodeMutation = useMutation({
-    mutationFn: async (params: { prompt: string; originalCode: any }) => {
-      const { data, error } = await supabase.functions.invoke('prompt-generator', {
-        body: {
-          action: 'revise',
-          prompt: params.prompt,
-          originalCode: params.originalCode
-        }
+      return data as PromptResponse;
+    },
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: ['prompt-logs'] });
+      toast({
+        title: 'Código gerado com sucesso',
+        description: 'O código foi gerado pela IA. Revise antes de aplicar.',
       });
-
-      if (error) throw error;
-      return data;
-    }
+    },
+    onError: (error: any) => {
+      console.error('Error generating code:', error);
+      toast({
+        title: 'Erro ao gerar código',
+        description: error.message || 'Erro desconhecido ao gerar código',
+        variant: 'destructive',
+      });
+    },
   });
 
-  const applyCodeMutation = useMutation({
+  // Apply code mutation
+  const applyCode = useMutation({
     mutationFn: async (logId: string) => {
-      const { data, error } = await supabase.functions.invoke('prompt-generator', {
-        body: {
-          action: 'apply',
-          logId
-        }
-      });
+      if (!isSuperAdmin) {
+        throw new Error('Acesso negado. Apenas super administradores podem aplicar código.');
+      }
+
+      const { data, error } = await supabase
+        .from('prompt_logs')
+        .update({ status: 'applied', applied_at: new Date().toISOString() })
+        .eq('id', logId)
+        .select()
+        .single();
 
       if (error) throw error;
       return data;
-    }
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['prompt-logs'] });
+      toast({
+        title: 'Código aplicado',
+        description: 'O código foi aplicado ao projeto com sucesso.',
+      });
+    },
+    onError: (error: any) => {
+      toast({
+        title: 'Erro ao aplicar código',
+        description: error.message || 'Erro desconhecido ao aplicar código',
+        variant: 'destructive',
+      });
+    },
   });
 
-  const rollbackCodeMutation = useMutation({
+  // Rollback code mutation
+  const rollbackCode = useMutation({
     mutationFn: async (logId: string) => {
-      const { data, error } = await supabase.functions.invoke('prompt-generator', {
-        body: {
-          action: 'rollback',
-          logId
-        }
-      });
+      if (!isSuperAdmin) {
+        throw new Error('Acesso negado. Apenas super administradores podem fazer rollback.');
+      }
+
+      const { data, error } = await supabase
+        .from('prompt_logs')
+        .update({ status: 'rolled_back', rolled_back_at: new Date().toISOString() })
+        .eq('id', logId)
+        .select()
+        .single();
 
       if (error) throw error;
       return data;
-    }
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['prompt-logs'] });
+      toast({
+        title: 'Código desfeito',
+        description: 'O rollback foi executado com sucesso.',
+      });
+    },
+    onError: (error: any) => {
+      toast({
+        title: 'Erro ao fazer rollback',
+        description: error.message || 'Erro desconhecido ao fazer rollback',
+        variant: 'destructive',
+      });
+    },
   });
 
   return {
     promptLogs,
     isLoadingLogs,
-    isGenerating: generateCodeMutation.isPending || reviseCodeMutation.isPending,
-    isApplying: applyCodeMutation.isPending,
-    generateCode: (params: { prompt: string; temperature: number; model: string }, callbacks?: { onSuccess?: (data: any) => void; onError?: (error: any) => void }) => {
-      generateCodeMutation.mutate(params, {
-        onSuccess: callbacks?.onSuccess,
-        onError: callbacks?.onError
-      });
+    generateCode: (params: PromptGeneratorParams, callbacks?: { onSuccess?: (data: any) => void; onError?: (error: any) => void }) => {
+      generateCode.mutate(params, callbacks);
     },
-    reviseCode: (prompt: string, originalCode: any, callbacks?: { onSuccess?: (data: any) => void; onError?: (error: any) => void }) => {
-      reviseCodeMutation.mutate({ prompt, originalCode }, {
-        onSuccess: callbacks?.onSuccess,
-        onError: callbacks?.onError
-      });
-    },
-    applyCode: applyCodeMutation.mutate,
-    rollbackCode: rollbackCodeMutation.mutate,
-    refetch
+    applyCode: applyCode.mutate,
+    rollbackCode: rollbackCode.mutate,
+    isGenerating: generateCode.isPending,
+    isApplying: applyCode.isPending,
+    isRollingBack: rollbackCode.isPending,
   };
-};
+}

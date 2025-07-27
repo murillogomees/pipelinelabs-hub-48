@@ -1,7 +1,7 @@
 
 import { useProfile } from './useProfile';
 
-// Backward compatibility wrapper
+// Backward compatibility wrapper - now uses profile instead of user_companies
 export const useUserCompany = () => {
   const { profile, isLoading, error } = useProfile();
 

@@ -1,90 +1,52 @@
 
 import { useProfile } from './useProfile';
-import { PERMISSIONS } from '@/utils/permissions';
 
-export interface UserPermissions {
-  isSuperAdmin: boolean;
-  isContratante: boolean;
-  isOperador: boolean;
-  isAdmin: boolean;
-  isLoading: boolean;
-  currentCompanyId: string | null;
-  companyId: string | null;
-  email: string | null;
-  userType: string | null;
-  permissions: Record<string, boolean>;
-  canAccessCompanyData: boolean;
-  canManageCompanyData: boolean;
-  canManageCompany: boolean;
-  canAccessAdminPanel: boolean;
-  canManageSystem: boolean;
-  canManageUsers: boolean;
-  canAccessDepartmentData: boolean;
-  canBypassAllRestrictions: boolean;
-  canDeleteAnyRecord: boolean;
-  canModifyAnyData: boolean;
-  canManagePlans: boolean;
-  hasPermission: (permission: string) => boolean;
-}
+export const usePermissions = () => {
+  const { profile, isSuperAdmin, hasPermission, canAccessRoute } = useProfile();
 
-export function usePermissions(): UserPermissions {
-  const { profile, isLoading, isSuperAdmin, hasPermission } = useProfile();
+  const isAdmin = isSuperAdmin || hasPermission('admin_panel');
+  const isContratante = hasPermission('admin_panel') || hasPermission('empresas');
+  const isOperador = !isSuperAdmin && !isAdmin && !!profile?.company_id;
 
-  const accessLevel = profile?.access_levels;
-  const accessLevelName = accessLevel?.name || 'operador';
-  const accessLevelPermissions = accessLevel?.permissions || {};
+  const canManageUsers = isSuperAdmin || hasPermission('usuarios');
+  const canManageCompanies = isSuperAdmin || hasPermission('empresas');
+  const canManageSystem = isSuperAdmin || hasPermission('sistema');
+  const canManageSecurity = isSuperAdmin || hasPermission('seguranca');
 
-  // Role checks baseados no access level
-  const isContratante = accessLevelName === 'contratante';
-  const isOperador = accessLevelName === 'operador';
-
-  // Company ID
-  const currentCompanyId = profile?.company_id || null;
-
-  // User info
-  const email = profile?.email || null;
-  const userType = accessLevelName;
-
-  // Permission checks
-  const permissions: Record<string, boolean> = {};
-  Object.keys(accessLevelPermissions).forEach(key => {
-    permissions[key] = accessLevelPermissions[key] === true;
-  });
-
-  // Access control baseado no novo sistema
-  const canAccessCompanyData = isSuperAdmin || isContratante || isOperador;
-  const canManageCompanyData = isSuperAdmin || isContratante;
-  const canAccessAdminPanel = isSuperAdmin;
-  const canManageSystem = isSuperAdmin;
-  const canManageUsers = isSuperAdmin || isContratante;
-  const canAccessDepartmentData = isSuperAdmin || isContratante;
-  const canBypassAllRestrictions = isSuperAdmin;
-  const canDeleteAnyRecord = isSuperAdmin || isContratante;
-  const canModifyAnyData = isSuperAdmin || isContratante;
-  const canManagePlans = isSuperAdmin;
+  const canAccess = {
+    dashboard: hasPermission('dashboard'),
+    vendas: hasPermission('vendas'),
+    produtos: hasPermission('produtos'),
+    clientes: hasPermission('clientes'),
+    fornecedores: hasPermission('fornecedores'),
+    estoque: hasPermission('estoque'),
+    financeiro: hasPermission('financeiro'),
+    relatorios: hasPermission('relatorios'),
+    configuracoes: hasPermission('configuracoes'),
+    admin: hasPermission('admin_panel'),
+    usuarios: hasPermission('usuarios'),
+    empresas: hasPermission('empresas'),
+    sistema: hasPermission('sistema'),
+    seguranca: hasPermission('seguranca'),
+    notas_fiscais: hasPermission('notas_fiscais'),
+    contratos: hasPermission('contratos'),
+    producao: hasPermission('producao'),
+    compras: hasPermission('compras'),
+    integracoes: hasPermission('integracoes'),
+  };
 
   return {
+    profile,
     isSuperAdmin,
+    isAdmin,
     isContratante,
     isOperador,
-    isAdmin: isSuperAdmin,
-    isLoading,
-    currentCompanyId,
-    companyId: currentCompanyId,
-    email,
-    userType,
-    permissions,
-    canAccessCompanyData,
-    canManageCompanyData,
-    canManageCompany: canManageCompanyData,
-    canAccessAdminPanel,
-    canManageSystem,
     canManageUsers,
-    canAccessDepartmentData,
-    canBypassAllRestrictions,
-    canDeleteAnyRecord,
-    canModifyAnyData,
-    canManagePlans,
-    hasPermission
+    canManageCompanies,
+    canManageSystem,
+    canManageSecurity,
+    hasPermission,
+    canAccessRoute,
+    canAccess,
   };
-}
+};
