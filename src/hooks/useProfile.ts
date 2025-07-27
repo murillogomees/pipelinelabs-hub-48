@@ -5,6 +5,7 @@ import { useToast } from '@/hooks/use-toast';
 
 export interface Profile {
   id: string;
+  user_id: string;
   email: string;
   display_name: string;
   document: string;
@@ -17,6 +18,8 @@ export interface Profile {
   avatar_url: string;
   is_active: boolean;
   access_level_id: string;
+  company_id?: string;
+  stripe_customer_id?: string;
   created_at: string;
   updated_at: string;
   access_levels: {
@@ -68,9 +71,10 @@ export function useProfile() {
       if (!user) return [];
 
       const { data, error } = await supabase
-        .from('user_companies')
+        .from('profiles')
         .select(`
-          *,
+          id,
+          company_id,
           companies (
             id,
             name
@@ -92,8 +96,44 @@ export function useProfile() {
     return false; // Simplificado por enquanto
   };
 
+  const hasPermission = (permission: string): boolean => {
+    if (isSuperAdmin) return true;
+    
+    const permissions = profile?.access_levels?.permissions || [];
+    return permissions.some(p => String(p) === permission);
+  };
+
+  const canAccessRoute = (route: string): boolean => {
+    if (isSuperAdmin) return true;
+    
+    // Mapeamento de rotas para permissões
+    const routePermissions: Record<string, string> = {
+      '/app/dashboard': 'dashboard',
+      '/app/vendas': 'vendas',
+      '/app/produtos': 'produtos',
+      '/app/clientes': 'clientes',
+      '/app/fornecedores': 'fornecedores',
+      '/app/estoque': 'estoque',
+      '/app/financeiro': 'financeiro',
+      '/app/relatorios': 'relatorios',
+      '/app/configuracoes': 'configuracoes',
+      '/app/admin': 'admin_panel',
+      '/app/notas-fiscais': 'notas_fiscais',
+      '/app/contratos': 'contratos',
+      '/app/producao': 'producao',
+      '/app/compras': 'compras',
+      '/app/integracoes': 'integracoes',
+    };
+
+    const requiredPermission = routePermissions[route];
+    if (!requiredPermission) return true;
+    
+    return hasPermission(requiredPermission);
+  };
+
   const transformedProfile: Profile | null = profile ? {
     id: profile.id,
+    user_id: profile.user_id,
     email: profile.email,
     display_name: profile.display_name,
     document: profile.document,
@@ -106,6 +146,8 @@ export function useProfile() {
     avatar_url: profile.avatar_url,
     is_active: profile.is_active,
     access_level_id: profile.access_level_id,
+    company_id: profile.company_id,
+    stripe_customer_id: profile.stripe_customer_id,
     created_at: profile.created_at,
     updated_at: profile.updated_at,
     access_levels: {
@@ -118,7 +160,7 @@ export function useProfile() {
     },
     is_super_admin: isSuperAdmin,
     companies: userCompanies?.map(uc => ({
-      id: uc.companies?.id || '',
+      id: uc.company_id || '',
       name: uc.companies?.name || ''
     })) || [],
   } : null;
@@ -130,5 +172,7 @@ export function useProfile() {
     isSuperAdmin,
     needsSubscriptionRedirect,
     userCompanies,
+    hasPermission,
+    canAccessRoute,
   };
 }
