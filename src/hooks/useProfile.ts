@@ -40,7 +40,8 @@ export function useProfile() {
     queryFn: async () => {
       if (!user?.id) return null;
 
-      const { data, error } = await supabase
+      // First, try to get the profile from the new profiles table
+      const { data: profileData, error: profileError } = await supabase
         .from('profiles')
         .select(`
           *,
@@ -50,7 +51,65 @@ export function useProfile() {
             display_name,
             permissions,
             is_active
-          ),
+          )
+        `)
+        .eq('user_id', user.id)
+        .eq('is_active', true)
+        .maybeSingle();
+
+      if (profileError) {
+        console.error('Error fetching profile:', profileError);
+        return null;
+      }
+
+      // If we found a profile, get the company data separately
+      if (profileData) {
+        let companyData = null;
+        
+        if (profileData.company_id) {
+          const { data: company, error: companyError } = await supabase
+            .from('companies')
+            .select('id, name, document, email')
+            .eq('id', profileData.company_id)
+            .maybeSingle();
+
+          if (!companyError && company) {
+            companyData = company;
+          }
+        }
+
+        const profile: Profile = {
+          id: profileData.id,
+          user_id: profileData.user_id,
+          company_id: profileData.company_id,
+          access_level_id: profileData.access_level_id,
+          stripe_customer_id: profileData.stripe_customer_id,
+          is_super_admin: profileData.is_super_admin || false,
+          display_name: profileData.display_name || undefined,
+          email: profileData.email || undefined,
+          phone: profileData.phone || undefined,
+          avatar_url: profileData.avatar_url || undefined,
+          is_active: profileData.is_active,
+          created_at: profileData.created_at,
+          updated_at: profileData.updated_at,
+          access_levels: profileData.access_levels ? {
+            id: profileData.access_levels.id,
+            name: profileData.access_levels.name,
+            display_name: profileData.access_levels.display_name,
+            permissions: (profileData.access_levels.permissions as Record<string, boolean>) || {},
+            is_active: profileData.access_levels.is_active
+          } : undefined,
+          companies: companyData || undefined
+        };
+
+        return profile;
+      }
+
+      // If no profile found, try to get data from user_companies as fallback
+      const { data: userCompanyData, error: userCompanyError } = await supabase
+        .from('user_companies')
+        .select(`
+          *,
           companies (
             id,
             name,
@@ -60,42 +119,34 @@ export function useProfile() {
         `)
         .eq('user_id', user.id)
         .eq('is_active', true)
-        .single();
+        .maybeSingle();
 
-      if (error) {
-        console.error('Error fetching profile:', error);
+      if (userCompanyError || !userCompanyData) {
+        console.error('Error fetching user company data:', userCompanyError);
         return null;
       }
 
-      if (!data) return null;
-
-      // Convert the data to match the Profile interface
+      // Create a profile from user_companies data
       const profile: Profile = {
-        id: data.id,
-        user_id: data.user_id,
-        company_id: data.company_id || null,
-        access_level_id: data.access_level_id || null,
-        stripe_customer_id: data.stripe_customer_id || null,
-        is_super_admin: data.is_super_admin || false,
-        display_name: data.display_name || undefined,
-        email: data.email || undefined,
-        phone: data.phone || undefined,
-        avatar_url: data.avatar_url || undefined,
-        is_active: data.is_active,
-        created_at: data.created_at,
-        updated_at: data.updated_at,
-        access_levels: data.access_levels ? {
-          id: data.access_levels.id,
-          name: data.access_levels.name,
-          display_name: data.access_levels.display_name,
-          permissions: (data.access_levels.permissions as Record<string, boolean>) || {},
-          is_active: data.access_levels.is_active
-        } : undefined,
-        companies: data.companies ? {
-          id: data.companies.id,
-          name: data.companies.name,
-          document: data.companies.document,
-          email: data.companies.email
+        id: userCompanyData.id,
+        user_id: userCompanyData.user_id,
+        company_id: userCompanyData.company_id,
+        access_level_id: null,
+        stripe_customer_id: null,
+        is_super_admin: userCompanyData.user_type === 'super_admin',
+        display_name: undefined,
+        email: undefined,
+        phone: undefined,
+        avatar_url: undefined,
+        is_active: userCompanyData.is_active,
+        created_at: userCompanyData.created_at,
+        updated_at: userCompanyData.updated_at,
+        access_levels: undefined,
+        companies: userCompanyData.companies ? {
+          id: userCompanyData.companies.id,
+          name: userCompanyData.companies.name,
+          document: userCompanyData.companies.document,
+          email: userCompanyData.companies.email
         } : undefined
       };
 
