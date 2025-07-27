@@ -1488,6 +1488,123 @@ export type Database = {
         }
         Relationships: []
       }
+      knowledge_base: {
+        Row: {
+          category: string
+          code_snippet: string | null
+          content: string
+          created_at: string | null
+          description: string | null
+          effectiveness_score: number | null
+          files_affected: string[] | null
+          id: string
+          last_used: string | null
+          solution_type: string | null
+          success_rate: number | null
+          tags: string[] | null
+          title: string
+          updated_at: string | null
+          usage_count: number | null
+        }
+        Insert: {
+          category: string
+          code_snippet?: string | null
+          content: string
+          created_at?: string | null
+          description?: string | null
+          effectiveness_score?: number | null
+          files_affected?: string[] | null
+          id?: string
+          last_used?: string | null
+          solution_type?: string | null
+          success_rate?: number | null
+          tags?: string[] | null
+          title: string
+          updated_at?: string | null
+          usage_count?: number | null
+        }
+        Update: {
+          category?: string
+          code_snippet?: string | null
+          content?: string
+          created_at?: string | null
+          description?: string | null
+          effectiveness_score?: number | null
+          files_affected?: string[] | null
+          id?: string
+          last_used?: string | null
+          solution_type?: string | null
+          success_rate?: number | null
+          tags?: string[] | null
+          title?: string
+          updated_at?: string | null
+          usage_count?: number | null
+        }
+        Relationships: []
+      }
+      learning_sessions: {
+        Row: {
+          analysis: Json | null
+          build_result: Json | null
+          company_id: string
+          context: Json | null
+          created_at: string | null
+          feedback_comment: string | null
+          feedback_score: number | null
+          id: string
+          implementation: Json | null
+          improvements_made: string[] | null
+          prompt: string | null
+          query: string
+          response: string
+          session_id: string
+          tags: string[] | null
+          updated_at: string | null
+          user_feedback: string | null
+          user_id: string
+        }
+        Insert: {
+          analysis?: Json | null
+          build_result?: Json | null
+          company_id: string
+          context?: Json | null
+          created_at?: string | null
+          feedback_comment?: string | null
+          feedback_score?: number | null
+          id?: string
+          implementation?: Json | null
+          improvements_made?: string[] | null
+          prompt?: string | null
+          query: string
+          response: string
+          session_id: string
+          tags?: string[] | null
+          updated_at?: string | null
+          user_feedback?: string | null
+          user_id: string
+        }
+        Update: {
+          analysis?: Json | null
+          build_result?: Json | null
+          company_id?: string
+          context?: Json | null
+          created_at?: string | null
+          feedback_comment?: string | null
+          feedback_score?: number | null
+          id?: string
+          implementation?: Json | null
+          improvements_made?: string[] | null
+          prompt?: string | null
+          query?: string
+          response?: string
+          session_id?: string
+          tags?: string[] | null
+          updated_at?: string | null
+          user_feedback?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       lgpd_requests: {
         Row: {
           company_id: string
@@ -2333,6 +2450,60 @@ export type Database = {
           },
         ]
       }
+      project_history: {
+        Row: {
+          build_status: string
+          company_id: string
+          created_at: string | null
+          errors_fixed: string[] | null
+          files_modified: string[] | null
+          id: string
+          impact_level: string
+          prompt: string
+          response: Json | null
+          session_id: string
+          similarity_hash: string
+          tags: string[] | null
+          technical_decisions: Json | null
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          build_status?: string
+          company_id: string
+          created_at?: string | null
+          errors_fixed?: string[] | null
+          files_modified?: string[] | null
+          id: string
+          impact_level?: string
+          prompt: string
+          response?: Json | null
+          session_id: string
+          similarity_hash: string
+          tags?: string[] | null
+          technical_decisions?: Json | null
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          build_status?: string
+          company_id?: string
+          created_at?: string | null
+          errors_fixed?: string[] | null
+          files_modified?: string[] | null
+          id?: string
+          impact_level?: string
+          prompt?: string
+          response?: Json | null
+          session_id?: string
+          similarity_hash?: string
+          tags?: string[] | null
+          technical_decisions?: Json | null
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       prompt_logs: {
         Row: {
           applied_at: string | null
@@ -2924,6 +3095,36 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      similarity_patterns: {
+        Row: {
+          created_at: string | null
+          id: string
+          pattern_data: Json | null
+          pattern_hash: string
+          pattern_type: string
+          similarity_threshold: number | null
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          pattern_data?: Json | null
+          pattern_hash: string
+          pattern_type: string
+          similarity_threshold?: number | null
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          pattern_data?: Json | null
+          pattern_hash?: string
+          pattern_type?: string
+          similarity_threshold?: number | null
+          updated_at?: string | null
+        }
+        Relationships: []
       }
       sla_acceptance: {
         Row: {
@@ -3901,6 +4102,10 @@ export type Database = {
         }[]
       }
       cleanup_old_security_logs: {
+        Args: Record<PropertyKey, never>
+        Returns: undefined
+      }
+      cleanup_project_history: {
         Args: Record<PropertyKey, never>
         Returns: undefined
       }

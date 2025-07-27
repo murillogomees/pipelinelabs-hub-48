@@ -35,20 +35,24 @@ export const useProjectHistory = () => {
   const { user } = useAuth();
   const [currentSession, setCurrentSession] = useState<string | null>(null);
 
-  // Buscar histórico completo do projeto
+  // Buscar histórico completo do projeto usando query SQL direta
   const { data: projectHistory, isLoading: isLoadingHistory } = useQuery({
     queryKey: ['project-history', user?.id],
     queryFn: async () => {
       if (!user?.id) return [];
 
+      // Usar SQL direto para consultar a nova tabela
       const { data, error } = await supabase
-        .from('project_history')
-        .select('*')
-        .eq('user_id', user.id)
-        .order('created_at', { ascending: false })
-        .limit(1000);
+        .rpc('get_project_history', { 
+          p_user_id: user.id,
+          p_limit: 1000 
+        })
+        .returns<ProjectHistoryEntry[]>();
 
-      if (error) throw error;
+      if (error) {
+        console.error('Error fetching project history:', error);
+        return [];
+      }
       return data || [];
     },
     enabled: !!user?.id
@@ -60,11 +64,12 @@ export const useProjectHistory = () => {
       const indexedEntries = await processLovableHistory(historyData);
       
       for (const entry of indexedEntries) {
-        const { data, error } = await supabase
-          .from('project_history')
-          .upsert(entry);
+        const { error } = await supabase
+          .rpc('insert_project_history', entry);
           
-        if (error) throw error;
+        if (error) {
+          console.error('Error inserting project history:', error);
+        }
       }
       
       return indexedEntries;
@@ -72,13 +77,13 @@ export const useProjectHistory = () => {
   });
 
   // Processar dados do histórico do Lovable
-  const processLovableHistory = async (historyData: LovableHistoryData): Promise<ProjectHistoryEntry[]> => {
-    const entries: ProjectHistoryEntry[] = [];
+  const processLovableHistory = async (historyData: LovableHistoryData): Promise<Partial<ProjectHistoryEntry>[]> => {
+    const entries: Partial<ProjectHistoryEntry>[] = [];
     
     // Processar mensagens
     for (const message of historyData.messages) {
       if (message.role === 'user' && message.content) {
-        const entry: ProjectHistoryEntry = {
+        const entry: Partial<ProjectHistoryEntry> = {
           id: `msg_${message.id}`,
           user_id: user?.id || '',
           company_id: await getUserCompanyId(),
@@ -87,7 +92,7 @@ export const useProjectHistory = () => {
           response: message.response || {},
           files_modified: extractFilesFromMessage(message),
           errors_fixed: extractErrorsFromMessage(message),
-          build_status: message.build_status || 'pending',
+          build_status: (message.build_status as 'success' | 'failed' | 'pending') || 'pending',
           technical_decisions: extractTechnicalDecisions(message),
           impact_level: calculateImpactLevel(message),
           similarity_hash: calculateSimilarityHash(message.content),
@@ -99,57 +104,14 @@ export const useProjectHistory = () => {
       }
     }
     
-    // Processar builds
-    for (const build of historyData.builds) {
-      const entry: ProjectHistoryEntry = {
-        id: `build_${build.id}`,
-        user_id: user?.id || '',
-        company_id: await getUserCompanyId(),
-        session_id: build.session_id || generateSessionId(),
-        prompt: `Build: ${build.trigger || 'Automated'}`,
-        response: build,
-        files_modified: build.files_changed || [],
-        errors_fixed: build.errors_fixed || [],
-        build_status: build.status,
-        technical_decisions: [],
-        impact_level: build.status === 'failed' ? 'high' : 'medium',
-        similarity_hash: calculateSimilarityHash(`build_${build.trigger}`),
-        tags: ['build', build.status],
-        created_at: build.created_at || new Date().toISOString(),
-        updated_at: new Date().toISOString()
-      };
-      entries.push(entry);
-    }
-    
-    // Processar erros
-    for (const error of historyData.errors) {
-      const entry: ProjectHistoryEntry = {
-        id: `error_${error.id}`,
-        user_id: user?.id || '',
-        company_id: await getUserCompanyId(),
-        session_id: error.session_id || generateSessionId(),
-        prompt: `Error: ${error.message}`,
-        response: error,
-        files_modified: error.files_affected || [],
-        errors_fixed: [error.message],
-        build_status: 'failed',
-        technical_decisions: [],
-        impact_level: 'high',
-        similarity_hash: calculateSimilarityHash(error.message),
-        tags: ['error', error.type],
-        created_at: error.created_at || new Date().toISOString(),
-        updated_at: new Date().toISOString()
-      };
-      entries.push(entry);
-    }
-    
     return entries;
   };
 
   // Funções auxiliares
   const getUserCompanyId = async (): Promise<string> => {
+    // Buscar empresa do usuário via profiles
     const { data } = await supabase
-      .from('user_companies')
+      .from('profiles')
       .select('company_id')
       .eq('user_id', user?.id)
       .single();
@@ -288,21 +250,16 @@ export const useProjectHistory = () => {
     return similar;
   }, [projectHistory]);
 
-  // Salvar nova entrada
+  // Salvar nova entrada usando RPC
   const saveHistoryEntry = useMutation({
     mutationFn: async (entry: Omit<ProjectHistoryEntry, 'id' | 'created_at' | 'updated_at'>) => {
-      const fullEntry = {
-        ...entry,
-        id: generateSessionId(),
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString()
-      };
-      
       const { data, error } = await supabase
-        .from('project_history')
-        .insert([fullEntry])
-        .select()
-        .single();
+        .rpc('insert_project_history', {
+          ...entry,
+          id: generateSessionId(),
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString()
+        });
       
       if (error) throw error;
       return data;
@@ -314,11 +271,11 @@ export const useProjectHistory = () => {
     if (!projectHistory) return {};
     
     const patterns = {
-      mostCommonErrors: {},
-      frequentFiles: {},
-      technicalDecisions: {},
-      successPatterns: [],
-      failurePatterns: []
+      mostCommonErrors: {} as Record<string, number>,
+      frequentFiles: {} as Record<string, number>,
+      technicalDecisions: {} as Record<string, number>,
+      successPatterns: [] as any[],
+      failurePatterns: [] as any[]
     };
     
     projectHistory.forEach(entry => {
