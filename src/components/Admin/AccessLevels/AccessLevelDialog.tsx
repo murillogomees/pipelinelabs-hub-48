@@ -114,7 +114,7 @@ export function AccessLevelDialog({ open, onOpenChange, accessLevel, onSave }: A
     }
     
     return {
-      name: '',
+      name: FormData.name,
       display_name: '',
       description: '',
       is_active: true,
