@@ -25,14 +25,14 @@ export function ProductCategoryForm({ data, onChange }: ProductCategoryFormProps
           <div>
             <Label htmlFor="category_id">Categoria do Produto</Label>
             <Select
-              value={data.category_id || ''}
-              onValueChange={(value) => onChange('category_id', value === 'none' ? null : value)}
+              value={data.category_id || 'no-category'}
+              onValueChange={(value) => onChange('category_id', value === 'no-category' ? null : value)}
             >
               <SelectTrigger>
                 <SelectValue placeholder={isLoading ? "Carregando..." : "Selecione uma categoria"} />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="none">Sem categoria</SelectItem>
+                <SelectItem value="no-category">Sem categoria</SelectItem>
                 {categories?.map((category) => (
                   <SelectItem key={category.id} value={category.id}>
                     {category.name}

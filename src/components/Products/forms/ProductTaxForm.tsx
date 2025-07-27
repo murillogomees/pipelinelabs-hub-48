@@ -51,14 +51,14 @@ export function ProductTaxForm({ data, onChange }: ProductTaxFormProps) {
             <div>
               <Label htmlFor="tax_origin">Origem</Label>
               <Select
-                value={data.tax_origin || 'none'}
-                onValueChange={(value) => onChange('tax_origin', value === 'none' ? null : value)}
+                value={data.tax_origin || 'no-origin'}
+                onValueChange={(value) => onChange('tax_origin', value === 'no-origin' ? null : value)}
               >
                 <SelectTrigger>
                   <SelectValue placeholder="Selecione a origem" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="none">Selecione uma origem</SelectItem>
+                  <SelectItem value="no-origin">Selecione uma origem</SelectItem>
                   {Object.entries(TAX_ORIGINS).map(([code, description]) => (
                     <SelectItem key={code} value={code}>
                       {code} - {description}
@@ -82,14 +82,14 @@ export function ProductTaxForm({ data, onChange }: ProductTaxFormProps) {
             <div>
               <Label htmlFor="item_type">Tipo do Item</Label>
               <Select
-                value={data.item_type || 'none'}
-                onValueChange={(value) => onChange('item_type', value === 'none' ? null : value)}
+                value={data.item_type || 'no-type'}
+                onValueChange={(value) => onChange('item_type', value === 'no-type' ? null : value)}
               >
                 <SelectTrigger>
                   <SelectValue placeholder="Selecione o tipo" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="none">Selecione um tipo</SelectItem>
+                  <SelectItem value="no-type">Selecione um tipo</SelectItem>
                   <SelectItem value="00">00 - Mercadoria para Revenda</SelectItem>
                   <SelectItem value="01">01 - Matéria-Prima</SelectItem>
                   <SelectItem value="02">02 - Embalagem</SelectItem>

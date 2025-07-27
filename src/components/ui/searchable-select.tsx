@@ -181,8 +181,9 @@ export function SearchableSelect({
                           key={option.value}
                           value={option.value}
                           onSelect={() => {
-                            const newValue = option.value === value ? "" : option.value;
-                            onValueChange?.(newValue);
+                            // Garante que nunca passa string vazia
+                            const newValue = option.value === value ? "no-selection" : option.value;
+                            onValueChange?.(newValue === "no-selection" ? "" : newValue);
                             setOpen(false);
                           }}
                           disabled={option.disabled}
