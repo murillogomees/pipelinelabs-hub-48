@@ -1,3 +1,4 @@
+
 import { useState, useCallback, useMemo } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
@@ -6,7 +7,7 @@ import { toast } from '@/hooks/use-toast';
 interface PromptLog {
   id: string;
   prompt: string;
-  generated_code: any;
+  generated_code: GeneratedCode | null;
   model_used: string;
   temperature: number;
   status: 'pending' | 'applied' | 'error' | 'rolled_back';
@@ -29,8 +30,25 @@ interface GeneratedCode {
   files: Record<string, string>;
   sql: string[];
   description: string;
+  suggestions?: Array<{
+    type: string;
+    title: string;
+    description: string;
+    code: string;
+  }>;
+  editable_sections?: Array<{
+    id: string;
+    title: string;
+    description: string;
+    content: string;
+  }>;
   rawContent?: string;
 }
+
+// Type guard to check if generated_code is valid
+const isValidGeneratedCode = (code: any): code is GeneratedCode => {
+  return code && typeof code === 'object' && 'files' in code && typeof code.files === 'object';
+};
 
 export const usePromptGenerator = () => {
   const queryClient = useQueryClient();
@@ -54,7 +72,7 @@ export const usePromptGenerator = () => {
         return (data || []).map(item => ({
           id: item.id,
           prompt: item.prompt,
-          generated_code: item.generated_code,
+          generated_code: isValidGeneratedCode(item.generated_code) ? item.generated_code : null,
           model_used: item.model_used,
           temperature: item.temperature,
           status: item.status as 'pending' | 'applied' | 'error' | 'rolled_back',
@@ -216,7 +234,7 @@ export const usePromptGenerator = () => {
           throw new Error('Falha ao buscar dados do log');
         }
 
-        if (!logData || !logData.generated_code) {
+        if (!logData || !isValidGeneratedCode(logData.generated_code)) {
           throw new Error('Nenhum código gerado encontrado para este log');
         }
 
