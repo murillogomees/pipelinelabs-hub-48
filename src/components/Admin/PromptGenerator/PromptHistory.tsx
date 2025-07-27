@@ -40,17 +40,19 @@ interface PromptLog {
 
 export interface PromptHistoryProps {
   promptLogs: PromptLog[];
-  onRollback: (logId: string) => void;
+  onRollbackCode: (logId: string) => void;
   onApplyCode: (logId: string) => void;
-  onViewCode: (log: PromptLog) => void;
+  onViewLog: (logId: string) => void;
+  selectedLogId: string | null;
   isLoadingLogs: boolean;
 }
 
 export const PromptHistory: React.FC<PromptHistoryProps> = ({
   promptLogs,
-  onRollback,
+  onRollbackCode,
   onApplyCode,
-  onViewCode,
+  onViewLog,
+  selectedLogId,
   isLoadingLogs
 }) => {
   const [expandedLogs, setExpandedLogs] = useState<Set<string>>(new Set());
@@ -128,7 +130,7 @@ export const PromptHistory: React.FC<PromptHistoryProps> = ({
 
     return (
       <div className="space-y-4 mt-4">
-        {/* Descrição */}
+        {/* Description */}
         {content.description && (
           <div className="bg-muted p-3 rounded-lg">
             <div className="flex items-center gap-2 mb-2">
@@ -139,7 +141,7 @@ export const PromptHistory: React.FC<PromptHistoryProps> = ({
           </div>
         )}
 
-        {/* Arquivos gerados */}
+        {/* Generated Files */}
         {content.files && Object.keys(content.files).length > 0 && (
           <div className="bg-muted p-3 rounded-lg">
             <div className="flex items-center gap-2 mb-2">
@@ -179,7 +181,7 @@ export const PromptHistory: React.FC<PromptHistoryProps> = ({
           </div>
         )}
 
-        {/* Sugestões */}
+        {/* Suggestions */}
         {content.suggestions && content.suggestions.length > 0 && (
           <div className="bg-muted p-3 rounded-lg">
             <div className="flex items-center gap-2 mb-2">
@@ -234,9 +236,10 @@ export const PromptHistory: React.FC<PromptHistoryProps> = ({
               {promptLogs.map((log) => {
                 const isExpanded = expandedLogs.has(log.id);
                 const contentSummary = getGeneratedContentSummary(log.generated_code);
+                const isSelected = selectedLogId === log.id;
 
                 return (
-                  <div key={log.id} className="border rounded-lg p-4 space-y-3">
+                  <div key={log.id} className={`border rounded-lg p-4 space-y-3 ${isSelected ? 'border-primary' : ''}`}>
                     <div className="flex items-start justify-between">
                       <div className="flex-1 space-y-1">
                         <p className="text-sm font-medium line-clamp-2">
@@ -287,7 +290,7 @@ export const PromptHistory: React.FC<PromptHistoryProps> = ({
                       </div>
                     )}
 
-                    {/* Expandir/Recolher detalhes */}
+                    {/* Expand/Collapse Details */}
                     <div className="flex items-center justify-between pt-2">
                       <Collapsible open={isExpanded} onOpenChange={() => toggleExpanded(log.id)}>
                         <CollapsibleTrigger asChild>
@@ -307,16 +310,14 @@ export const PromptHistory: React.FC<PromptHistoryProps> = ({
                       </Collapsible>
 
                       <div className="flex gap-2">
-                        {log.generated_code && (
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            onClick={() => onViewCode(log)}
-                          >
-                            <Eye className="h-3 w-3 mr-1" />
-                            Visualizar Código
-                          </Button>
-                        )}
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => onViewLog(log.id)}
+                        >
+                          <Eye className="h-3 w-3 mr-1" />
+                          Visualizar
+                        </Button>
                         
                         {log.status === 'pending' && log.generated_code && (
                           <Button
@@ -333,7 +334,7 @@ export const PromptHistory: React.FC<PromptHistoryProps> = ({
                           <Button
                             size="sm"
                             variant="outline"
-                            onClick={() => onRollback(log.id)}
+                            onClick={() => onRollbackCode(log.id)}
                           >
                             <RotateCcw className="h-3 w-3 mr-1" />
                             Desfazer

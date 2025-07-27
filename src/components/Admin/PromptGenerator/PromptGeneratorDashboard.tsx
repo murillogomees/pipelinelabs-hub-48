@@ -10,7 +10,7 @@ import { CodePreview } from './CodePreview';
 import { PromptHistory } from './PromptHistory';
 import { usePromptGenerator } from '@/hooks/usePromptGenerator';
 import { Bot, Code, History, MessageSquare, Zap } from 'lucide-react';
-import { PromptLog } from './types';
+import { type PromptLog } from './types';
 
 export const PromptGeneratorDashboard: React.FC = () => {
   const [mode, setMode] = useState<'conversational' | 'traditional'>('conversational');
@@ -60,22 +60,22 @@ export const PromptGeneratorDashboard: React.FC = () => {
     );
   }
 
-  // Mock prompt logs with correct typing
-  const mockPromptLogs: PromptLog[] = (promptLogs || []).map(log => ({
+  // Transform prompt logs to match PromptLog interface
+  const transformedPromptLogs: PromptLog[] = (promptLogs || []).map(log => ({
     id: log.id,
     prompt: log.prompt,
     generated_code: log.generated_code,
     status: (log.status as 'pending' | 'applied' | 'rolled_back' | 'error') || 'pending',
     created_at: log.created_at,
-    applied_at: log.applied_at || undefined,
-    rolled_back_at: log.rolled_back_at || undefined,
-    error_message: log.error_message || undefined,
+    applied_at: log.applied_at,
+    rolled_back_at: log.rolled_back_at,
+    error_message: log.error_message,
     user_id: log.user_id,
     company_id: log.company_id || '',
     model_used: log.model_used || 'gpt-4',
     temperature: log.temperature || 0.7,
-    applied_files: log.applied_files || undefined,
-    rollback_data: log.rollback_data || undefined
+    applied_files: Array.isArray(log.applied_files) ? log.applied_files : [],
+    rollback_data: log.rollback_data
   }));
 
   return (
@@ -143,6 +143,7 @@ export const PromptGeneratorDashboard: React.FC = () => {
             <CardContent>
               <CodePreview 
                 generatedCode={generatedCode}
+                logId={selectedLog}
                 onApply={handleApplyCode}
                 isApplying={isApplying}
               />
@@ -157,11 +158,12 @@ export const PromptGeneratorDashboard: React.FC = () => {
             </CardHeader>
             <CardContent>
               <PromptHistory 
-                promptLogs={mockPromptLogs}
+                promptLogs={transformedPromptLogs}
                 onViewLog={handleViewLog}
                 onApplyCode={handleApplyCode}
                 onRollbackCode={handleRollbackCode}
                 selectedLogId={selectedLog}
+                isLoadingLogs={false}
               />
             </CardContent>
           </Card>

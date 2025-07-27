@@ -2,75 +2,73 @@
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Calendar, Search, Filter, AlertCircle, User, Clock } from 'lucide-react';
-import { useUserCompany } from '@/hooks/useUserCompany';
+import { Badge } from '@/components/ui/badge';
+import { Separator } from '@/components/ui/separator';
+import { Calendar, Search, Filter, Download, User, Clock, AlertCircle } from 'lucide-react';
 import { useAuditLogs } from '@/hooks/useAuditLogs';
-import { format } from 'date-fns';
+import { useUserCompany } from '@/hooks/useUserCompany';
+import { formatDistanceToNow } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 
 interface AuditLogFilters {
+  company_id?: string;
+  user_id?: string;
   action?: string;
   resource_type?: string;
   severity?: string;
-  user_id?: string;
-  start_date?: string;
-  end_date?: string;
-}
-
-interface AuditLog {
-  id: string;
-  action: string;
-  resource_type: string;
-  resource_id: string;
-  old_values: any;
-  new_values: any;
-  ip_address: string;
-  user_agent: string;
-  severity: string;
-  status: string;
-  details: any;
-  created_at: string;
-  user_email?: string;
-  user_name?: string;
+  start_date?: Date;
+  end_date?: Date;
 }
 
 export const CompanyAuditLog: React.FC = () => {
   const [filters, setFilters] = useState<AuditLogFilters>({});
-  const { userCompany } = useUserCompany();
-  const { data: auditLogs, isLoading, error, refetch } = useAuditLogs(filters);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 20;
 
-  const handleFilterChange = (key: keyof AuditLogFilters, value: string) => {
+  const { data: userCompany } = useUserCompany();
+  const { data: auditLogs, isLoading, error, refetch } = useAuditLogs({
+    ...filters,
+    company_id: userCompany?.company_id || '',
+    limit: itemsPerPage,
+    offset: (currentPage - 1) * itemsPerPage
+  });
+
+  const handleFilterChange = (key: keyof AuditLogFilters, value: any) => {
     setFilters(prev => ({ ...prev, [key]: value }));
+    setCurrentPage(1);
   };
 
   const getSeverityColor = (severity: string) => {
     switch (severity) {
-      case 'high':
-        return 'bg-red-100 text-red-800';
-      case 'medium':
-        return 'bg-yellow-100 text-yellow-800';
-      case 'low':
-        return 'bg-green-100 text-green-800';
+      case 'critical':
+        return 'destructive';
+      case 'warning':
+        return 'secondary';
+      case 'info':
+        return 'default';
       default:
-        return 'bg-gray-100 text-gray-800';
+        return 'outline';
     }
   };
 
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'success':
-        return 'bg-green-100 text-green-800';
+        return 'default';
       case 'error':
-        return 'bg-red-100 text-red-800';
-      case 'warning':
-        return 'bg-yellow-100 text-yellow-800';
+        return 'destructive';
+      case 'blocked':
+        return 'secondary';
       default:
-        return 'bg-gray-100 text-gray-800';
+        return 'outline';
     }
+  };
+
+  const formatAction = (action: string) => {
+    return action.split(':').join(' ➤ ').replace(/_/g, ' ');
   };
 
   if (isLoading) {
@@ -95,8 +93,9 @@ export const CompanyAuditLog: React.FC = () => {
           <CardTitle>Log de Auditoria</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="flex items-center justify-center py-8">
-            <div className="text-red-500">Erro ao carregar logs</div>
+          <div className="text-center py-8 text-red-500">
+            <AlertCircle className="h-12 w-12 mx-auto mb-4" />
+            <p>Erro ao carregar logs de auditoria</p>
           </div>
         </CardContent>
       </Card>
@@ -104,122 +103,189 @@ export const CompanyAuditLog: React.FC = () => {
   }
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          <AlertCircle className="h-5 w-5" />
-          Log de Auditoria
-        </CardTitle>
-      </CardHeader>
-      <CardContent className="space-y-4">
-        {/* Filtros */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 p-4 bg-muted rounded-lg">
-          <div className="space-y-2">
-            <Label htmlFor="action">Ação</Label>
-            <Input
-              id="action"
-              placeholder="Filtrar por ação..."
-              value={filters.action || ''}
-              onChange={(e) => handleFilterChange('action', e.target.value)}
-            />
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="resource_type">Tipo de Recurso</Label>
-            <Select
-              value={filters.resource_type || ''}
-              onValueChange={(value) => handleFilterChange('resource_type', value)}
-            >
+    <div className="space-y-6">
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Calendar className="h-5 w-5" />
+            Log de Auditoria
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          {/* Filters */}
+          <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-6 gap-4 mb-6">
+            <div className="relative">
+              <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+              <Input
+                placeholder="Buscar ações..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="pl-10"
+              />
+            </div>
+            
+            <Select onValueChange={(value) => handleFilterChange('action', value)}>
               <SelectTrigger>
-                <SelectValue placeholder="Todos os tipos" />
+                <SelectValue placeholder="Ação" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">Todos os tipos</SelectItem>
+                <SelectItem value="">Todas as ações</SelectItem>
+                <SelectItem value="create">Criar</SelectItem>
+                <SelectItem value="update">Atualizar</SelectItem>
+                <SelectItem value="delete">Excluir</SelectItem>
+                <SelectItem value="login">Login</SelectItem>
+                <SelectItem value="logout">Logout</SelectItem>
+              </SelectContent>
+            </Select>
+
+            <Select onValueChange={(value) => handleFilterChange('resource_type', value)}>
+              <SelectTrigger>
+                <SelectValue placeholder="Recurso" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="">Todos os recursos</SelectItem>
                 <SelectItem value="user">Usuário</SelectItem>
                 <SelectItem value="company">Empresa</SelectItem>
                 <SelectItem value="product">Produto</SelectItem>
+                <SelectItem value="customer">Cliente</SelectItem>
                 <SelectItem value="sale">Venda</SelectItem>
-                <SelectItem value="invoice">Nota Fiscal</SelectItem>
               </SelectContent>
             </Select>
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="severity">Severidade</Label>
-            <Select
-              value={filters.severity || ''}
-              onValueChange={(value) => handleFilterChange('severity', value)}
-            >
+
+            <Select onValueChange={(value) => handleFilterChange('severity', value)}>
               <SelectTrigger>
-                <SelectValue placeholder="Todas as severidades" />
+                <SelectValue placeholder="Gravidade" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">Todas as severidades</SelectItem>
-                <SelectItem value="low">Baixa</SelectItem>
-                <SelectItem value="medium">Média</SelectItem>
-                <SelectItem value="high">Alta</SelectItem>
+                <SelectItem value="">Todas</SelectItem>
+                <SelectItem value="info">Info</SelectItem>
+                <SelectItem value="warning">Aviso</SelectItem>
+                <SelectItem value="critical">Crítico</SelectItem>
               </SelectContent>
             </Select>
-          </div>
-        </div>
 
-        {/* Lista de logs */}
-        <div className="space-y-3">
-          {auditLogs && auditLogs.length > 0 ? (
-            auditLogs.map((entry: AuditLog) => (
-              <div key={entry.id} className="border rounded-lg p-4 space-y-2">
-                <div className="flex items-start justify-between">
-                  <div className="flex-1">
-                    <div className="flex items-center gap-2 mb-1">
-                      <Badge variant="outline">{entry.action}</Badge>
-                      <Badge variant="outline">{entry.resource_type}</Badge>
-                      <Badge className={getSeverityColor(entry.severity)}>
-                        {entry.severity}
-                      </Badge>
-                      <Badge className={getStatusColor(entry.status)}>
-                        {entry.status}
-                      </Badge>
-                    </div>
-                    <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                      <User className="h-3 w-3" />
-                      <span>{entry.user_email || 'Sistema'}</span>
-                      <Clock className="h-3 w-3 ml-2" />
-                      <span>{format(new Date(entry.created_at), 'dd/MM/yyyy HH:mm', { locale: ptBR })}</span>
+            <Button variant="outline" onClick={() => refetch()}>
+              <Filter className="h-4 w-4 mr-2" />
+              Filtrar
+            </Button>
+
+            <Button variant="outline">
+              <Download className="h-4 w-4 mr-2" />
+              Exportar
+            </Button>
+          </div>
+
+          {/* Logs List */}
+          <div className="space-y-4">
+            {auditLogs && auditLogs.length > 0 ? (
+              auditLogs.map((log) => (
+                <div key={log.id} className="border rounded-lg p-4 space-y-3">
+                  <div className="flex items-start justify-between">
+                    <div className="flex-1">
+                      <div className="flex items-center gap-2 mb-2">
+                        <Badge variant={getSeverityColor(log.severity) as any}>
+                          {log.severity}
+                        </Badge>
+                        <Badge variant={getStatusColor(log.status) as any}>
+                          {log.status}
+                        </Badge>
+                        <span className="text-sm text-muted-foreground">
+                          {formatAction(log.action)}
+                        </span>
+                      </div>
+                      
+                      <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                        <User className="h-4 w-4" />
+                        <span>{log.user_email || 'Sistema'}</span>
+                        <Clock className="h-4 w-4 ml-4" />
+                        <span>
+                          {formatDistanceToNow(new Date(log.created_at), {
+                            addSuffix: true,
+                            locale: ptBR
+                          })}
+                        </span>
+                      </div>
                     </div>
                   </div>
+
+                  <div className="text-sm">
+                    <span className="font-medium">Recurso:</span> {log.resource_type}
+                    {log.resource_id && (
+                      <>
+                        <span className="mx-2">•</span>
+                        <span className="font-medium">ID:</span> {log.resource_id}
+                      </>
+                    )}
+                  </div>
+
+                  {log.ip_address && (
+                    <div className="text-sm">
+                      <span className="font-medium">IP:</span> {log.ip_address}
+                    </div>
+                  )}
+
+                  {log.old_values && (
+                    <div className="text-sm">
+                      <span className="font-medium">Valores anteriores:</span>
+                      <pre className="mt-1 p-2 bg-muted rounded text-xs overflow-x-auto">
+                        {JSON.stringify(log.old_values, null, 2)}
+                      </pre>
+                    </div>
+                  )}
+
+                  {log.new_values && (
+                    <div className="text-sm">
+                      <span className="font-medium">Novos valores:</span>
+                      <pre className="mt-1 p-2 bg-muted rounded text-xs overflow-x-auto">
+                        {JSON.stringify(log.new_values, null, 2)}
+                      </pre>
+                    </div>
+                  )}
+
+                  <Separator />
                 </div>
-                
-                {entry.details && (
-                  <div className="text-xs text-muted-foreground bg-muted p-2 rounded">
-                    <strong>Detalhes:</strong> {JSON.stringify(entry.details)}
-                  </div>
-                )}
-                
-                {entry.ip_address && (
-                  <div className="text-xs text-muted-foreground">
-                    <strong>IP:</strong> {entry.ip_address}
-                  </div>
-                )}
+              ))
+            ) : (
+              <div className="text-center py-8 text-muted-foreground">
+                <Calendar className="h-12 w-12 mx-auto mb-4 opacity-50" />
+                <p>Nenhum log de auditoria encontrado</p>
+                <p className="text-xs">Ajuste os filtros para ver mais resultados</p>
               </div>
-            ))
-          ) : (
-            <div className="text-center py-8 text-muted-foreground">
-              <AlertCircle className="h-12 w-12 mx-auto mb-4 opacity-50" />
-              <p>Nenhum log encontrado</p>
-              <p className="text-xs">Ajuste os filtros para ver mais resultados</p>
+            )}
+          </div>
+
+          {/* Pagination */}
+          {auditLogs && auditLogs.length > 0 && (
+            <div className="flex items-center justify-between mt-6">
+              <div className="text-sm text-muted-foreground">
+                Mostrando {(currentPage - 1) * itemsPerPage + 1} a{' '}
+                {Math.min(currentPage * itemsPerPage, auditLogs.length)} de {auditLogs.length} registros
+              </div>
+              <div className="flex items-center gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+                  disabled={currentPage === 1}
+                >
+                  Anterior
+                </Button>
+                <span className="text-sm px-3 py-1">
+                  Página {currentPage}
+                </span>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setCurrentPage(prev => prev + 1)}
+                  disabled={auditLogs.length < itemsPerPage}
+                >
+                  Próxima
+                </Button>
+              </div>
             </div>
           )}
-        </div>
-
-        <div className="flex justify-between items-center">
-          <Button variant="outline" onClick={() => refetch()}>
-            <Search className="h-4 w-4 mr-2" />
-            Atualizar
-          </Button>
-          <Button variant="outline" onClick={() => setFilters({})}>
-            <Filter className="h-4 w-4 mr-2" />
-            Limpar Filtros
-          </Button>
-        </div>
-      </CardContent>
-    </Card>
+        </CardContent>
+      </Card>
+    </div>
   );
 };

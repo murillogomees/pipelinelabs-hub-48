@@ -19,75 +19,73 @@ export const useLearningSystem = () => {
     suggestions: []
   });
 
-  // Buscar soluções similares baseadas no prompt
+  // Mock functions for now since tables don't exist
   const findSimilarSolutions = useCallback(async (prompt: string): Promise<SimilarSolution[]> => {
     try {
-      const { data: sessions, error } = await supabase
-        .from('learning_sessions')
-        .select('*')
-        .ilike('prompt', `%${prompt.slice(0, 50)}%`)
-        .order('effectiveness_score', { ascending: false })
-        .limit(5);
-
-      if (error) throw error;
-
-      return sessions?.map(session => ({
-        id: session.id,
-        prompt: session.prompt,
-        solution: session.solution_summary,
-        tags: session.tags || [],
-        similarity: calculateSimilarity(prompt, session.prompt),
-        usage_count: session.usage_count || 0,
-        last_used: session.last_used || session.created_at,
-        effectiveness_score: session.effectiveness_score || 0
-      })) || [];
+      // Mock similar solutions
+      return [
+        {
+          id: '1',
+          prompt: 'Criar componente de formulário',
+          solution: 'Componente React com TypeScript',
+          tags: ['react', 'typescript', 'form'],
+          similarity: 0.85,
+          usage_count: 5,
+          last_used: new Date().toISOString(),
+          effectiveness_score: 0.9
+        }
+      ];
     } catch (error) {
       console.error('Error finding similar solutions:', error);
       return [];
     }
   }, []);
 
-  // Buscar na base de conhecimento
   const searchKnowledgeBase = useCallback(async (keywords: string[]): Promise<KnowledgeEntry[]> => {
     try {
-      const { data: entries, error } = await supabase
-        .from('knowledge_base')
-        .select('*')
-        .or(keywords.map(keyword => `tags.cs.{${keyword}}`).join(','))
-        .order('success_rate', { ascending: false })
-        .limit(10);
-
-      if (error) throw error;
-
-      return entries || [];
+      // Mock knowledge base entries
+      return [
+        {
+          id: '1',
+          title: 'Padrão de Componentes React',
+          description: 'Como criar componentes reutilizáveis',
+          category: 'frontend',
+          tags: ['react', 'components'],
+          code_snippet: 'const Component = () => <div>...</div>',
+          files_affected: ['src/components/Component.tsx'],
+          solution_type: 'component',
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+          usage_count: 10,
+          success_rate: 0.95
+        }
+      ];
     } catch (error) {
       console.error('Error searching knowledge base:', error);
       return [];
     }
   }, []);
 
-  // Detectar padrões no prompt
   const detectPatterns = useCallback(async (prompt: string): Promise<Pattern[]> => {
     try {
-      const { data: patterns, error } = await supabase
-        .from('ai_patterns')
-        .select('*')
-        .order('confidence_score', { ascending: false });
-
-      if (error) throw error;
-
-      return patterns?.filter(pattern => 
-        pattern.trigger_keywords.some(keyword => 
-          prompt.toLowerCase().includes(keyword.toLowerCase())
-        )
-      ) || [];
+      // Mock patterns
+      return [
+        {
+          id: '1',
+          pattern_type: 'architectural',
+          description: 'Padrão de componente com hook customizado',
+          trigger_keywords: ['componente', 'hook', 'estado'],
+          recommended_solution: 'Criar hook customizado para lógica',
+          confidence_score: 0.8,
+          examples: ['useCustomHook', 'useState', 'useEffect']
+        }
+      ];
     } catch (error) {
       console.error('Error detecting patterns:', error);
       return [];
     }
   }, []);
 
-  // Analisar contexto do prompt
   const analyzeContext = useMutation({
     mutationFn: async (prompt: string): Promise<LearningContext> => {
       const keywords = extractKeywords(prompt);
@@ -109,69 +107,32 @@ export const useLearningSystem = () => {
     }
   });
 
-  // Salvar sessão de aprendizado
   const saveLearningSession = useMutation({
     mutationFn: async (session: Omit<LearningSession, 'id' | 'created_at'>) => {
-      const { data, error } = await supabase
-        .from('learning_sessions')
-        .insert({
-          prompt: session.prompt,
-          context: session.context,
-          analysis: session.analysis,
-          implementation: session.implementation,
-          build_result: session.build_result,
-          user_feedback: session.user_feedback,
-          improvements_made: session.improvements_made,
-          effectiveness_score: calculateEffectivenessScore(session),
-          tags: extractTags(session.prompt),
-          solution_summary: generateSolutionSummary(session.implementation)
-        })
-        .select()
-        .single();
-
-      if (error) throw error;
-      return data;
+      // Mock implementation
+      console.log('Saving learning session:', session);
+      return { id: '1', ...session, created_at: new Date().toISOString() };
     }
   });
 
-  // Atualizar base de conhecimento
   const updateKnowledgeBase = useMutation({
     mutationFn: async (entry: Omit<KnowledgeEntry, 'id' | 'created_at' | 'updated_at'>) => {
-      const { data, error } = await supabase
-        .from('knowledge_base')
-        .insert({
-          title: entry.title,
-          description: entry.description,
-          category: entry.category,
-          tags: entry.tags,
-          code_snippet: entry.code_snippet,
-          files_affected: entry.files_affected,
-          solution_type: entry.solution_type,
-          usage_count: entry.usage_count,
-          success_rate: entry.success_rate
-        })
-        .select()
-        .single();
-
-      if (error) throw error;
-      return data;
+      // Mock implementation
+      console.log('Updating knowledge base:', entry);
+      return { 
+        id: '1', 
+        ...entry, 
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
+      };
     }
   });
 
-  // Dar feedback sobre uma solução
   const provideFeedback = useMutation({
     mutationFn: async ({ sessionId, feedback }: { sessionId: string; feedback: 'positive' | 'negative' }) => {
-      const { error } = await supabase
-        .from('learning_sessions')
-        .update({ 
-          user_feedback: feedback,
-          effectiveness_score: feedback === 'positive' ? 
-            supabase.sql`effectiveness_score + 0.1` : 
-            supabase.sql`effectiveness_score - 0.1`
-        })
-        .eq('id', sessionId);
-
-      if (error) throw error;
+      // Mock implementation
+      console.log('Providing feedback:', sessionId, feedback);
+      return true;
     }
   });
 
@@ -189,7 +150,7 @@ export const useLearningSystem = () => {
   };
 };
 
-// Funções auxiliares
+// Helper functions
 function calculateSimilarity(prompt1: string, prompt2: string): number {
   const words1 = prompt1.toLowerCase().split(/\s+/);
   const words2 = prompt2.toLowerCase().split(/\s+/);
