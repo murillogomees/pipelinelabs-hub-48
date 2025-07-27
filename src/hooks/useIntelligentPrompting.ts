@@ -1,266 +1,241 @@
 
-import { useState, useCallback } from 'react';
+import { useState, useEffect } from 'react';
 import { useProjectHistory } from './useProjectHistory';
-import { useLearningSystem } from './useLearningSystem';
 
-interface IntelligentPromptResult {
-  shouldProceed: boolean;
-  reason: string;
-  suggestions: string[];
-  alternatives: any[];
-  riskLevel: 'low' | 'medium' | 'high';
+export interface PromptPrediction {
   confidence: number;
+  suggestedPrompt: string;
+  reasoning: string;
+  expectedFiles: string[];
+  estimatedTime: number;
 }
 
-interface RedundancyCheck {
-  isRedundant: boolean;
-  existingImplementation?: any;
-  similarityScore: number;
-  recommendation: string;
+export interface IntelligentInsight {
+  type: 'warning' | 'suggestion' | 'optimization';
+  message: string;
+  confidence: number;
+  actionable: boolean;
 }
 
-export const useIntelligentPrompting = () => {
-  const { findSimilarEntries, saveHistoryEntry, analyzePatterns } = useProjectHistory();
-  const { analyzeContext, findSimilarSolutions } = useLearningSystem();
+export function useIntelligentPrompting() {
+  const { history, getPatternAnalysis, analyzeSimilarPrompts } = useProjectHistory();
+  const [predictions, setPredictions] = useState<PromptPrediction[]>([]);
+  const [insights, setInsights] = useState<IntelligentInsight[]>([]);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
 
-  // Análise inteligente pré-execução
-  const analyzePrompt = useCallback(async (prompt: string): Promise<IntelligentPromptResult> => {
+  const analyzePrompt = async (prompt: string): Promise<PromptPrediction> => {
     setIsAnalyzing(true);
-    
+
     try {
-      // Buscar implementações similares
-      const similarEntries = await findSimilarEntries(prompt, 10);
-      const patterns = analyzePatterns();
+      // Analyze similar prompts from history
+      const similarPrompts = analyzeSimilarPrompts(prompt);
+      const patterns = getPatternAnalysis();
+
+      // Calculate confidence based on historical data
+      let confidence = 0.5; // Base confidence
       
-      // Verificar redundância
-      const redundancyCheck = await checkRedundancy(prompt, similarEntries);
+      if (similarPrompts.length > 0) {
+        const successfulSimilar = similarPrompts.filter(p => p.success);
+        confidence = successfulSimilar.length / similarPrompts.length;
+      }
+
+      // Predict expected files based on patterns
+      const expectedFiles = predictFilesFromPrompt(prompt, similarPrompts);
       
-      // Analisar risco
-      const riskAnalysis = analyzeRisk(prompt, similarEntries, patterns);
-      
-      // Gerar sugestões
-      const suggestions = generateIntelligentSuggestions(prompt, similarEntries, patterns);
-      
-      // Calcular confiança
-      const confidence = calculateConfidence(similarEntries, patterns, riskAnalysis);
-      
-      const result: IntelligentPromptResult = {
-        shouldProceed: !redundancyCheck.isRedundant && riskAnalysis.level !== 'high',
-        reason: redundancyCheck.isRedundant 
-          ? `Implementação similar já existe: ${redundancyCheck.recommendation}`
-          : riskAnalysis.level === 'high' 
-            ? `Risco alto detectado: ${riskAnalysis.reason}`
-            : 'Análise aprovada para prosseguir',
-        suggestions,
-        alternatives: redundancyCheck.isRedundant ? [redundancyCheck.existingImplementation] : [],
-        riskLevel: riskAnalysis.level,
-        confidence
+      // Estimate execution time
+      const estimatedTime = estimateExecutionTime(prompt, similarPrompts);
+
+      // Generate reasoning
+      const reasoning = generateReasoning(prompt, similarPrompts, patterns);
+
+      const prediction: PromptPrediction = {
+        confidence,
+        suggestedPrompt: optimizePrompt(prompt, similarPrompts),
+        reasoning,
+        expectedFiles,
+        estimatedTime
       };
-      
-      return result;
+
+      return prediction;
+    } catch (error) {
+      console.error('Error analyzing prompt:', error);
+      return {
+        confidence: 0.5,
+        suggestedPrompt: prompt,
+        reasoning: 'Análise não disponível',
+        expectedFiles: [],
+        estimatedTime: 5000
+      };
     } finally {
       setIsAnalyzing(false);
     }
-  }, [findSimilarEntries, analyzePatterns]);
+  };
 
-  // Verificar redundâncias
-  const checkRedundancy = async (prompt: string, similarEntries: any[]): Promise<RedundancyCheck> => {
-    const promptKeywords = extractKeywords(prompt);
+  const predictFilesFromPrompt = (prompt: string, similarPrompts: any[]): string[] => {
+    const filePatterns = new Map<string, number>();
     
-    for (const entry of similarEntries) {
-      const entryKeywords = extractKeywords(entry.prompt);
-      const similarity = calculateSimilarity(promptKeywords, entryKeywords);
-      
-      if (similarity > 0.8) {
-        return {
-          isRedundant: true,
-          existingImplementation: entry,
-          similarityScore: similarity,
-          recommendation: `Implementação similar já existe. Considere reutilizar ou refinar a solução anterior.`
-        };
+    similarPrompts.forEach(entry => {
+      if (Array.isArray(entry.files_modified)) {
+        entry.files_modified.forEach(file => {
+          filePatterns.set(file, (filePatterns.get(file) || 0) + 1);
+        });
       }
-    }
-    
-    return {
-      isRedundant: false,
-      similarityScore: 0,
-      recommendation: 'Nenhuma redundância detectada'
-    };
+    });
+
+    // Return most common files
+    return Array.from(filePatterns.entries())
+      .sort(([,a], [,b]) => b - a)
+      .slice(0, 5)
+      .map(([file]) => file);
   };
 
-  // Análise de risco
-  const analyzeRisk = (prompt: string, similarEntries: any[], patterns: any) => {
-    const riskFactors = [];
-    let riskLevel: 'low' | 'medium' | 'high' = 'low';
+  const estimateExecutionTime = (prompt: string, similarPrompts: any[]): number => {
+    if (similarPrompts.length === 0) return 5000;
+
+    const avgTime = similarPrompts.reduce((sum, entry) => sum + entry.execution_time, 0) / similarPrompts.length;
     
-    // Verificar se afeta arquivos críticos
-    const criticalFiles = ['database', 'migration', 'auth', 'security', 'api'];
-    const affectsCritical = criticalFiles.some(file => 
-      prompt.toLowerCase().includes(file)
-    );
-    
-    if (affectsCritical) {
-      riskFactors.push('Afeta componentes críticos do sistema');
-      riskLevel = 'high';
-    }
-    
-    // Verificar histórico de erros
-    const hasErrorHistory = similarEntries.some(entry => 
-      entry.build_status === 'failed' || entry.errors_fixed.length > 0
-    );
-    
-    if (hasErrorHistory) {
-      riskFactors.push('Histórico de erros em implementações similares');
-      riskLevel = riskLevel === 'high' ? 'high' : 'medium';
-    }
-    
-    // Verificar complexidade
-    const complexityKeywords = ['refactor', 'restructure', 'architecture', 'multiple'];
-    const isComplex = complexityKeywords.some(keyword => 
-      prompt.toLowerCase().includes(keyword)
-    );
-    
-    if (isComplex) {
-      riskFactors.push('Implementação complexa detectada');
-      riskLevel = riskLevel === 'high' ? 'high' : 'medium';
-    }
-    
-    return {
-      level: riskLevel,
-      factors: riskFactors,
-      reason: riskFactors.join(', ') || 'Nenhum fator de risco detectado'
-    };
+    // Adjust based on prompt complexity
+    const complexity = calculatePromptComplexity(prompt);
+    return Math.round(avgTime * complexity);
   };
 
-  // Gerar sugestões inteligentes
-  const generateIntelligentSuggestions = (
-    prompt: string, 
-    similarEntries: any[], 
-    patterns: any
-  ): string[] => {
-    const suggestions: string[] = [];
+  const calculatePromptComplexity = (prompt: string): number => {
+    const words = prompt.split(/\s+/).length;
+    const hasCodeKeywords = /\b(component|hook|function|class|interface|type)\b/i.test(prompt);
+    const hasMultipleActions = /\b(and|also|additionally|then|next)\b/i.test(prompt);
     
-    // Sugestões baseadas em sucessos anteriores
-    const successfulEntries = similarEntries.filter(entry => 
-      entry.build_status === 'success'
-    );
+    let complexity = 1;
     
-    if (successfulEntries.length > 0) {
-      suggestions.push(
-        `Baseie-se na implementação bem-sucedida: "${successfulEntries[0].prompt.substring(0, 50)}..."`
-      );
+    if (words > 50) complexity += 0.3;
+    if (hasCodeKeywords) complexity += 0.2;
+    if (hasMultipleActions) complexity += 0.4;
+    
+    return Math.min(complexity, 2);
+  };
+
+  const optimizePrompt = (prompt: string, similarPrompts: any[]): string => {
+    // Find successful patterns
+    const successfulPrompts = similarPrompts.filter(p => p.success);
+    
+    if (successfulPrompts.length === 0) return prompt;
+
+    // Extract common successful patterns
+    const commonPatterns = findCommonPatterns(successfulPrompts.map(p => p.prompt));
+    
+    // Suggest improvements
+    let optimizedPrompt = prompt;
+    
+    if (!prompt.includes('TypeScript') && commonPatterns.includes('TypeScript')) {
+      optimizedPrompt += ' (use TypeScript)';
     }
     
-    // Sugestões baseadas em erros comuns
-    const commonErrors = Object.entries(patterns.mostCommonErrors || {})
+    if (!prompt.includes('responsive') && commonPatterns.includes('responsive')) {
+      optimizedPrompt += ' (make it responsive)';
+    }
+
+    return optimizedPrompt;
+  };
+
+  const findCommonPatterns = (prompts: string[]): string[] => {
+    const patterns: string[] = [];
+    const keywords = ['TypeScript', 'responsive', 'component', 'hook', 'Tailwind', 'shadcn'];
+    
+    keywords.forEach(keyword => {
+      const count = prompts.filter(p => p.includes(keyword)).length;
+      if (count > prompts.length * 0.6) {
+        patterns.push(keyword);
+      }
+    });
+    
+    return patterns;
+  };
+
+  const generateReasoning = (prompt: string, similarPrompts: any[], patterns: any): string => {
+    if (similarPrompts.length === 0) {
+      return 'Prompt único - sem histórico similar para análise';
+    }
+
+    const successRate = similarPrompts.filter(p => p.success).length / similarPrompts.length;
+    const avgTime = similarPrompts.reduce((sum, entry) => sum + entry.execution_time, 0) / similarPrompts.length;
+    
+    return `Baseado em ${similarPrompts.length} prompts similares com ${(successRate * 100).toFixed(1)}% de sucesso. Tempo médio: ${(avgTime / 1000).toFixed(1)}s`;
+  };
+
+  const generateInsights = (): IntelligentInsight[] => {
+    const newInsights: IntelligentInsight[] = [];
+    const patterns = getPatternAnalysis();
+
+    if (!patterns) return newInsights;
+
+    // Success rate insight
+    if (patterns.successRate < 70) {
+      newInsights.push({
+        type: 'warning',
+        message: `Taxa de sucesso baixa (${patterns.successRate.toFixed(1)}%). Considere prompts mais específicos.`,
+        confidence: 0.8,
+        actionable: true
+      });
+    }
+
+    // Performance insight
+    if (patterns.averageExecutionTime > 10000) {
+      newInsights.push({
+        type: 'optimization',
+        message: `Tempo médio de execução alto (${(patterns.averageExecutionTime / 1000).toFixed(1)}s). Divida tarefas complexas.`,
+        confidence: 0.7,
+        actionable: true
+      });
+    }
+
+    // Pattern suggestion
+    const topActions = Object.entries(patterns.mostCommonActions)
       .sort(([,a], [,b]) => (b as number) - (a as number))
-      .slice(0, 3);
+      .slice(0, 1);
+
+    if (topActions.length > 0) {
+      newInsights.push({
+        type: 'suggestion',
+        message: `Ação mais comum: ${topActions[0][0]}. Considere criar templates para esse tipo de tarefa.`,
+        confidence: 0.6,
+        actionable: true
+      });
+    }
+
+    return newInsights;
+  };
+
+  const getIntelligentSuggestions = (context: string) => {
+    if (!Array.isArray(history)) return [];
     
-    if (commonErrors.length > 0) {
-      suggestions.push(
-        `Atenção aos erros comuns: ${commonErrors.map(([error]) => error.substring(0, 30)).join(', ')}`
-      );
+    const suggestions = [];
+    
+    // Context-based suggestions
+    if (context.includes('component') && !context.includes('TypeScript')) {
+      suggestions.push('Considere especificar TypeScript para melhor tipagem');
     }
     
-    // Sugestões baseadas em arquivos frequentes
-    const frequentFiles = Object.entries(patterns.frequentFiles || {})
-      .sort(([,a], [,b]) => (b as number) - (a as number))
-      .slice(0, 3);
-    
-    if (frequentFiles.length > 0) {
-      suggestions.push(
-        `Considere impacto nos arquivos frequentemente modificados: ${frequentFiles.map(([file]) => file).join(', ')}`
-      );
+    if (context.includes('form') && !context.includes('validation')) {
+      suggestions.push('Adicione validação de formulário para melhor UX');
     }
     
-    // Sugestões baseadas em decisões técnicas
-    const technicalDecisions = Object.entries(patterns.technicalDecisions || {})
-      .sort(([,a], [,b]) => (b as number) - (a as number))
-      .slice(0, 2);
-    
-    if (technicalDecisions.length > 0) {
-      suggestions.push(
-        `Padrões técnicos recomendados: ${technicalDecisions.map(([decision]) => decision).join(', ')}`
-      );
+    if (context.includes('API') && !context.includes('error')) {
+      suggestions.push('Implemente tratamento de erro para chamadas API');
     }
-    
+
     return suggestions;
   };
 
-  // Calcular confiança
-  const calculateConfidence = (
-    similarEntries: any[], 
-    patterns: any, 
-    riskAnalysis: any
-  ): number => {
-    let confidence = 0.5; // Base
-    
-    // Aumentar confiança com histórico de sucesso
-    const successRate = similarEntries.length > 0 
-      ? similarEntries.filter(entry => entry.build_status === 'success').length / similarEntries.length
-      : 0;
-    
-    confidence += successRate * 0.3;
-    
-    // Diminuir confiança com risco
-    if (riskAnalysis.level === 'high') {
-      confidence -= 0.3;
-    } else if (riskAnalysis.level === 'medium') {
-      confidence -= 0.1;
-    }
-    
-    // Aumentar confiança com padrões estáveis
-    if (patterns.successPatterns?.length > 5) {
-      confidence += 0.2;
-    }
-    
-    return Math.max(0, Math.min(1, confidence));
-  };
-
-  // Extrair palavras-chave
-  const extractKeywords = (text: string): string[] => {
-    const stopWords = ['o', 'a', 'de', 'para', 'com', 'em', 'um', 'uma', 'do', 'da', 'que', 'e', 'é'];
-    return text
-      .toLowerCase()
-      .split(/\s+/)
-      .filter(word => word.length > 2 && !stopWords.includes(word))
-      .slice(0, 10);
-  };
-
-  // Calcular similaridade
-  const calculateSimilarity = (keywords1: string[], keywords2: string[]): number => {
-    const intersection = keywords1.filter(word => keywords2.includes(word));
-    const union = [...new Set([...keywords1, ...keywords2])];
-    return intersection.length / union.length;
-  };
-
-  // Salvar contexto da execução
-  const saveExecutionContext = useCallback(async (
-    prompt: string,
-    result: any,
-    filesModified: string[],
-    errorsFixed: string[]
-  ) => {
-    await saveHistoryEntry({
-      user_id: '', // Será preenchido pelo hook
-      company_id: '', // Será preenchido pelo hook
-      session_id: `session_${Date.now()}`,
-      prompt,
-      response: result,
-      files_modified: filesModified,
-      errors_fixed: errorsFixed,
-      build_status: result.success ? 'success' : 'failed',
-      technical_decisions: result.technical_decisions || [],
-      impact_level: result.impact_level || 'medium',
-      similarity_hash: '', // Será calculado pelo hook
-      tags: result.tags || []
-    });
-  }, [saveHistoryEntry]);
+  useEffect(() => {
+    const newInsights = generateInsights();
+    setInsights(newInsights);
+  }, [history]);
 
   return {
+    predictions,
+    insights,
+    isAnalyzing,
     analyzePrompt,
-    saveExecutionContext,
-    isAnalyzing
+    getIntelligentSuggestions,
+    generateInsights: () => generateInsights()
   };
-};
+}

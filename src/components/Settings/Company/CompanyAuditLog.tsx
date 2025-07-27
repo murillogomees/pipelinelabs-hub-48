@@ -1,209 +1,228 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
-import { Loader2, Search, Filter } from 'lucide-react';
-import { useAuth } from '@/components/Auth/AuthProvider';
+import { History, Search, Filter, Calendar, User, AlertCircle } from 'lucide-react';
+import { format } from 'date-fns';
+import { ptBR } from 'date-fns/locale';
+import { useCompanyData } from '@/hooks/useCompanyData';
 
-interface AuditLogFilters {
-  user_id?: string;
-  action?: string;
-  resource_type?: string;
-  severity?: string;
-  start_date?: Date;
-  end_date?: Date;
-}
-
-interface AuditLog {
+interface AuditLogEntry {
   id: string;
   action: string;
-  resource_type: string;
-  severity: string;
-  created_at: string;
-  user_email?: string;
-  ip_address?: string;
-  status: string;
-  details?: any;
+  field_name: string;
+  old_value: string;
+  new_value: string;
+  user_name: string;
+  timestamp: string;
 }
 
-export const CompanyAuditLog: React.FC = () => {
-  const { user } = useAuth();
-  const [filters, setFilters] = useState<AuditLogFilters>({});
-  
-  // Mock data for now
-  const logs: AuditLog[] = [];
-  const isLoading = false;
-  const error = null;
+const ACTION_TYPES = {
+  'UPDATE': 'Atualização',
+  'CREATE': 'Criação',
+  'DELETE': 'Exclusão',
+  'VIEW': 'Visualização'
+};
 
-  const refetch = () => {
-    // Mock refetch
-  };
+const ACTION_COLORS = {
+  'UPDATE': 'bg-blue-500',
+  'CREATE': 'bg-green-500',
+  'DELETE': 'bg-red-500',
+  'VIEW': 'bg-gray-500'
+};
 
-  const handleFilterChange = (key: keyof AuditLogFilters, value: string) => {
-    setFilters(prev => ({ ...prev, [key]: value }));
-  };
+export function CompanyAuditLog() {
+  const { company } = useCompanyData();
+  const [auditLogs, setAuditLogs] = useState<AuditLogEntry[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [selectedAction, setSelectedAction] = useState<string>('all');
+  const [selectedField, setSelectedField] = useState<string>('all');
 
-  const clearFilters = () => {
-    setFilters({});
-  };
+  // Mock data for demonstration
+  useEffect(() => {
+    const mockLogs: AuditLogEntry[] = [
+      {
+        id: '1',
+        action: 'UPDATE',
+        field_name: 'name',
+        old_value: 'Pipeline Labs Tecnologia',
+        new_value: 'Pipeline Labs Tecnologia LTDA',
+        user_name: 'João Silva',
+        timestamp: new Date().toISOString()
+      },
+      {
+        id: '2',
+        action: 'UPDATE',
+        field_name: 'email',
+        old_value: 'contato@pipeline.com',
+        new_value: 'contato@pipelinelabs.com',
+        user_name: 'Maria Santos',
+        timestamp: new Date(Date.now() - 86400000).toISOString()
+      },
+      {
+        id: '3',
+        action: 'CREATE',
+        field_name: 'company',
+        old_value: '',
+        new_value: 'Empresa criada',
+        user_name: 'Admin Sistema',
+        timestamp: new Date(Date.now() - 172800000).toISOString()
+      }
+    ];
 
-  const getSeverityColor = (severity: string) => {
-    switch (severity) {
-      case 'critical': return 'destructive';
-      case 'high': return 'destructive';
-      case 'medium': return 'default';
-      case 'low': return 'secondary';
-      default: return 'secondary';
-    }
-  };
+    setTimeout(() => {
+      setAuditLogs(mockLogs);
+      setIsLoading(false);
+    }, 1000);
+  }, []);
 
-  if (!user?.id) {
-    return (
-      <div className="flex items-center justify-center p-8">
-        <p className="text-muted-foreground">Faça login para visualizar os logs</p>
-      </div>
-    );
+  const filteredLogs = auditLogs.filter(log => {
+    const matchesSearch = log.field_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         log.user_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         log.old_value.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         log.new_value.toLowerCase().includes(searchTerm.toLowerCase());
+    
+    const matchesAction = selectedAction === 'all' || log.action === selectedAction;
+    const matchesField = selectedField === 'all' || log.field_name === selectedField;
+    
+    return matchesSearch && matchesAction && matchesField;
+  });
+
+  const uniqueFields = [...new Set(auditLogs.map(log => log.field_name))];
+
+  if (!company) {
+    return null;
   }
 
   return (
-    <div className="space-y-6">
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Filter className="h-5 w-5" />
-            Filtros de Auditoria
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="action">Ação</Label>
-              <Input
-                id="action"
-                placeholder="Ex: user:login"
-                value={filters.action || ''}
-                onChange={(e) => handleFilterChange('action', e.target.value)}
-              />
+    <Card>
+      <CardHeader>
+        <div className="flex items-center gap-2">
+          <History className="h-5 w-5" />
+          <div>
+            <CardTitle>Histórico de Alterações</CardTitle>
+            <p className="text-sm text-muted-foreground">
+              Registro de todas as modificações realizadas nos dados da empresa
+            </p>
+          </div>
+        </div>
+      </CardHeader>
+      
+      <CardContent>
+        {/* Filtros */}
+        <div className="space-y-4 mb-6">
+          <div className="flex flex-col sm:flex-row gap-4">
+            <div className="flex-1">
+              <div className="relative">
+                <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                <Input
+                  placeholder="Buscar por campo, usuário ou valor..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="pl-10"
+                />
+              </div>
             </div>
             
-            <div className="space-y-2">
-              <Label htmlFor="resource_type">Tipo de Recurso</Label>
-              <Select
-                value={filters.resource_type || ''}
-                onValueChange={(value) => handleFilterChange('resource_type', value)}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Selecione o tipo" />
+            <div className="flex gap-2">
+              <Select value={selectedAction} onValueChange={setSelectedAction}>
+                <SelectTrigger className="w-[150px]">
+                  <SelectValue placeholder="Todas as ações" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">Todos</SelectItem>
-                  <SelectItem value="user">Usuário</SelectItem>
-                  <SelectItem value="company">Empresa</SelectItem>
-                  <SelectItem value="product">Produto</SelectItem>
-                  <SelectItem value="sale">Venda</SelectItem>
-                  <SelectItem value="invoice">Nota Fiscal</SelectItem>
+                  <SelectItem value="all">Todas as ações</SelectItem>
+                  {Object.entries(ACTION_TYPES).map(([key, label]) => (
+                    <SelectItem key={key} value={key}>
+                      {label}
+                    </SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
-            </div>
-            
-            <div className="space-y-2">
-              <Label htmlFor="severity">Severidade</Label>
-              <Select
-                value={filters.severity || ''}
-                onValueChange={(value) => handleFilterChange('severity', value)}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Selecione a severidade" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="">Todas</SelectItem>
-                  <SelectItem value="critical">Crítico</SelectItem>
-                  <SelectItem value="high">Alto</SelectItem>
-                  <SelectItem value="medium">Médio</SelectItem>
-                  <SelectItem value="low">Baixo</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
-          
-          <div className="flex gap-2">
-            <Button onClick={() => refetch()} variant="outline" size="sm">
-              <Search className="h-4 w-4 mr-2" />
-              Buscar
-            </Button>
-            <Button onClick={clearFilters} variant="outline" size="sm">
-              Limpar Filtros
-            </Button>
-          </div>
-        </CardContent>
-      </Card>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Log de Auditoria</CardTitle>
-        </CardHeader>
-        <CardContent>
-          {isLoading ? (
-            <div className="flex items-center justify-center p-8">
-              <Loader2 className="h-8 w-8 animate-spin" />
+              <Select value={selectedField} onValueChange={setSelectedField}>
+                <SelectTrigger className="w-[150px]">
+                  <SelectValue placeholder="Todos os campos" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Todos os campos</SelectItem>
+                  {uniqueFields.map((field) => (
+                    <SelectItem key={field} value={field}>
+                      {field}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
-          ) : error ? (
-            <div className="text-center p-8 text-red-500">
-              Erro ao carregar logs: {error}
+          </div>
+        </div>
+
+        {/* Lista de Logs */}
+        {isLoading ? (
+          <div className="flex items-center justify-center h-32">
+            <div className="flex items-center gap-2 text-muted-foreground">
+              <div className="h-4 w-4 animate-spin rounded-full border-2 border-gray-300 border-t-gray-600" />
+              Carregando histórico...
             </div>
-          ) : logs.length === 0 ? (
-            <div className="text-center p-8 text-muted-foreground">
-              Nenhum log encontrado
-            </div>
-          ) : (
-            <div className="space-y-4">
-              {logs.map((log) => (
-                <div key={log.id} className="border rounded-lg p-4 space-y-2">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                      <Badge variant={getSeverityColor(log.severity)}>
-                        {log.severity}
+          </div>
+        ) : filteredLogs.length === 0 ? (
+          <div className="flex flex-col items-center justify-center h-32 text-muted-foreground">
+            <AlertCircle className="h-8 w-8 mb-2" />
+            <p>Nenhum registro encontrado</p>
+            <p className="text-sm">Tente ajustar os filtros ou a busca</p>
+          </div>
+        ) : (
+          <div className="space-y-4">
+            {filteredLogs.map((log) => (
+              <div key={log.id} className="border rounded-lg p-4">
+                <div className="flex items-start justify-between">
+                  <div className="flex-1">
+                    <div className="flex items-center gap-3 mb-2">
+                      <Badge 
+                        variant="secondary" 
+                        className={`${ACTION_COLORS[log.action as keyof typeof ACTION_COLORS]} text-white`}
+                      >
+                        {ACTION_TYPES[log.action as keyof typeof ACTION_TYPES]}
                       </Badge>
-                      <span className="font-medium">{log.action}</span>
+                      <span className="font-medium">{log.field_name}</span>
                     </div>
-                    <span className="text-sm text-muted-foreground">
-                      {new Date(log.created_at).toLocaleString()}
-                    </span>
-                  </div>
-                  
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
-                    <div>
-                      <span className="font-medium">Usuário:</span> {log.user_email || 'N/A'}
-                    </div>
-                    <div>
-                      <span className="font-medium">Recurso:</span> {log.resource_type}
-                    </div>
-                    <div>
-                      <span className="font-medium">IP:</span> {log.ip_address || 'N/A'}
-                    </div>
-                    <div>
-                      <span className="font-medium">Status:</span> {log.status}
+                    
+                    <div className="space-y-2 text-sm">
+                      {log.old_value && (
+                        <div>
+                          <span className="text-muted-foreground">Valor anterior:</span>
+                          <span className="ml-2 text-red-600">{log.old_value}</span>
+                        </div>
+                      )}
+                      
+                      {log.new_value && (
+                        <div>
+                          <span className="text-muted-foreground">Novo valor:</span>
+                          <span className="ml-2 text-green-600">{log.new_value}</span>
+                        </div>
+                      )}
                     </div>
                   </div>
                   
-                  {log.details && Object.keys(log.details).length > 0 && (
-                    <div className="mt-2">
-                      <span className="font-medium">Detalhes:</span>
-                      <pre className="bg-muted p-2 rounded text-xs mt-1 overflow-x-auto">
-                        {JSON.stringify(log.details, null, 2)}
-                      </pre>
+                  <div className="text-right text-sm text-muted-foreground">
+                    <div className="flex items-center gap-1 mb-1">
+                      <User className="h-3 w-3" />
+                      {log.user_name}
                     </div>
-                  )}
+                    <div className="flex items-center gap-1">
+                      <Calendar className="h-3 w-3" />
+                      {format(new Date(log.timestamp), 'dd/MM/yyyy HH:mm', { locale: ptBR })}
+                    </div>
+                  </div>
                 </div>
-              ))}
-            </div>
-          )}
-        </CardContent>
-      </Card>
-    </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </CardContent>
+    </Card>
   );
-};
+}
