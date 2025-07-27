@@ -233,8 +233,8 @@ async function exchangeCodeForTokens(
 
     // Get user company
     const { data: userCompany } = await supabase
-      .from('user_companies')
-      .select('company_id')
+      .from('Profile')
+      .select('id')
       .eq('user_id', userId)
       .eq('is_active', true)
       .single()
@@ -354,8 +354,8 @@ async function validateAndStoreApiKey(
 
   // Get user company
   const { data: userCompany } = await supabase
-    .from('user_companies')
-    .select('company_id')
+    .from('profiles')
+    .select('id')
     .eq('user_id', userId)
     .eq('is_active', true)
     .single()
@@ -418,8 +418,8 @@ async function handleRefreshToken(
 
   // Get current integration
   const { data: userCompany } = await supabase
-    .from('user_companies')
-    .select('company_id')
+    .from('profiles')
+    .select('id')
     .eq('user_id', userId)
     .eq('is_active', true)
     .single()
@@ -496,8 +496,8 @@ async function handleValidateCredentials(
 
   // Get user company
   const { data: userCompany, error: companyError } = await supabase
-    .from('user_companies')
-    .select('company_id')
+    .from('profile')
+    .select('id')
     .eq('user_id', userId)
     .eq('is_active', true)
     .single()
@@ -554,8 +554,8 @@ async function handleDisconnect(supabase: any, userId: string, body: AuthRequest
   console.log(`🔌 Disconnecting ${body.marketplace}`)
 
   const { data: userCompany } = await supabase
-    .from('user_companies')
-    .select('company_id')
+    .from('profiles')
+    .select('id')
     .eq('user_id', userId)
     .eq('is_active', true)
     .single()
