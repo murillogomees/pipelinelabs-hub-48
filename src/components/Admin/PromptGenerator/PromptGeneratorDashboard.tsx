@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useCallback, useMemo } from 'react';
 import { usePromptGenerator } from '@/hooks/usePromptGenerator';
 import { PromptEditor } from './PromptEditor';
 import { CodePreview } from './CodePreview';
@@ -23,7 +23,7 @@ export const PromptGeneratorDashboard: React.FC = () => {
     generatedCode: any;
   } | null>(null);
 
-  const handleGenerate = async (params: {
+  const handleGenerate = useCallback(async (params: {
     prompt: string;
     temperature: number;
     model: string;
@@ -34,21 +34,35 @@ export const PromptGeneratorDashboard: React.FC = () => {
         generatedCode: any;
       }>((resolve, reject) => {
         generateCode(params, {
-          onSuccess: (data) => resolve(data),
-          onError: (error) => reject(error)
+          onSuccess: (data) => {
+            console.log('Generate success:', data);
+            resolve(data);
+          },
+          onError: (error) => {
+            console.error('Generate error:', error);
+            reject(error);
+          }
         });
       });
       
       setCurrentGeneration(result);
     } catch (error) {
       console.error('Error generating code:', error);
+      setCurrentGeneration(null);
     }
-  };
+  }, [generateCode]);
 
-  const handleApply = (logId: string) => {
+  const handleApply = useCallback((logId: string) => {
     applyCode(logId);
     setCurrentGeneration(null);
-  };
+  }, [applyCode]);
+
+  const handleRollback = useCallback((logId: string) => {
+    rollbackCode(logId);
+  }, [rollbackCode]);
+
+  // Memoizar propriedades para evitar re-renders desnecessários
+  const promptLogsData = useMemo(() => promptLogs || [], [promptLogs]);
 
   return (
     <div className="space-y-6">
@@ -79,8 +93,8 @@ export const PromptGeneratorDashboard: React.FC = () => {
 
         <div>
           <PromptHistory
-            promptLogs={promptLogs || []}
-            onRollback={rollbackCode}
+            promptLogs={promptLogsData}
+            onRollback={handleRollback}
             isLoadingLogs={isLoadingLogs}
           />
         </div>

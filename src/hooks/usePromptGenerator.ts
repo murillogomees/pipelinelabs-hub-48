@@ -1,5 +1,5 @@
 
-import { useState } from 'react';
+import { useState, useCallback, useMemo } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
@@ -32,12 +32,10 @@ interface GeneratedCode {
 }
 
 export const usePromptGenerator = () => {
-  const [isGenerating, setIsGenerating] = useState(false);
-  const [isApplying, setIsApplying] = useState(false);
   const queryClient = useQueryClient();
 
-  // Buscar logs de prompts
-  const { data: promptLogs, isLoading: isLoadingLogs } = useQuery({
+  // Buscar logs de prompts com memoização
+  const promptLogsQuery = useQuery({
     queryKey: ['prompt-logs'],
     queryFn: async (): Promise<PromptLog[]> => {
       try {
@@ -74,16 +72,13 @@ export const usePromptGenerator = () => {
     },
     retry: 1,
     staleTime: 30000,
+    refetchOnWindowFocus: false,
   });
 
   // Gerar código com IA
-  const generateCode = useMutation({
-    mutationFn: async ({ prompt, temperature = 0.7, model = 'gpt-4o-mini' }: GenerateCodeParams): Promise<{
-      logId: string;
-      generatedCode: GeneratedCode;
-    }> => {
+  const generateCodeMutation = useMutation({
+    mutationFn: async ({ prompt, temperature = 0.7, model = 'gpt-4o-mini' }: GenerateCodeParams) => {
       console.log('Iniciando geração de código...');
-      setIsGenerating(true);
 
       try {
         // Primeiro, salvar o prompt no banco
@@ -175,8 +170,9 @@ export const usePromptGenerator = () => {
           logId: promptLog.id,
           generatedCode: data.data
         };
-      } finally {
-        setIsGenerating(false);
+      } catch (error) {
+        console.error('Error in generateCode:', error);
+        throw error;
       }
     },
     onSuccess: () => {
@@ -197,11 +193,9 @@ export const usePromptGenerator = () => {
     }
   });
 
-  // Aplicar código no projeto (simulado)
-  const applyCode = useMutation({
+  // Aplicar código no projeto
+  const applyCodeMutation = useMutation({
     mutationFn: async (logId: string) => {
-      setIsApplying(true);
-
       try {
         const { error } = await supabase
           .from('prompt_logs')
@@ -218,8 +212,9 @@ export const usePromptGenerator = () => {
         }
 
         return { success: true };
-      } finally {
-        setIsApplying(false);
+      } catch (error) {
+        console.error('Error in applyCode:', error);
+        throw error;
       }
     },
     onSuccess: () => {
@@ -240,7 +235,7 @@ export const usePromptGenerator = () => {
   });
 
   // Fazer rollback
-  const rollbackCode = useMutation({
+  const rollbackCodeMutation = useMutation({
     mutationFn: async (logId: string) => {
       const { error } = await supabase
         .from('prompt_logs')
@@ -272,21 +267,35 @@ export const usePromptGenerator = () => {
     }
   });
 
-  return {
-    promptLogs,
-    isLoadingLogs,
-    isGenerating,
-    isApplying,
-    generateCode: (params: GenerateCodeParams, callbacks?: {
-      onSuccess?: (data: { logId: string; generatedCode: GeneratedCode; }) => void;
-      onError?: (error: any) => void;
-    }) => {
-      generateCode.mutate(params, {
-        onSuccess: callbacks?.onSuccess,
-        onError: callbacks?.onError
-      });
-    },
-    applyCode: applyCode.mutate,
-    rollbackCode: rollbackCode.mutate
-  };
+  // Função para gerar código com callback
+  const generateCode = useCallback((params: GenerateCodeParams, callbacks?: {
+    onSuccess?: (data: { logId: string; generatedCode: GeneratedCode; }) => void;
+    onError?: (error: any) => void;
+  }) => {
+    generateCodeMutation.mutate(params, {
+      onSuccess: callbacks?.onSuccess,
+      onError: callbacks?.onError
+    });
+  }, [generateCodeMutation]);
+
+  // Memorizar valores para evitar re-renders desnecessários
+  const memoizedReturn = useMemo(() => ({
+    promptLogs: promptLogsQuery.data,
+    isLoadingLogs: promptLogsQuery.isLoading,
+    isGenerating: generateCodeMutation.isPending,
+    isApplying: applyCodeMutation.isPending,
+    generateCode,
+    applyCode: applyCodeMutation.mutate,
+    rollbackCode: rollbackCodeMutation.mutate
+  }), [
+    promptLogsQuery.data,
+    promptLogsQuery.isLoading,
+    generateCodeMutation.isPending,
+    applyCodeMutation.isPending,
+    generateCode,
+    applyCodeMutation.mutate,
+    rollbackCodeMutation.mutate
+  ]);
+
+  return memoizedReturn;
 };
