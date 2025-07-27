@@ -96,15 +96,6 @@ export function AccessLevelsManagement() {
     level.name.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-    const { data: levels, error: lError } = supabase
-            .from('access_levels')
-            .select('*')
-            .order('created_at', { ascending: false });
-
-        
-        
-      
-
   const columns: Column<AccessLevelWithCount>[] = [
     {
       key: 'display_name' as keyof AccessLevelWithCount,
@@ -113,9 +104,8 @@ export function AccessLevelsManagement() {
         <div className="flex items-center space-x-2">
           <Shield className="h-4 w-4 text-primary" />
           <div>
-            <p className="font-medium">{levels.filter(level => 
-    level.display_name.toLowerCase().includes(searchTerm.toLowerCase()))}</p>
-            <p className="text-sm text-muted-foreground">{filteredLevels}</p>
+            <p className="font-medium">{value}</p>
+            <p className="text-sm text-muted-foreground">{row.name}</p>
           </div>
         </div>
       )
