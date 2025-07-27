@@ -26,11 +26,14 @@ export function useBackupSettings() {
   const queryClient = useQueryClient();
   const { profile, isSuperAdmin } = useProfile();
 
-  const { data: settings, isLoading } = useQuery({
+  const { data: settings, isLoading, error } = useQuery({
     queryKey: ["backup-settings"],
     queryFn: async (): Promise<BackupSettings | null> => {
+      console.log('Verificando permissões de backup:', { isSuperAdmin, profile });
+      
       if (!isSuperAdmin) {
-        throw new Error('Acesso negado: Apenas super administradores podem acessar configurações de backup');
+        console.log('Usuário não é super admin, bloqueando acesso ao backup');
+        return null;
       }
 
       const { data, error } = await supabase
@@ -45,7 +48,8 @@ export function useBackupSettings() {
 
       return data ? (data as unknown as BackupSettings) : null;
     },
-    enabled: !!profile && isSuperAdmin,
+    enabled: !!profile,
+    retry: false,
   });
 
   const updateSettingsMutation = useMutation({
@@ -111,6 +115,7 @@ export function useBackupSettings() {
   return {
     settings,
     isLoading,
+    error,
     updateSettings: updateSettingsMutation.mutate,
     triggerBackup: triggerBackupMutation.mutate,
     isUpdating: updateSettingsMutation.isPending,

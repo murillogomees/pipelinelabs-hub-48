@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -9,8 +8,9 @@ import { Switch } from '@/components/ui/switch';
 import { Separator } from '@/components/ui/separator';
 import { Badge } from '@/components/ui/badge';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Clock, Download, Shield, AlertTriangle } from 'lucide-react';
+import { Clock, Download, Shield, AlertTriangle, Lock } from 'lucide-react';
 import { useBackupSettings } from '@/hooks/useBackupSettings';
+import { useProfile } from '@/hooks/useProfile';
 import { useForm } from 'react-hook-form';
 
 interface BackupForm {
@@ -35,9 +35,11 @@ const availableTables = [
 ];
 
 export function BackupSettings() {
+  const { isSuperAdmin } = useProfile();
   const { 
     settings, 
     isLoading, 
+    error,
     updateSettings, 
     triggerBackup, 
     isUpdating, 
@@ -77,14 +79,36 @@ export function BackupSettings() {
     setValue('backup_tables', newTables);
   };
 
-  if (!canManageBackup) {
+  // Verificar se não é super admin
+  if (!isSuperAdmin) {
     return (
-      <Alert variant="destructive">
-        <AlertTriangle className="h-4 w-4" />
-        <AlertDescription>
-          Acesso negado. Apenas super administradores podem gerenciar configurações de backup.
-        </AlertDescription>
-      </Alert>
+      <div className="space-y-6">
+        <div className="flex items-center justify-between">
+          <div>
+            <h2 className="text-2xl font-bold">Configurações de Backup</h2>
+            <p className="text-muted-foreground">
+              Configure backups automáticos para proteger seus dados
+            </p>
+          </div>
+        </div>
+
+        <Card>
+          <CardContent className="p-8">
+            <div className="flex flex-col items-center justify-center space-y-4">
+              <Lock className="h-16 w-16 text-muted-foreground" />
+              <div className="text-center space-y-2">
+                <h3 className="text-lg font-semibold">Acesso Restrito</h3>
+                <p className="text-muted-foreground max-w-md">
+                  Apenas super administradores podem acessar e configurar as opções de backup do sistema.
+                </p>
+                <p className="text-sm text-muted-foreground">
+                  Entre em contato com um administrador do sistema para obter acesso.
+                </p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
     );
   }
 
@@ -93,6 +117,17 @@ export function BackupSettings() {
       <div className="flex items-center justify-center p-8">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
       </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <Alert variant="destructive">
+        <AlertTriangle className="h-4 w-4" />
+        <AlertDescription>
+          Erro ao carregar configurações de backup: {error.message}
+        </AlertDescription>
+      </Alert>
     );
   }
 
@@ -238,8 +273,8 @@ export function BackupSettings() {
 
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2 text-sm text-muted-foreground">
-            <AlertTriangle className="h-4 w-4" />
-            <span>Apenas super administradores podem alterar estas configurações</span>
+            <Shield className="h-4 w-4" />
+            <span>Configurações de backup do sistema</span>
           </div>
           
           <Button

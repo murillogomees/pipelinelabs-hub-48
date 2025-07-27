@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { useProjectHistory } from './useProjectHistory';
 
@@ -27,25 +26,18 @@ export function useIntelligentPrompting() {
     setIsAnalyzing(true);
 
     try {
-      // Analyze similar prompts from history
       const similarPrompts = analyzeSimilarPrompts(prompt);
       const patterns = getPatternAnalysis();
 
-      // Calculate confidence based on historical data
-      let confidence = 0.5; // Base confidence
+      let confidence = 0.5;
       
       if (similarPrompts.length > 0) {
         const successfulSimilar = similarPrompts.filter(p => p.success);
         confidence = successfulSimilar.length / similarPrompts.length;
       }
 
-      // Predict expected files based on patterns
       const expectedFiles = predictFilesFromPrompt(prompt, similarPrompts);
-      
-      // Estimate execution time
       const estimatedTime = estimateExecutionTime(prompt, similarPrompts);
-
-      // Generate reasoning
       const reasoning = generateReasoning(prompt, similarPrompts, patterns);
 
       const prediction: PromptPrediction = {
@@ -72,21 +64,120 @@ export function useIntelligentPrompting() {
   };
 
   const predictFilesFromPrompt = (prompt: string, similarPrompts: any[]): string[] => {
-    const filePatterns = new Map<string, number>();
+    const lowerPrompt = prompt.toLowerCase();
+    const predictedFiles: string[] = [];
     
-    similarPrompts.forEach(entry => {
-      if (Array.isArray(entry.files_modified)) {
-        entry.files_modified.forEach(file => {
-          filePatterns.set(file, (filePatterns.get(file) || 0) + 1);
-        });
-      }
-    });
+    // Analisar o prompt para gerar nomes de arquivos específicos
+    const words = lowerPrompt.split(' ').filter(word => word.length > 2);
+    
+    // Gerar nome base baseado no prompt
+    const baseNames = extractMeaningfulWords(prompt);
+    
+    // Prever arquivos baseado no tipo de solicitação
+    if (lowerPrompt.includes('component') || lowerPrompt.includes('criar') && lowerPrompt.includes('botão')) {
+      const componentName = generateComponentName(baseNames);
+      predictedFiles.push(`src/components/${componentName}.tsx`);
+    }
+    
+    if (lowerPrompt.includes('hook') || lowerPrompt.includes('use')) {
+      const hookName = generateHookName(baseNames);
+      predictedFiles.push(`src/hooks/${hookName}.ts`);
+    }
+    
+    if (lowerPrompt.includes('página') || lowerPrompt.includes('page') || lowerPrompt.includes('rota')) {
+      const pageName = generatePageName(baseNames);
+      predictedFiles.push(`src/pages/${pageName}.tsx`);
+    }
+    
+    if (lowerPrompt.includes('api') || lowerPrompt.includes('função') || lowerPrompt.includes('endpoint')) {
+      const functionName = generateFunctionName(baseNames);
+      predictedFiles.push(`supabase/functions/${functionName}/index.ts`);
+    }
+    
+    if (lowerPrompt.includes('utilitário') || lowerPrompt.includes('util') || lowerPrompt.includes('helper')) {
+      const utilName = generateUtilName(baseNames);
+      predictedFiles.push(`src/utils/${utilName}.ts`);
+    }
+    
+    if (lowerPrompt.includes('tipo') || lowerPrompt.includes('interface') || lowerPrompt.includes('type')) {
+      const typeName = generateTypeName(baseNames);
+      predictedFiles.push(`src/types/${typeName}.ts`);
+    }
+    
+    // Se não conseguiu prever nada específico, usar padrões dos prompts similares
+    if (predictedFiles.length === 0 && similarPrompts.length > 0) {
+      const filePatterns = new Map<string, number>();
+      
+      similarPrompts.forEach(entry => {
+        if (Array.isArray(entry.files_modified)) {
+          entry.files_modified.forEach(file => {
+            filePatterns.set(file, (filePatterns.get(file) || 0) + 1);
+          });
+        }
+      });
 
-    // Return most common files
-    return Array.from(filePatterns.entries())
-      .sort(([,a], [,b]) => b - a)
-      .slice(0, 5)
-      .map(([file]) => file);
+      const topFiles = Array.from(filePatterns.entries())
+        .sort(([,a], [,b]) => b - a)
+        .slice(0, 3)
+        .map(([file]) => file);
+        
+      predictedFiles.push(...topFiles);
+    }
+
+    return predictedFiles;
+  };
+
+  const extractMeaningfulWords = (prompt: string): string[] => {
+    const words = prompt.toLowerCase()
+      .replace(/[^a-z0-9\s]/g, ' ')
+      .split(/\s+/)
+      .filter(word => word.length > 2 && !isStopWord(word));
+    
+    return words.slice(0, 3); // Pegar apenas as 3 palavras mais relevantes
+  };
+
+  const isStopWord = (word: string): boolean => {
+    const stopWords = ['criar', 'fazer', 'adicionar', 'implementar', 'desenvolver', 'para', 'com', 'uma', 'um', 'que', 'de', 'da', 'do', 'na', 'no', 'em', 'por', 'ser', 'ter', 'este', 'essa', 'isso'];
+    return stopWords.includes(word);
+  };
+
+  const generateComponentName = (baseNames: string[]): string => {
+    if (baseNames.length === 0) return 'CustomComponent';
+    const name = baseNames.map(word => capitalizeFirst(word)).join('');
+    return `${name}Component`;
+  };
+
+  const generateHookName = (baseNames: string[]): string => {
+    if (baseNames.length === 0) return 'useCustomHook';
+    const name = baseNames.map(word => capitalizeFirst(word)).join('');
+    return `use${name}`;
+  };
+
+  const generatePageName = (baseNames: string[]): string => {
+    if (baseNames.length === 0) return 'CustomPage';
+    const name = baseNames.map(word => capitalizeFirst(word)).join('');
+    return `${name}Page`;
+  };
+
+  const generateFunctionName = (baseNames: string[]): string => {
+    if (baseNames.length === 0) return 'custom-function';
+    return baseNames.join('-').toLowerCase();
+  };
+
+  const generateUtilName = (baseNames: string[]): string => {
+    if (baseNames.length === 0) return 'customUtils';
+    const name = baseNames.map(word => capitalizeFirst(word)).join('');
+    return `${name}Utils`;
+  };
+
+  const generateTypeName = (baseNames: string[]): string => {
+    if (baseNames.length === 0) return 'customTypes';
+    const name = baseNames.map(word => capitalizeFirst(word)).join('');
+    return `${name}Types`;
+  };
+
+  const capitalizeFirst = (word: string): string => {
+    return word.charAt(0).toUpperCase() + word.slice(1);
   };
 
   const estimateExecutionTime = (prompt: string, similarPrompts: any[]): number => {
@@ -94,7 +185,6 @@ export function useIntelligentPrompting() {
 
     const avgTime = similarPrompts.reduce((sum, entry) => sum + entry.execution_time, 0) / similarPrompts.length;
     
-    // Adjust based on prompt complexity
     const complexity = calculatePromptComplexity(prompt);
     return Math.round(avgTime * complexity);
   };
@@ -114,15 +204,12 @@ export function useIntelligentPrompting() {
   };
 
   const optimizePrompt = (prompt: string, similarPrompts: any[]): string => {
-    // Find successful patterns
     const successfulPrompts = similarPrompts.filter(p => p.success);
     
     if (successfulPrompts.length === 0) return prompt;
 
-    // Extract common successful patterns
     const commonPatterns = findCommonPatterns(successfulPrompts.map(p => p.prompt));
     
-    // Suggest improvements
     let optimizedPrompt = prompt;
     
     if (!prompt.includes('TypeScript') && commonPatterns.includes('TypeScript')) {
@@ -152,7 +239,7 @@ export function useIntelligentPrompting() {
 
   const generateReasoning = (prompt: string, similarPrompts: any[], patterns: any): string => {
     if (similarPrompts.length === 0) {
-      return 'Prompt único - sem histórico similar para análise';
+      return 'Prompt único - analisando baseado em padrões do projeto';
     }
 
     const successRate = similarPrompts.filter(p => p.success).length / similarPrompts.length;
@@ -167,7 +254,6 @@ export function useIntelligentPrompting() {
 
     if (!patterns) return newInsights;
 
-    // Success rate insight
     if (patterns.successRate < 70) {
       newInsights.push({
         type: 'warning',
@@ -177,7 +263,6 @@ export function useIntelligentPrompting() {
       });
     }
 
-    // Performance insight
     if (patterns.averageExecutionTime > 10000) {
       newInsights.push({
         type: 'optimization',
@@ -187,7 +272,6 @@ export function useIntelligentPrompting() {
       });
     }
 
-    // Pattern suggestion
     const topActions = Object.entries(patterns.mostCommonActions)
       .sort(([,a], [,b]) => (b as number) - (a as number))
       .slice(0, 1);
@@ -209,7 +293,6 @@ export function useIntelligentPrompting() {
     
     const suggestions = [];
     
-    // Context-based suggestions
     if (context.includes('component') && !context.includes('TypeScript')) {
       suggestions.push('Considere especificar TypeScript para melhor tipagem');
     }
@@ -226,7 +309,6 @@ export function useIntelligentPrompting() {
   };
 
   const saveExecutionContext = async (context: any) => {
-    // Mock implementation for now
     console.log('Saving execution context:', context);
   };
 
