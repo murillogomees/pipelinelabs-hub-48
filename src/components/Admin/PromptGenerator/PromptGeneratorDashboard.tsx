@@ -1,11 +1,14 @@
 
 import React, { useState, useCallback, useMemo } from 'react';
 import { usePromptGenerator } from '@/hooks/usePromptGenerator';
+import { ConversationalDashboard } from './ConversationalDashboard';
 import { PromptEditor } from './PromptEditor';
 import { CodeEditor } from './CodeEditor';
 import { PromptHistory } from './PromptHistory';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Shield } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Shield, Zap, ArrowRight } from 'lucide-react';
 
 interface PromptLog {
   id: string;
@@ -33,6 +36,7 @@ export const PromptGeneratorDashboard: React.FC = () => {
     rollbackCode
   } = usePromptGenerator();
 
+  const [useConversationalMode, setUseConversationalMode] = useState(true);
   const [currentGeneration, setCurrentGeneration] = useState<{
     logId: string;
     generatedCode: any;
@@ -119,40 +123,95 @@ export const PromptGeneratorDashboard: React.FC = () => {
       <Alert>
         <Shield className="h-4 w-4" />
         <AlertDescription>
-          <strong>Painel Técnico do Desenvolvedor</strong> - Esta funcionalidade permite gerar e aplicar código automaticamente no projeto usando IA. 
-          Use com cuidado e sempre revise o código antes de aplicar.
+          <strong>Painel Técnico do Desenvolvedor</strong> - Agora com modo conversacional aprimorado! 
+          Escolha entre o modo tradicional ou o novo sistema de 4 etapas para uma experiência mais guiada.
         </AlertDescription>
       </Alert>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <div className="space-y-6">
-          <PromptEditor
-            onGenerate={handleGenerate}
-            isGenerating={isGenerating}
-          />
+      {/* Seletor de Modo */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Zap className="h-5 w-5" />
+            Modo de Operação
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div 
+              className={`p-4 rounded-lg border-2 cursor-pointer transition-all ${
+                useConversationalMode ? 'border-blue-500 bg-blue-50' : 'border-gray-200 hover:border-gray-300'
+              }`}
+              onClick={() => setUseConversationalMode(true)}
+            >
+              <h3 className="font-semibold mb-2 flex items-center gap-2">
+                <ArrowRight className="h-4 w-4" />
+                Modo Conversacional (Novo)
+              </h3>
+              <p className="text-sm text-gray-600">
+                Sistema em 4 etapas: Consulta Inicial → Aprovação Técnica → Implementação → Verificação de Build
+              </p>
+              <div className="mt-3 flex flex-wrap gap-1">
+                <span className="text-xs bg-green-100 text-green-700 px-2 py-1 rounded">Guiado</span>
+                <span className="text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded">Seguro</span>
+                <span className="text-xs bg-purple-100 text-purple-700 px-2 py-1 rounded">Explicado</span>
+              </div>
+            </div>
 
-          {currentGeneration && (
-            <CodeEditor
-              generatedCode={currentGeneration.generatedCode}
-              logId={currentGeneration.logId}
-              onApply={handleApply}
-              onRevise={handleRevise}
-              isApplying={isApplying}
-              isRevising={isGenerating}
+            <div 
+              className={`p-4 rounded-lg border-2 cursor-pointer transition-all ${
+                !useConversationalMode ? 'border-blue-500 bg-blue-50' : 'border-gray-200 hover:border-gray-300'
+              }`}
+              onClick={() => setUseConversationalMode(false)}
+            >
+              <h3 className="font-semibold mb-2">Modo Tradicional</h3>
+              <p className="text-sm text-gray-600">
+                Interface direta de geração e edição de código, ideal para usuários experientes
+              </p>
+              <div className="mt-3 flex flex-wrap gap-1">
+                <span className="text-xs bg-gray-100 text-gray-700 px-2 py-1 rounded">Direto</span>
+                <span className="text-xs bg-gray-100 text-gray-700 px-2 py-1 rounded">Rápido</span>
+                <span className="text-xs bg-gray-100 text-gray-700 px-2 py-1 rounded">Avançado</span>
+              </div>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Renderizar interface baseada no modo selecionado */}
+      {useConversationalMode ? (
+        <ConversationalDashboard />
+      ) : (
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <div className="space-y-6">
+            <PromptEditor
+              onGenerate={handleGenerate}
+              isGenerating={isGenerating}
             />
-          )}
-        </div>
 
-        <div>
-          <PromptHistory
-            promptLogs={promptLogsData}
-            onRollback={handleRollback}
-            onApplyCode={handleApplyFromHistory}
-            onViewCode={handleViewCode}
-            isLoadingLogs={isLoadingLogs}
-          />
+            {currentGeneration && (
+              <CodeEditor
+                generatedCode={currentGeneration.generatedCode}
+                logId={currentGeneration.logId}
+                onApply={handleApply}
+                onRevise={handleRevise}
+                isApplying={isApplying}
+                isRevising={isGenerating}
+              />
+            )}
+          </div>
+
+          <div>
+            <PromptHistory
+              promptLogs={promptLogsData}
+              onRollback={handleRollback}
+              onApplyCode={handleApplyFromHistory}
+              onViewCode={handleViewCode}
+              isLoadingLogs={isLoadingLogs}
+            />
+          </div>
         </div>
-      </div>
+      )}
     </div>
   );
 };

@@ -3,6 +3,7 @@ import { useState, useCallback, useMemo } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
+import { useCurrentCompany } from '@/hooks/useCurrentCompany';
 
 interface PromptLog {
   id: string;
@@ -52,15 +53,19 @@ const isValidGeneratedCode = (code: any): code is GeneratedCode => {
 
 export const usePromptGenerator = () => {
   const queryClient = useQueryClient();
+  const { currentCompany } = useCurrentCompany();
 
   // Buscar logs de prompts com memoização
   const promptLogsQuery = useQuery({
-    queryKey: ['prompt-logs'],
+    queryKey: ['prompt-logs', currentCompany?.id],
     queryFn: async (): Promise<PromptLog[]> => {
       try {
+        if (!currentCompany?.id) return [];
+
         const { data, error } = await supabase
           .from('prompt_logs')
           .select('*')
+          .eq('company_id', currentCompany.id)
           .order('created_at', { ascending: false })
           .limit(50);
 
@@ -92,6 +97,7 @@ export const usePromptGenerator = () => {
     retry: 1,
     staleTime: 30000,
     refetchOnWindowFocus: false,
+    enabled: !!currentCompany?.id
   });
 
   // Gerar código com IA
@@ -100,25 +106,20 @@ export const usePromptGenerator = () => {
       console.log('Iniciando geração de código...');
 
       try {
+        if (!currentCompany?.id) {
+          throw new Error('Nenhuma empresa ativa encontrada');
+        }
+
         // Primeiro, salvar o prompt no banco
         const { data: user } = await supabase.auth.getUser();
         if (!user.user) throw new Error('Usuário não autenticado');
-
-        const { data: userCompany } = await supabase
-          .from('user_companies')
-          .select('company_id')
-          .eq('user_id', user.user.id)
-          .eq('is_active', true)
-          .single();
-
-        if (!userCompany) throw new Error('Nenhuma empresa ativa encontrada');
 
         console.log('Salvando prompt no banco...');
         const { data: promptLog, error: logError } = await supabase
           .from('prompt_logs')
           .insert({
             user_id: user.user.id,
-            company_id: userCompany.company_id,
+            company_id: currentCompany.id,
             prompt,
             model_used: model,
             temperature,
