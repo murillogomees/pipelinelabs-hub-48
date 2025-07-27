@@ -1,6 +1,6 @@
 
-import { useState, useCallback } from 'react';
-import { ConversationState, ConversationStep, TechnicalAnalysis, ImplementationReport } from '@/components/Admin/PromptGenerator/types';
+import { useState } from 'react';
+import { ConversationState, ConversationStep } from '@/components/Admin/PromptGenerator/types';
 
 export const useConversationFlow = () => {
   const [conversationState, setConversationState] = useState<ConversationState>({
@@ -9,23 +9,15 @@ export const useConversationFlow = () => {
     originalPrompt: ''
   });
 
-  const initializeConversation = useCallback((prompt: string) => {
-    const initialStep: ConversationStep = {
-      id: Date.now().toString(),
-      type: 'initial_query',
-      status: 'pending',
-      content: prompt,
-      timestamp: new Date().toISOString()
-    };
-
+  const initializeConversation = (prompt: string) => {
     setConversationState({
       currentStep: 'initial_query',
-      steps: [initialStep],
+      steps: [],
       originalPrompt: prompt
     });
-  }, []);
+  };
 
-  const addStep = useCallback((step: Omit<ConversationStep, 'id' | 'timestamp'>) => {
+  const addStep = (step: Omit<ConversationStep, 'id' | 'timestamp'>) => {
     const newStep: ConversationStep = {
       ...step,
       id: Date.now().toString(),
@@ -34,59 +26,54 @@ export const useConversationFlow = () => {
 
     setConversationState(prev => ({
       ...prev,
-      steps: [...prev.steps, newStep],
-      currentStep: step.type
+      steps: [...prev.steps, newStep]
     }));
-  }, []);
+  };
 
-  const updateCurrentStep = useCallback((status: ConversationStep['status'], content?: string) => {
+  const updateConversationState = (updates: Partial<ConversationState>) => {
     setConversationState(prev => ({
       ...prev,
-      steps: prev.steps.map(step => 
-        step.type === prev.currentStep 
-          ? { ...step, status, content: content || step.content }
-          : step
-      )
+      ...updates
     }));
-  }, []);
+  };
 
-  const setTechnicalAnalysis = useCallback((analysis: TechnicalAnalysis) => {
+  const setCurrentStep = (step: ConversationStep['type']) => {
+    setConversationState(prev => ({
+      ...prev,
+      currentStep: step
+    }));
+  };
+
+  const setTechnicalAnalysis = (analysis: ConversationState['technicalAnalysis']) => {
     setConversationState(prev => ({
       ...prev,
       technicalAnalysis: analysis
     }));
-  }, []);
+  };
 
-  const setImplementationReport = useCallback((report: ImplementationReport) => {
+  const setImplementationReport = (report: ConversationState['implementationReport']) => {
     setConversationState(prev => ({
       ...prev,
       implementationReport: report
     }));
-  }, []);
+  };
 
-  const moveToNextStep = useCallback((nextStep: ConversationStep['type']) => {
-    setConversationState(prev => ({
-      ...prev,
-      currentStep: nextStep
-    }));
-  }, []);
-
-  const resetConversation = useCallback(() => {
+  const resetConversation = () => {
     setConversationState({
       currentStep: 'initial_query',
       steps: [],
       originalPrompt: ''
     });
-  }, []);
+  };
 
   return {
     conversationState,
     initializeConversation,
     addStep,
-    updateCurrentStep,
+    updateConversationState,
+    setCurrentStep,
     setTechnicalAnalysis,
     setImplementationReport,
-    moveToNextStep,
     resetConversation
   };
 };

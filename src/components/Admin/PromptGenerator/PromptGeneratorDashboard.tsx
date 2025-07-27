@@ -26,7 +26,7 @@ export const PromptGeneratorDashboard: React.FC = () => {
     isApplying 
   } = usePromptGenerator();
 
-  const handleGenerateCode = (prompt: string, temperature: number, model: string) => {
+  const handleGenerateCode = ({ prompt, temperature, model }: { prompt: string; temperature: number; model: string }) => {
     generateCode(
       { prompt, temperature, model },
       {
@@ -65,15 +65,15 @@ export const PromptGeneratorDashboard: React.FC = () => {
     id: log.id,
     prompt: log.prompt,
     generated_code: log.generated_code,
-    status: log.status as 'pending' | 'applied' | 'rolled_back' | 'error',
+    status: (log.status as 'pending' | 'applied' | 'rolled_back' | 'error') || 'pending',
     created_at: log.created_at,
     applied_at: log.applied_at,
     rolled_back_at: log.rolled_back_at,
     error_message: log.error_message,
     user_id: log.user_id,
-    company_id: log.company_id,
-    model_used: log.model_used,
-    temperature: log.temperature,
+    company_id: log.company_id || '',
+    model_used: log.model_used || 'gpt-4',
+    temperature: log.temperature || 0.7,
     applied_files: log.applied_files,
     rollback_data: log.rollback_data
   }));
@@ -142,7 +142,7 @@ export const PromptGeneratorDashboard: React.FC = () => {
             </CardHeader>
             <CardContent>
               <CodePreview 
-                code={generatedCode}
+                generatedCode={generatedCode}
                 onApply={handleApplyCode}
                 onRollback={handleRollbackCode}
                 isApplying={isApplying}
@@ -158,7 +158,7 @@ export const PromptGeneratorDashboard: React.FC = () => {
             </CardHeader>
             <CardContent>
               <PromptHistory 
-                logs={mockPromptLogs}
+                promptLogs={mockPromptLogs}
                 onViewLog={handleViewLog}
                 onApplyCode={handleApplyCode}
                 onRollbackCode={handleRollbackCode}

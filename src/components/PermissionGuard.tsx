@@ -1,141 +1,83 @@
+
 import React from 'react';
 import { usePermissions } from '@/hooks/usePermissions';
-import { AlertTriangle, Lock } from 'lucide-react';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { AlertTriangle } from 'lucide-react';
 
 interface PermissionGuardProps {
   children: React.ReactNode;
+  requiredPermissions?: string[];
+  requiredRole?: string;
   fallback?: React.ReactNode;
-  requiredRole?: 'super_admin' | 'contratante' | 'operador';
-  requireSystemAdmin?: boolean;
-  requireCompanyAdmin?: boolean;
-  companyId?: string;
-  department?: string;
-  customCheck?: () => boolean;
-  showFallback?: boolean;
 }
 
-export function PermissionGuard({
+export const PermissionGuard: React.FC<PermissionGuardProps> = ({
   children,
-  fallback,
+  requiredPermissions = [],
   requiredRole,
-  requireSystemAdmin = false,
-  requireCompanyAdmin = false,
-  companyId,
-  department,
-  customCheck,
-  showFallback = true
-}: PermissionGuardProps) {
-  const {
-    canManageSystem,
-    canManageCompany,
-    canAccessDepartmentData,
-    hasPermission
+  fallback
+}) => {
+  const { 
+    hasPermission, 
+    hasRole, 
+    isLoading, 
+    isContratante,
+    isAdmin,
+    canManageCompanyData
   } = usePermissions();
 
-  // Verificação personalizada
-  if (customCheck && !customCheck()) {
-    return showFallback ? (fallback || <DefaultAccessDenied />) : null;
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center p-8">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+      </div>
+    );
   }
 
-  // Verificação por nível de sistema
-  if (requireSystemAdmin && !canManageSystem) {
-    return showFallback ? (fallback || <DefaultAccessDenied />) : null;
-  }
-
-  // Verificação por nível de empresa
-  if (requireCompanyAdmin && !canManageCompany) {
-    return showFallback ? (fallback || <DefaultAccessDenied />) : null;
-  }
-
-  // Verificação por role específico e contexto
+  // Check role-based permissions
   if (requiredRole) {
-    let hasAccess = false;
-    
-    switch (requiredRole) {
-      case 'super_admin':
-        hasAccess = canManageSystem;
-        break;
-      case 'contratante':
-        hasAccess = canManageCompany;
-        break;
-      case 'operador':
-        hasAccess = canAccessDepartmentData(companyId || '', department);
-        break;
-    }
+    const roleCheck = () => {
+      switch (requiredRole) {
+        case 'admin':
+          return isAdmin;
+        case 'contratante':
+          return isContratante;
+        case 'manager':
+          return canManageCompanyData;
+        default:
+          return hasRole(requiredRole);
+      }
+    };
 
-    if (!hasAccess) {
-      return showFallback ? (fallback || <DefaultAccessDenied />) : null;
+    if (!roleCheck()) {
+      return fallback || (
+        <Alert>
+          <AlertTriangle className="h-4 w-4" />
+          <AlertDescription>
+            Você não tem permissão para acessar esta funcionalidade. Função necessária: {requiredRole}
+          </AlertDescription>
+        </Alert>
+      );
+    }
+  }
+
+  // Check specific permissions
+  if (requiredPermissions.length > 0) {
+    const hasRequiredPermissions = requiredPermissions.every(permission => 
+      hasPermission(permission)
+    );
+
+    if (!hasRequiredPermissions) {
+      return fallback || (
+        <Alert>
+          <AlertTriangle className="h-4 w-4" />
+          <AlertDescription>
+            Você não tem as permissões necessárias para acessar esta funcionalidade.
+          </AlertDescription>
+        </Alert>
+      );
     }
   }
 
   return <>{children}</>;
-}
-
-function DefaultAccessDenied() {
-  return (
-    <div className="flex items-center justify-center p-8">
-      <div className="text-center max-w-md">
-        <div className="mx-auto w-16 h-16 bg-muted rounded-full flex items-center justify-center mb-4">
-          <Lock className="w-8 h-8 text-muted-foreground" />
-        </div>
-        <h3 className="text-lg font-semibold text-foreground mb-2">
-          Acesso Restrito
-        </h3>
-        <p className="text-muted-foreground text-sm">
-          Você não tem permissão para acessar esta funcionalidade.
-        </p>
-      </div>
-    </div>
-  );
-}
-
-// Componentes específicos para diferentes tipos de proteção
-export function SuperAdminGuard({ children, fallback, showFallback = true }: Omit<PermissionGuardProps, 'requiredRole'>) {
-  return (
-    <PermissionGuard
-      requireSystemAdmin
-      fallback={fallback}
-      showFallback={showFallback}
-    >
-      {children}
-    </PermissionGuard>
-  );
-}
-
-export function ContratanteGuard({ 
-  children, 
-  fallback, 
-  companyId, 
-  showFallback = true 
-}: Omit<PermissionGuardProps, 'requiredRole'>) {
-  return (
-    <PermissionGuard
-      requireCompanyAdmin
-      companyId={companyId}
-      fallback={fallback}
-      showFallback={showFallback}
-    >
-      {children}
-    </PermissionGuard>
-  );
-}
-
-export function OperadorGuard({ 
-  children, 
-  fallback, 
-  companyId, 
-  department, 
-  showFallback = true 
-}: Omit<PermissionGuardProps, 'requiredRole'>) {
-  return (
-    <PermissionGuard
-      requiredRole="operador"
-      companyId={companyId}
-      department={department}
-      fallback={fallback}
-      showFallback={showFallback}
-    >
-      {children}
-    </PermissionGuard>
-  );
-}
+};
