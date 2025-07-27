@@ -115,9 +115,11 @@ function App() {
                 <Route path="notificacoes" element={<Notificacoes />} />
 
                 {/* User Routes */}
-                <Route path="user/dados-pessoais" element={<UserDadosPessoais />} />
+                <Route path="user">
+                  <Route path="dados-pessoais" element={<UserDadosPessoais />} />
+                </Route>
 
-                {/* Admin Routes */}
+                {/* Admin Routes - Protected by Super Admin */}
                 <Route path="admin" element={
                   <ProtectedRoute requireSuperAdmin>
                     <Admin />

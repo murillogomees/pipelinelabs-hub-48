@@ -5,34 +5,33 @@ import { useAuth } from '@/components/Auth/AuthProvider';
 
 export interface Profile {
   id: string;
-  user_id: string;
-  company_id: string | null;
-  access_level_id: string | null;
-  stripe_customer_id: string | null;
-  is_super_admin: boolean;
-  display_name?: string;
-  email?: string;
-  phone?: string;
-  avatar_url?: string;
+  email: string;
+  display_name: string;
+  document: string;
+  document_type: string;
+  phone: string;
+  address: string;
+  city: string;
+  state: string;
+  zip_code: string;
+  avatar_url: string;
   is_active: boolean;
+  access_level_id: string;
   created_at: string;
   updated_at: string;
-  access_levels?: {
+  access_levels: {
     id: string;
     name: string;
-    display_name: string;
-    permissions: Record<string, boolean>;
-    is_active: boolean;
+    description: string;
+    permissions: string[];
   };
-  companies?: {
-    id: string;
-    name: string;
-    document: string;
-    email?: string;
-  };
+  // Campos adicionais que podem existir
+  company_id?: string;
+  stripe_customer_id?: string;
+  is_super_admin?: boolean;
 }
 
-export function useProfile() {
+export const useProfile = () => {
   const { user } = useAuth();
 
   const { data: profile, isLoading, error } = useQuery({
@@ -40,124 +39,88 @@ export function useProfile() {
     queryFn: async () => {
       if (!user?.id) return null;
 
-      // Fetch profile with access levels
-      const { data: profileData, error: profileError } = await supabase
+      const { data, error } = await supabase
         .from('profiles')
         .select(`
           *,
           access_levels (
             id,
             name,
-            display_name,
-            permissions,
-            is_active
+            description,
+            permissions
           )
         `)
-        .eq('user_id', user.id)
-        .eq('is_active', true)
-        .maybeSingle();
+        .eq('id', user.id)
+        .single();
 
-      if (profileError) {
-        console.error('Error fetching profile:', profileError);
-        return null;
+      if (error) {
+        console.error('Error fetching profile:', error);
+        throw error;
       }
 
-      if (!profileData) {
-        return null;
-      }
-
-      // Fetch company data if profile has company_id
-      let companyData = null;
-      if (profileData.company_id) {
-        const { data: company, error: companyError } = await supabase
-          .from('companies')
-          .select('id, name, document, email')
-          .eq('id', profileData.company_id)
-          .maybeSingle();
-
-        if (!companyError && company) {
-          companyData = company;
-        }
-      }
-
-      const profile: Profile = {
-        id: profileData.id,
-        user_id: profileData.user_id,
-        company_id: profileData.company_id,
-        access_level_id: profileData.access_level_id,
-        stripe_customer_id: profileData.stripe_customer_id,
-        is_super_admin: profileData.is_super_admin || false,
-        display_name: profileData.display_name || undefined,
-        email: profileData.email || undefined,
-        phone: profileData.phone || undefined,
-        avatar_url: profileData.avatar_url || undefined,
-        is_active: profileData.is_active,
-        created_at: profileData.created_at,
-        updated_at: profileData.updated_at,
-        access_levels: profileData.access_levels ? {
-          id: profileData.access_levels.id,
-          name: profileData.access_levels.name,
-          display_name: profileData.access_levels.display_name,
-          permissions: (profileData.access_levels.permissions as Record<string, boolean>) || {},
-          is_active: profileData.access_levels.is_active
-        } : undefined,
-        companies: companyData || undefined
-      };
-
-      return profile;
+      return data;
     },
     enabled: !!user?.id,
   });
 
-  const isSuperAdmin = profile?.is_super_admin || false;
-  const hasActiveCompany = !!profile?.company_id;
-  const hasActiveSubscription = !!profile?.stripe_customer_id;
-  const accessLevel = profile?.access_levels;
-
+  // Função para verificar se o usuário tem uma permissão específica
   const hasPermission = (permission: string): boolean => {
-    if (isSuperAdmin) return true;
-    if (!accessLevel?.permissions) return false;
-    return accessLevel.permissions[permission] === true;
+    if (!profile?.access_levels?.permissions) return false;
+    return profile.access_levels.permissions.includes(permission);
   };
 
+  // Função para verificar se o usuário pode acessar uma rota
   const canAccessRoute = (route: string): boolean => {
-    if (isSuperAdmin) return true;
-    
-    // Map routes to permissions
-    const routePermissions: Record<string, string> = {
-      '/app/dashboard': 'dashboard',
-      '/app/vendas': 'vendas',
-      '/app/produtos': 'produtos',
-      '/app/clientes': 'clientes',
-      '/app/financeiro': 'financeiro',
-      '/app/relatorios': 'relatorios',
-      '/app/configuracoes': 'configuracoes',
-      '/app/admin': 'admin_panel',
-    };
+    // Rotas públicas sempre acessíveis
+    const publicRoutes = ['/auth', '/sla', '/privacidade', '/termos'];
+    if (publicRoutes.includes(route)) return true;
 
-    const requiredPermission = routePermissions[route];
-    if (!requiredPermission) return true;
+    // Rotas admin só para super admin
+    if (route.startsWith('/app/admin')) {
+      return profile?.access_levels?.name === 'super_admin';
+    }
 
-    return hasPermission(requiredPermission);
+    // Outras rotas do app requerem estar logado
+    if (route.startsWith('/app')) {
+      return !!profile && profile.is_active;
+    }
+
+    return true;
   };
 
-  const needsSubscriptionRedirect = (): boolean => {
-    if (isSuperAdmin) return false;
-    if (!hasActiveCompany) return true;
-    if (!hasActiveSubscription) return true;
-    return false;
-  };
+  // Verificar se é super admin
+  const isSuperAdmin = profile?.access_levels?.name === 'super_admin';
+
+  // Mapear dados do profile para compatibilidade
+  const mappedProfile: Profile = profile ? {
+    id: profile.id,
+    email: profile.email,
+    display_name: profile.display_name,
+    document: profile.document,
+    document_type: profile.document_type,
+    phone: profile.phone,
+    address: profile.address,
+    city: profile.city,
+    state: profile.state,
+    zip_code: profile.zip_code,
+    avatar_url: profile.avatar_url,
+    is_active: profile.is_active,
+    access_level_id: profile.access_level_id,
+    created_at: profile.created_at,
+    updated_at: profile.updated_at,
+    access_levels: profile.access_levels,
+    // Campos opcionais que podem não existir
+    company_id: profile.company_id || undefined,
+    stripe_customer_id: profile.stripe_customer_id || undefined,
+    is_super_admin: isSuperAdmin,
+  } : null;
 
   return {
-    profile,
+    profile: mappedProfile,
     isLoading,
     error,
-    isSuperAdmin,
-    hasActiveCompany,
-    hasActiveSubscription,
-    accessLevel,
     hasPermission,
     canAccessRoute,
-    needsSubscriptionRedirect,
+    isSuperAdmin,
   };
-}
+};
