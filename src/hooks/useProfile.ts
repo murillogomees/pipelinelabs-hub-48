@@ -69,7 +69,7 @@ export function useProfile() {
 
       if (!data) return null;
 
-      // Ensure the data matches the Profile interface
+      // Convert the data to match the Profile interface
       const profile: Profile = {
         id: data.id,
         user_id: data.user_id,
@@ -84,8 +84,19 @@ export function useProfile() {
         is_active: data.is_active,
         created_at: data.created_at,
         updated_at: data.updated_at,
-        access_levels: data.access_levels || undefined,
-        companies: data.companies || undefined
+        access_levels: data.access_levels ? {
+          id: data.access_levels.id,
+          name: data.access_levels.name,
+          display_name: data.access_levels.display_name,
+          permissions: (data.access_levels.permissions as Record<string, boolean>) || {},
+          is_active: data.access_levels.is_active
+        } : undefined,
+        companies: data.companies ? {
+          id: data.companies.id,
+          name: data.companies.name,
+          document: data.companies.document,
+          email: data.companies.email
+        } : undefined
       };
 
       return profile;
