@@ -79,11 +79,11 @@ export function useContracts() {
 
       const { data: userCompany } = await supabase
         .from('profile' as any)
-        .select('company_id')
+        .select('id')
         .eq('user_id', user.id)
         .single();
 
-      if (!userCompany || !('profile' in userCompany)) throw new Error('User not found');
+      if (!userCompany || !('company_id' in userCompany)) throw new Error('User company not found');
 
       // Generate contract number
       const { data: contractNumber, error: contractNumberError } = await supabase
