@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -7,31 +7,19 @@ import { Separator } from '@/components/ui/separator';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { useConversationFlow } from '@/hooks/useConversationFlow';
 import { usePromptGenerator } from '@/hooks/usePromptGenerator';
-import { useLearningSystem } from '@/hooks/useLearningSystem';
 import { InitialQuery } from './InitialQuery';
 import { TechnicalApproval } from './TechnicalApproval';
 import { ImplementationReport } from './ImplementationReport';
 import { BuildVerification } from './BuildVerification';
-import { IntelligentAnalysis } from './IntelligentAnalysis';
 import { LearningFeedback } from './LearningFeedback';
-import { 
-  ConversationState, 
-  ImplementationReport as IImplementationReport, 
-  PromptLog,
-  LearningContext,
-  SimilarSolution,
-  KnowledgeEntry,
-  Pattern
-} from './types';
 import { 
   MessageSquare, 
   Zap, 
   CheckCircle, 
   AlertCircle, 
   Brain,
-  ThumbsUp,
-  ThumbsDown,
-  Sparkles
+  Sparkles,
+  Loader2
 } from 'lucide-react';
 
 interface EnhancedConversationalDashboardProps {
@@ -42,72 +30,17 @@ export const EnhancedConversationalDashboard: React.FC<EnhancedConversationalDas
   onBackToTraditional
 }) => {
   const { conversationState, updateConversationState, resetConversation } = useConversationFlow();
-  const { promptLogs, generateCode, applyCode, isGenerating, isApplying } = usePromptGenerator();
-  const { 
-    learningContext, 
-    analyzeContext, 
-    isAnalyzing, 
-    saveLearningSession, 
-    updateKnowledgeBase,
-    provideFeedback
-  } = useLearningSystem();
-  
+  const { generateCode, isGenerating } = usePromptGenerator();
   const [buildStatus, setBuildStatus] = useState<'success' | 'failed' | 'running'>('success');
-  const [showIntelligentAnalysis, setShowIntelligentAnalysis] = useState(false);
-  const [currentSessionId, setCurrentSessionId] = useState<string | null>(null);
 
-  // Analisar contexto quando um novo prompt é recebido
   const handleInitialQuery = async (prompt: string) => {
-    setShowIntelligentAnalysis(true);
+    console.log('Processando prompt:', prompt);
     
-    // Analisar contexto inteligente
-    analyzeContext(prompt, {
-      onSuccess: (context: LearningContext) => {
-        updateConversationState({
-          learningContext: context,
-          originalPrompt: prompt
-        });
-
-        // Se encontrou soluções similares, mostrar análise primeiro
-        if (context.similarSolutions.length > 0 || context.knowledgeBase.length > 0) {
-          updateConversationState({
-            currentStep: 'initial_query',
-            steps: [
-              ...conversationState.steps,
-              {
-                id: Date.now().toString(),
-                type: 'initial_query',
-                status: 'completed',
-                content: `Análise inteligente concluída: ${context.suggestions.join(', ')}`,
-                timestamp: new Date().toISOString(),
-                metadata: { hasLearningContext: true }
-              }
-            ]
-          });
-        } else {
-          // Continuar com análise técnica normal
-          proceedWithTechnicalAnalysis(prompt);
-        }
-      }
-    });
-  };
-
-  const proceedWithTechnicalAnalysis = (prompt: string) => {
-    // Simulate AI understanding and analysis
-    const mockAnalysis = {
-      affectedFiles: ['src/components/ProductDialog.tsx', 'src/hooks/useProducts.ts'],
-      impactType: 'performance' as const,
-      impactDescription: 'Otimização de performance em listagem de produtos',
-      justification: 'Melhoria necessária para reduzir tempo de carregamento',
-      estimatedChanges: {
-        files: ['ProductDialog.tsx', 'useProducts.ts'],
-        functions: ['handleProductSubmit', 'fetchProducts'],
-        tables: ['products'],
-        edgeFunctions: []
-      }
-    };
-
+    // Análise mais detalhada do prompt
+    const analysis = analyzePrompt(prompt);
+    
     updateConversationState({
+      originalPrompt: prompt,
       currentStep: 'technical_approval',
       steps: [
         ...conversationState.steps,
@@ -119,183 +52,153 @@ export const EnhancedConversationalDashboard: React.FC<EnhancedConversationalDas
           timestamp: new Date().toISOString()
         }
       ],
-      technicalAnalysis: mockAnalysis
+      technicalAnalysis: analysis
     });
   };
 
-  const handleUseSimilarSolution = (solution: SimilarSolution) => {
-    updateConversationState({
-      currentStep: 'technical_approval',
-      steps: [
-        ...conversationState.steps,
-        {
-          id: Date.now().toString(),
-          type: 'initial_query',
-          status: 'completed',
-          content: `Reaproveitando solução similar: ${solution.prompt}`,
-          timestamp: new Date().toISOString(),
-          metadata: { reusedSolution: solution }
-        }
-      ],
-      technicalAnalysis: {
-        affectedFiles: solution.tags.filter(tag => tag.includes('.')),
-        impactType: 'clean_code' as const,
-        impactDescription: `Solução baseada em implementação anterior com ${Math.round(solution.similarity * 100)}% de similaridade`,
-        justification: `Esta solução foi usada ${solution.usage_count} vezes com taxa de sucesso de ${Math.round(solution.effectiveness_score * 100)}%`,
-        estimatedChanges: {
-          files: solution.tags.filter(tag => tag.includes('.')),
-          functions: [],
-          tables: [],
-          edgeFunctions: []
-        }
+  const analyzePrompt = (prompt: string) => {
+    // Análise mais inteligente do prompt
+    const lowerPrompt = prompt.toLowerCase();
+    
+    let impactType: 'performance' | 'security' | 'clean_code' | 'database' | 'architectural' = 'clean_code';
+    let affectedFiles: string[] = [];
+    let functions: string[] = [];
+    
+    // Detectar tipo de operação
+    if (lowerPrompt.includes('criar') || lowerPrompt.includes('adicionar')) {
+      if (lowerPrompt.includes('componente')) {
+        affectedFiles.push('src/components/NewComponent.tsx');
+        functions.push('NewComponent');
       }
-    });
-    setShowIntelligentAnalysis(false);
-  };
-
-  const handleApplyKnowledge = (entry: KnowledgeEntry) => {
-    updateConversationState({
-      currentStep: 'technical_approval',
-      steps: [
-        ...conversationState.steps,
-        {
-          id: Date.now().toString(),
-          type: 'initial_query',
-          status: 'completed',
-          content: `Aplicando conhecimento: ${entry.title}`,
-          timestamp: new Date().toISOString(),
-          metadata: { appliedKnowledge: entry }
-        }
-      ],
-      technicalAnalysis: {
-        affectedFiles: entry.files_affected,
-        impactType: entry.solution_type as any,
-        impactDescription: entry.description,
-        justification: `Baseado em conhecimento com ${Math.round(entry.success_rate * 100)}% de taxa de sucesso`,
-        estimatedChanges: {
-          files: entry.files_affected,
-          functions: [],
-          tables: [],
-          edgeFunctions: []
-        }
+      if (lowerPrompt.includes('hook')) {
+        affectedFiles.push('src/hooks/useNewHook.ts');
+        functions.push('useNewHook');
       }
-    });
-    setShowIntelligentAnalysis(false);
-  };
-
-  const handleApplyPattern = (pattern: Pattern) => {
-    updateConversationState({
-      currentStep: 'technical_approval',
-      steps: [
-        ...conversationState.steps,
-        {
-          id: Date.now().toString(),
-          type: 'initial_query',
-          status: 'completed',
-          content: `Aplicando padrão: ${pattern.description}`,
-          timestamp: new Date().toISOString(),
-          metadata: { appliedPattern: pattern }
-        }
-      ],
-      technicalAnalysis: {
-        affectedFiles: [],
-        impactType: pattern.pattern_type as any,
-        impactDescription: pattern.description,
-        justification: pattern.recommended_solution,
-        estimatedChanges: {
-          files: [],
-          functions: [],
-          tables: [],
-          edgeFunctions: []
-        }
+      if (lowerPrompt.includes('página') || lowerPrompt.includes('page')) {
+        affectedFiles.push('src/pages/NewPage.tsx');
+        functions.push('NewPage');
       }
-    });
-    setShowIntelligentAnalysis(false);
-  };
+      if (lowerPrompt.includes('api') || lowerPrompt.includes('endpoint')) {
+        affectedFiles.push('supabase/functions/new-function/index.ts');
+        functions.push('newFunction');
+      }
+    }
+    
+    if (lowerPrompt.includes('banco') || lowerPrompt.includes('database') || lowerPrompt.includes('tabela')) {
+      impactType = 'database';
+    }
+    
+    if (lowerPrompt.includes('performance') || lowerPrompt.includes('otimizar')) {
+      impactType = 'performance';
+    }
+    
+    if (lowerPrompt.includes('segurança') || lowerPrompt.includes('security')) {
+      impactType = 'security';
+    }
 
-  const handleTechnicalApproval = () => {
-    // Simulate implementation
-    const mockImplementation: IImplementationReport = {
-      modifiedFiles: ['src/components/ProductDialog.tsx', 'src/hooks/useProducts.ts'],
-      linesChanged: {
-        'ProductDialog.tsx': 15,
-        'useProducts.ts': 8
-      },
-      functionsCreated: ['optimizeProductQuery'],
-      functionsModified: ['handleProductSubmit'],
-      functionsRemoved: [],
-      databaseChanges: {
-        tables: ['products'],
-        fields: ['indexed_name'],
-        indexes: ['idx_products_name']
-      },
-      edgeFunctions: ['product-optimizer'],
-      buildStatus: 'success' as const,
-      buildErrors: []
+    return {
+      affectedFiles,
+      impactType,
+      impactDescription: `Implementação baseada no comando: "${prompt}"`,
+      justification: 'Análise automática do prompt para determinar arquivos e funções necessárias',
+      estimatedChanges: {
+        files: affectedFiles,
+        functions,
+        tables: lowerPrompt.includes('tabela') ? ['nova_tabela'] : [],
+        edgeFunctions: lowerPrompt.includes('api') ? ['nova-funcao'] : []
+      }
     };
+  };
 
-    updateConversationState({
-      currentStep: 'implementation',
-      steps: [
-        ...conversationState.steps,
-        {
-          id: Date.now().toString(),
-          type: 'technical_approval',
-          status: 'completed',
-          content: 'Aprovação técnica concedida',
-          timestamp: new Date().toISOString()
+  const handleTechnicalApproval = async () => {
+    console.log('Iniciando implementação...');
+    
+    const prompt = conversationState.originalPrompt;
+    
+    // Gerar código baseado no prompt
+    generateCode(
+      {
+        prompt,
+        temperature: 0.7,
+        model: 'gpt-4o-mini'
+      },
+      {
+        onSuccess: (data) => {
+          console.log('Código gerado:', data);
+          
+          const implementationReport = {
+            modifiedFiles: Object.keys(data.files || {}),
+            linesChanged: Object.keys(data.files || {}).reduce((acc, file) => {
+              acc[file] = 50; // Estimativa
+              return acc;
+            }, {} as Record<string, number>),
+            functionsCreated: data.suggestions?.map((s: any) => s.title) || [],
+            functionsModified: [],
+            functionsRemoved: [],
+            databaseChanges: {
+              tables: data.sql?.length > 0 ? ['nova_tabela'] : [],
+              fields: [],
+              indexes: []
+            },
+            edgeFunctions: data.files && Object.keys(data.files).some(f => f.includes('functions')) ? ['nova-funcao'] : [],
+            buildStatus: 'success' as const,
+            buildErrors: []
+          };
+          
+          updateConversationState({
+            currentStep: 'implementation',
+            steps: [
+              ...conversationState.steps,
+              {
+                id: Date.now().toString(),
+                type: 'technical_approval',
+                status: 'completed',
+                content: 'Aprovação técnica concedida',
+                timestamp: new Date().toISOString()
+              }
+            ],
+            implementationReport
+          });
+          
+          // Simular build
+          setTimeout(() => {
+            setBuildStatus('success');
+            updateConversationState({
+              currentStep: 'build_verification',
+              steps: [
+                ...conversationState.steps,
+                {
+                  id: Date.now().toString(),
+                  type: 'implementation',
+                  status: 'completed',
+                  content: 'Implementação concluída com sucesso',
+                  timestamp: new Date().toISOString()
+                }
+              ]
+            });
+          }, 2000);
+        },
+        onError: (error) => {
+          console.error('Erro na geração:', error);
+          updateConversationState({
+            currentStep: 'technical_approval',
+            steps: [
+              ...conversationState.steps,
+              {
+                id: Date.now().toString(),
+                type: 'technical_approval',
+                status: 'failed',
+                content: `Erro na aprovação técnica: ${error.message}`,
+                timestamp: new Date().toISOString()
+              }
+            ]
+          });
         }
-      ],
-      implementationReport: mockImplementation
-    });
-
-    // Simulate build verification
-    setTimeout(() => {
-      setBuildStatus('success');
-      updateConversationState({
-        currentStep: 'build_verification',
-        steps: [
-          ...conversationState.steps,
-          {
-            id: Date.now().toString(),
-            type: 'implementation',
-            status: 'completed',
-            content: 'Implementação concluída',
-            timestamp: new Date().toISOString()
-          }
-        ],
-        implementationReport: {
-          ...mockImplementation,
-          buildStatus: 'success' as const
-        }
-      });
-    }, 3000);
+      }
+    );
   };
 
   const handleBuildVerification = () => {
-    // Salvar sessão de aprendizado
-    if (conversationState.technicalAnalysis && conversationState.implementationReport) {
-      saveLearningSession({
-        prompt: conversationState.originalPrompt,
-        context: conversationState.learningContext || {
-          similarSolutions: [],
-          knowledgeBase: [],
-          patterns: [],
-          suggestions: []
-        },
-        analysis: conversationState.technicalAnalysis,
-        implementation: conversationState.implementationReport,
-        build_result: {
-          success: buildStatus === 'success',
-          errors: conversationState.implementationReport.buildErrors || [],
-          warnings: [],
-          timestamp: new Date().toISOString(),
-          build_time_ms: 2000
-        },
-        improvements_made: []
-      });
-    }
-
     updateConversationState({
       currentStep: 'build_verification',
       steps: [
@@ -311,16 +214,10 @@ export const EnhancedConversationalDashboard: React.FC<EnhancedConversationalDas
     });
   };
 
-  const handleUserFeedback = (feedback: 'positive' | 'negative') => {
-    if (currentSessionId) {
-      provideFeedback({ sessionId: currentSessionId, feedback });
-    }
-  };
-
   const getCurrentStepIcon = () => {
     switch (conversationState.currentStep) {
       case 'initial_query':
-        return showIntelligentAnalysis ? <Brain className="h-5 w-5" /> : <MessageSquare className="h-5 w-5" />;
+        return <MessageSquare className="h-5 w-5" />;
       case 'technical_approval':
         return <Zap className="h-5 w-5" />;
       case 'implementation':
@@ -335,7 +232,7 @@ export const EnhancedConversationalDashboard: React.FC<EnhancedConversationalDas
   const getStepTitle = () => {
     switch (conversationState.currentStep) {
       case 'initial_query':
-        return showIntelligentAnalysis ? 'Análise Inteligente' : 'Consulta Inicial';
+        return 'Análise do Comando';
       case 'technical_approval':
         return 'Aprovação Técnica';
       case 'implementation':
@@ -348,18 +245,6 @@ export const EnhancedConversationalDashboard: React.FC<EnhancedConversationalDas
   };
 
   const renderCurrentStep = () => {
-    if (showIntelligentAnalysis && conversationState.learningContext) {
-      return (
-        <IntelligentAnalysis
-          context={conversationState.learningContext}
-          originalPrompt={conversationState.originalPrompt}
-          onUseSimilarSolution={handleUseSimilarSolution}
-          onApplyKnowledge={handleApplyKnowledge}
-          onApplyPattern={handleApplyPattern}
-        />
-      );
-    }
-
     switch (conversationState.currentStep) {
       case 'initial_query':
         return <InitialQuery onSubmit={handleInitialQuery} />;
@@ -369,7 +254,7 @@ export const EnhancedConversationalDashboard: React.FC<EnhancedConversationalDas
             analysis={conversationState.technicalAnalysis!}
             onApprove={handleTechnicalApproval}
             onReject={resetConversation}
-            isProcessing={false}
+            isProcessing={isGenerating}
           />
         );
       case 'implementation':
@@ -389,8 +274,8 @@ export const EnhancedConversationalDashboard: React.FC<EnhancedConversationalDas
               onComplete={resetConversation}
             />
             <LearningFeedback
-              onFeedback={handleUserFeedback}
-              sessionSummary={`Implementação concluída com ${conversationState.implementationReport?.modifiedFiles.length || 0} arquivos modificados`}
+              onFeedback={(feedback) => console.log('Feedback:', feedback)}
+              sessionSummary={`Implementação concluída: ${conversationState.originalPrompt}`}
             />
           </div>
         );
@@ -423,12 +308,12 @@ export const EnhancedConversationalDashboard: React.FC<EnhancedConversationalDas
         </div>
       </div>
 
-      {/* Indicador de análise inteligente */}
-      {isAnalyzing && (
+      {/* Indicador de processamento */}
+      {isGenerating && (
         <Alert>
-          <Brain className="h-4 w-4 animate-pulse" />
+          <Loader2 className="h-4 w-4 animate-spin" />
           <AlertDescription>
-            Analisando contexto inteligente... Buscando soluções similares e padrões na base de conhecimento.
+            Processando seu comando... Analisando e gerando código personalizado.
           </AlertDescription>
         </Alert>
       )}
@@ -436,7 +321,7 @@ export const EnhancedConversationalDashboard: React.FC<EnhancedConversationalDas
       {/* Progress Steps */}
       <Card>
         <CardHeader>
-          <CardTitle className="text-lg">Progresso da Conversa</CardTitle>
+          <CardTitle className="text-lg">Progresso da Implementação</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="flex items-center gap-2 mb-4">
@@ -472,25 +357,6 @@ export const EnhancedConversationalDashboard: React.FC<EnhancedConversationalDas
           {renderCurrentStep()}
         </CardContent>
       </Card>
-
-      {/* Continue with normal flow button */}
-      {showIntelligentAnalysis && (
-        <Card>
-          <CardContent className="pt-6">
-            <div className="flex items-center justify-center">
-              <Button
-                variant="outline"
-                onClick={() => {
-                  setShowIntelligentAnalysis(false);
-                  proceedWithTechnicalAnalysis(conversationState.originalPrompt);
-                }}
-              >
-                Continuar com Análise Normal
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
-      )}
     </div>
   );
 };

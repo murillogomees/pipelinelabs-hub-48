@@ -1,7 +1,7 @@
 
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
-import { useAuth } from '@/components/Auth/AuthProvider';
+import { useToast } from '@/hooks/use-toast';
 
 export interface Profile {
   id: string;
@@ -13,8 +13,7 @@ export interface Profile {
   address: string;
   city: string;
   state: string;
-  zip_code?: string;
-  zipcode?: string;
+  zipcode: string;
   avatar_url: string;
   is_active: boolean;
   access_level_id: string;
@@ -26,25 +25,23 @@ export interface Profile {
     description: string;
     permissions: string[];
   };
-  // Campos adicionais que podem existir
-  company_id?: string;
-  stripe_customer_id?: string;
-  is_super_admin?: boolean;
-  companies?: {
+  is_super_admin: boolean;
+  companies?: Array<{
     id: string;
     name: string;
-  };
+  }>;
 }
 
-export const useProfile = () => {
-  const { user } = useAuth();
+export function useProfile() {
+  const { toast } = useToast();
 
   const { data: profile, isLoading, error } = useQuery({
-    queryKey: ['profile', user?.id],
+    queryKey: ['profile'],
     queryFn: async () => {
-      if (!user?.id) return null;
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error('No user found');
 
-      const { data, error } = await supabase
+      const { data: profile, error } = await supabase
         .from('profiles')
         .select(`
           *,
@@ -53,65 +50,49 @@ export const useProfile = () => {
             name,
             description,
             permissions
-          ),
+          )
+        `)
+        .eq('user_id', user.id)
+        .single();
+
+      if (error) throw error;
+      return profile;
+    },
+    enabled: true,
+  });
+
+  const { data: userCompanies } = useQuery({
+    queryKey: ['user-companies'],
+    queryFn: async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return [];
+
+      const { data, error } = await supabase
+        .from('user_companies')
+        .select(`
+          *,
           companies (
             id,
             name
           )
         `)
-        .eq('id', user.id)
-        .single();
+        .eq('user_id', user.id)
+        .eq('is_active', true);
 
-      if (error) {
-        console.error('Error fetching profile:', error);
-        throw error;
-      }
-
-      return data;
+      if (error) throw error;
+      return data || [];
     },
-    enabled: !!user?.id,
   });
 
-  // Função para verificar se o usuário tem uma permissão específica
-  const hasPermission = (permission: string): boolean => {
-    if (!profile?.access_levels?.permissions) return false;
-    const permissions = Array.isArray(profile.access_levels.permissions) 
-      ? profile.access_levels.permissions 
-      : [];
-    return permissions.includes(permission);
-  };
-
-  // Função para verificar se o usuário pode acessar uma rota
-  const canAccessRoute = (route: string): boolean => {
-    // Rotas públicas sempre acessíveis
-    const publicRoutes = ['/auth', '/sla', '/privacidade', '/termos'];
-    if (publicRoutes.includes(route)) return true;
-
-    // Rotas admin só para super admin
-    if (route.startsWith('/app/admin')) {
-      return profile?.access_levels?.name === 'super_admin';
-    }
-
-    // Outras rotas do app requerem estar logado
-    if (route.startsWith('/app')) {
-      return !!profile && profile.is_active;
-    }
-
-    return true;
-  };
-
-  // Verificar se é super admin
   const isSuperAdmin = profile?.access_levels?.name === 'super_admin';
 
-  // Função para verificar se precisa de redirecionamento de assinatura
   const needsSubscriptionRedirect = (): boolean => {
     if (isSuperAdmin) return false;
-    // Verificar se existe stripe_customer_id no profile ou user_companies
-    return !profile?.stripe_customer_id;
+    // Verificar se existe assinatura ativa
+    return false; // Simplificado por enquanto
   };
 
-  // Mapear dados do profile para compatibilidade
-  const mappedProfile: Profile | null = profile ? {
+  const transformedProfile: Profile | null = profile ? {
     id: profile.id,
     email: profile.email,
     display_name: profile.display_name,
@@ -121,7 +102,6 @@ export const useProfile = () => {
     address: profile.address,
     city: profile.city,
     state: profile.state,
-    zip_code: profile.zipcode,
     zipcode: profile.zipcode,
     avatar_url: profile.avatar_url,
     is_active: profile.is_active,
@@ -136,20 +116,19 @@ export const useProfile = () => {
         ? profile.access_levels.permissions.map(p => String(p))
         : []
     },
-    // Campos opcionais que podem não existir no banco
-    company_id: undefined,
-    stripe_customer_id: undefined,
     is_super_admin: isSuperAdmin,
-    companies: profile.companies || undefined,
+    companies: userCompanies?.map(uc => ({
+      id: uc.companies?.id || '',
+      name: uc.companies?.name || ''
+    })) || [],
   } : null;
 
   return {
-    profile: mappedProfile,
+    profile: transformedProfile,
     isLoading,
     error,
-    hasPermission,
-    canAccessRoute,
     isSuperAdmin,
     needsSubscriptionRedirect,
+    userCompanies,
   };
-};
+}

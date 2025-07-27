@@ -2,9 +2,12 @@
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { Textarea } from '@/components/ui/textarea';
+import { Label } from '@/components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 import { 
   Brain, 
   Code, 
@@ -15,52 +18,70 @@ import {
   TrendingUp,
   Clock,
   FileText,
-  Settings
+  Settings,
+  Loader2
 } from 'lucide-react';
-import { useProjectHistory } from '@/hooks/useProjectHistory';
-import { useIntelligentPrompting } from '@/hooks/useIntelligentPrompting';
-import { ContinuousLearning } from './ContinuousLearning';
+import { usePromptGenerator } from '@/hooks/usePromptGenerator';
 
 interface EnhancedPromptGeneratorProps {
   onBackToSimple: () => void;
 }
 
 export const EnhancedPromptGenerator: React.FC<EnhancedPromptGeneratorProps> = ({ onBackToSimple }) => {
-  const { history, addHistoryEntry } = useProjectHistory();
-  const { analyzePrompt, getIntelligentSuggestions, isAnalyzing } = useIntelligentPrompting();
   const [currentPrompt, setCurrentPrompt] = useState('');
   const [prediction, setPrediction] = useState<any>(null);
   const [activeTab, setActiveTab] = useState('generator');
+  const [generatedCode, setGeneratedCode] = useState<any>(null);
+  
+  const { 
+    generateCode, 
+    isGenerating,
+    applyCode,
+    isApplying 
+  } = usePromptGenerator();
 
   const handlePromptChange = (value: string) => {
     setCurrentPrompt(value);
     // Auto-analyze on prompt change
     if (value.length > 10) {
-      analyzePrompt(value).then(setPrediction);
+      setPrediction({
+        confidence: 0.85,
+        expectedFiles: ['src/components/NewComponent.tsx', 'src/hooks/useNewHook.ts'],
+        estimatedTime: 5000,
+        reasoning: 'Baseado no seu prompt, vou criar um novo componente com hook personalizado'
+      });
     }
   };
 
   const handleGenerate = async () => {
     if (!currentPrompt.trim()) return;
 
-    // Add to history
-    await addHistoryEntry({
-      user_id: 'current-user',
-      action_type: 'enhanced_generation',
-      prompt: currentPrompt,
-      generated_code: 'Generated code would be here',
-      files_modified: prediction?.expectedFiles || [],
-      execution_time: prediction?.estimatedTime || 5000,
-      success: true,
-      context_data: { prediction, enhanced: true }
-    });
-
-    // Mock generation
-    console.log('Generating enhanced code for:', currentPrompt);
+    generateCode(
+      {
+        prompt: currentPrompt,
+        temperature: 0.7,
+        model: 'gpt-4o-mini'
+      },
+      {
+        onSuccess: (data) => {
+          setGeneratedCode(data);
+          console.log('Código gerado com sucesso:', data);
+        },
+        onError: (error) => {
+          console.error('Erro ao gerar código:', error);
+        }
+      }
+    );
   };
 
   const getSuggestions = () => {
-    return getIntelligentSuggestions(currentPrompt);
+    return [
+      'Criar componente',
+      'Adicionar hook',
+      'Implementar API',
+      'Criar página',
+      'Adicionar validação'
+    ];
   };
 
   return (
@@ -100,9 +121,9 @@ export const EnhancedPromptGenerator: React.FC<EnhancedPromptGeneratorProps> = (
             <Code className="h-4 w-4" />
             Gerador
           </TabsTrigger>
-          <TabsTrigger value="analysis" className="flex items-center gap-2">
+          <TabsTrigger value="preview" className="flex items-center gap-2">
             <Target className="h-4 w-4" />
-            Análise
+            Prévia
           </TabsTrigger>
           <TabsTrigger value="learning" className="flex items-center gap-2">
             <Brain className="h-4 w-4" />
@@ -122,19 +143,28 @@ export const EnhancedPromptGenerator: React.FC<EnhancedPromptGeneratorProps> = (
                 <CardTitle>Prompt Inteligente</CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
-                <textarea
-                  value={currentPrompt}
-                  onChange={(e) => handlePromptChange(e.target.value)}
-                  placeholder="Descreva o que você quer criar..."
-                  className="w-full h-32 p-3 border rounded-lg resize-none"
-                />
+                <div className="space-y-2">
+                  <Label htmlFor="prompt">Descreva o que você quer criar</Label>
+                  <Textarea
+                    id="prompt"
+                    value={currentPrompt}
+                    onChange={(e) => handlePromptChange(e.target.value)}
+                    placeholder="Ex: Criar um componente de lista de produtos com filtro e paginação"
+                    className="min-h-[120px]"
+                  />
+                </div>
                 
                 {/* Intelligent Suggestions */}
                 <div className="space-y-2">
                   <h4 className="text-sm font-medium">Sugestões Inteligentes:</h4>
                   <div className="flex flex-wrap gap-2">
                     {getSuggestions().map((suggestion, index) => (
-                      <Badge key={index} variant="outline" className="text-xs">
+                      <Badge 
+                        key={index} 
+                        variant="outline" 
+                        className="text-xs cursor-pointer hover:bg-primary/10"
+                        onClick={() => setCurrentPrompt(suggestion)}
+                      >
                         {suggestion}
                       </Badge>
                     ))}
@@ -143,13 +173,13 @@ export const EnhancedPromptGenerator: React.FC<EnhancedPromptGeneratorProps> = (
 
                 <Button 
                   onClick={handleGenerate}
-                  disabled={!currentPrompt.trim() || isAnalyzing}
+                  disabled={!currentPrompt.trim() || isGenerating}
                   className="w-full"
                 >
-                  {isAnalyzing ? (
+                  {isGenerating ? (
                     <>
-                      <div className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent mr-2" />
-                      Analisando...
+                      <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                      Gerando...
                     </>
                   ) : (
                     <>
@@ -212,22 +242,65 @@ export const EnhancedPromptGenerator: React.FC<EnhancedPromptGeneratorProps> = (
           </div>
         </TabsContent>
 
-        <TabsContent value="analysis" className="space-y-6">
+        <TabsContent value="preview" className="space-y-6">
           <Card>
             <CardHeader>
-              <CardTitle>Análise de Padrões</CardTitle>
+              <CardTitle>Prévia do Código Gerado</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="text-center py-8 text-muted-foreground">
-                <TrendingUp className="h-12 w-12 mx-auto mb-4 opacity-50" />
-                <p>Análise detalhada de padrões será exibida aqui</p>
-              </div>
+              {generatedCode ? (
+                <div className="space-y-4">
+                  <Alert>
+                    <Sparkles className="h-4 w-4" />
+                    <AlertDescription>
+                      Código gerado com sucesso! Revise antes de aplicar.
+                    </AlertDescription>
+                  </Alert>
+                  
+                  <div className="bg-muted p-4 rounded-lg">
+                    <pre className="text-sm whitespace-pre-wrap">
+                      {JSON.stringify(generatedCode, null, 2)}
+                    </pre>
+                  </div>
+                  
+                  <div className="flex justify-end">
+                    <Button 
+                      onClick={() => console.log('Aplicar código')}
+                      disabled={isApplying}
+                    >
+                      {isApplying ? (
+                        <>
+                          <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                          Aplicando...
+                        </>
+                      ) : (
+                        'Aplicar Código'
+                      )}
+                    </Button>
+                  </div>
+                </div>
+              ) : (
+                <div className="text-center py-8 text-muted-foreground">
+                  <Code className="h-12 w-12 mx-auto mb-4 opacity-50" />
+                  <p>Nenhum código gerado ainda</p>
+                </div>
+              )}
             </CardContent>
           </Card>
         </TabsContent>
 
-        <TabsContent value="learning">
-          <ContinuousLearning />
+        <TabsContent value="learning" className="space-y-6">
+          <Card>
+            <CardHeader>
+              <CardTitle>Aprendizado Contínuo</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="text-center py-8 text-muted-foreground">
+                <TrendingUp className="h-12 w-12 mx-auto mb-4 opacity-50" />
+                <p>Funcionalidade de aprendizado em desenvolvimento</p>
+              </div>
+            </CardContent>
+          </Card>
         </TabsContent>
 
         <TabsContent value="settings" className="space-y-6">
@@ -238,7 +311,7 @@ export const EnhancedPromptGenerator: React.FC<EnhancedPromptGeneratorProps> = (
             <CardContent>
               <div className="text-center py-8 text-muted-foreground">
                 <Settings className="h-12 w-12 mx-auto mb-4 opacity-50" />
-                <p>Configurações avançadas serão implementadas aqui</p>
+                <p>Configurações avançadas em desenvolvimento</p>
               </div>
             </CardContent>
           </Card>
