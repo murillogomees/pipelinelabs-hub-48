@@ -1,30 +1,28 @@
+
 import React, { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
-import { AlertCircle, CheckCircle, Upload, Key, Calendar, Shield, Trash2 } from 'lucide-react';
-import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
+import { AlertCircle, Upload, Trash2, CheckCircle, XCircle } from 'lucide-react';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 import { useCertificateManager } from '@/hooks/useCertificateManager';
-import { SecureInput } from '@/components/Security';
 
 export function CertificadoTab() {
-  const {
-    isUploading,
-    isValidating,
-    validateAndUploadCertificate,
-    validateCertificate,
-    getCertificateStatus,
-    getDaysUntilExpiration,
-    removeCertificate,
-    settings
-  } = useCertificateManager();
-
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [password, setPassword] = useState('');
+  const [isUploading, setIsUploading] = useState(false);
+  
+  const {
+    certificates,
+    isLoading,
+    uploadCertificate,
+    removeCertificate,
+    refetch
+  } = useCertificateManager();
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
       setSelectedFile(file);
@@ -32,218 +30,160 @@ export function CertificadoTab() {
   };
 
   const handleUpload = async () => {
-    if (!selectedFile || !password) {
-      return;
-    }
-    
-    await validateAndUploadCertificate(selectedFile, password);
-    
-    // Clear form after successful upload
-    setSelectedFile(null);
-    setPassword('');
-    
-    // Reset file input
-    const fileInput = document.getElementById('certificate-file') as HTMLInputElement;
-    if (fileInput) {
-      fileInput.value = '';
+    if (!selectedFile || !password) return;
+
+    setIsUploading(true);
+    try {
+      await uploadCertificate(selectedFile, password);
+      setSelectedFile(null);
+      setPassword('');
+      refetch();
+    } catch (error) {
+      console.error('Erro ao fazer upload:', error);
+    } finally {
+      setIsUploading(false);
     }
   };
 
-  const getStatusBadge = (): JSX.Element => {
-    const status = getCertificateStatus();
-    
+  const handleRemove = async (certificateId: string) => {
+    try {
+      await removeCertificate(certificateId);
+      refetch();
+    } catch (error) {
+      console.error('Erro ao remover certificado:', error);
+    }
+  };
+
+  const getCertificateStatus = (expiresAt: string) => {
+    const now = new Date();
+    const expirationDate = new Date(expiresAt);
+    const daysUntilExpiration = Math.ceil((expirationDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
+
+    if (daysUntilExpiration <= 0) {
+      return { status: 'expired', variant: 'destructive' as const, text: 'Expirado' };
+    } else if (daysUntilExpiration <= 30) {
+      return { status: 'expiring', variant: 'secondary' as const, text: `Expira em ${daysUntilExpiration} dias` };
+    } else {
+      return { status: 'valid', variant: 'default' as const, text: 'Válido' };
+    }
+  };
+
+  const getStatusIcon = (status: string) => {
     switch (status) {
-      case 'none':
-        return <Badge variant="secondary">Não configurado</Badge>;
-      case 'expired':
-        return <Badge variant="destructive">Expirado</Badge>;
-      case 'expiring':
-        return <Badge variant="outline" className="border-yellow-500 text-yellow-600">Expira em breve</Badge>;
       case 'valid':
-        return <Badge variant="default" className="bg-green-500">Válido</Badge>;
+        return <CheckCircle className="h-4 w-4 text-green-600" />;
+      case 'expired':
+        return <XCircle className="h-4 w-4 text-red-600" />;
+      case 'expiring':
+        return <AlertCircle className="h-4 w-4 text-yellow-600" />;
       default:
-        return <Badge variant="secondary">Desconhecido</Badge>;
+        return <AlertCircle className="h-4 w-4 text-gray-600" />;
     }
   };
-
-  // Use only existing database fields
-  const hasUploadedCertificate = settings?.certificate_data;
-  const certificateName = settings?.certificate_cn || 'N/A';
-  const certificateExpiration = settings?.certificate_expires_at;
 
   return (
     <div className="space-y-6">
       <Card>
         <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Shield className="h-5 w-5" />
-            Certificado Digital A1
-          </CardTitle>
+          <CardTitle>Upload de Certificado Digital</CardTitle>
           <CardDescription>
-            Configure seu certificado digital A1 para emissão de notas fiscais
+            Faça upload do seu certificado digital A1 (.p12 ou .pfx)
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
-          <div className="flex items-center justify-between">
-            <span className="text-sm font-medium">Status do Certificado:</span>
-            {getStatusBadge()}
+          <div className="space-y-2">
+            <Label htmlFor="certificate-file">Arquivo do Certificado</Label>
+            <Input
+              id="certificate-file"
+              type="file"
+              accept=".p12,.pfx"
+              onChange={handleFileSelect}
+            />
           </div>
 
-          {hasUploadedCertificate && (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 p-4 bg-muted rounded-lg">
-              <div className="flex items-center gap-2">
-                <Key className="h-4 w-4 text-muted-foreground" />
-                <div>
-                  <p className="text-sm font-medium">Nome do Certificado</p>
-                  <p className="text-xs text-muted-foreground">{certificateName}</p>
-                </div>
-              </div>
-              <div className="flex items-center gap-2">
-                <Calendar className="h-4 w-4 text-muted-foreground" />
-                <div>
-                  <p className="text-sm font-medium">Expira em</p>
-                  <p className="text-xs text-muted-foreground">
-                    {certificateExpiration 
-                      ? `${getDaysUntilExpiration()} dias (${new Date(certificateExpiration).toLocaleDateString('pt-BR')})`
-                      : 'N/A'
-                    }
-                  </p>
-                </div>
-              </div>
-            </div>
-          )}
-
-          <div className="space-y-4">
-            <div>
-              <Label htmlFor="certificate-file">Arquivo do Certificado (.pfx ou .p12)</Label>
-              <Input
-                id="certificate-file"
-                type="file"
-                accept=".pfx,.p12"
-                onChange={handleFileChange}
-                className="mt-1"
-              />
-              {selectedFile && (
-                <p className="text-xs text-muted-foreground mt-1">
-                  Arquivo selecionado: {selectedFile.name}
-                </p>
-              )}
-            </div>
-
-            <div>
-              <Label htmlFor="certificate-password">Senha do Certificado</Label>
-              <SecureInput
-                id="certificate-password"
-                type="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                placeholder="Digite a senha do certificado"
-                className="mt-1"
-              />
-            </div>
-
-            <Button 
-              onClick={handleUpload}
-              disabled={!selectedFile || !password || isUploading}
-              className="w-full"
-            >
-              {isUploading ? (
-                <>
-                  <Upload className="mr-2 h-4 w-4 animate-spin" />
-                  {isValidating ? 'Validando...' : 'Enviando...'}
-                </>
-              ) : (
-                <>
-                  <Upload className="mr-2 h-4 w-4" />
-                  Enviar Certificado
-                </>
-              )}
-            </Button>
+          <div className="space-y-2">
+            <Label htmlFor="certificate-password">Senha do Certificado</Label>
+            <Input
+              id="certificate-password"
+              type="password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              placeholder="Digite a senha do certificado"
+            />
           </div>
 
-          {hasUploadedCertificate && (
-            <div className="pt-4 border-t space-y-4">
-              <div className="flex items-center justify-between">
-                <h4 className="text-sm font-medium">Certificado Atual</h4>
-                <div className="flex gap-2">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={validateCertificate}
-                    disabled={isValidating}
-                  >
-                    {isValidating ? 'Validando...' : 'Validar'}
-                  </Button>
-                  <AlertDialog>
-                    <AlertDialogTrigger asChild>
-                      <Button variant="destructive" size="sm">
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
-                    </AlertDialogTrigger>
-                    <AlertDialogContent>
-                      <AlertDialogHeader>
-                        <AlertDialogTitle>Remover Certificado</AlertDialogTitle>
-                        <AlertDialogDescription>
-                          Tem certeza que deseja remover o certificado? Esta ação não pode ser desfeita.
-                        </AlertDialogDescription>
-                      </AlertDialogHeader>
-                      <AlertDialogFooter>
-                        <AlertDialogCancel>Cancelar</AlertDialogCancel>
-                        <AlertDialogAction onClick={removeCertificate}>
-                          Remover
-                        </AlertDialogAction>
-                      </AlertDialogFooter>
-                    </AlertDialogContent>
-                  </AlertDialog>
-                </div>
-              </div>
-              
-              <div className="text-xs text-muted-foreground space-y-1">
-                <p>Certificado: {certificateName}</p>
-                <p>Status: Ativo</p>
-                {certificateExpiration && (
-                  <p>Validade: {new Date(certificateExpiration).toLocaleDateString('pt-BR')}</p>
-                )}
-              </div>
-            </div>
-          )}
+          <Button 
+            onClick={handleUpload}
+            disabled={!selectedFile || !password || isUploading}
+            className="w-full"
+          >
+            <Upload className="h-4 w-4 mr-2" />
+            {isUploading ? 'Enviando...' : 'Enviar Certificado'}
+          </Button>
+
+          <Alert>
+            <AlertCircle className="h-4 w-4" />
+            <AlertDescription>
+              O certificado será criptografado e armazenado com segurança. 
+              Certifique-se de usar um certificado válido A1.
+            </AlertDescription>
+          </Alert>
         </CardContent>
       </Card>
 
       <Card>
         <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <AlertCircle className="h-5 w-5" />
-            Informações de Segurança
-          </CardTitle>
+          <CardTitle>Certificados Instalados</CardTitle>
+          <CardDescription>
+            Gerencie seus certificados digitais
+          </CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="space-y-2 text-sm text-muted-foreground">
-            <p className="flex items-center gap-2">
-              <CheckCircle className="h-4 w-4 text-green-500" />
-              Certificado criptografado com AES-256-GCM
-            </p>
-            <p className="flex items-center gap-2">
-              <CheckCircle className="h-4 w-4 text-green-500" />
-              Senha criptografada separadamente
-            </p>
-            <p className="flex items-center gap-2">
-              <CheckCircle className="h-4 w-4 text-green-500" />
-              Chaves de criptografia externas (KMS)
-            </p>
-            <p className="flex items-center gap-2">
-              <CheckCircle className="h-4 w-4 text-green-500" />
-              Acesso auditado e monitorado
-            </p>
-            <p className="flex items-center gap-2">
-              <CheckCircle className="h-4 w-4 text-green-500" />
-              Descriptografia apenas em memória
-            </p>
-            <p className="flex items-center gap-2">
-              <CheckCircle className="h-4 w-4 text-green-500" />
-              Conformidade com LGPD
-            </p>
-          </div>
+          {isLoading ? (
+            <div className="text-center py-8">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto"></div>
+              <p className="mt-2 text-sm text-muted-foreground">Carregando certificados...</p>
+            </div>
+          ) : certificates.length === 0 ? (
+            <div className="text-center py-8 text-muted-foreground">
+              <AlertCircle className="h-12 w-12 mx-auto mb-4 opacity-50" />
+              <p>Nenhum certificado instalado</p>
+            </div>
+          ) : (
+            <div className="space-y-4">
+              {certificates.map((cert) => {
+                const statusInfo = getCertificateStatus(cert.expires_at);
+                
+                return (
+                  <div key={cert.id} className="border rounded-lg p-4">
+                    <div className="flex items-start justify-between">
+                      <div className="space-y-1">
+                        <div className="flex items-center space-x-2">
+                          {getStatusIcon(statusInfo.status)}
+                          <h3 className="font-medium">{cert.certificate_cn}</h3>
+                        </div>
+                        <p className="text-sm text-muted-foreground">
+                          Válido até: {new Date(cert.expires_at).toLocaleDateString('pt-BR')}
+                        </p>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <Badge variant={statusInfo.variant}>
+                          {statusInfo.text}
+                        </Badge>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => handleRemove(cert.id)}
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
         </CardContent>
       </Card>
     </div>

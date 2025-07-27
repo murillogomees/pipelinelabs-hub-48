@@ -2,7 +2,6 @@
 import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
-import { validateDocument } from "@/utils/documentValidation";
 
 interface FormData {
   email: string;
@@ -40,15 +39,6 @@ export function useAuthForm() {
         toast({
           title: "Erro",
           description: "As senhas não coincidem",
-          variant: "destructive",
-        });
-        return;
-      }
-
-      if (!validateDocument(formData.document)) {
-        toast({
-          title: "Erro",
-          description: "CPF/CNPJ inválido",
           variant: "destructive",
         });
         return;

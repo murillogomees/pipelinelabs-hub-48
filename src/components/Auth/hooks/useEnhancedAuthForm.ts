@@ -12,17 +12,13 @@ interface PasswordStrength {
   feedback: string[];
 }
 
-interface UseEnhancedAuthFormProps {
-  onSuccess?: () => void;
-}
-
-export function useEnhancedAuthForm({ onSuccess }: UseEnhancedAuthFormProps = {}) {
+export function useEnhancedAuthForm() {
   const [passwordStrength, setPasswordStrength] = useState<PasswordStrength | null>(null);
   const [isPasswordValid, setIsPasswordValid] = useState(false);
   
   const { logAuthAttempt, logSecurityViolation } = useSecurityLogger();
   
-  const baseAuthForm = useAuthForm({ onSuccess });
+  const baseAuthForm = useAuthForm();
 
   const enhancedHandleAuth = async (
     isSignUp: boolean,
@@ -65,9 +61,16 @@ export function useEnhancedAuthForm({ onSuccess }: UseEnhancedAuthFormProps = {}
     }
 
     try {
-      // Call the original auth handler (without documentType as it's not used in the base handler)
-      const { documentType, ...baseFormData } = formData;
-      await baseAuthForm.handleAuth(isSignUp, baseFormData);
+      // Simulate the auth process with the base form
+      const fakeEvent = {
+        preventDefault: () => {},
+        target: {
+          email: { value: formData.email },
+          password: { value: formData.password }
+        }
+      } as any;
+
+      await baseAuthForm.handleSubmit(fakeEvent);
       
       // Log successful auth attempt
       await logAuthAttempt(formData.email, true);

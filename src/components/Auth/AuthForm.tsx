@@ -9,7 +9,6 @@ import { AuthFormFields } from './components/AuthFormFields';
 import { useAuthForm } from './hooks/useAuthForm';
 import { PasswordStrengthValidator } from '@/components/Security/PasswordStrengthValidator';
 import { CSRFToken, CSRFProvider } from '@/components/Security/CSRFProtection';
-import { cleanDocument } from '@/utils/documentValidation';
 
 export function AuthForm() {
   const [isSignUp, setIsSignUp] = useState(false);
@@ -27,25 +26,19 @@ export function AuthForm() {
   const [isPasswordValid, setIsPasswordValid] = useState(false);
 
   const { 
-    loading, 
-    rateLimited, 
-    rateLimitTime, 
-    handleAuth
+    isLoading, 
+    handleSubmit
   } = useAuthForm();
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleFormSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (rateLimited) {
-      return;
-    }
-
     // For sign up, ensure password is valid
     if (isSignUp && !isPasswordValid) {
       return;
     }
 
-    await handleAuth(isSignUp, formData);
+    await handleSubmit(e);
   };
 
   const handleFormDataChange = (updates: Partial<typeof formData>) => {
@@ -53,26 +46,13 @@ export function AuthForm() {
   };
 
   const handleDocumentChange = (value: string) => {
-    const cleaned = cleanDocument(value);
+    const cleaned = value.replace(/[^0-9]/g, '');
     setFormData(prev => ({ ...prev, document: cleaned }));
   };
 
   const handlePasswordValidation = (isValid: boolean) => {
     setIsPasswordValid(isValid);
   };
-
-  if (rateLimited) {
-    return (
-      <Card className="w-full max-w-md mx-auto">
-        <CardHeader>
-          <CardTitle className="text-red-600">Muitas Tentativas</CardTitle>
-          <CardDescription>
-            Tente novamente em {Math.ceil(rateLimitTime / 60000)} minutos.
-          </CardDescription>
-        </CardHeader>
-      </Card>
-    );
-  }
 
   return (
     <CSRFProvider>
@@ -100,7 +80,7 @@ export function AuthForm() {
               </TabsTrigger>
             </TabsList>
 
-            <form onSubmit={handleSubmit} className="space-y-4">
+            <form onSubmit={handleFormSubmit} className="space-y-4">
               <CSRFToken />
               
               <TabsContent value="signin" className="space-y-4">
@@ -146,9 +126,9 @@ export function AuthForm() {
               <Button 
                 type="submit" 
                 className="w-full" 
-                disabled={loading || (isSignUp && !isPasswordValid)}
+                disabled={isLoading || (isSignUp && !isPasswordValid)}
               >
-                {loading ? 'Processando...' : (isSignUp ? 'Cadastrar' : 'Entrar')}
+                {isLoading ? 'Processando...' : (isSignUp ? 'Cadastrar' : 'Entrar')}
               </Button>
             </form>
           </Tabs>

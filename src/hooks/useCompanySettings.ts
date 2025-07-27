@@ -1,116 +1,105 @@
+
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import { Tables } from '@/integrations/supabase/types';
-import { useToast } from '@/hooks/use-toast';
+import { useAuth } from '@/components/Auth/AuthProvider';
+import { usePermissions } from '@/hooks/usePermissions';
 
-type CompanySettings = Tables<'company_settings'>;
+interface CompanySettings {
+  id: string;
+  company_id: string;
+  theme: string;
+  language: string;
+  timezone: string;
+  currency: string;
+  date_format: string;
+  time_format: string;
+  fiscal_year_start: string;
+  default_tax_rate: number;
+  settings: any;
+  created_at: string;
+  updated_at: string;
+}
 
 export function useCompanySettings() {
+  const { user } = useAuth();
+  const { isContratante, isSuperAdmin } = usePermissions();
   const [settings, setSettings] = useState<CompanySettings | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [saving, setSaving] = useState(false);
-  const { toast } = useToast();
+  const [isLoading, setIsLoading] = useState(true);
 
   const fetchSettings = async () => {
+    if (!user?.id) return;
+
     try {
-      setLoading(true);
-      
-      // Primeiro obter a empresa do usuário
-      const { data: userCompanyData } = await supabase
-        .from('user_companies')
-        .select('company_id')
-        .eq('user_id', (await supabase.auth.getUser()).data.user?.id)
-        .eq('is_active', true)
-        .order('created_at', { ascending: false })
+      setIsLoading(true);
+
+      // Buscar configurações da primeira empresa disponível
+      const { data: companiesData, error: companiesError } = await supabase
+        .from('companies')
+        .select('id')
         .limit(1);
 
-      const companyId = userCompanyData?.[0]?.company_id;
-      
-      if (!companyId) {
-        throw new Error('Usuário não possui empresa associada');
+      if (companiesError || !companiesData?.[0]) {
+        console.error('Erro ao buscar empresa:', companiesError);
+        return;
       }
 
-      const { data, error } = await supabase
+      const companyId = companiesData[0].id;
+
+      const { data: settingsData, error: settingsError } = await supabase
         .from('company_settings')
         .select('*')
         .eq('company_id', companyId)
-        .maybeSingle();
+        .single();
 
-      if (error) throw error;
-
-      if (data) {
-        setSettings(data);
-      } else {
-        // Create default settings if none exist
-        const { data: newSettingsData, error: insertError } = await supabase
-          .from('company_settings')
-          .insert({
-            company_id: companyId
-          })
-          .select();
-
-        if (insertError) throw insertError;
-        const newSettings = newSettingsData?.[0];
-        if (newSettings) {
-          setSettings(newSettings);
-        }
+      if (settingsError && settingsError.code !== 'PGRST116') {
+        console.error('Erro ao buscar configurações:', settingsError);
+        return;
       }
+
+      setSettings(settingsData);
     } catch (error) {
-      console.error('Erro ao carregar configurações:', error);
-      toast({
-        title: "Erro",
-        description: "Não foi possível carregar as configurações",
-        variant: "destructive"
-      });
+      console.error('Erro inesperado:', error);
     } finally {
-      setLoading(false);
+      setIsLoading(false);
     }
   };
 
   const updateSettings = async (updates: Partial<CompanySettings>) => {
+    if (!settings || (!isContratante && !isSuperAdmin)) {
+      return false;
+    }
+
     try {
-      setSaving(true);
-      
-      const { data: updatedData, error } = await supabase
+      const { error } = await supabase
         .from('company_settings')
-        .update(updates)
-        .eq('id', settings?.id)
-        .select();
+        .update({
+          ...updates,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', settings.id);
 
-      if (error) throw error;
-
-      const updatedSettings = updatedData?.[0];
-      if (updatedSettings) {
-        setSettings(updatedSettings);
+      if (error) {
+        console.error('Erro ao atualizar configurações:', error);
+        return false;
       }
-      toast({
-        title: "Sucesso",
-        description: "Configurações salvas com sucesso"
-      });
 
+      setSettings(prev => prev ? { ...prev, ...updates } : null);
       return true;
     } catch (error) {
-      console.error('Erro ao salvar configurações:', error);
-      toast({
-        title: "Erro",
-        description: "Não foi possível salvar as configurações",
-        variant: "destructive"
-      });
+      console.error('Erro inesperado ao atualizar configurações:', error);
       return false;
-    } finally {
-      setSaving(false);
     }
   };
 
   useEffect(() => {
     fetchSettings();
-  }, []);
+  }, [user?.id]);
 
   return {
     settings,
-    loading,
-    saving,
+    isLoading,
     updateSettings,
-    refreshSettings: fetchSettings
+    refetch: fetchSettings,
+    canEdit: isContratante || isSuperAdmin
   };
 }

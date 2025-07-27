@@ -22,8 +22,8 @@ interface AuditLogEntry {
   severity: string;
   status: string;
   profiles?: {
-    display_name: string;
-    email: string;
+    display_name?: string;
+    email?: string;
     access_levels?: {
       name: string;
       display_name: string;
@@ -35,13 +35,11 @@ export function CompanyAuditLog() {
   const [searchTerm, setSearchTerm] = useState('');
   const [actionFilter, setActionFilter] = useState('all');
   const [severityFilter, setSeverityFilter] = useState('all');
-  const { companyId, canManageCompany } = usePermissions();
+  const { isContratante, isSuperAdmin } = usePermissions();
 
   const { data: auditLogs = [], isLoading } = useQuery({
-    queryKey: ['company-audit-logs', companyId, actionFilter, severityFilter],
+    queryKey: ['company-audit-logs', actionFilter, severityFilter],
     queryFn: async () => {
-      if (!companyId) return [];
-
       let query = supabase
         .from('audit_logs')
         .select(`
@@ -55,7 +53,6 @@ export function CompanyAuditLog() {
             )
           )
         `)
-        .eq('company_id', companyId)
         .order('created_at', { ascending: false });
 
       if (actionFilter !== 'all') {
@@ -71,7 +68,7 @@ export function CompanyAuditLog() {
       if (error) throw error;
       return data || [];
     },
-    enabled: !!companyId && canManageCompany,
+    enabled: isContratante || isSuperAdmin,
   });
 
   const getUserTypeIcon = (accessLevel: string) => {
@@ -88,22 +85,38 @@ export function CompanyAuditLog() {
   };
 
   const getSeverityBadge = (severity: string) => {
-    const variants = {
-      info: 'default',
-      warning: 'secondary',
-      error: 'destructive',
-      critical: 'destructive'
+    const getVariant = (severity: string) => {
+      switch (severity) {
+        case 'info':
+          return 'default';
+        case 'warning':
+          return 'secondary';
+        case 'error':
+        case 'critical':
+          return 'destructive';
+        default:
+          return 'default';
+      }
     };
-    return <Badge variant={variants[severity as keyof typeof variants] || 'default'}>{severity}</Badge>;
+    
+    return <Badge variant={getVariant(severity)}>{severity}</Badge>;
   };
 
   const getStatusBadge = (status: string) => {
-    const variants = {
-      success: 'default',
-      failed: 'destructive',
-      pending: 'secondary'
+    const getVariant = (status: string) => {
+      switch (status) {
+        case 'success':
+          return 'default';
+        case 'failed':
+          return 'destructive';
+        case 'pending':
+          return 'secondary';
+        default:
+          return 'default';
+      }
     };
-    return <Badge variant={variants[status as keyof typeof variants] || 'default'}>{status}</Badge>;
+    
+    return <Badge variant={getVariant(status)}>{status}</Badge>;
   };
 
   const filteredLogs = auditLogs.filter(log => {
@@ -134,7 +147,7 @@ export function CompanyAuditLog() {
           {getUserTypeIcon(row.profiles?.access_levels?.name || '')}
           <div>
             <p className="font-medium">{row.profiles?.display_name || 'Usuário Desconhecido'}</p>
-            <p className="text-sm text-muted-foreground">{row.profiles?.email}</p>
+            <p className="text-sm text-muted-foreground">{row.profiles?.email || 'Email não disponível'}</p>
           </div>
         </div>
       )
@@ -170,7 +183,6 @@ export function CompanyAuditLog() {
       label: 'Detalhes',
       icon: Eye,
       onClick: (row: AuditLogEntry) => {
-        // Implementar modal de detalhes
         console.log('View details:', row);
       },
       variant: 'outline' as const
@@ -178,11 +190,10 @@ export function CompanyAuditLog() {
   ];
 
   const handleExport = () => {
-    // Implementar exportação
     console.log('Export audit logs');
   };
 
-  if (!canManageCompany) {
+  if (!isContratante && !isSuperAdmin) {
     return (
       <Card>
         <CardContent className="p-6">

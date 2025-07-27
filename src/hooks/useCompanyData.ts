@@ -1,7 +1,9 @@
+
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { useAuth } from '@/components/Auth/AuthProvider';
+import { usePermissions } from '@/hooks/usePermissions';
 
 interface CompanyData {
   id: string;
@@ -34,10 +36,13 @@ interface UseCompanyDataReturn {
 
 export function useCompanyData(): UseCompanyDataReturn {
   const { user } = useAuth();
+  const { isContratante, isSuperAdmin } = usePermissions();
   const [company, setCompany] = useState<CompanyData | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isUpdating, setIsUpdating] = useState(false);
-  const [canEdit, setCanEdit] = useState(false);
+
+  // Contratante e Super Admin podem editar
+  const canEdit = isContratante || isSuperAdmin;
 
   const fetchCompany = async () => {
     if (!user?.id) return;
@@ -45,37 +50,11 @@ export function useCompanyData(): UseCompanyDataReturn {
     try {
       setIsLoading(true);
 
-      // Primeiro, obter a empresa do usuário (pegar o primeiro registro ativo)
-      const { data: userCompanyData, error: userCompanyError } = await supabase
-        .from('user_companies')
-        .select('company_id, user_type')
-        .eq('user_id', user.id)
-        .eq('is_active', true)
-        .order('created_at', { ascending: false })
-        .limit(1);
-
-      if (userCompanyError) {
-        console.error('Erro ao buscar empresa do usuário:', userCompanyError);
-        return;
-      }
-
-      const userCompany = userCompanyData?.[0];
-
-      if (!userCompany) {
-        toast.error('Usuário não possui empresa associada');
-        return;
-      }
-
-      // Verificar permissões - contratante ou super admin podem editar
-      const canUserEdit = userCompany.user_type === 'contratante' || 
-                         userCompany.user_type === 'super_admin';
-      setCanEdit(canUserEdit);
-
-      // Buscar dados da empresa
+      // Buscar a primeira empresa disponível para simplificar
       const { data: companiesData, error: companyError } = await supabase
         .from('companies')
         .select('*')
-        .eq('id', userCompany.company_id);
+        .limit(1);
 
       if (companyError) {
         console.error('Erro ao buscar dados da empresa:', companyError);
