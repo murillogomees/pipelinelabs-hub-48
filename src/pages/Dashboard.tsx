@@ -1,232 +1,158 @@
-import React, { useState, useEffect } from 'react';
-import { DashboardWidget } from '@/components/Dashboard/DashboardWidget';
+
+import React, { useState } from 'react';
+import { useQuery } from '@tanstack/react-query';
+import { supabase } from '@/integrations/supabase/client';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Plus, Grid, Smartphone } from 'lucide-react';
+import { useDashboard, useUpdateDashboard, WIDGET_TYPES, Widget } from '@/hooks/useDashboard';
+import { usePermissions } from '@/hooks/usePermissions';
 import { WidgetSelector } from '@/components/Dashboard/WidgetSelector';
-import { AnalyticsTracker } from '@/components/Dashboard/AnalyticsTracker';
+import { ResponsiveWidgetContainer } from '@/components/Dashboard/ResponsiveWidgetContainer';
+import { MobileWidgetList } from '@/components/Dashboard/MobileWidgetList';
 import { ResponsiveDashboardHeader } from '@/components/Dashboard/ResponsiveDashboardHeader';
 import { EmptyDashboardState } from '@/components/Dashboard/EmptyDashboardState';
-import { MobileWidgetList } from '@/components/Dashboard/MobileWidgetList';
-import { ResponsiveWidgetContainer } from '@/components/Dashboard/ResponsiveWidgetContainer';
-import { ResponsiveContainer } from '@/components/ui/responsive-layout';
-import { useDashboard, useUpdateDashboard, WIDGET_TYPES, Widget } from '@/hooks/useDashboard';
-import { useAuth } from '@/components/Auth/AuthProvider';
-import { useAnalyticsTracker } from '@/hooks/useAnalyticsTracker';
-import { supabase } from '@/integrations/supabase/client';
-import { Responsive, WidthProvider } from 'react-grid-layout';
-import { useResponsiveGrid } from '@/hooks/use-responsive-grid';
+import { useMobile } from '@/hooks/use-mobile';
 
-const ResponsiveGridLayout = WidthProvider(Responsive);
-
-export default function Dashboard() {
-  const { user } = useAuth();
-  const { data: dashboardConfig } = useDashboard();
-  const updateDashboard = useUpdateDashboard();
-  const { trackButtonClick, trackFeatureUsage } = useAnalyticsTracker();
-  const [showWidgetSelector, setShowWidgetSelector] = useState(false);
-  const [widgets, setWidgets] = useState<Widget[]>([]);
-  const [layouts, setLayouts] = useState({});
+const Dashboard: React.FC = () => {
+  const { dashboardData, isLoading } = useDashboard();
+  const { updateWidget, addWidget, removeWidget } = useUpdateDashboard();
+  const { currentCompanyId } = usePermissions();
+  const isMobile = useMobile();
   
-  // Responsive grid configuration
-  const { gridConfig, isMobile, isTablet } = useResponsiveGrid();
-
-  // Initialize widgets from saved config
-  useEffect(() => {
-    if (dashboardConfig?.widgets) {
-      setWidgets(dashboardConfig.widgets);
-      // Convert widgets to react-grid-layout format
-      const layoutObj = dashboardConfig.widgets.reduce((acc, widget) => {
-        acc[widget.id] = {
-          i: widget.id,
-          x: widget.position.x,
-          y: widget.position.y,
-          w: widget.position.w,
-          h: widget.position.h,
-        };
-        return acc;
-      }, {} as any);
-      setLayouts({ lg: Object.values(layoutObj) });
-    } else {
-      // Default widgets for new users
-      const defaultWidgets: Widget[] = [
-        {
-          id: 'default-sales',
-          type: 'sales_monthly',
-          title: WIDGET_TYPES.SALES_MONTHLY.title,
-          position: { x: 0, y: 0, w: 3, h: 2 },
-        },
-        {
-          id: 'default-orders',
-          type: 'pending_orders',
-          title: WIDGET_TYPES.PENDING_ORDERS.title,
-          position: { x: 3, y: 0, w: 3, h: 2 },
-        },
-        {
-          id: 'default-stock',
-          type: 'low_stock',
-          title: WIDGET_TYPES.LOW_STOCK.title,
-          position: { x: 0, y: 2, w: 3, h: 2 },
-        },
-      ];
-      setWidgets(defaultWidgets);
+  const [widgets, setWidgets] = useState<Widget[]>([
+    {
+      id: '1',
+      type: 'sales_overview',
+      title: 'Vendas',
+      x: 0,
+      y: 0,
+      w: 4,
+      h: 2,
+      data: dashboardData?.sales || []
+    },
+    {
+      id: '2',
+      type: 'products_stock',
+      title: 'Estoque',
+      x: 4,
+      y: 0,
+      w: 4,
+      h: 2,
+      data: dashboardData?.products || []
+    },
+    {
+      id: '3',
+      type: 'customers_overview',
+      title: 'Clientes',
+      x: 0,
+      y: 2,
+      w: 4,
+      h: 2,
+      data: dashboardData?.customers || []
     }
-  }, [dashboardConfig]);
+  ]);
 
-  // Get company_id from user context
-  const getCompanyId = async (): Promise<string> => {
-    const { data } = await supabase
-      .from('user_companies')
-      .select('company_id')
-      .eq('user_id', user?.id)
-      .eq('is_active', true)
-      .single();
-    
-    return data?.company_id || '';
-  };
+  const [isWidgetSelectorOpen, setIsWidgetSelectorOpen] = useState(false);
+  const [viewMode, setViewMode] = useState<'desktop' | 'mobile'>('desktop');
 
-  const handleAddWidget = async (widgetType: string) => {
-    const widgetConfig = Object.values(WIDGET_TYPES).find(w => w.id === widgetType);
+  const { data: dashboardConfig } = useQuery({
+    queryKey: ['dashboard-config', currentCompanyId],
+    queryFn: async () => {
+      if (!currentCompanyId) return null;
+
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('company_id', currentCompanyId)
+        .single();
+
+      if (error) {
+        console.error('Error fetching dashboard config:', error);
+        return null;
+      }
+
+      return data;
+    },
+    enabled: !!currentCompanyId
+  });
+
+  const handleAddWidget = (widgetType: string) => {
+    const widgetConfig = WIDGET_TYPES[widgetType];
     if (!widgetConfig) return;
 
-    // Track widget addition
-    trackFeatureUsage('dashboard', 'widget_added');
-    trackButtonClick('add_widget', `dashboard:${widgetType}`);
-
     const newWidget: Widget = {
-      id: `widget-${Date.now()}`,
+      id: Date.now().toString(),
       type: widgetType,
       title: widgetConfig.title,
-      position: {
-        x: (widgets.length * 3) % 6,
-        y: Math.floor((widgets.length * 3) / 6) * 2,
-        w: 3,
-        h: widgetConfig.defaultSize.h,
-      },
+      x: 0,
+      y: 0,
+      w: widgetConfig.defaultSize.w,
+      h: widgetConfig.defaultSize.h,
+      data: []
     };
 
-    const updatedWidgets = [...widgets, newWidget];
-    setWidgets(updatedWidgets);
-
-    // Save to database
-    const companyId = await getCompanyId();
-    updateDashboard.mutate({
-      company_id: companyId,
-      widgets: updatedWidgets,
-      layout_config: layouts,
-    });
-
-    setShowWidgetSelector(false);
+    setWidgets(prev => [...prev, newWidget]);
+    addWidget(widgetType);
+    setIsWidgetSelectorOpen(false);
   };
 
-  const handleRemoveWidget = async (widgetId: string) => {
-    const updatedWidgets = widgets.filter(w => w.id !== widgetId);
-    setWidgets(updatedWidgets);
-
-    // Save to database
-    const companyId = await getCompanyId();
-    updateDashboard.mutate({
-      company_id: companyId,
-      widgets: updatedWidgets,
-      layout_config: layouts,
-    });
+  const handleRemoveWidget = (widgetId: string) => {
+    setWidgets(prev => prev.filter(w => w.id !== widgetId));
+    removeWidget(widgetId);
   };
 
-  const handleLayoutChange = async (layout: any, allLayouts: any) => {
-    // Update widget positions
-    const updatedWidgets = widgets.map(widget => {
-      const layoutItem = layout.find((item: any) => item.i === widget.id);
-      if (layoutItem) {
-        return {
-          ...widget,
-          position: {
-            x: layoutItem.x,
-            y: layoutItem.y,
-            w: layoutItem.w,
-            h: layoutItem.h,
-          },
-        };
-      }
-      return widget;
-    });
-
-    setWidgets(updatedWidgets);
-    setLayouts(allLayouts);
-
-    // Save to database with debounce
-    const companyId = await getCompanyId();
-    updateDashboard.mutate({
-      company_id: companyId,
-      widgets: updatedWidgets,
-      layout_config: allLayouts,
-    });
+  const handleLayoutChange = (layout: any[]) => {
+    setWidgets(prev => prev.map(widget => {
+      const layoutItem = layout.find(item => item.i === widget.id);
+      return layoutItem ? { ...widget, x: layoutItem.x, y: layoutItem.y, w: layoutItem.w, h: layoutItem.h } : widget;
+    }));
   };
 
-  // Convert widgets to grid layout format
-  const gridLayout = widgets.map(widget => ({
-    i: widget.id,
-    x: widget.position.x,
-    y: widget.position.y,
-    w: widget.position.w,
-    h: widget.position.h,
-  }));
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+      </div>
+    );
+  }
 
   return (
-    <div className="space-y-8 min-h-screen bg-background">
-      <AnalyticsTracker />
-      
-      {/* Header */}
-      <ResponsiveDashboardHeader onAddWidget={() => setShowWidgetSelector(true)} />
+    <div className="space-y-6">
+      <ResponsiveDashboardHeader
+        viewMode={viewMode}
+        onViewModeChange={setViewMode}
+        onAddWidget={() => setIsWidgetSelectorOpen(true)}
+      />
 
-      {/* Content */}
-      <ResponsiveContainer>
-        {widgets.length > 0 ? (
-          // Show mobile list for many widgets on mobile, otherwise grid
-          isMobile && widgets.length > 4 ? (
-            <MobileWidgetList 
-              widgets={widgets} 
-              onRemove={handleRemoveWidget} 
+      {widgets.length === 0 ? (
+        <EmptyDashboardState onAddWidget={() => setIsWidgetSelectorOpen(true)} />
+      ) : (
+        <>
+          {(viewMode === 'desktop' && !isMobile) ? (
+            <ResponsiveWidgetContainer
+              widgets={widgets}
+              onLayoutChange={handleLayoutChange}
+              onRemoveWidget={handleRemoveWidget}
             />
           ) : (
-            <ResponsiveGridLayout
-              className="layout"
-              layouts={{ lg: gridLayout }}
-              onLayoutChange={handleLayoutChange}
-              breakpoints={gridConfig.breakpoints}
-              cols={gridConfig.cols}
-              rowHeight={gridConfig.rowHeight}
-              margin={gridConfig.margin}
-              containerPadding={gridConfig.containerPadding}
-              isDraggable={!isMobile}
-              isResizable={!isMobile}
-              useCSSTransforms={true}
-              preventCollision={false}
-              compactType="vertical"
-              autoSize={true}
-            >
-              {widgets.map((widget) => (
-                <div key={widget.id} className="h-full">
-                  <ResponsiveWidgetContainer compact={isMobile || isTablet}>
-                    <DashboardWidget
-                      widget={widget}
-                      onRemove={handleRemoveWidget}
-                      isDragHandle={!isMobile}
-                      className={isMobile ? "text-sm" : ""}
-                    />
-                  </ResponsiveWidgetContainer>
-                </div>
-              ))}
-            </ResponsiveGridLayout>
-          )
-        ) : (
-          <EmptyDashboardState onAddWidget={() => setShowWidgetSelector(true)} />
-        )}
-      </ResponsiveContainer>
+            <MobileWidgetList
+              widgets={widgets}
+              onRemove={handleRemoveWidget}
+            />
+          )}
+        </>
+      )}
 
-      {/* Widget Selector Modal */}
       <WidgetSelector
-        open={showWidgetSelector}
-        onOpenChange={setShowWidgetSelector}
+        open={isWidgetSelectorOpen}
+        onOpenChange={setIsWidgetSelectorOpen}
         onAddWidget={handleAddWidget}
         existingWidgets={widgets}
       />
     </div>
   );
-}
+};
+
+export default Dashboard;

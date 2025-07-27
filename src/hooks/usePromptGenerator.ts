@@ -1,374 +1,129 @@
 
-import { useState, useCallback, useMemo } from 'react';
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useMutation, useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
-import { toast } from '@/hooks/use-toast';
-import { useCurrentCompany } from '@/hooks/useCurrentCompany';
-
-interface PromptLog {
-  id: string;
-  prompt: string;
-  generated_code: GeneratedCode | null;
-  model_used: string;
-  temperature: number;
-  status: 'pending' | 'applied' | 'error' | 'rolled_back';
-  error_message?: string;
-  applied_files: string[];
-  created_at: string;
-  applied_at?: string;
-  rolled_back_at?: string;
-}
-
-interface GenerateCodeParams {
-  prompt: string;
-  temperature?: number;
-  model?: string;
-  isRevision?: boolean;
-  originalCode?: any;
-}
-
-interface GeneratedCode {
-  files: Record<string, string>;
-  sql: string[];
-  description: string;
-  suggestions?: Array<{
-    type: string;
-    title: string;
-    description: string;
-    code: string;
-  }>;
-  editable_sections?: Array<{
-    id: string;
-    title: string;
-    description: string;
-    content: string;
-  }>;
-  rawContent?: string;
-}
-
-// Type guard to check if generated_code is valid
-const isValidGeneratedCode = (code: any): code is GeneratedCode => {
-  return code && typeof code === 'object' && 'files' in code && typeof code.files === 'object';
-};
+import { useAuth } from '@/components/Auth/AuthProvider';
 
 export const usePromptGenerator = () => {
-  const queryClient = useQueryClient();
-  const { currentCompany } = useCurrentCompany();
+  const { user } = useAuth();
 
-  // Buscar logs de prompts com memoização
-  const promptLogsQuery = useQuery({
-    queryKey: ['prompt-logs', currentCompany?.id],
-    queryFn: async (): Promise<PromptLog[]> => {
-      try {
-        if (!currentCompany?.id) return [];
-
-        const { data, error } = await supabase
-          .from('prompt_logs')
-          .select('*')
-          .eq('company_id', currentCompany.id)
-          .order('created_at', { ascending: false })
-          .limit(50);
-
-        if (error) {
-          console.error('Error fetching prompt logs:', error);
-          return [];
-        }
-        
-        return (data || []).map(item => ({
-          id: item.id,
-          prompt: item.prompt,
-          generated_code: isValidGeneratedCode(item.generated_code) ? item.generated_code : null,
-          model_used: item.model_used,
-          temperature: item.temperature,
-          status: item.status as 'pending' | 'applied' | 'error' | 'rolled_back',
-          error_message: item.error_message,
-          applied_files: Array.isArray(item.applied_files) 
-            ? item.applied_files.map(file => String(file))
-            : [],
-          created_at: item.created_at,
-          applied_at: item.applied_at,
-          rolled_back_at: item.rolled_back_at,
-        }));
-      } catch (error) {
-        console.error('Error in promptLogs query:', error);
-        return [];
-      }
-    },
-    retry: 1,
-    staleTime: 30000,
-    refetchOnWindowFocus: false,
-    enabled: !!currentCompany?.id
-  });
-
-  // Gerar código com IA
-  const generateCodeMutation = useMutation({
-    mutationFn: async ({ prompt, temperature = 0.7, model = 'gpt-4o-mini', isRevision = false, originalCode = null }: GenerateCodeParams) => {
-      console.log('Iniciando geração de código...');
-
-      try {
-        if (!currentCompany?.id) {
-          throw new Error('Nenhuma empresa ativa encontrada');
-        }
-
-        // Primeiro, salvar o prompt no banco
-        const { data: user } = await supabase.auth.getUser();
-        if (!user.user) throw new Error('Usuário não autenticado');
-
-        console.log('Salvando prompt no banco...');
-        const { data: promptLog, error: logError } = await supabase
-          .from('prompt_logs')
-          .insert({
-            user_id: user.user.id,
-            company_id: currentCompany.id,
-            prompt,
-            model_used: model,
-            temperature,
-            status: 'pending'
-          })
-          .select()
-          .single();
-
-        if (logError) {
-          console.error('Error creating prompt log:', logError);
-          throw new Error('Falha ao salvar prompt no histórico');
-        }
-
-        console.log('Prompt salvo, chamando edge function...');
-        // Chamar a edge function para gerar código
-        const { data, error } = await supabase.functions.invoke('prompt-generator', {
-          body: { 
-            prompt, 
-            temperature, 
-            model,
-            isRevision,
-            originalCode 
-          }
-        });
-
-        console.log('Resposta da edge function:', data, error);
-
-        if (error) {
-          console.error('Error invoking prompt-generator:', error);
-          
-          // Atualizar o log com erro
-          await supabase
-            .from('prompt_logs')
-            .update({
-              status: 'error',
-              error_message: error.message || 'Erro desconhecido na geração'
-            })
-            .eq('id', promptLog.id);
-
-          throw new Error(error.message || 'Falha ao gerar código');
-        }
-
-        if (!data || !data.success) {
-          const errorMsg = data?.error || 'Resposta inválida da API';
-          console.error('Dados inválidos recebidos:', data);
-          
-          // Atualizar o log com erro
-          await supabase
-            .from('prompt_logs')
-            .update({
-              status: 'error',
-              error_message: errorMsg
-            })
-            .eq('id', promptLog.id);
-
-          throw new Error(errorMsg);
-        }
-
-        console.log('Código gerado com sucesso, atualizando log...');
-        // Atualizar o log com o código gerado
-        const { error: updateError } = await supabase
-          .from('prompt_logs')
-          .update({
-            generated_code: data.data
-          })
-          .eq('id', promptLog.id);
-
-        if (updateError) {
-          console.error('Error updating prompt log:', updateError);
-        }
-
-        console.log('Processo concluído com sucesso');
-        return {
-          logId: promptLog.id,
-          generatedCode: data.data
-        };
-      } catch (error) {
-        console.error('Error in generateCode:', error);
-        throw error;
-      }
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['prompt-logs'] });
-      toast({
-        title: 'Código gerado com sucesso!',
-        description: 'Revise o código antes de aplicá-lo ao projeto.',
-      });
-    },
-    onError: (error: any) => {
-      const errorMessage = error.message || 'Erro desconhecido ao gerar código';
-      console.error('Generate code error:', error);
-      toast({
-        title: 'Erro ao gerar código',
-        description: errorMessage,
-        variant: 'destructive'
-      });
-    }
-  });
-
-  // Aplicar código no projeto
-  const applyCodeMutation = useMutation({
-    mutationFn: async (logId: string) => {
-      try {
-        // Buscar o log primeiro para verificar se tem código gerado
-        const { data: logData, error: logError } = await supabase
-          .from('prompt_logs')
-          .select('generated_code, status')
-          .eq('id', logId)
-          .single();
-
-        if (logError) {
-          console.error('Error fetching log:', logError);
-          throw new Error('Falha ao buscar dados do log');
-        }
-
-        if (!logData || !isValidGeneratedCode(logData.generated_code)) {
-          throw new Error('Nenhum código gerado encontrado para este log');
-        }
-
-        if (logData.status === 'applied') {
-          throw new Error('Este código já foi aplicado');
-        }
-
-        // Simular aplicação do código (aqui você implementaria a lógica real)
-        const generatedCode = logData.generated_code;
-        const appliedFiles = [];
-
-        // Adicionar arquivos que seriam aplicados
-        if (generatedCode.files) {
-          appliedFiles.push(...Object.keys(generatedCode.files));
-        }
-
-        // Atualizar o status do log
-        const { error } = await supabase
-          .from('prompt_logs')
-          .update({
-            status: 'applied',
-            applied_files: appliedFiles,
-            applied_at: new Date().toISOString()
-          })
-          .eq('id', logId);
-
-        if (error) {
-          console.error('Error applying code:', error);
-          throw new Error('Falha ao aplicar código');
-        }
-
-        return { success: true, appliedFiles };
-      } catch (error) {
-        console.error('Error in applyCode:', error);
-        throw error;
-      }
-    },
-    onSuccess: (data) => {
-      queryClient.invalidateQueries({ queryKey: ['prompt-logs'] });
-      toast({
-        title: 'Código aplicado com sucesso!',
-        description: `${data.appliedFiles.length} arquivo(s) foram implementados no projeto.`,
-      });
-    },
-    onError: (error: any) => {
-      console.error('Apply code error:', error);
-      toast({
-        title: 'Erro ao aplicar código',
-        description: error.message || 'Erro desconhecido ao aplicar código',
-        variant: 'destructive'
-      });
-    }
-  });
-
-  // Fazer rollback
-  const rollbackCodeMutation = useMutation({
-    mutationFn: async (logId: string) => {
-      const { error } = await supabase
+  const { data: promptLogs, isLoading: isLoadingLogs, refetch } = useQuery({
+    queryKey: ['prompt-logs'],
+    queryFn: async () => {
+      const { data, error } = await supabase
         .from('prompt_logs')
-        .update({
-          status: 'rolled_back',
-          rolled_back_at: new Date().toISOString()
-        })
-        .eq('id', logId);
+        .select('*')
+        .order('created_at', { ascending: false });
 
       if (error) {
-        console.error('Error rolling back:', error);
-        throw new Error('Falha ao desfazer alterações');
+        console.error('Error fetching prompt logs:', error);
+        return [];
       }
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['prompt-logs'] });
-      toast({
-        title: 'Rollback realizado',
-        description: 'As alterações foram desfeitas.',
-      });
-    },
-    onError: (error: any) => {
-      console.error('Rollback error:', error);
-      toast({
-        title: 'Erro no rollback',
-        description: error.message || 'Erro desconhecido no rollback',
-        variant: 'destructive'
-      });
+
+      return data;
     }
   });
 
-  // Função para gerar código com callback
-  const generateCode = useCallback((params: GenerateCodeParams, callbacks?: {
-    onSuccess?: (data: { logId: string; generatedCode: GeneratedCode; }) => void;
-    onError?: (error: any) => void;
-  }) => {
-    generateCodeMutation.mutate(params, {
-      onSuccess: callbacks?.onSuccess,
-      onError: callbacks?.onError
-    });
-  }, [generateCodeMutation]);
+  const { data: userCompany } = useQuery({
+    queryKey: ['user-profile', user?.id],
+    queryFn: async () => {
+      if (!user?.id) return null;
 
-  // Função para revisar código
-  const reviseCode = useCallback((prompt: string, originalCode: any, callbacks?: {
-    onSuccess?: (data: { logId: string; generatedCode: GeneratedCode; }) => void;
-    onError?: (error: any) => void;
-  }) => {
-    generateCodeMutation.mutate({
-      prompt,
-      isRevision: true,
-      originalCode
-    }, {
-      onSuccess: callbacks?.onSuccess,
-      onError: callbacks?.onError
-    });
-  }, [generateCodeMutation]);
+      const { data: profile, error } = await supabase
+        .from('profiles')
+        .select('company_id')
+        .eq('user_id', user.id)
+        .single();
 
-  // Memorizar valores para evitar re-renders desnecessários
-  const memoizedReturn = useMemo(() => ({
-    promptLogs: promptLogsQuery.data,
-    isLoadingLogs: promptLogsQuery.isLoading,
-    isGenerating: generateCodeMutation.isPending,
+      if (error || !profile?.company_id) {
+        return null;
+      }
+
+      return {
+        company_id: profile.company_id,
+        company: { id: profile.company_id, name: 'Company' }
+      };
+    },
+    enabled: !!user?.id
+  });
+
+  const generateCodeMutation = useMutation({
+    mutationFn: async (params: { prompt: string; temperature: number; model: string }) => {
+      const { data, error } = await supabase.functions.invoke('prompt-generator', {
+        body: {
+          action: 'generate',
+          prompt: params.prompt,
+          temperature: params.temperature,
+          model: params.model
+        }
+      });
+
+      if (error) throw error;
+      return data;
+    }
+  });
+
+  const reviseCodeMutation = useMutation({
+    mutationFn: async (params: { prompt: string; originalCode: any }) => {
+      const { data, error } = await supabase.functions.invoke('prompt-generator', {
+        body: {
+          action: 'revise',
+          prompt: params.prompt,
+          originalCode: params.originalCode
+        }
+      });
+
+      if (error) throw error;
+      return data;
+    }
+  });
+
+  const applyCodeMutation = useMutation({
+    mutationFn: async (logId: string) => {
+      const { data, error } = await supabase.functions.invoke('prompt-generator', {
+        body: {
+          action: 'apply',
+          logId
+        }
+      });
+
+      if (error) throw error;
+      return data;
+    }
+  });
+
+  const rollbackCodeMutation = useMutation({
+    mutationFn: async (logId: string) => {
+      const { data, error } = await supabase.functions.invoke('prompt-generator', {
+        body: {
+          action: 'rollback',
+          logId
+        }
+      });
+
+      if (error) throw error;
+      return data;
+    }
+  });
+
+  return {
+    promptLogs,
+    isLoadingLogs,
+    isGenerating: generateCodeMutation.isPending || reviseCodeMutation.isPending,
     isApplying: applyCodeMutation.isPending,
-    generateCode,
-    reviseCode,
+    generateCode: (params: { prompt: string; temperature: number; model: string }, callbacks?: { onSuccess?: (data: any) => void; onError?: (error: any) => void }) => {
+      generateCodeMutation.mutate(params, {
+        onSuccess: callbacks?.onSuccess,
+        onError: callbacks?.onError
+      });
+    },
+    reviseCode: (prompt: string, originalCode: any, callbacks?: { onSuccess?: (data: any) => void; onError?: (error: any) => void }) => {
+      reviseCodeMutation.mutate({ prompt, originalCode }, {
+        onSuccess: callbacks?.onSuccess,
+        onError: callbacks?.onError
+      });
+    },
     applyCode: applyCodeMutation.mutate,
-    rollbackCode: rollbackCodeMutation.mutate
-  }), [
-    promptLogsQuery.data,
-    promptLogsQuery.isLoading,
-    generateCodeMutation.isPending,
-    applyCodeMutation.isPending,
-    generateCode,
-    reviseCode,
-    applyCodeMutation.mutate,
-    rollbackCodeMutation.mutate
-  ]);
-
-  return memoizedReturn;
+    rollbackCode: rollbackCodeMutation.mutate,
+    refetch
+  };
 };

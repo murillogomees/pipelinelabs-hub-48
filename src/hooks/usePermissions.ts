@@ -9,9 +9,18 @@ export interface UserPermissions {
   isSuperAdmin: boolean;
   isContratante: boolean;
   isOperador: boolean;
+  isAdmin: boolean; // Alias for isSuperAdmin
+  
+  // Loading state
+  isLoading: boolean;
   
   // Company info
   currentCompanyId: string | null;
+  companyId: string | null; // Alias for currentCompanyId
+  
+  // User info
+  email: string | null;
+  userType: string | null;
   
   // Specific permissions
   permissions: Record<string, boolean>;
@@ -19,6 +28,7 @@ export interface UserPermissions {
   // Access checks
   canAccessCompanyData: boolean;
   canManageCompanyData: boolean;
+  canManageCompany: boolean; // Alias for canManageCompanyData
   canAccessAdminPanel: boolean;
   canManageSystem: boolean;
   canManageUsers: boolean;
@@ -35,7 +45,7 @@ export interface UserPermissions {
 export function usePermissions(): UserPermissions {
   const { user } = useAuth();
 
-  const { data: userProfile } = useQuery({
+  const { data: userProfile, isLoading: profileLoading } = useQuery({
     queryKey: ['user-profile', user?.id],
     queryFn: async () => {
       if (!user?.id) return null;
@@ -64,7 +74,7 @@ export function usePermissions(): UserPermissions {
     enabled: !!user?.id
   });
 
-  const { data: currentCompany } = useQuery({
+  const { data: currentCompany, isLoading: companyLoading } = useQuery({
     queryKey: ['current-company'],
     queryFn: async () => {
       const { data, error } = await supabase
@@ -82,6 +92,8 @@ export function usePermissions(): UserPermissions {
     }
   });
 
+  const isLoading = profileLoading || companyLoading;
+
   // Extract permissions from access level
   const accessLevel = userProfile?.access_levels;
   const accessLevelName = accessLevel?.name || 'operador';
@@ -95,8 +107,18 @@ export function usePermissions(): UserPermissions {
   // Company ID
   const currentCompanyId = currentCompany?.id || null;
 
-  // Permission checks
-  const permissions = typeof accessLevelPermissions === 'object' ? accessLevelPermissions : {};
+  // User info
+  const email = userProfile?.email || null;
+  const userType = accessLevelName;
+
+  // Permission checks - safely handle permissions
+  const permissions: Record<string, boolean> = {};
+  if (accessLevelPermissions && typeof accessLevelPermissions === 'object') {
+    Object.keys(accessLevelPermissions).forEach(key => {
+      const value = accessLevelPermissions[key];
+      permissions[key] = value === true;
+    });
+  }
 
   const hasPermission = (permission: string): boolean => {
     if (isSuperAdmin) return true;
@@ -119,10 +141,16 @@ export function usePermissions(): UserPermissions {
     isSuperAdmin,
     isContratante,
     isOperador,
+    isAdmin: isSuperAdmin,
+    isLoading,
     currentCompanyId,
+    companyId: currentCompanyId,
+    email,
+    userType,
     permissions,
     canAccessCompanyData,
     canManageCompanyData,
+    canManageCompany: canManageCompanyData,
     canAccessAdminPanel,
     canManageSystem,
     canManageUsers,

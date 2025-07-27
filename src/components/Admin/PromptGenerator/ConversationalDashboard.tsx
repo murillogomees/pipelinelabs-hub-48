@@ -109,7 +109,7 @@ export const ConversationalDashboard: React.FC = () => {
           indexes: ['idx_products_validation']
         },
         edgeFunctions: ['product-validation'],
-        buildStatus: 'pending' as const,
+        buildStatus: 'running' as const,
         buildErrors: []
       };
       

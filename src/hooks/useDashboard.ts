@@ -3,6 +3,70 @@ import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { usePermissions } from '@/hooks/usePermissions';
 
+export interface Widget {
+  id: string;
+  type: string;
+  title: string;
+  x: number;
+  y: number;
+  w: number;
+  h: number;
+  data?: any;
+}
+
+export interface WidgetType {
+  id: string;
+  title: string;
+  icon: string;
+  category: string;
+  defaultSize: { w: number; h: number };
+}
+
+export const WIDGET_TYPES: Record<string, WidgetType> = {
+  sales_overview: {
+    id: 'sales_overview',
+    title: 'Visão Geral de Vendas',
+    icon: 'DollarSign',
+    category: 'sales',
+    defaultSize: { w: 4, h: 2 }
+  },
+  products_stock: {
+    id: 'products_stock',
+    title: 'Estoque de Produtos',
+    icon: 'Package',
+    category: 'inventory',
+    defaultSize: { w: 4, h: 2 }
+  },
+  customers_overview: {
+    id: 'customers_overview',
+    title: 'Visão Geral de Clientes',
+    icon: 'ShoppingCart',
+    category: 'sales',
+    defaultSize: { w: 4, h: 2 }
+  },
+  financial_summary: {
+    id: 'financial_summary',
+    title: 'Resumo Financeiro',
+    icon: 'CreditCard',
+    category: 'financial',
+    defaultSize: { w: 4, h: 2 }
+  },
+  invoice_status: {
+    id: 'invoice_status',
+    title: 'Status das Notas Fiscais',
+    icon: 'Receipt',
+    category: 'fiscal',
+    defaultSize: { w: 4, h: 2 }
+  },
+  quick_actions: {
+    id: 'quick_actions',
+    title: 'Ações Rápidas',
+    icon: 'Zap',
+    category: 'actions',
+    defaultSize: { w: 4, h: 2 }
+  }
+};
+
 export function useDashboard() {
   const { currentCompanyId } = usePermissions();
 
@@ -38,6 +102,22 @@ export function useDashboard() {
 
   return {
     dashboardData,
-    isLoading
+    isLoading,
+    data: dashboardData // Adding data property for compatibility
+  };
+}
+
+// Mock function for useUpdateDashboard
+export function useUpdateDashboard() {
+  return {
+    updateWidget: (widgetId: string, data: any) => {
+      console.log('Updating widget:', widgetId, data);
+    },
+    addWidget: (widgetType: string) => {
+      console.log('Adding widget:', widgetType);
+    },
+    removeWidget: (widgetId: string) => {
+      console.log('Removing widget:', widgetId);
+    }
   };
 }

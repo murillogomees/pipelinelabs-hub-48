@@ -5,12 +5,12 @@ import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Calendar, Filter, Search, User, Clock, AlertTriangle, CheckCircle } from 'lucide-react';
 import { usePermissions } from '@/hooks/usePermissions';
-import { format } from 'date-fns';
-import { ptBR } from 'date-fns/locale';
+import { Eye, Filter, Search, Clock, User, FileText } from 'lucide-react';
 
 interface AuditLogEntry {
   id: string;
@@ -20,9 +20,11 @@ interface AuditLogEntry {
   old_values: any;
   new_values: any;
   created_at: string;
-  severity: string;
-  status: string;
   user_id: string;
+  company_id: string;
+  ip_address: string;
+  user_agent: string;
+  details: any;
   profiles?: {
     display_name?: string;
     email?: string;
@@ -34,22 +36,27 @@ interface AuditLogEntry {
 }
 
 export function CompanyAuditLog() {
-  const { currentCompanyId, canAccessCompanyData } = usePermissions();
-  const [searchTerm, setSearchTerm] = useState('');
-  const [actionFilter, setActionFilter] = useState('all');
-  const [severityFilter, setSeverityFilter] = useState('all');
+  const { currentCompanyId, canAccessAdminPanel } = usePermissions();
   const [selectedEntry, setSelectedEntry] = useState<AuditLogEntry | null>(null);
+  const [isDetailsOpen, setIsDetailsOpen] = useState(false);
+  const [filters, setFilters] = useState({
+    action: '',
+    resource_type: '',
+    user_id: '',
+    date_from: '',
+    date_to: ''
+  });
 
-  const { data: auditLogs = [], isLoading } = useQuery({
-    queryKey: ['company-audit-logs', currentCompanyId, searchTerm, actionFilter, severityFilter],
+  const { data: auditLogs, isLoading } = useQuery({
+    queryKey: ['audit-logs', currentCompanyId, filters],
     queryFn: async () => {
-      if (!currentCompanyId || !canAccessCompanyData) return [];
+      if (!currentCompanyId) return [];
 
       let query = supabase
         .from('audit_logs')
         .select(`
           *,
-          profiles!inner (
+          profiles (
             display_name,
             email,
             access_levels (
@@ -61,213 +68,274 @@ export function CompanyAuditLog() {
         .eq('company_id', currentCompanyId)
         .order('created_at', { ascending: false });
 
-      if (searchTerm) {
-        query = query.or(`action.ilike.%${searchTerm}%,resource_type.ilike.%${searchTerm}%`);
+      // Apply filters
+      if (filters.action) {
+        query = query.eq('action', filters.action);
+      }
+      if (filters.resource_type) {
+        query = query.eq('resource_type', filters.resource_type);
+      }
+      if (filters.user_id) {
+        query = query.eq('user_id', filters.user_id);
+      }
+      if (filters.date_from) {
+        query = query.gte('created_at', filters.date_from);
+      }
+      if (filters.date_to) {
+        query = query.lte('created_at', filters.date_to);
       }
 
-      if (actionFilter !== 'all') {
-        query = query.eq('action', actionFilter);
-      }
-
-      if (severityFilter !== 'all') {
-        query = query.eq('severity', severityFilter);
-      }
-
-      const { data, error } = await query.limit(100);
+      const { data, error } = await query;
 
       if (error) {
         console.error('Error fetching audit logs:', error);
         return [];
       }
 
-      return data || [];
+      // Process data to handle potential profile errors
+      const processedData = data.map(entry => ({
+        ...entry,
+        profiles: entry.profiles && typeof entry.profiles === 'object' && !('error' in entry.profiles)
+          ? entry.profiles
+          : { display_name: 'Usuário não encontrado', email: 'N/A' }
+      }));
+
+      return processedData as AuditLogEntry[];
     },
-    enabled: !!currentCompanyId && canAccessCompanyData
+    enabled: !!currentCompanyId && canAccessAdminPanel
   });
 
-  const getSeverityColor = (severity: string) => {
-    switch (severity) {
-      case 'critical': return 'destructive';
-      case 'high': return 'destructive';
-      case 'medium': return 'secondary';
-      case 'low': return 'default';
-      default: return 'default';
+  const getActionBadge = (action: string) => {
+    const variants = {
+      'CREATE': 'default' as const,
+      'UPDATE': 'secondary' as const,
+      'DELETE': 'destructive' as const,
+      'LOGIN': 'outline' as const,
+      'LOGOUT': 'outline' as const
+    };
+    return variants[action as keyof typeof variants] || 'outline' as const;
+  };
+
+  const getResourceIcon = (resourceType: string) => {
+    switch (resourceType) {
+      case 'user':
+        return <User className="h-4 w-4" />;
+      case 'product':
+        return <FileText className="h-4 w-4" />;
+      default:
+        return <FileText className="h-4 w-4" />;
     }
   };
 
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'success': return 'default';
-      case 'error': return 'destructive';
-      case 'warning': return 'secondary';
-      default: return 'default';
-    }
+  const handleViewDetails = (entry: AuditLogEntry) => {
+    setSelectedEntry(entry);
+    setIsDetailsOpen(true);
   };
 
-  const getActionIcon = (action: string) => {
-    if (action.includes('create')) return <CheckCircle className="h-4 w-4 text-green-600" />;
-    if (action.includes('update')) return <Clock className="h-4 w-4 text-blue-600" />;
-    if (action.includes('delete')) return <AlertTriangle className="h-4 w-4 text-red-600" />;
-    return <User className="h-4 w-4 text-gray-600" />;
+  const clearFilters = () => {
+    setFilters({
+      action: '',
+      resource_type: '',
+      user_id: '',
+      date_from: '',
+      date_to: ''
+    });
   };
 
-  if (!canAccessCompanyData) {
+  if (!canAccessAdminPanel) {
     return (
-      <div className="text-center py-8">
-        <AlertTriangle className="h-12 w-12 mx-auto mb-4 text-muted-foreground" />
-        <p className="text-muted-foreground">
-          Você não tem permissão para visualizar os logs de auditoria desta empresa.
-        </p>
-      </div>
+      <Card>
+        <CardContent className="p-6">
+          <p className="text-muted-foreground text-center">
+            Você não tem permissão para visualizar os logs de auditoria.
+          </p>
+        </CardContent>
+      </Card>
     );
   }
 
   return (
     <div className="space-y-6">
+      {/* Filtros */}
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
-            <Calendar className="h-5 w-5" />
-            Logs de Auditoria da Empresa
+            <Filter className="h-5 w-5" />
+            Filtros
           </CardTitle>
         </CardHeader>
         <CardContent>
-          {/* Filtros */}
-          <div className="flex flex-col md:flex-row gap-4 mb-6">
-            <div className="flex-1">
-              <div className="relative">
-                <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                <Input
-                  placeholder="Buscar por ação ou recurso..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className="pl-10"
-                />
-              </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="action">Ação</Label>
+              <Select
+                value={filters.action}
+                onValueChange={(value) => setFilters(prev => ({ ...prev, action: value }))}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Todas as ações" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="">Todas as ações</SelectItem>
+                  <SelectItem value="CREATE">Criar</SelectItem>
+                  <SelectItem value="UPDATE">Atualizar</SelectItem>
+                  <SelectItem value="DELETE">Deletar</SelectItem>
+                  <SelectItem value="LOGIN">Login</SelectItem>
+                  <SelectItem value="LOGOUT">Logout</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
-            <Select value={actionFilter} onValueChange={setActionFilter}>
-              <SelectTrigger className="w-full md:w-48">
-                <SelectValue placeholder="Filtrar por ação" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">Todas as ações</SelectItem>
-                <SelectItem value="create">Criação</SelectItem>
-                <SelectItem value="update">Atualização</SelectItem>
-                <SelectItem value="delete">Exclusão</SelectItem>
-              </SelectContent>
-            </Select>
-            <Select value={severityFilter} onValueChange={setSeverityFilter}>
-              <SelectTrigger className="w-full md:w-48">
-                <SelectValue placeholder="Filtrar por severidade" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">Todas as severidades</SelectItem>
-                <SelectItem value="critical">Crítica</SelectItem>
-                <SelectItem value="high">Alta</SelectItem>
-                <SelectItem value="medium">Média</SelectItem>
-                <SelectItem value="low">Baixa</SelectItem>
-              </SelectContent>
-            </Select>
+
+            <div className="space-y-2">
+              <Label htmlFor="resource_type">Tipo de Recurso</Label>
+              <Select
+                value={filters.resource_type}
+                onValueChange={(value) => setFilters(prev => ({ ...prev, resource_type: value }))}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Todos os tipos" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="">Todos os tipos</SelectItem>
+                  <SelectItem value="user">Usuário</SelectItem>
+                  <SelectItem value="product">Produto</SelectItem>
+                  <SelectItem value="company">Empresa</SelectItem>
+                  <SelectItem value="sale">Venda</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="date_from">Data Inicial</Label>
+              <Input
+                type="date"
+                value={filters.date_from}
+                onChange={(e) => setFilters(prev => ({ ...prev, date_from: e.target.value }))}
+              />
+            </div>
           </div>
 
-          {/* Lista de logs */}
-          <div className="space-y-3">
-            {isLoading ? (
-              <div className="text-center py-8">
-                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto"></div>
-                <p className="mt-2 text-sm text-muted-foreground">Carregando logs...</p>
-              </div>
-            ) : auditLogs.length === 0 ? (
-              <div className="text-center py-8 text-muted-foreground">
-                <Filter className="h-12 w-12 mx-auto mb-4 opacity-50" />
-                <p>Nenhum log de auditoria encontrado</p>
-              </div>
-            ) : (
-              auditLogs.map((log) => (
+          <div className="flex justify-end mt-4">
+            <Button variant="outline" onClick={clearFilters}>
+              Limpar Filtros
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Lista de Logs */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Clock className="h-5 w-5" />
+            Logs de Auditoria
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          {isLoading ? (
+            <div className="flex items-center justify-center py-8">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+            </div>
+          ) : auditLogs?.length === 0 ? (
+            <div className="text-center py-8 text-muted-foreground">
+              <Clock className="h-12 w-12 mx-auto mb-4 opacity-50" />
+              <p>Nenhum log de auditoria encontrado</p>
+            </div>
+          ) : (
+            <div className="space-y-3">
+              {auditLogs?.map((entry) => (
                 <div
-                  key={log.id}
-                  className="border rounded-lg p-4 hover:bg-muted/50 transition-colors cursor-pointer"
-                  onClick={() => setSelectedEntry(log)}
+                  key={entry.id}
+                  className="flex items-center justify-between p-4 border rounded-lg hover:bg-muted/50 transition-colors"
                 >
-                  <div className="flex items-start justify-between">
-                    <div className="flex-1">
-                      <div className="flex items-center gap-2 mb-2">
-                        {getActionIcon(log.action)}
-                        <h3 className="font-medium">{log.action}</h3>
-                        <Badge variant={getSeverityColor(log.severity) as any}>
-                          {log.severity}
+                  <div className="flex items-center space-x-4">
+                    {getResourceIcon(entry.resource_type)}
+                    <div>
+                      <div className="flex items-center space-x-2">
+                        <Badge variant={getActionBadge(entry.action)}>
+                          {entry.action}
                         </Badge>
-                        <Badge variant={getStatusColor(log.status) as any}>
-                          {log.status}
-                        </Badge>
+                        <span className="text-sm font-medium">{entry.resource_type}</span>
                       </div>
-                      <p className="text-sm text-muted-foreground mb-1">
-                        Recurso: {log.resource_type} {log.resource_id && `(ID: ${log.resource_id})`}
-                      </p>
-                      <p className="text-sm text-muted-foreground">
-                        Usuário: {log.profiles?.display_name || log.profiles?.email || 'N/A'}
-                      </p>
-                    </div>
-                    <div className="text-right">
-                      <p className="text-sm text-muted-foreground">
-                        {format(new Date(log.created_at), 'dd/MM/yyyy HH:mm:ss', { locale: ptBR })}
-                      </p>
+                      <div className="text-sm text-muted-foreground">
+                        Por: {entry.profiles?.display_name || 'Usuário não encontrado'} ({entry.profiles?.email || 'N/A'})
+                      </div>
+                      <div className="text-xs text-muted-foreground">
+                        {new Date(entry.created_at).toLocaleString()}
+                      </div>
                     </div>
                   </div>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => handleViewDetails(entry)}
+                  >
+                    <Eye className="h-4 w-4" />
+                  </Button>
                 </div>
-              ))
-            )}
-          </div>
-
-          {/* Detalhes do log selecionado */}
-          {selectedEntry && (
-            <div className="mt-6 p-4 border rounded-lg bg-muted/20">
-              <h4 className="font-medium mb-2">Detalhes do Log</h4>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
-                <div>
-                  <strong>Ação:</strong> {selectedEntry.action}
-                </div>
-                <div>
-                  <strong>Recurso:</strong> {selectedEntry.resource_type}
-                </div>
-                <div>
-                  <strong>Usuário:</strong> {selectedEntry.profiles?.display_name || selectedEntry.profiles?.email || 'N/A'}
-                </div>
-                <div>
-                  <strong>Data:</strong> {format(new Date(selectedEntry.created_at), 'dd/MM/yyyy HH:mm:ss', { locale: ptBR })}
-                </div>
-              </div>
-              
-              {selectedEntry.old_values && (
-                <div className="mt-3">
-                  <strong>Valores anteriores:</strong>
-                  <pre className="mt-1 p-2 bg-muted rounded text-xs overflow-x-auto">
-                    {JSON.stringify(selectedEntry.old_values, null, 2)}
-                  </pre>
-                </div>
-              )}
-              
-              {selectedEntry.new_values && (
-                <div className="mt-3">
-                  <strong>Novos valores:</strong>
-                  <pre className="mt-1 p-2 bg-muted rounded text-xs overflow-x-auto">
-                    {JSON.stringify(selectedEntry.new_values, null, 2)}
-                  </pre>
-                </div>
-              )}
-              
-              <Button 
-                variant="outline" 
-                size="sm" 
-                className="mt-3"
-                onClick={() => setSelectedEntry(null)}
-              >
-                Fechar Detalhes
-              </Button>
+              ))}
             </div>
           )}
         </CardContent>
       </Card>
+
+      {/* Dialog de Detalhes */}
+      <Dialog open={isDetailsOpen} onOpenChange={setIsDetailsOpen}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>Detalhes do Log de Auditoria</DialogTitle>
+          </DialogHeader>
+          {selectedEntry && (
+            <div className="space-y-4">
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label>Ação</Label>
+                  <p className="text-sm">{selectedEntry.action}</p>
+                </div>
+                <div>
+                  <Label>Tipo de Recurso</Label>
+                  <p className="text-sm">{selectedEntry.resource_type}</p>
+                </div>
+                <div>
+                  <Label>Usuário</Label>
+                  <p className="text-sm">{selectedEntry.profiles?.display_name || 'N/A'}</p>
+                </div>
+                <div>
+                  <Label>Data/Hora</Label>
+                  <p className="text-sm">{new Date(selectedEntry.created_at).toLocaleString()}</p>
+                </div>
+              </div>
+
+              {selectedEntry.old_values && (
+                <div>
+                  <Label>Valores Anteriores</Label>
+                  <pre className="text-xs bg-muted p-2 rounded mt-1 overflow-auto">
+                    {JSON.stringify(selectedEntry.old_values, null, 2)}
+                  </pre>
+                </div>
+              )}
+
+              {selectedEntry.new_values && (
+                <div>
+                  <Label>Novos Valores</Label>
+                  <pre className="text-xs bg-muted p-2 rounded mt-1 overflow-auto">
+                    {JSON.stringify(selectedEntry.new_values, null, 2)}
+                  </pre>
+                </div>
+              )}
+
+              {selectedEntry.details && (
+                <div>
+                  <Label>Detalhes Adicionais</Label>
+                  <pre className="text-xs bg-muted p-2 rounded mt-1 overflow-auto">
+                    {JSON.stringify(selectedEntry.details, null, 2)}
+                  </pre>
+                </div>
+              )}
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
