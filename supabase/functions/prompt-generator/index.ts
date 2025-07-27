@@ -54,7 +54,7 @@ serve(async (req) => {
     const requestBody = await req.json().catch(() => ({}))
     const { prompt, temperature = 0.7, model = 'gpt-4o-mini' } = requestBody
 
-    console.log('Dados recebidos:', { prompt: prompt?.substring(0, 50), temperature, model })
+    console.log('Dados recebidos:', { prompt: prompt?.substring(0, 100), temperature, model })
 
     if (!prompt) {
       return new Response(JSON.stringify({ error: 'Prompt is required' }), {
@@ -77,6 +77,76 @@ serve(async (req) => {
 
     console.log('Chamando OpenAI API...')
 
+    // Prompt do sistema aprimorado
+    const systemPrompt = `Você é um desenvolvedor sênior especialista em React, TypeScript, Tailwind CSS e Supabase, trabalhando no Pipeline Labs - um sistema ERP completo para pequenos empreendedores.
+
+CONTEXTO DO PROJETO:
+- Sistema ERP com foco em vendas, produtos, clientes, estoque, financeiro, NFe, integrações
+- Stack: React + TypeScript + Tailwind CSS + Supabase + Tanstack Query
+- Arquitetura: Components modulares, hooks customizados, tipos TypeScript bem definidos
+- Padrões: Shadcn/UI, RLS policies, audit logs, tratamento de erros robusto
+
+INSTRUÇÕES ESPECÍFICAS:
+1. SEMPRE retorne um JSON válido com esta estrutura exata:
+{
+  "files": {
+    "src/components/Example.tsx": "código completo aqui",
+    "src/hooks/useExample.ts": "código completo aqui"
+  },
+  "sql": ["CREATE TABLE...", "ALTER TABLE..."],
+  "description": "Descrição detalhada do que foi implementado"
+}
+
+2. REGRAS DE CÓDIGO:
+- Use SEMPRE TypeScript com tipos explícitos
+- Siga padrões do React moderno (hooks, functional components)
+- Use Tailwind CSS para estilização (classes semânticas quando possível)
+- Implemente tratamento de erros robusto
+- Use Tanstack Query para operações de dados
+- Implemente RLS policies para segurança
+- Crie audit logs para operações críticas
+- Use componentes do Shadcn/UI quando apropriado
+
+3. ESTRUTURA DE ARQUIVOS:
+- Components: src/components/[Feature]/[Component].tsx
+- Hooks: src/hooks/use[Feature].ts
+- Types: src/types/[feature].ts
+- Utils: src/utils/[feature].ts
+- Pages: src/pages/[Page].tsx
+
+4. QUALIDADE DO CÓDIGO:
+- Código COMPLETO e funcional, não apenas esqueletos
+- Imports corretos e organizados
+- Componentes bem estruturados com props tipadas
+- Hooks customizados quando apropriado
+- Validação de dados com Zod quando necessário
+- Tratamento de estados de loading e erro
+- Responsividade mobile-first
+
+5. BANCO DE DADOS:
+- Use PostgreSQL/Supabase
+- Implemente RLS policies sempre
+- Crie índices para performance
+- Use foreign keys para integridade
+- Mantenha consistência nos nomes
+
+6. FUNCIONALIDADES ESPECÍFICAS:
+- Sistema de permissões (super_admin, contratante, operador)
+- Audit logs para rastreabilidade
+- Validação de documentos (CPF/CNPJ)
+- Integração com APIs externas quando necessário
+- Sistema de notificações
+
+IMPORTANTE:
+- Seja específico e detalhado no código
+- Não use placeholders ou comentários "// TODO"
+- Implemente funcionalidades completas
+- Teste mentalmente o fluxo antes de escrever
+- Considere edge cases e validações
+- Mantenha consistência com o padrão do projeto
+
+Agora processe o prompt do usuário e retorne o JSON com o código completo e funcional.`;
+
     // Chamar OpenAI
     const openaiResponse = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
@@ -89,34 +159,20 @@ serve(async (req) => {
         messages: [
           {
             role: 'system',
-            content: `Você é um desenvolvedor especialista em React, TypeScript, Tailwind CSS e Supabase. 
-            Sua tarefa é gerar código baseado no prompt do usuário.
-            
-            Retorne SEMPRE um JSON com esta estrutura:
-            {
-              "files": {
-                "path/to/file.tsx": "código aqui",
-                "path/to/another.ts": "código aqui"
-              },
-              "sql": ["CREATE TABLE...", "ALTER TABLE..."],
-              "description": "Descrição do que foi implementado"
-            }
-            
-            Regras importantes:
-            1. Use sempre TypeScript
-            2. Siga padrões do React moderno (hooks, functional components)
-            3. Use Tailwind CSS para estilização
-            4. Para banco de dados, use Supabase/PostgreSQL
-            5. Implemente RLS policies quando necessário
-            6. Use o padrão de componentes existente no projeto
-            7. Crie hooks customizados quando apropriado
-            8. NÃO inclua imports desnecessários
-            9. Mantenha código limpo e bem estruturado
-            10. SEMPRE retorne um JSON válido`
+            content: systemPrompt
           },
           {
             role: 'user',
-            content: prompt
+            content: `Contexto: Você está trabalhando no Pipeline Labs ERP. 
+
+Prompt do usuário: ${prompt}
+
+Lembre-se:
+- Retorne SEMPRE um JSON válido
+- Implemente código COMPLETO e funcional
+- Use as melhores práticas do React/TypeScript
+- Considere segurança e performance
+- Seja específico e detalhado`
           }
         ],
         temperature: temperature,
@@ -150,12 +206,12 @@ serve(async (req) => {
       })
     }
 
-    console.log('Conteúdo gerado:', generatedContent.substring(0, 100))
+    console.log('Conteúdo gerado:', generatedContent.substring(0, 200))
 
     let parsedContent
     try {
-      // Tentar extrair JSON do conteúdo
-      const jsonMatch = generatedContent.match(/```json\n([\s\S]*?)\n```/) || 
+      // Tentar extrair JSON do conteúdo com melhor regex
+      const jsonMatch = generatedContent.match(/```json\s*\n([\s\S]*?)\n\s*```/) || 
                        generatedContent.match(/(\{[\s\S]*\})/)
       
       if (jsonMatch) {
@@ -163,13 +219,39 @@ serve(async (req) => {
       } else {
         parsedContent = JSON.parse(generatedContent)
       }
+
+      // Validar estrutura do JSON
+      if (!parsedContent.files || typeof parsedContent.files !== 'object') {
+        throw new Error('Invalid JSON structure: missing or invalid files object')
+      }
+
+      // Garantir que sql seja um array
+      if (!Array.isArray(parsedContent.sql)) {
+        parsedContent.sql = parsedContent.sql ? [parsedContent.sql] : []
+      }
+
+      // Garantir que description existe
+      if (!parsedContent.description) {
+        parsedContent.description = "Código gerado com sucesso"
+      }
+
     } catch (parseError) {
-      console.log('Erro ao fazer parse do JSON, usando estrutura padrão')
-      parsedContent = {
-        files: {},
-        sql: [],
-        description: "Código gerado (formato não estruturado)",
-        rawContent: generatedContent
+      console.log('Erro ao fazer parse do JSON:', parseError)
+      
+      // Tentar extrair apenas o conteúdo útil
+      const cleanContent = generatedContent.replace(/```json\s*\n?/g, '').replace(/\n?\s*```/g, '')
+      
+      try {
+        parsedContent = JSON.parse(cleanContent)
+      } catch (secondParseError) {
+        console.log('Segundo parse também falhou, usando estrutura padrão')
+        parsedContent = {
+          files: {},
+          sql: [],
+          description: "Erro ao processar resposta da IA. Conteúdo bruto disponível.",
+          rawContent: generatedContent,
+          parseError: parseError.message
+        }
       }
     }
 
