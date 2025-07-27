@@ -4270,14 +4270,16 @@ export type Database = {
         Returns: string
       }
       create_analytics_event: {
-        Args: {
-          p_event_name: string
-          p_device_type?: string
-          p_route?: string
-          p_duration_ms?: number
-          p_meta?: Json
-        }
-        Returns: string
+        Args:
+          | { event_type: string; event_data?: Json }
+          | {
+              p_event_name: string
+              p_device_type?: string
+              p_route?: string
+              p_duration_ms?: number
+              p_meta?: Json
+            }
+        Returns: Json
       }
       create_app_version: {
         Args: {
