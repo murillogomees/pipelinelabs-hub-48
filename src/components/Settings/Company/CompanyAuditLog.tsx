@@ -1,175 +1,193 @@
-import React, { useState, useEffect } from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { ScrollArea } from '@/components/ui/scroll-area';
-import { Button } from '@/components/ui/button';
-import { Clock, User, FileText, RefreshCw } from 'lucide-react';
+
+import React, { useState } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
-import { useAuth } from '@/components/Auth/AuthProvider';
-import { toast } from 'sonner';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { Input } from '@/components/ui/input';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Button } from '@/components/ui/button';
+import { Search, Download, Eye, Shield, User, Crown } from 'lucide-react';
+import { usePermissions } from '@/hooks/usePermissions';
+import { DataTable, Column } from '@/components/ui/data-table';
 
 interface AuditLogEntry {
   id: string;
   action: string;
-  user_email: string;
-  user_name: string;
-  old_values: any;
-  new_values: any;
+  resource_type: string;
+  resource_id: string;
+  user_id: string;
+  details: any;
   created_at: string;
   severity: string;
   status: string;
+  profiles?: {
+    display_name: string;
+    email: string;
+    access_levels?: {
+      name: string;
+      display_name: string;
+    };
+  };
 }
 
 export function CompanyAuditLog() {
-  const { user } = useAuth();
-  const [auditLogs, setAuditLogs] = useState<AuditLogEntry[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [canViewLogs, setCanViewLogs] = useState(false);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [actionFilter, setActionFilter] = useState('all');
+  const [severityFilter, setSeverityFilter] = useState('all');
+  const { companyId, canManageCompany } = usePermissions();
 
-  const fetchAuditLogs = async () => {
-    if (!user?.id) return;
+  const { data: auditLogs = [], isLoading } = useQuery({
+    queryKey: ['company-audit-logs', companyId, actionFilter, severityFilter],
+    queryFn: async () => {
+      if (!companyId) return [];
 
-    try {
-      setIsLoading(true);
+      let query = supabase
+        .from('audit_logs')
+        .select(`
+          *,
+          profiles (
+            display_name,
+            email,
+            access_levels (
+              name,
+              display_name
+            )
+          )
+        `)
+        .eq('company_id', companyId)
+        .order('created_at', { ascending: false });
 
-      // Verificar se usuário pode ver logs de auditoria
-      const { data: userCompany } = await supabase
-        .from('user_companies')
-        .select('company_id, user_type')
-        .eq('user_id', user.id)
-        .eq('is_active', true)
-        .single();
-
-      if (!userCompany) {
-        setCanViewLogs(false);
-        return;
+      if (actionFilter !== 'all') {
+        query = query.eq('action', actionFilter);
       }
 
-      // Apenas contratantes e super admins podem ver logs
-      const canView = userCompany.user_type === 'contratante' || 
-                     userCompany.user_type === 'super_admin';
-      setCanViewLogs(canView);
-
-      if (!canView) return;
-
-      // Buscar logs de auditoria relacionados à empresa
-      const { data, error } = await supabase.rpc('get_audit_logs', {
-        p_company_id: userCompany.company_id,
-        p_resource_type: 'company',
-        p_limit: 50,
-        p_offset: 0
-      });
-
-      if (error) {
-        console.error('Erro ao buscar logs de auditoria:', error);
-        return;
+      if (severityFilter !== 'all') {
+        query = query.eq('severity', severityFilter);
       }
 
-      setAuditLogs(data || []);
-    } catch (error) {
-      console.error('Erro inesperado ao buscar logs:', error);
-      toast.error('Erro ao carregar histórico de alterações');
-    } finally {
-      setIsLoading(false);
+      const { data, error } = await query;
+      
+      if (error) throw error;
+      return data || [];
+    },
+    enabled: !!companyId && canManageCompany,
+  });
+
+  const getUserTypeIcon = (accessLevel: string) => {
+    switch (accessLevel) {
+      case 'super_admin':
+        return <Crown className="w-4 h-4 text-amber-500" />;
+      case 'contratante':
+        return <Shield className="w-4 h-4 text-blue-500" />;
+      case 'operador':
+        return <User className="w-4 h-4 text-green-500" />;
+      default:
+        return <User className="w-4 h-4 text-gray-500" />;
     }
   };
 
-  useEffect(() => {
-    fetchAuditLogs();
-  }, [user?.id]);
-
-  const formatAction = (action: string) => {
-    const actionMap: Record<string, string> = {
-      'company:updated': 'Dados da empresa atualizados',
-      'company:created': 'Empresa criada',
-      'company:deleted': 'Empresa removida',
-      'company:settings_updated': 'Configurações alteradas'
+  const getSeverityBadge = (severity: string) => {
+    const variants = {
+      info: 'default',
+      warning: 'secondary',
+      error: 'destructive',
+      critical: 'destructive'
     };
-    return actionMap[action] || action;
+    return <Badge variant={variants[severity as keyof typeof variants] || 'default'}>{severity}</Badge>;
   };
 
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleString('pt-BR', {
-      day: '2-digit',
-      month: '2-digit',
-      year: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit'
-    });
+  const getStatusBadge = (status: string) => {
+    const variants = {
+      success: 'default',
+      failed: 'destructive',
+      pending: 'secondary'
+    };
+    return <Badge variant={variants[status as keyof typeof variants] || 'default'}>{status}</Badge>;
   };
 
-  const getChanges = (oldValues: any, newValues: any) => {
-    if (!newValues) return [];
+  const filteredLogs = auditLogs.filter(log => {
+    const matchesSearch = 
+      log.action.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      log.resource_type.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      log.profiles?.display_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      log.profiles?.email?.toLowerCase().includes(searchTerm.toLowerCase());
+    
+    return matchesSearch;
+  });
 
-    const changes = [];
-    const fieldNames: Record<string, string> = {
-      name: 'Nome da Empresa',
-      legal_name: 'Razão Social',
-      trade_name: 'Nome Fantasia',
-      document: 'CNPJ',
-      email: 'E-mail',
-      fiscal_email: 'E-mail Fiscal',
-      phone: 'Telefone',
-      address: 'Endereço',
-      city: 'Cidade',
-      zipcode: 'CEP',
-      state_registration: 'Inscrição Estadual',
-      municipal_registration: 'Inscrição Municipal',
-      tax_regime: 'Regime Tributário',
-      legal_representative: 'Responsável Legal'
-    };
-
-    for (const [key, value] of Object.entries(newValues)) {
-      if (oldValues && oldValues[key] !== value) {
-        changes.push({
-          field: fieldNames[key] || key,
-          oldValue: oldValues[key] || 'Não informado',
-          newValue: value || 'Não informado'
-        });
-      } else if (!oldValues) {
-        changes.push({
-          field: fieldNames[key] || key,
-          oldValue: 'Não informado',
-          newValue: value || 'Não informado'
-        });
-      }
+  const columns: Column<AuditLogEntry>[] = [
+    {
+      key: 'created_at',
+      header: 'Data/Hora',
+      render: (value: string) => (
+        <span className="text-sm text-muted-foreground">
+          {new Date(value).toLocaleString('pt-BR')}
+        </span>
+      )
+    },
+    {
+      key: 'profiles',
+      header: 'Usuário',
+      render: (_value: any, row: AuditLogEntry) => (
+        <div className="flex items-center space-x-2">
+          {getUserTypeIcon(row.profiles?.access_levels?.name || '')}
+          <div>
+            <p className="font-medium">{row.profiles?.display_name || 'Usuário Desconhecido'}</p>
+            <p className="text-sm text-muted-foreground">{row.profiles?.email}</p>
+          </div>
+        </div>
+      )
+    },
+    {
+      key: 'action',
+      header: 'Ação',
+      render: (value: string) => (
+        <Badge variant="outline">{value}</Badge>
+      )
+    },
+    {
+      key: 'resource_type',
+      header: 'Recurso',
+      render: (value: string) => (
+        <span className="text-sm">{value}</span>
+      )
+    },
+    {
+      key: 'severity',
+      header: 'Severidade',
+      render: (value: string) => getSeverityBadge(value)
+    },
+    {
+      key: 'status',
+      header: 'Status',
+      render: (value: string) => getStatusBadge(value)
     }
+  ];
 
-    return changes;
+  const actions = [
+    {
+      label: 'Detalhes',
+      icon: Eye,
+      onClick: (row: AuditLogEntry) => {
+        // Implementar modal de detalhes
+        console.log('View details:', row);
+      },
+      variant: 'outline' as const
+    }
+  ];
+
+  const handleExport = () => {
+    // Implementar exportação
+    console.log('Export audit logs');
   };
 
-  if (isLoading) {
+  if (!canManageCompany) {
     return (
       <Card>
-        <CardHeader>
-          <div className="flex items-center gap-2">
-            <FileText className="h-5 w-5" />
-            <CardTitle>Histórico de Alterações</CardTitle>
-          </div>
-        </CardHeader>
-        <CardContent>
-          <div className="flex items-center justify-center h-32">
-            <div className="text-muted-foreground">Carregando histórico...</div>
-          </div>
-        </CardContent>
-      </Card>
-    );
-  }
-
-  if (!canViewLogs) {
-    return (
-      <Card>
-        <CardHeader>
-          <div className="flex items-center gap-2">
-            <FileText className="h-5 w-5" />
-            <CardTitle>Histórico de Alterações</CardTitle>
-          </div>
-        </CardHeader>
-        <CardContent>
-          <div className="flex items-center justify-center h-32">
-            <div className="text-muted-foreground">
-              Acesso restrito. Apenas contratantes podem visualizar o histórico.
-            </div>
+        <CardContent className="p-6">
+          <div className="text-center text-muted-foreground">
+            Você não tem permissão para visualizar os logs de auditoria.
           </div>
         </CardContent>
       </Card>
@@ -179,88 +197,61 @@ export function CompanyAuditLog() {
   return (
     <Card>
       <CardHeader>
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <FileText className="h-5 w-5" />
-            <div>
-              <CardTitle>Histórico de Alterações</CardTitle>
-              <CardDescription>
-                Registro de todas as modificações nos dados da empresa
-              </CardDescription>
-            </div>
-          </div>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={fetchAuditLogs}
-            className="flex items-center gap-1"
-          >
-            <RefreshCw className="h-4 w-4" />
-            Atualizar
+        <CardTitle className="flex items-center justify-between">
+          <span>Log de Auditoria</span>
+          <Button onClick={handleExport} variant="outline" size="sm">
+            <Download className="w-4 h-4 mr-2" />
+            Exportar
           </Button>
-        </div>
+        </CardTitle>
       </CardHeader>
-
-      <CardContent>
-        {auditLogs.length === 0 ? (
-          <div className="flex items-center justify-center h-32 text-muted-foreground">
-            Nenhuma alteração registrada
+      <CardContent className="space-y-4">
+        {/* Filtros */}
+        <div className="flex flex-col sm:flex-row gap-4">
+          <div className="relative flex-1">
+            <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+            <Input
+              placeholder="Buscar por ação, recurso ou usuário..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="pl-10"
+            />
           </div>
-        ) : (
-          <ScrollArea className="h-96">
-            <div className="space-y-4">
-              {auditLogs.map((log) => {
-                const changes = getChanges(log.old_values, log.new_values);
-                
-                return (
-                  <div key={log.id} className="border rounded-lg p-4 space-y-3">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-2">
-                        <Badge variant={log.status === 'success' ? 'default' : 'destructive'}>
-                          {formatAction(log.action)}
-                        </Badge>
-                        {log.severity === 'high' && (
-                          <Badge variant="destructive">Crítico</Badge>
-                        )}
-                      </div>
-                      <div className="flex items-center gap-1 text-sm text-muted-foreground">
-                        <Clock className="h-3 w-3" />
-                        {formatDate(log.created_at)}
-                      </div>
-                    </div>
+          <Select value={actionFilter} onValueChange={setActionFilter}>
+            <SelectTrigger className="w-full sm:w-48">
+              <SelectValue placeholder="Filtrar por ação" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Todas as ações</SelectItem>
+              <SelectItem value="create">Criar</SelectItem>
+              <SelectItem value="update">Atualizar</SelectItem>
+              <SelectItem value="delete">Excluir</SelectItem>
+              <SelectItem value="login">Login</SelectItem>
+              <SelectItem value="logout">Logout</SelectItem>
+            </SelectContent>
+          </Select>
+          <Select value={severityFilter} onValueChange={setSeverityFilter}>
+            <SelectTrigger className="w-full sm:w-48">
+              <SelectValue placeholder="Filtrar por severidade" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Todas as severidades</SelectItem>
+              <SelectItem value="info">Info</SelectItem>
+              <SelectItem value="warning">Aviso</SelectItem>
+              <SelectItem value="error">Erro</SelectItem>
+              <SelectItem value="critical">Crítico</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
 
-                    <div className="flex items-center gap-2 text-sm">
-                      <User className="h-3 w-3" />
-                      <span className="font-medium">{log.user_name || 'Sistema'}</span>
-                      <span className="text-muted-foreground">({log.user_email})</span>
-                    </div>
-
-                    {changes.length > 0 && (
-                      <div className="space-y-2">
-                        <h4 className="text-sm font-medium">Alterações:</h4>
-                        <div className="bg-muted rounded p-3 space-y-2">
-                          {changes.map((change, index) => (
-                            <div key={index} className="text-xs">
-                              <span className="font-medium">{change.field}:</span>
-                              <div className="ml-2 space-y-1">
-                                <div className="text-red-600">
-                                  <span className="font-mono">- {change.oldValue}</span>
-                                </div>
-                                <div className="text-green-600">
-                                  <span className="font-mono">+ {change.newValue}</span>
-                                </div>
-                              </div>
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                );
-              })}
-            </div>
-          </ScrollArea>
-        )}
+        {/* Tabela */}
+        <DataTable
+          data={filteredLogs}
+          columns={columns}
+          actions={actions}
+          loading={isLoading}
+          emptyMessage="Nenhum log de auditoria encontrado"
+        />
       </CardContent>
     </Card>
   );

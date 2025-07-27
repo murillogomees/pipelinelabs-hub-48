@@ -13,6 +13,9 @@ interface PermissionContextProps {
   isContratante: boolean;
   isOperador: boolean;
   userType: string | null;
+  canDeleteAnyRecord: boolean;
+  canModifyAnyData: boolean;
+  canManagePlans: boolean;
 }
 
 const PermissionContext = createContext<PermissionContextProps | undefined>(undefined);
@@ -32,22 +35,18 @@ export function PermissionProvider({ children }: PermissionProviderProps) {
     );
   }
 
-  const hasPermission = (permission: string): boolean => {
-    return permissions.hasPermission(permission);
-  };
-
   const canAccess = (permission: string | string[]): boolean => {
     if (permissions.isSuperAdmin) return true;
     
     if (Array.isArray(permission)) {
-      return permission.some(p => hasPermission(p));
+      return permission.some(p => permissions.hasPermission(p));
     }
     
-    return hasPermission(permission);
+    return permissions.hasPermission(permission);
   };
 
   const contextValue: PermissionContextProps = {
-    hasPermission,
+    hasPermission: permissions.hasPermission,
     canAccess,
     canManageSystem: permissions.canManageSystem,
     canManageCompany: permissions.canManageCompany,
@@ -55,7 +54,10 @@ export function PermissionProvider({ children }: PermissionProviderProps) {
     isSuperAdmin: permissions.isSuperAdmin,
     isContratante: permissions.isContratante,
     isOperador: permissions.isOperador,
-    userType: permissions.userType
+    userType: permissions.userType,
+    canDeleteAnyRecord: permissions.canDeleteAnyRecord,
+    canModifyAnyData: permissions.canModifyAnyData,
+    canManagePlans: permissions.canManagePlans
   };
 
   return (

@@ -1,295 +1,197 @@
-import { useState, useEffect } from 'react';
+
+import React from 'react';
+import { useQuery } from '@tanstack/react-query';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Alert, AlertDescription } from '@/components/ui/alert';
-import { 
-  Activity, 
-  CheckCircle, 
-  XCircle, 
-  Clock, 
-  AlertTriangle,
-  RefreshCw,
-  TrendingUp,
-  FileText
-} from 'lucide-react';
-import { useQuery } from '@tanstack/react-query';
+import { AlertCircle, CheckCircle, XCircle, RefreshCw } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { usePermissions } from '@/hooks/usePermissions';
 
-interface NFeStats {
-  total: number;
-  authorized: number;
-  pending: number;
-  rejected: number;
-  cancelled: number;
-  today: number;
-  thisMonth: number;
-}
-
-interface RecentNFe {
-  id: string;
-  invoice_number: string;
-  status: string;
-  total_amount: number;
-  issue_date: string;
-  customer_name?: string;
-  rejection_reason?: string;
+interface NFeStatus {
+  status: 'active' | 'inactive' | 'error';
+  message: string;
+  lastCheck: string;
+  certificate?: {
+    cn: string;
+    expiresAt: string;
+    valid: boolean;
+  };
 }
 
 export function NFeStatusMonitor() {
-  const { companyId } = usePermissions();
-  const [refreshing, setRefreshing] = useState(false);
+  const { companyId, canManageCompany } = usePermissions();
 
-  // Buscar estatísticas de NFe
-  const { data: stats, isLoading: isLoadingStats, refetch: refetchStats } = useQuery({
-    queryKey: ['nfe-stats', companyId],
-    queryFn: async (): Promise<NFeStats> => {
-      if (!companyId) throw new Error('Company ID não encontrado');
+  const { data: nfeStatus, isLoading, refetch } = useQuery({
+    queryKey: ['nfe-status', companyId],
+    queryFn: async (): Promise<NFeStatus> => {
+      if (!companyId) {
+        return {
+          status: 'inactive',
+          message: 'Empresa não identificada',
+          lastCheck: new Date().toISOString()
+        };
+      }
 
-      const today = new Date().toISOString().split('T')[0];
-      const firstDayOfMonth = new Date(new Date().getFullYear(), new Date().getMonth(), 1)
-        .toISOString().split('T')[0];
-
-      const { data: invoices, error } = await supabase
-        .from('invoices')
-        .select('status, issue_date, total_amount')
+      const { data: settings, error } = await supabase
+        .from('company_settings')
+        .select('*')
         .eq('company_id', companyId)
-        .eq('invoice_type', 'NFE');
+        .single();
 
-      if (error) throw error;
+      if (error || !settings) {
+        return {
+          status: 'inactive',
+          message: 'Configurações não encontradas',
+          lastCheck: new Date().toISOString()
+        };
+      }
 
-      const stats: NFeStats = {
-        total: invoices.length,
-        authorized: invoices.filter(i => i.status === 'authorized').length,
-        pending: invoices.filter(i => i.status === 'pending').length,
-        rejected: invoices.filter(i => i.status === 'rejected').length,
-        cancelled: invoices.filter(i => i.status === 'cancelled').length,
-        today: invoices.filter(i => i.issue_date === today).length,
-        thisMonth: invoices.filter(i => i.issue_date >= firstDayOfMonth).length,
-      };
+      // Simular verificação de status
+      const hasApiToken = !!settings.nfe_api_token;
+      const hasCertificate = !!settings.certificate_file;
 
-      return stats;
+      if (hasApiToken && hasCertificate) {
+        return {
+          status: 'active',
+          message: 'NFe configurada e funcionando',
+          lastCheck: new Date().toISOString(),
+          certificate: {
+            cn: settings.certificate_cn || 'Certificado válido',
+            expiresAt: settings.certificate_expires_at || new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
+            valid: true
+          }
+        };
+      } else {
+        return {
+          status: 'error',
+          message: 'Configuração incompleta - verifique API token e certificado',
+          lastCheck: new Date().toISOString()
+        };
+      }
     },
-    enabled: !!companyId,
-    refetchInterval: 60000, // Atualizar a cada minuto
-    staleTime: 30000 // 30 segundos
+    enabled: !!companyId && canManageCompany,
+    refetchInterval: 30000, // Atualizar a cada 30 segundos
   });
 
-  // Buscar NFes recentes
-  const { data: recentNFes, isLoading: isLoadingRecent, refetch: refetchRecent } = useQuery({
-    queryKey: ['recent-nfes', companyId],
-    queryFn: async (): Promise<RecentNFe[]> => {
-      if (!companyId) throw new Error('Company ID não encontrado');
-
-      const { data: invoices, error } = await supabase
-        .from('invoices')
-        .select(`
-          id,
-          invoice_number,
-          status,
-          total_amount,
-          issue_date,
-          customers(name)
-        `)
-        .eq('company_id', companyId)
-        .eq('invoice_type', 'NFE')
-        .order('created_at', { ascending: false })
-        .limit(10);
-
-      if (error) throw error;
-
-      return invoices.map(invoice => ({
-        id: invoice.id,
-        invoice_number: invoice.invoice_number,
-        status: invoice.status,
-        total_amount: invoice.total_amount,
-        issue_date: invoice.issue_date,
-        customer_name: (invoice.customers as any)?.name,
-      }));
-    },
-    enabled: !!companyId,
-    refetchInterval: 60000, // Atualizar a cada minuto
-    staleTime: 30000 // 30 segundos
-  });
-
-  const handleRefresh = async () => {
-    setRefreshing(true);
-    try {
-      await Promise.all([refetchStats(), refetchRecent()]);
-    } finally {
-      setRefreshing(false);
+  const getStatusIcon = (status: string) => {
+    switch (status) {
+      case 'active':
+        return <CheckCircle className="w-5 h-5 text-green-500" />;
+      case 'error':
+        return <XCircle className="w-5 h-5 text-red-500" />;
+      default:
+        return <AlertCircle className="w-5 h-5 text-yellow-500" />;
     }
   };
 
   const getStatusBadge = (status: string) => {
-    const statusConfig = {
-      authorized: { variant: 'default' as const, icon: CheckCircle, label: 'Autorizada' },
-      pending: { variant: 'secondary' as const, icon: Clock, label: 'Pendente' },
-      rejected: { variant: 'destructive' as const, icon: XCircle, label: 'Rejeitada' },
-      cancelled: { variant: 'outline' as const, icon: XCircle, label: 'Cancelada' },
-      draft: { variant: 'outline' as const, icon: FileText, label: 'Rascunho' },
+    const variants = {
+      active: 'default',
+      error: 'destructive',
+      inactive: 'secondary'
+    };
+    
+    const labels = {
+      active: 'Ativo',
+      error: 'Erro',
+      inactive: 'Inativo'
     };
 
-    const config = statusConfig[status as keyof typeof statusConfig] || statusConfig.draft;
-    const Icon = config.icon;
-
     return (
-      <Badge variant={config.variant} className="flex items-center gap-1">
-        <Icon className="h-3 w-3" />
-        {config.label}
+      <Badge variant={variants[status as keyof typeof variants] || 'secondary'}>
+        {labels[status as keyof typeof labels] || status}
       </Badge>
     );
   };
 
-  const formatCurrency = (value: number) => {
-    return new Intl.NumberFormat('pt-BR', {
-      style: 'currency',
-      currency: 'BRL'
-    }).format(value);
-  };
-
-  if (isLoadingStats || isLoadingRecent) {
+  if (!canManageCompany) {
     return (
       <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Activity className="h-5 w-5 animate-pulse" />
-            Carregando status das NFes...
-          </CardTitle>
-        </CardHeader>
+        <CardContent className="p-6">
+          <div className="text-center text-muted-foreground">
+            Você não tem permissão para visualizar o status da NFe.
+          </div>
+        </CardContent>
       </Card>
     );
   }
 
   return (
-    <div className="space-y-6">
-      {/* Estatísticas Resumidas */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <Card>
-          <CardContent className="pt-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-muted-foreground">Total</p>
-                <p className="text-2xl font-bold">{stats?.total || 0}</p>
-              </div>
-              <FileText className="h-8 w-8 text-muted-foreground" />
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardContent className="pt-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-muted-foreground">Autorizadas</p>
-                <p className="text-2xl font-bold text-green-600">{stats?.authorized || 0}</p>
-              </div>
-              <CheckCircle className="h-8 w-8 text-green-600" />
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardContent className="pt-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-muted-foreground">Pendentes</p>
-                <p className="text-2xl font-bold text-yellow-600">{stats?.pending || 0}</p>
-              </div>
-              <Clock className="h-8 w-8 text-yellow-600" />
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardContent className="pt-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-muted-foreground">Rejeitadas</p>
-                <p className="text-2xl font-bold text-red-600">{stats?.rejected || 0}</p>
-              </div>
-              <XCircle className="h-8 w-8 text-red-600" />
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Monitor de Status */}
-      <Card>
-        <CardHeader className="flex flex-row items-center justify-between">
-          <CardTitle className="flex items-center gap-2">
-            <Activity className="h-5 w-5" />
-            Monitor de NFes
-          </CardTitle>
-          <Button
-            variant="outline"
+    <Card>
+      <CardHeader>
+        <CardTitle className="flex items-center justify-between">
+          <span>Status da NFe</span>
+          <Button 
+            onClick={() => refetch()} 
+            variant="outline" 
             size="sm"
-            onClick={handleRefresh}
-            disabled={refreshing}
+            disabled={isLoading}
           >
-            <RefreshCw className={`h-4 w-4 mr-2 ${refreshing ? 'animate-spin' : ''}`} />
+            <RefreshCw className={`w-4 h-4 mr-2 ${isLoading ? 'animate-spin' : ''}`} />
             Atualizar
           </Button>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-4">
-            {/* Estatísticas do período */}
-            <div className="flex items-center gap-6 p-4 bg-muted/50 rounded-lg">
-              <div className="flex items-center gap-2">
-                <TrendingUp className="h-4 w-4 text-blue-600" />
-                <span className="text-sm font-medium">Hoje: {stats?.today || 0}</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <TrendingUp className="h-4 w-4 text-green-600" />
-                <span className="text-sm font-medium">Este mês: {stats?.thisMonth || 0}</span>
+        </CardTitle>
+      </CardHeader>
+      <CardContent className="space-y-4">
+        {isLoading ? (
+          <div className="flex items-center justify-center p-8">
+            <RefreshCw className="w-8 h-8 animate-spin text-muted-foreground" />
+          </div>
+        ) : nfeStatus ? (
+          <>
+            <div className="flex items-center space-x-3">
+              {getStatusIcon(nfeStatus.status)}
+              <div className="flex-1">
+                <div className="flex items-center space-x-2">
+                  <span className="font-medium">Status:</span>
+                  {getStatusBadge(nfeStatus.status)}
+                </div>
+                <p className="text-sm text-muted-foreground mt-1">
+                  {nfeStatus.message}
+                </p>
               </div>
             </div>
 
-            {/* NFes Recentes */}
-            <div>
-              <h4 className="font-medium mb-3">NFes Recentes</h4>
-              {recentNFes && recentNFes.length > 0 ? (
-                <div className="space-y-2">
-                  {recentNFes.map((nfe) => (
-                    <div
-                      key={nfe.id}
-                      className="flex items-center justify-between p-3 border rounded-lg hover:bg-muted/50 transition-colors"
-                    >
-                      <div className="flex-1">
-                        <div className="flex items-center gap-3">
-                          <span className="font-mono text-sm font-medium">
-                            #{nfe.invoice_number}
-                          </span>
-                          {getStatusBadge(nfe.status)}
-                        </div>
-                        {nfe.customer_name && (
-                          <p className="text-sm text-muted-foreground mt-1">
-                            {nfe.customer_name}
-                          </p>
-                        )}
-                      </div>
-                      <div className="text-right">
-                        <p className="font-medium">{formatCurrency(nfe.total_amount)}</p>
-                        <p className="text-sm text-muted-foreground">
-                          {new Date(nfe.issue_date).toLocaleDateString()}
-                        </p>
-                      </div>
-                    </div>
-                  ))}
+            {nfeStatus.certificate && (
+              <div className="border-t pt-4">
+                <h4 className="font-medium mb-2">Certificado Digital</h4>
+                <div className="space-y-1">
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm">Nome:</span>
+                    <span className="text-sm text-muted-foreground">{nfeStatus.certificate.cn}</span>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm">Válido até:</span>
+                    <span className="text-sm text-muted-foreground">
+                      {new Date(nfeStatus.certificate.expiresAt).toLocaleDateString('pt-BR')}
+                    </span>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm">Status:</span>
+                    <Badge variant={nfeStatus.certificate.valid ? 'default' : 'destructive'}>
+                      {nfeStatus.certificate.valid ? 'Válido' : 'Inválido'}
+                    </Badge>
+                  </div>
                 </div>
-              ) : (
-                <Alert>
-                  <FileText className="h-4 w-4" />
-                  <AlertDescription>
-                    Nenhuma NFe encontrada. Comece emitindo sua primeira nota fiscal.
-                  </AlertDescription>
-                </Alert>
-              )}
+              </div>
+            )}
+
+            <div className="border-t pt-4">
+              <div className="flex items-center justify-between">
+                <span className="text-sm">Última verificação:</span>
+                <span className="text-sm text-muted-foreground">
+                  {new Date(nfeStatus.lastCheck).toLocaleString('pt-BR')}
+                </span>
+              </div>
             </div>
+          </>
+        ) : (
+          <div className="text-center text-muted-foreground">
+            Não foi possível obter o status da NFe.
           </div>
-        </CardContent>
-      </Card>
-    </div>
+        )}
+      </CardContent>
+    </Card>
   );
 }

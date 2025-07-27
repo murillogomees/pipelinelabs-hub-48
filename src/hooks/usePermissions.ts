@@ -16,8 +16,24 @@ interface UserPermissions {
     permissions: Record<string, boolean>;
   } | null;
   email: string | null;
+  companyId: string | null;
   isLoading: boolean;
   error: any;
+  
+  // Funções de conveniência
+  hasPermission: (permission: string) => boolean;
+  canManageSystem: boolean;
+  canManageCompany: boolean;
+  canAccessAdminPanel: boolean;
+  canBypassAllRestrictions: boolean;
+  canManageUsers: boolean;
+  canAccessDepartmentData: (companyId?: string, department?: string) => boolean;
+  canManageCompanyData: (companyId?: string) => boolean;
+  canAccessRoute: (route?: string) => boolean;
+  canDeleteAnyRecord: boolean;
+  canModifyAnyData: boolean;
+  canManagePlans: boolean;
+  hasFullAccess: boolean;
 }
 
 export function usePermissions(): UserPermissions {
@@ -36,7 +52,8 @@ export function usePermissions(): UserPermissions {
             isAdmin: false,
             permissions: {},
             accessLevel: null,
-            email: null
+            email: null,
+            companyId: null
           };
         }
 
@@ -97,7 +114,8 @@ export function usePermissions(): UserPermissions {
                 system_settings: true
               }
             },
-            email: userEmail
+            email: userEmail,
+            companyId: null
           };
         }
         
@@ -127,7 +145,8 @@ export function usePermissions(): UserPermissions {
             isAdmin: false,
             permissions: {},
             accessLevel: null,
-            email: userEmail
+            email: userEmail,
+            companyId: null
           };
         }
 
@@ -148,7 +167,8 @@ export function usePermissions(): UserPermissions {
           isAdmin,
           permissions,
           accessLevel,
-          email: userEmail
+          email: userEmail,
+          companyId: profile.company_id || null
         };
       } catch (error) {
         console.error("Error in usePermissions:", error);
@@ -164,6 +184,33 @@ export function usePermissions(): UserPermissions {
     staleTime: 30 * 1000,
   });
 
+  const hasPermission = (permission: string) => {
+    if (permissionsData?.isSuperAdmin) return true;
+    return permissionsData?.permissions?.[permission] === true;
+  };
+
+  const canManageSystem = permissionsData?.isSuperAdmin || false;
+  const canManageCompany = permissionsData?.isSuperAdmin || permissionsData?.isContratante || false;
+  const canAccessAdminPanel = permissionsData?.isSuperAdmin || permissionsData?.isContratante || false;
+  const canBypassAllRestrictions = permissionsData?.isSuperAdmin || false;
+  const canManageUsers = permissionsData?.isSuperAdmin || permissionsData?.isContratante || false;
+  const canDeleteAnyRecord = permissionsData?.isSuperAdmin || permissionsData?.isContratante || false;
+  const canModifyAnyData = permissionsData?.isSuperAdmin || permissionsData?.isContratante || false;
+  const canManagePlans = permissionsData?.isSuperAdmin || false;
+  const hasFullAccess = permissionsData?.isSuperAdmin || false;
+
+  const canAccessDepartmentData = (companyId?: string, department?: string) => {
+    return permissionsData?.isSuperAdmin || permissionsData?.isContratante || permissionsData?.isOperador || false;
+  };
+
+  const canManageCompanyData = (companyId?: string) => {
+    return permissionsData?.isSuperAdmin || permissionsData?.isContratante || false;
+  };
+
+  const canAccessRoute = (route?: string) => {
+    return true; // Simplificado para nova estrutura
+  };
+
   return {
     userType: permissionsData?.userType || null,
     isSuperAdmin: permissionsData?.isSuperAdmin || false,
@@ -173,24 +220,23 @@ export function usePermissions(): UserPermissions {
     permissions: permissionsData?.permissions || {},
     accessLevel: permissionsData?.accessLevel || null,
     email: permissionsData?.email || null,
+    companyId: permissionsData?.companyId || null,
     isLoading,
     error,
     
     // Funções de conveniência
-    hasPermission: (permission: string) => {
-      if (permissionsData?.isSuperAdmin) return true;
-      return permissionsData?.permissions?.[permission] === true;
-    },
-    
-    canManageSystem: permissionsData?.isSuperAdmin || false,
-    canManageCompany: permissionsData?.isSuperAdmin || permissionsData?.isContratante || false,
-    canAccessAdminPanel: permissionsData?.isSuperAdmin || permissionsData?.isContratante || false,
-    
-    hasFullAccess: permissionsData?.isSuperAdmin || false,
-    canManageUsers: permissionsData?.isSuperAdmin || permissionsData?.isContratante || false,
-    canAccessDepartmentData: () => true, // Simplificado para nova estrutura
-    canManageCompanyData: () => permissionsData?.isSuperAdmin || permissionsData?.isContratante || false,
-    canAccessRoute: () => true, // Simplificado para nova estrutura
-    canBypassAllRestrictions: permissionsData?.isSuperAdmin || false
+    hasPermission,
+    canManageSystem,
+    canManageCompany,
+    canAccessAdminPanel,
+    canBypassAllRestrictions,
+    canManageUsers,
+    canAccessDepartmentData,
+    canManageCompanyData,
+    canAccessRoute,
+    canDeleteAnyRecord,
+    canModifyAnyData,
+    canManagePlans,
+    hasFullAccess
   };
 }

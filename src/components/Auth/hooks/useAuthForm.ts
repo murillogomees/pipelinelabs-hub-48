@@ -1,284 +1,138 @@
-import { useState } from 'react';
-import { supabase } from '@/integrations/supabase/client';
-import { useToast } from '@/hooks/use-toast';
-import { rateLimiter, cleanupAuthState, sanitizeInput } from '@/utils/security';
-import { cleanDocument } from '@/utils/documentValidation';
 
-interface UseAuthFormProps {
-  onSuccess?: () => void;
+import { useState } from "react";
+import { useToast } from "@/hooks/use-toast";
+import { supabase } from "@/integrations/supabase/client";
+import { validateDocument } from "@/utils/documentValidation";
+
+interface FormData {
+  email: string;
+  password: string;
+  confirmPassword: string;
+  name: string;
+  document: string;
+  phone: string;
 }
 
-export function useAuthForm({ onSuccess }: UseAuthFormProps = {}) {
-  const [loading, setLoading] = useState(false);
-  const [rateLimited, setRateLimited] = useState(false);
-  const [rateLimitTime, setRateLimitTime] = useState(0);
+export function useAuthForm() {
+  const [formData, setFormData] = useState<FormData>({
+    email: "",
+    password: "",
+    confirmPassword: "",
+    name: "",
+    document: "",
+    phone: "",
+  });
+  const [isLoading, setIsLoading] = useState(false);
+  const [isSignUp, setIsSignUp] = useState(false);
   const { toast } = useToast();
 
-  const validatePassword = (password: string): string | null => {
-    if (password.length < 8) {
-      return 'A senha deve ter pelo menos 8 caracteres';
-    }
-    if (!/(?=.*[a-z])/.test(password)) {
-      return 'A senha deve conter pelo menos uma letra minúscula';
-    }
-    if (!/(?=.*[A-Z])/.test(password)) {
-      return 'A senha deve conter pelo menos uma letra maiúscula';
-    }
-    if (!/(?=.*\d)/.test(password)) {
-      return 'A senha deve conter pelo menos um número';
-    }
-    if (!/(?=.*[@$!%*?&])/.test(password)) {
-      return 'A senha deve conter pelo menos um caractere especial (@$!%*?&)';
-    }
-    return null;
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({ ...prev, [name]: value }));
   };
 
-  const sanitizeErrorMessage = (errorMessage: string): string => {
-    if (errorMessage.includes('duplicate key value') || errorMessage.includes('Este email já está cadastrado')) {
-      return 'Este email já está cadastrado no sistema';
-    }
-    if (errorMessage.includes('Invalid login credentials')) {
-      return 'Email ou senha incorretos';
-    }
-    if (errorMessage.includes('Email not confirmed')) {
-      return 'Confirme seu email antes de fazer login';
-    }
-    if (errorMessage.includes('Too many requests')) {
-      return 'Muitas tentativas. Tente novamente em alguns minutos';
-    }
-    if (errorMessage.includes('document_already_exists')) {
-      return 'Este CPF/CNPJ já está cadastrado no sistema. Entre em contato com o suporte para obter ajuda.';
-    }
-    return errorMessage;
-  };
-
-  const checkUserExists = async (email: string): Promise<boolean> => {
-    const { data, error } = await supabase
-      .from('profiles')
-      .select('user_id')
-      .eq('email', email)
-      .maybeSingle();
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
     
-    if (error && error.code !== 'PGRST116') throw error; // PGRST116 = no rows returned
-    return !!data;
-  };
-
-  const checkDocumentExists = async (cleanedDocument: string): Promise<boolean> => {
-    const { data, error } = await supabase
-      .from('companies')
-      .select('id')
-      .eq('document', cleanedDocument)
-      .maybeSingle();
-    
-    if (error && error.code !== 'PGRST116') throw error; // PGRST116 = no rows returned
-    return !!data;
-  };
-
-  const createCompanyAndAssociation = async (userId: string, companyData: {
-    companyName: string;
-    document: string;
-    phone: string;
-  }) => {
-    const cleanedDocument = cleanDocument(companyData.document);
-    
-    // Verificação adicional de segurança (já foi verificado antes, mas garantindo)
-    const documentExists = await checkDocumentExists(cleanedDocument);
-    if (documentExists) {
-      throw new Error('document_already_exists');
-    }
-
-    const { data: company, error: companyError } = await supabase
-      .from('companies')
-      .insert({
-        name: sanitizeInput(companyData.companyName.trim()),
-        document: cleanedDocument,
-        phone: sanitizeInput(companyData.phone.trim()) || null,
-      })
-      .select()
-      .single();
-
-    if (companyError) throw companyError;
-
-    const { error: associationError } = await supabase
-      .from('user_companies')
-      .insert({
-        user_id: userId,
-        company_id: company.id,
-        user_type: 'contratante',
-        is_active: true,
-        permissions: {
-          dashboard: true,
-          vendas: true,
-          produtos: true,
-          clientes: true,
-          financeiro: true,
-          notas_fiscais: true,
-          producao: true,
-          contratos: true,
-        },
-      });
-
-    if (associationError) throw associationError;
-
-    const { error: settingsError } = await supabase
-      .from('company_settings')
-      .insert({
-        company_id: company.id,
-      });
-
-    if (settingsError) throw settingsError;
-
-    return company;
-  };
-
-  const signIn = async (email: string, password: string) => {
-    const sanitizedEmail = sanitizeInput(email.toLowerCase().trim());
-    
-    const { error } = await supabase.auth.signInWithPassword({
-      email: sanitizedEmail,
-      password,
-    });
-    
-    if (error) throw error;
-    
-    toast({
-      title: 'Login realizado com sucesso!',
-      description: 'Bem-vindo ao Pipeline Labs.',
-    });
-    
-    // Aguardar um pouco antes de redirecionar para garantir que o estado seja atualizado
-    setTimeout(() => {
-      window.location.href = '/';
-    }, 1000);
-    
-    onSuccess?.();
-  };
-
-  const signUp = async (formData: {
-    email: string;
-    password: string;
-    firstName: string;
-    lastName: string;
-    companyName: string;
-    document: string;
-    phone: string;
-  }) => {
-    const passwordError = validatePassword(formData.password);
-    if (passwordError) {
-      throw new Error(passwordError);
-    }
-
-    if (!formData.companyName.trim()) {
-      throw new Error('Nome da empresa é obrigatório');
-    }
-
-    // Verificar se o usuário já existe
-    const sanitizedEmail = sanitizeInput(formData.email.toLowerCase().trim());
-    const userExists = await checkUserExists(sanitizedEmail);
-    if (userExists) {
-      throw new Error('Este email já está cadastrado no sistema');
-    }
-
-    // Verificar se a empresa (documento) já existe
-    const cleanedDocument = cleanDocument(formData.document);
-    const documentExists = await checkDocumentExists(cleanedDocument);
-    if (documentExists) {
-      throw new Error('document_already_exists');
-    }
-
-    cleanupAuthState();
-    
-    const sanitizedFirstName = sanitizeInput(formData.firstName.trim());
-    const sanitizedLastName = sanitizeInput(formData.lastName.trim());
-    
-    const { data, error } = await supabase.auth.signUp({
-      email: sanitizedEmail,
-      password: formData.password,
-      options: {
-        data: {
-          first_name: sanitizedFirstName,
-          last_name: sanitizedLastName,
-        },
-        emailRedirectTo: `${window.location.origin}/planos`
-      },
-    });
-    
-    if (error) throw error;
-    
-    if (data.user) {
-      try {
-        await createCompanyAndAssociation(data.user.id, {
-          companyName: formData.companyName,
-          document: formData.document,
-          phone: formData.phone,
+    if (isSignUp) {
+      // Validações para cadastro
+      if (formData.password !== formData.confirmPassword) {
+        toast({
+          title: "Erro",
+          description: "As senhas não coincidem",
+          variant: "destructive",
         });
-      } catch (companyError: any) {
-        console.error('Failed to create company:', companyError);
-        throw companyError;
+        return;
+      }
+
+      if (!validateDocument(formData.document)) {
+        toast({
+          title: "Erro",
+          description: "CPF/CNPJ inválido",
+          variant: "destructive",
+        });
+        return;
       }
     }
-    
-    toast({
-      title: 'Conta criada!',
-      description: 'Verifique seu email para confirmar a conta.',
-    });
-    
-    // Redirecionar para seleção de planos após cadastro confirmado
-    setTimeout(() => {
-      window.location.href = '/planos';
-    }, 2000);
-    
-    onSuccess?.();
-  };
 
-  const handleAuth = async (
-    isSignUp: boolean,
-    formData: {
-      email: string;
-      password: string;
-      firstName?: string;
-      lastName?: string;
-      companyName?: string;
-      document?: string;
-      phone?: string;
-    }
-  ) => {
-    if (rateLimiter.isRateLimited('auth_attempts', 5, 15 * 60 * 1000)) {
-      const remaining = rateLimiter.getRemainingTime('auth_attempts');
-      setRateLimited(true);
-      setRateLimitTime(remaining);
-      toast({
-        title: 'Muitas tentativas',
-        description: `Tente novamente em ${Math.ceil(remaining / 60000)} minutos.`,
-        variant: 'destructive',
-      });
-      return;
-    }
-
-    setLoading(true);
+    setIsLoading(true);
 
     try {
       if (isSignUp) {
-        await signUp(formData as Required<typeof formData>);
+        // Cadastro
+        const { error } = await supabase.auth.signUp({
+          email: formData.email,
+          password: formData.password,
+          options: {
+            data: {
+              display_name: formData.name,
+              document: formData.document,
+              phone: formData.phone,
+            }
+          }
+        });
+
+        if (error) throw error;
+
+        toast({
+          title: "Sucesso",
+          description: "Cadastro realizado com sucesso! Verifique seu email para confirmar a conta.",
+        });
       } else {
-        await signIn(formData.email, formData.password);
+        // Login
+        const { error } = await supabase.auth.signInWithPassword({
+          email: formData.email,
+          password: formData.password,
+        });
+
+        if (error) throw error;
+
+        toast({
+          title: "Sucesso",
+          description: "Login realizado com sucesso!",
+        });
       }
     } catch (error: any) {
-      const sanitizedMessage = sanitizeErrorMessage(error.message);
+      console.error("Auth error:", error);
+      
+      let message = "Erro inesperado. Tente novamente.";
+      
+      if (error.message?.includes("Invalid login credentials")) {
+        message = "Email ou senha incorretos";
+      } else if (error.message?.includes("User already registered")) {
+        message = "Este email já está cadastrado";
+      } else if (error.message?.includes("Password should be at least")) {
+        message = "A senha deve ter pelo menos 6 caracteres";
+      }
+
       toast({
-        title: 'Erro',
-        description: sanitizedMessage,
-        variant: 'destructive',
+        title: "Erro",
+        description: message,
+        variant: "destructive",
       });
     } finally {
-      setLoading(false);
+      setIsLoading(false);
     }
   };
 
+  const toggleMode = () => {
+    setIsSignUp(!isSignUp);
+    setFormData({
+      email: "",
+      password: "",
+      confirmPassword: "",
+      name: "",
+      document: "",
+      phone: "",
+    });
+  };
+
   return {
-    loading,
-    rateLimited,
-    rateLimitTime,
-    handleAuth,
+    formData,
+    handleInputChange,
+    handleSubmit,
+    isLoading,
+    isSignUp,
+    toggleMode,
   };
 }
