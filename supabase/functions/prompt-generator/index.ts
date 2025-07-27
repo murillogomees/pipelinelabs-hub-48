@@ -13,6 +13,8 @@ serve(async (req) => {
   }
 
   try {
+    console.log('Iniciando prompt-generator...')
+    
     const supabaseClient = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
       Deno.env.get('SUPABASE_ANON_KEY') ?? '',
@@ -22,11 +24,14 @@ serve(async (req) => {
     // Verificar se o usuário é super admin
     const { data: { user }, error: userError } = await supabaseClient.auth.getUser()
     if (userError || !user) {
+      console.error('Erro de autenticação:', userError)
       return new Response(JSON.stringify({ error: 'Unauthorized' }), {
         status: 401,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       })
     }
+
+    console.log('Usuário autenticado:', user.id)
 
     const { data: userCompany } = await supabaseClient
       .from('user_companies')
@@ -37,14 +42,19 @@ serve(async (req) => {
       .single()
 
     if (!userCompany) {
+      console.error('Acesso negado - não é super admin')
       return new Response(JSON.stringify({ error: 'Access denied. Super admin only.' }), {
         status: 403,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       })
     }
 
+    console.log('Acesso de super admin confirmado')
+
     const requestBody = await req.json().catch(() => ({}))
     const { prompt, temperature = 0.7, model = 'gpt-4o-mini' } = requestBody
+
+    console.log('Dados recebidos:', { prompt: prompt?.substring(0, 50), temperature, model })
 
     if (!prompt) {
       return new Response(JSON.stringify({ error: 'Prompt is required' }), {
@@ -56,6 +66,7 @@ serve(async (req) => {
     // Verificar se a chave da OpenAI está configurada
     const openaiKey = Deno.env.get('OPENAI_API_KEY')
     if (!openaiKey) {
+      console.error('Chave OpenAI não configurada')
       return new Response(JSON.stringify({ 
         error: 'OpenAI API key not configured. Please configure OPENAI_API_KEY environment variable.' 
       }), {
@@ -63,6 +74,8 @@ serve(async (req) => {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       })
     }
+
+    console.log('Chamando OpenAI API...')
 
     // Chamar OpenAI
     const openaiResponse = await fetch('https://api.openai.com/v1/chat/completions', {
@@ -98,7 +111,8 @@ serve(async (req) => {
             6. Use o padrão de componentes existente no projeto
             7. Crie hooks customizados quando apropriado
             8. NÃO inclua imports desnecessários
-            9. Mantenha código limpo e bem estruturado`
+            9. Mantenha código limpo e bem estruturado
+            10. SEMPRE retorne um JSON válido`
           },
           {
             role: 'user',
@@ -110,8 +124,11 @@ serve(async (req) => {
       }),
     })
 
+    console.log('Status da resposta OpenAI:', openaiResponse.status)
+
     if (!openaiResponse.ok) {
       const errorText = await openaiResponse.text().catch(() => 'Unknown error')
+      console.error('Erro na API OpenAI:', errorText)
       return new Response(JSON.stringify({ 
         error: `OpenAI API error: ${openaiResponse.status} - ${errorText}` 
       }), {
@@ -121,14 +138,19 @@ serve(async (req) => {
     }
 
     const openaiData = await openaiResponse.json()
+    console.log('Dados recebidos da OpenAI:', openaiData)
+
     const generatedContent = openaiData.choices?.[0]?.message?.content
 
     if (!generatedContent) {
+      console.error('Nenhum conteúdo gerado pela OpenAI')
       return new Response(JSON.stringify({ error: 'No content generated' }), {
         status: 500,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       })
     }
+
+    console.log('Conteúdo gerado:', generatedContent.substring(0, 100))
 
     let parsedContent
     try {
@@ -142,6 +164,7 @@ serve(async (req) => {
         parsedContent = JSON.parse(generatedContent)
       }
     } catch (parseError) {
+      console.log('Erro ao fazer parse do JSON, usando estrutura padrão')
       parsedContent = {
         files: {},
         sql: [],
@@ -149,6 +172,8 @@ serve(async (req) => {
         rawContent: generatedContent
       }
     }
+
+    console.log('Conteúdo processado com sucesso')
 
     return new Response(JSON.stringify({
       success: true,
@@ -160,7 +185,7 @@ serve(async (req) => {
     })
 
   } catch (error) {
-    console.error('Error in prompt-generator:', error)
+    console.error('Erro geral no prompt-generator:', error)
     return new Response(JSON.stringify({ 
       error: error.message || 'Internal server error' 
     }), {

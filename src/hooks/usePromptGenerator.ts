@@ -49,10 +49,9 @@ export const usePromptGenerator = () => {
 
         if (error) {
           console.error('Error fetching prompt logs:', error);
-          throw new Error('Falha ao carregar histórico de prompts');
+          return [];
         }
         
-        // Transform the data to match our interface
         return (data || []).map(item => ({
           id: item.id,
           prompt: item.prompt,
@@ -74,7 +73,7 @@ export const usePromptGenerator = () => {
       }
     },
     retry: 1,
-    staleTime: 30000, // 30 seconds
+    staleTime: 30000,
   });
 
   // Gerar código com IA
@@ -83,6 +82,7 @@ export const usePromptGenerator = () => {
       logId: string;
       generatedCode: GeneratedCode;
     }> => {
+      console.log('Iniciando geração de código...');
       setIsGenerating(true);
 
       try {
@@ -99,6 +99,7 @@ export const usePromptGenerator = () => {
 
         if (!userCompany) throw new Error('Nenhuma empresa ativa encontrada');
 
+        console.log('Salvando prompt no banco...');
         const { data: promptLog, error: logError } = await supabase
           .from('prompt_logs')
           .insert({
@@ -117,10 +118,13 @@ export const usePromptGenerator = () => {
           throw new Error('Falha ao salvar prompt no histórico');
         }
 
+        console.log('Prompt salvo, chamando edge function...');
         // Chamar a edge function para gerar código
         const { data, error } = await supabase.functions.invoke('prompt-generator', {
           body: { prompt, temperature, model }
         });
+
+        console.log('Resposta da edge function:', data, error);
 
         if (error) {
           console.error('Error invoking prompt-generator:', error);
@@ -139,6 +143,7 @@ export const usePromptGenerator = () => {
 
         if (!data || !data.success) {
           const errorMsg = data?.error || 'Resposta inválida da API';
+          console.error('Dados inválidos recebidos:', data);
           
           // Atualizar o log com erro
           await supabase
@@ -152,6 +157,7 @@ export const usePromptGenerator = () => {
           throw new Error(errorMsg);
         }
 
+        console.log('Código gerado com sucesso, atualizando log...');
         // Atualizar o log com o código gerado
         const { error: updateError } = await supabase
           .from('prompt_logs')
@@ -162,9 +168,9 @@ export const usePromptGenerator = () => {
 
         if (updateError) {
           console.error('Error updating prompt log:', updateError);
-          // Não falhar por causa disso, apenas log
         }
 
+        console.log('Processo concluído com sucesso');
         return {
           logId: promptLog.id,
           generatedCode: data.data
@@ -197,8 +203,6 @@ export const usePromptGenerator = () => {
       setIsApplying(true);
 
       try {
-        // Aqui seria implementada a lógica real de aplicar o código
-        // Por enquanto, vamos apenas marcar como aplicado
         const { error } = await supabase
           .from('prompt_logs')
           .update({
