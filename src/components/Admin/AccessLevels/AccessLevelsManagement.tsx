@@ -91,10 +91,6 @@ export function AccessLevelsManagement() {
     }
   };
 
-  const filteredLevels = accessLevels.filter(level => 
-    level.display_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    level.name.toLowerCase().includes(searchTerm.toLowerCase())
-  );
 
   const columns: Column<AccessLevelWithCount>[] = [
     {
@@ -104,8 +100,12 @@ export function AccessLevelsManagement() {
         <div className="flex items-center space-x-2">
           <Shield className="h-4 w-4 text-primary" />
           <div>
-            <p className="font-medium">{filteredLevels}</p>
-            <p className="text-sm text-muted-foreground">{filteredLevels}</p>
+            <p className="font-medium">{accessLevels.filter(level => level.display_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+              level.name.toLowerCase().includes(searchTerm.toLowerCase())
+            )}</p>
+            <p className="text-sm text-muted-foreground">{accessLevels.filter(level => level.display_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+              level.name.toLowerCase().includes(searchTerm.toLowerCase())
+            )}</p>
           </div>
         </div>
       )
@@ -195,7 +195,9 @@ export function AccessLevelsManagement() {
       </div>
 
       <DataTable
-        data={filteredLevels}
+        data={accessLevels.filter(level => level.display_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          level.name.toLowerCase().includes(searchTerm.toLowerCase())
+        )}
         columns={columns}
         actions={actions}
         loading={isLoading}
