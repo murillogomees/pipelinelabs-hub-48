@@ -32,7 +32,7 @@ export function AccessLevelsManagement() {
       const levelsWithCount = await Promise.all(
         (levelsData || []).map(async (level: any) => {
           const { count } = await supabase
-            .from('user_companies')
+            .from('profiles')
             .select('*', { count: 'exact', head: true })
             .eq('access_level_id', level.id)
             .eq('is_active', true);
