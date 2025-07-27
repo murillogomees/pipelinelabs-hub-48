@@ -67,24 +67,28 @@ export function useProfile() {
         return null;
       }
 
+      if (!data) return null;
+
       // Ensure the data matches the Profile interface
-      return {
+      const profile: Profile = {
         id: data.id,
         user_id: data.user_id,
-        company_id: data.company_id,
-        access_level_id: data.access_level_id,
-        stripe_customer_id: data.stripe_customer_id,
+        company_id: data.company_id || null,
+        access_level_id: data.access_level_id || null,
+        stripe_customer_id: data.stripe_customer_id || null,
         is_super_admin: data.is_super_admin || false,
-        display_name: data.display_name,
-        email: data.email,
-        phone: data.phone,
-        avatar_url: data.avatar_url,
+        display_name: data.display_name || undefined,
+        email: data.email || undefined,
+        phone: data.phone || undefined,
+        avatar_url: data.avatar_url || undefined,
         is_active: data.is_active,
         created_at: data.created_at,
         updated_at: data.updated_at,
-        access_levels: data.access_levels,
-        companies: data.companies
-      } as Profile;
+        access_levels: data.access_levels || undefined,
+        companies: data.companies || undefined
+      };
+
+      return profile;
     },
     enabled: !!user?.id,
   });
