@@ -96,7 +96,7 @@ export function AccessLevelsManagement() {
     level.name.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-    const { data: levels, error: lError } = await supabase
+    const { data: levels, error: lError } = supabase
             .from('access_levels')
             .select('*')
             .order('created_at', { ascending: false });
