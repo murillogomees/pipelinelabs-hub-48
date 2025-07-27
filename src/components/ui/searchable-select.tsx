@@ -1,3 +1,4 @@
+
 import * as React from "react"
 import { Check, ChevronsUpDown, Loader2 } from "lucide-react"
 import { cn } from "@/lib/utils"
@@ -180,8 +181,9 @@ export function SearchableSelect({
                           key={option.value}
                           value={option.value}
                           onSelect={() => {
-                            onValueChange?.(option.value === value ? "" : option.value)
-                            setOpen(false)
+                            const newValue = option.value === value ? "" : option.value;
+                            onValueChange?.(newValue);
+                            setOpen(false);
                           }}
                           disabled={option.disabled}
                           className="cursor-pointer"

@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -50,13 +51,14 @@ export function ProductTaxForm({ data, onChange }: ProductTaxFormProps) {
             <div>
               <Label htmlFor="tax_origin">Origem</Label>
               <Select
-                value={data.tax_origin || ''}
-                onValueChange={(value) => onChange('tax_origin', value)}
+                value={data.tax_origin || 'none'}
+                onValueChange={(value) => onChange('tax_origin', value === 'none' ? null : value)}
               >
                 <SelectTrigger>
                   <SelectValue placeholder="Selecione a origem" />
                 </SelectTrigger>
                 <SelectContent>
+                  <SelectItem value="none">Selecione uma origem</SelectItem>
                   {Object.entries(TAX_ORIGINS).map(([code, description]) => (
                     <SelectItem key={code} value={code}>
                       {code} - {description}
@@ -80,13 +82,14 @@ export function ProductTaxForm({ data, onChange }: ProductTaxFormProps) {
             <div>
               <Label htmlFor="item_type">Tipo do Item</Label>
               <Select
-                value={data.item_type || ''}
-                onValueChange={(value) => onChange('item_type', value)}
+                value={data.item_type || 'none'}
+                onValueChange={(value) => onChange('item_type', value === 'none' ? null : value)}
               >
                 <SelectTrigger>
                   <SelectValue placeholder="Selecione o tipo" />
                 </SelectTrigger>
                 <SelectContent>
+                  <SelectItem value="none">Selecione um tipo</SelectItem>
                   <SelectItem value="00">00 - Mercadoria para Revenda</SelectItem>
                   <SelectItem value="01">01 - Matéria-Prima</SelectItem>
                   <SelectItem value="02">02 - Embalagem</SelectItem>

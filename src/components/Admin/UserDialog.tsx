@@ -201,11 +201,12 @@ export function UserDialog({ open, onOpenChange, user, onSave }: UserDialogProps
 
           <div className="space-y-2">
             <Label htmlFor="access_level">Nível de Acesso</Label>
-            <Select value={formData.access_level_id} onValueChange={(value) => setFormData(prev => ({ ...prev, access_level_id: value }))}>
+            <Select value={formData.access_level_id || 'none'} onValueChange={(value) => setFormData(prev => ({ ...prev, access_level_id: value === 'none' ? '' : value }))}>
               <SelectTrigger>
                 <SelectValue placeholder="Selecione o nível de acesso" />
               </SelectTrigger>
               <SelectContent>
+                <SelectItem value="none">Selecione um nível</SelectItem>
                 {accessLevels.map((level) => (
                   <SelectItem key={level.id} value={level.id}>
                     <div className="flex items-center space-x-2">

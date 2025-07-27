@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -25,12 +26,13 @@ export function ProductCategoryForm({ data, onChange }: ProductCategoryFormProps
             <Label htmlFor="category_id">Categoria do Produto</Label>
             <Select
               value={data.category_id || ''}
-              onValueChange={(value) => onChange('category_id', value || null)}
+              onValueChange={(value) => onChange('category_id', value === 'none' ? null : value)}
             >
               <SelectTrigger>
                 <SelectValue placeholder={isLoading ? "Carregando..." : "Selecione uma categoria"} />
               </SelectTrigger>
               <SelectContent>
+                <SelectItem value="none">Sem categoria</SelectItem>
                 {categories?.map((category) => (
                   <SelectItem key={category.id} value={category.id}>
                     {category.name}
