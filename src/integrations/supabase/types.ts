@@ -381,6 +381,151 @@ export type Database = {
         }
         Relationships: []
       }
+      auditoria_config: {
+        Row: {
+          auditoria_ativa: boolean
+          auto_limpeza_segura: boolean
+          company_id: string
+          created_at: string
+          email_notificacao: string | null
+          escopo_padrao: Json
+          frequencia_cron: string
+          id: string
+          limite_problemas_alerta: number
+          manter_historico_dias: number
+          notificacoes_ativas: boolean
+          proxima_execucao: string | null
+          regras_preservacao: Json
+          ultima_execucao: string | null
+          updated_at: string
+          webhook_notificacao: string | null
+        }
+        Insert: {
+          auditoria_ativa?: boolean
+          auto_limpeza_segura?: boolean
+          company_id: string
+          created_at?: string
+          email_notificacao?: string | null
+          escopo_padrao?: Json
+          frequencia_cron?: string
+          id?: string
+          limite_problemas_alerta?: number
+          manter_historico_dias?: number
+          notificacoes_ativas?: boolean
+          proxima_execucao?: string | null
+          regras_preservacao?: Json
+          ultima_execucao?: string | null
+          updated_at?: string
+          webhook_notificacao?: string | null
+        }
+        Update: {
+          auditoria_ativa?: boolean
+          auto_limpeza_segura?: boolean
+          company_id?: string
+          created_at?: string
+          email_notificacao?: string | null
+          escopo_padrao?: Json
+          frequencia_cron?: string
+          id?: string
+          limite_problemas_alerta?: number
+          manter_historico_dias?: number
+          notificacoes_ativas?: boolean
+          proxima_execucao?: string | null
+          regras_preservacao?: Json
+          ultima_execucao?: string | null
+          updated_at?: string
+          webhook_notificacao?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "auditoria_config_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      auditoria_historico: {
+        Row: {
+          arquivos_analisados: number
+          arquivos_duplicados: Json
+          arquivos_nao_utilizados: Json
+          company_id: string
+          componentes_duplicados: Json
+          created_at: string
+          erro_detalhes: string | null
+          escopo_auditoria: Json
+          feedback_usuario: string | null
+          hooks_nao_utilizados: Json
+          id: string
+          melhorias_aplicadas: Json
+          padroes_aprendidos: Json
+          problemas_encontrados: number
+          score_aprendizado: number
+          status: string
+          sugestoes_limpeza: Json
+          tempo_execucao_ms: number
+          tipo_auditoria: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          arquivos_analisados?: number
+          arquivos_duplicados?: Json
+          arquivos_nao_utilizados?: Json
+          company_id: string
+          componentes_duplicados?: Json
+          created_at?: string
+          erro_detalhes?: string | null
+          escopo_auditoria?: Json
+          feedback_usuario?: string | null
+          hooks_nao_utilizados?: Json
+          id?: string
+          melhorias_aplicadas?: Json
+          padroes_aprendidos?: Json
+          problemas_encontrados?: number
+          score_aprendizado?: number
+          status?: string
+          sugestoes_limpeza?: Json
+          tempo_execucao_ms?: number
+          tipo_auditoria: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          arquivos_analisados?: number
+          arquivos_duplicados?: Json
+          arquivos_nao_utilizados?: Json
+          company_id?: string
+          componentes_duplicados?: Json
+          created_at?: string
+          erro_detalhes?: string | null
+          escopo_auditoria?: Json
+          feedback_usuario?: string | null
+          hooks_nao_utilizados?: Json
+          id?: string
+          melhorias_aplicadas?: Json
+          padroes_aprendidos?: Json
+          problemas_encontrados?: number
+          score_aprendizado?: number
+          status?: string
+          sugestoes_limpeza?: Json
+          tempo_execucao_ms?: number
+          tipo_auditoria?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "auditoria_historico_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       backup_settings: {
         Row: {
           auto_backup_enabled: boolean
@@ -4052,6 +4197,10 @@ export type Database = {
       }
     }
     Functions: {
+      agendar_proxima_auditoria: {
+        Args: Record<PropertyKey, never>
+        Returns: undefined
+      }
       analyze_database_performance: {
         Args: Record<PropertyKey, never>
         Returns: {
@@ -4212,6 +4361,10 @@ export type Database = {
       }
       encrypt_sensitive_data: {
         Args: { data_to_encrypt: string; encryption_key: string }
+        Returns: string
+      }
+      executar_auditoria_automatica: {
+        Args: { p_company_id: string }
         Returns: string
       }
       export_user_data: {
