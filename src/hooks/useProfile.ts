@@ -106,6 +106,7 @@ export const useProfile = () => {
   // Função para verificar se precisa de redirecionamento de assinatura
   const needsSubscriptionRedirect = (): boolean => {
     if (isSuperAdmin) return false;
+    // Verificar se existe stripe_customer_id no profile ou user_companies
     return !profile?.stripe_customer_id;
   };
 
@@ -120,7 +121,8 @@ export const useProfile = () => {
     address: profile.address,
     city: profile.city,
     state: profile.state,
-    zip_code: profile.zipcode || profile.zip_code,
+    zip_code: profile.zipcode,
+    zipcode: profile.zipcode,
     avatar_url: profile.avatar_url,
     is_active: profile.is_active,
     access_level_id: profile.access_level_id,
@@ -131,12 +133,12 @@ export const useProfile = () => {
       name: profile.access_levels?.name || '',
       description: profile.access_levels?.description || '',
       permissions: Array.isArray(profile.access_levels?.permissions) 
-        ? profile.access_levels.permissions 
+        ? profile.access_levels.permissions.map(p => String(p))
         : []
     },
-    // Campos opcionais que podem não existir
-    company_id: profile.company_id || undefined,
-    stripe_customer_id: profile.stripe_customer_id || undefined,
+    // Campos opcionais que podem não existir no banco
+    company_id: undefined,
+    stripe_customer_id: undefined,
     is_super_admin: isSuperAdmin,
     companies: profile.companies || undefined,
   } : null;
