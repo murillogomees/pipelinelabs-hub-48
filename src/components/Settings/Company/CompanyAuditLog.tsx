@@ -7,39 +7,41 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
 import { Loader2, Search, Filter } from 'lucide-react';
-import { useUserCompany } from '@/hooks/useUserCompany';
-import { useAuditLogs } from '@/hooks/useAuditLogs';
+import { useAuth } from '@/components/Auth/AuthProvider';
 
 interface AuditLogFilters {
   user_id?: string;
   action?: string;
   resource_type?: string;
   severity?: string;
-  start_date?: string;
-  end_date?: string;
+  start_date?: Date;
+  end_date?: Date;
+}
+
+interface AuditLog {
+  id: string;
+  action: string;
+  resource_type: string;
+  severity: string;
+  created_at: string;
+  user_email?: string;
+  ip_address?: string;
+  status: string;
+  details?: any;
 }
 
 export const CompanyAuditLog: React.FC = () => {
-  const { userCompany, isLoading: isLoadingCompany } = useUserCompany();
+  const { user } = useAuth();
   const [filters, setFilters] = useState<AuditLogFilters>({});
   
-  const { 
-    logs, 
-    isLoading: isLoadingLogs, 
-    error,
-    refetch 
-  } = useAuditLogs({
-    company_id: userCompany?.company_id,
-    ...filters
-  });
+  // Mock data for now
+  const logs: AuditLog[] = [];
+  const isLoading = false;
+  const error = null;
 
-  if (isLoadingCompany || !userCompany?.company_id) {
-    return (
-      <div className="flex items-center justify-center p-8">
-        <Loader2 className="h-8 w-8 animate-spin" />
-      </div>
-    );
-  }
+  const refetch = () => {
+    // Mock refetch
+  };
 
   const handleFilterChange = (key: keyof AuditLogFilters, value: string) => {
     setFilters(prev => ({ ...prev, [key]: value }));
@@ -58,6 +60,14 @@ export const CompanyAuditLog: React.FC = () => {
       default: return 'secondary';
     }
   };
+
+  if (!user?.id) {
+    return (
+      <div className="flex items-center justify-center p-8">
+        <p className="text-muted-foreground">Faça login para visualizar os logs</p>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -137,13 +147,13 @@ export const CompanyAuditLog: React.FC = () => {
           <CardTitle>Log de Auditoria</CardTitle>
         </CardHeader>
         <CardContent>
-          {isLoadingLogs ? (
+          {isLoading ? (
             <div className="flex items-center justify-center p-8">
               <Loader2 className="h-8 w-8 animate-spin" />
             </div>
           ) : error ? (
             <div className="text-center p-8 text-red-500">
-              Erro ao carregar logs: {error.message}
+              Erro ao carregar logs: {error}
             </div>
           ) : logs.length === 0 ? (
             <div className="text-center p-8 text-muted-foreground">

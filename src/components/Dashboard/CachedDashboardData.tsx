@@ -1,20 +1,19 @@
 
 import React from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
-import { useUserCompany } from '@/hooks/useUserCompany';
+import { useAuth } from '@/components/Auth/AuthProvider';
 
 interface CachedDashboardDataProps {
   children: (data: any) => React.ReactNode;
 }
 
 export const CachedDashboardData: React.FC<CachedDashboardDataProps> = ({ children }) => {
-  const { userCompany } = useUserCompany();
+  const { user } = useAuth();
 
   const { data: dashboardData, isLoading } = useQuery({
-    queryKey: ['dashboard-data', userCompany?.company_id],
+    queryKey: ['dashboard-data', user?.id],
     queryFn: async () => {
-      if (!userCompany?.company_id) return null;
+      if (!user?.id) return null;
 
       // Mock dashboard data for now
       return {
@@ -24,9 +23,9 @@ export const CachedDashboardData: React.FC<CachedDashboardDataProps> = ({ childr
         invoices: { count: 0 }
       };
     },
-    enabled: !!userCompany?.company_id,
+    enabled: !!user?.id,
     staleTime: 5 * 60 * 1000, // 5 minutes
-    cacheTime: 10 * 60 * 1000, // 10 minutes
+    gcTime: 10 * 60 * 1000, // 10 minutes (replaces cacheTime)
   });
 
   if (isLoading) {

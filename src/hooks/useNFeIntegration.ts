@@ -17,6 +17,16 @@ interface NFeConfig {
   updated_at: string;
 }
 
+interface CertificateValidationResult {
+  is_valid: boolean;
+  days_until_expiry: number;
+  valid_to: string;
+  subject: string;
+  issuer: string;
+  serial_number: string;
+  valid_from: string;
+}
+
 export const useNFeIntegration = () => {
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -86,7 +96,7 @@ export const useNFeIntegration = () => {
   });
 
   const validateCertificate = useMutation({
-    mutationFn: async (file?: File, password?: string) => {
+    mutationFn: async (file?: File, password?: string): Promise<CertificateValidationResult> => {
       // Mock validation
       return {
         is_valid: true,
@@ -139,7 +149,7 @@ export const useNFeIntegration = () => {
     isLoading,
     testConnection: testConnection.mutate,
     updateConfig: updateConfig.mutate,
-    validateCertificate: validateCertificate.mutate,
+    validateCertificate: validateCertificate.mutateAsync,
     uploadCertificate: uploadCertificate.mutate,
     isTestingConnection: testConnection.isPending,
     isUpdatingConfig: updateConfig.isPending,

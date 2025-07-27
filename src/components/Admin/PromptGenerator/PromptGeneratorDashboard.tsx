@@ -143,7 +143,7 @@ export const PromptGeneratorDashboard: React.FC = () => {
             <CardContent>
               <CodePreview 
                 generatedCode={generatedCode}
-                logId={selectedLog}
+                logId={selectedLog || undefined}
                 onApply={handleApplyCode}
                 isApplying={isApplying}
               />

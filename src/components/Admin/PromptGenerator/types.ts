@@ -1,56 +1,10 @@
 
-export interface ConversationStep {
-  id: string;
-  type: 'initial_query' | 'technical_approval' | 'implementation' | 'build_verification';
-  status: 'pending' | 'completed' | 'failed';
-  content: string;
-  timestamp: string;
-  metadata?: Record<string, any>;
-}
-
-export interface TechnicalAnalysis {
-  affectedFiles: string[];
-  impactType: 'performance' | 'security' | 'clean_code' | 'database' | 'architecture';
-  impactDescription: string;
-  justification: string;
-  estimatedChanges: {
-    files: string[];
-    functions: string[];
-    tables: string[];
-    edgeFunctions: string[];
-  };
-}
-
-export interface ImplementationReport {
-  modifiedFiles: string[];
-  linesChanged: Record<string, number>;
-  functionsCreated: string[];
-  functionsModified: string[];
-  functionsRemoved: string[];
-  databaseChanges: {
-    tables: string[];
-    fields: string[];
-    indexes: string[];
-  };
-  edgeFunctions: string[];
-  buildStatus: 'success' | 'failed' | 'pending' | 'running';
-  buildErrors?: string[];
-}
-
-export interface ConversationState {
-  currentStep: ConversationStep['type'];
-  steps: ConversationStep[];
-  technicalAnalysis?: TechnicalAnalysis;
-  implementationReport?: ImplementationReport;
-  originalPrompt: string;
-  logId?: string;
-  learningContext?: LearningContext;
-}
+import { Json } from '@/integrations/supabase/types';
 
 export interface PromptLog {
   id: string;
   prompt: string;
-  generated_code: any;
+  generated_code: Json;
   status: 'pending' | 'applied' | 'rolled_back' | 'error';
   created_at: string;
   applied_at?: string;
@@ -60,70 +14,85 @@ export interface PromptLog {
   company_id: string;
   model_used: string;
   temperature: number;
-  applied_files?: string[];
-  rollback_data?: any;
+  applied_files: string[];
+  rollback_data?: Json;
 }
 
-// Novas interfaces para aprendizado contínuo
-export interface LearningContext {
-  similarSolutions: SimilarSolution[];
-  knowledgeBase: KnowledgeEntry[];
-  patterns: Pattern[];
-  suggestions: string[];
-}
-
-export interface SimilarSolution {
+export interface ConversationStep {
   id: string;
-  prompt: string;
-  solution: string;
-  tags: string[];
-  similarity: number;
-  usage_count: number;
-  last_used: string;
-  effectiveness_score: number;
-}
-
-export interface KnowledgeEntry {
-  id: string;
-  title: string;
-  description: string;
-  category: string;
-  tags: string[];
-  code_snippet: string;
-  files_affected: string[];
-  solution_type: string;
-  created_at: string;
-  updated_at: string;
-  usage_count: number;
-  success_rate: number;
-}
-
-export interface Pattern {
-  id: string;
-  pattern_type: 'architectural' | 'security' | 'performance' | 'code_style';
-  description: string;
-  trigger_keywords: string[];
-  recommended_solution: string;
-  confidence_score: number;
-  examples: string[];
-}
-
-export interface BuildResult {
-  success: boolean;
-  errors: string[];
-  warnings: string[];
+  type: 'user' | 'ai' | 'system';
+  content: string;
   timestamp: string;
-  build_time_ms: number;
+  metadata?: {
+    prompt?: string;
+    generated_code?: any;
+    build_status?: 'pending' | 'success' | 'error';
+    build_errors?: string[];
+    suggestions?: string[];
+  };
 }
 
 export interface LearningSession {
   id: string;
-  prompt: string;
-  context: LearningContext;
-  analysis: TechnicalAnalysis;
-  implementation: ImplementationReport;
-  build_result: BuildResult;
-  user_feedback?: 'positive' | 'negative';
-  improvements_made: string[];
+  session_id: string;
+  user_id: string;
+  company_id: string;
+  query: string;
+  response: string;
+  context: Json;
+  feedback_score?: number;
+  feedback_comment?: string;
+  tags: string[];
   created_at: string;
+  updated_at: string;
+}
+
+export interface KnowledgeBase {
+  id: string;
+  title: string;
+  content: string;
+  category: string;
+  tags: string[];
+  effectiveness_score: number;
+  usage_count: number;
+  last_used: string;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface SimilarityPattern {
+  id: string;
+  pattern_hash: string;
+  pattern_type: 'query' | 'solution' | 'error';
+  pattern_data: Json;
+  similarity_threshold: number;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface BuildStatus {
+  status: 'pending' | 'success' | 'error';
+  errors?: string[];
+  warnings?: string[];
+  timestamp: string;
+}
+
+export interface GeneratedCode {
+  files: {
+    path: string;
+    content: string;
+    action: 'create' | 'update' | 'delete';
+  }[];
+  dependencies?: string[];
+  explanation: string;
+  warnings?: string[];
+}
+
+export interface PromptGeneratorConfig {
+  defaultModel: string;
+  defaultTemperature: number;
+  maxTokens: number;
+  enableBuildVerification: boolean;
+  enableLearning: boolean;
+  enableSimilarityCheck: boolean;
 }
