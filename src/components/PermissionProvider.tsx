@@ -49,7 +49,7 @@ export function PermissionProvider({ children }: PermissionProviderProps) {
     hasPermission: permissions.hasPermission,
     canAccess,
     canManageSystem: permissions.canManageSystem,
-    canManageCompany: permissions.canManageCompanyData,
+    canManageCompany: permissions.canManageCompany,
     canAccessAdminPanel: permissions.canAccessAdminPanel,
     isSuperAdmin: permissions.isSuperAdmin,
     isContratante: permissions.isContratante,

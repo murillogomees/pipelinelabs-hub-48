@@ -1,8 +1,10 @@
 
 import { useProfile } from './useProfile';
+import { useCurrentCompany } from './useCurrentCompany';
 
 export const usePermissions = () => {
-  const { profile, isSuperAdmin, hasPermission, canAccessRoute } = useProfile();
+  const { profile, isLoading, error, isSuperAdmin, hasPermission, canAccessRoute } = useProfile();
+  const { data: currentCompany } = useCurrentCompany();
 
   const isAdmin = isSuperAdmin || hasPermission('admin_panel');
   const isContratante = hasPermission('admin_panel') || hasPermission('empresas');
@@ -12,6 +14,15 @@ export const usePermissions = () => {
   const canManageCompanies = isSuperAdmin || hasPermission('empresas');
   const canManageSystem = isSuperAdmin || hasPermission('sistema');
   const canManageSecurity = isSuperAdmin || hasPermission('seguranca');
+  const canManagePlans = isSuperAdmin || hasPermission('planos');
+  const canDeleteAnyRecord = isSuperAdmin || isContratante;
+  const canModifyAnyData = isSuperAdmin || isContratante;
+  const canManageCompany = isSuperAdmin || isContratante;
+  const canManageCompanyData = isSuperAdmin || isContratante;
+  const canAccessAdminPanel = isSuperAdmin || hasPermission('admin_panel');
+
+  const currentCompanyId = currentCompany?.company_id || profile?.company_id;
+  const userType = isSuperAdmin ? 'super_admin' : (isContratante ? 'contratante' : 'operador');
 
   const canAccess = {
     dashboard: hasPermission('dashboard'),
@@ -37,6 +48,8 @@ export const usePermissions = () => {
 
   return {
     profile,
+    isLoading,
+    error,
     isSuperAdmin,
     isAdmin,
     isContratante,
@@ -45,6 +58,14 @@ export const usePermissions = () => {
     canManageCompanies,
     canManageSystem,
     canManageSecurity,
+    canManagePlans,
+    canDeleteAnyRecord,
+    canModifyAnyData,
+    canManageCompany,
+    canManageCompanyData,
+    canAccessAdminPanel,
+    currentCompanyId,
+    userType,
     hasPermission,
     canAccessRoute,
     canAccess,
