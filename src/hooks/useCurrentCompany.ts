@@ -41,11 +41,19 @@ export const useCurrentCompany = () => {
       }
 
       // Para usuários normais, usar empresa do perfil
-      if (profile?.company_id && profile?.companies) {
-        return {
-          company_id: profile.company_id,
-          company: profile.companies
-        };
+      if (profile?.company_id) {
+        const { data: company, error } = await supabase
+          .from('companies')
+          .select('id, name')
+          .eq('id', profile.company_id)
+          .single();
+
+        if (!error && company) {
+          return {
+            company_id: profile.company_id,
+            company: company
+          };
+        }
       }
 
       throw new Error('Nenhuma empresa encontrada');

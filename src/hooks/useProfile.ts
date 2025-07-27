@@ -13,7 +13,8 @@ export interface Profile {
   address: string;
   city: string;
   state: string;
-  zip_code: string;
+  zip_code?: string;
+  zipcode?: string;
   avatar_url: string;
   is_active: boolean;
   access_level_id: string;
@@ -29,6 +30,10 @@ export interface Profile {
   company_id?: string;
   stripe_customer_id?: string;
   is_super_admin?: boolean;
+  companies?: {
+    id: string;
+    name: string;
+  };
 }
 
 export const useProfile = () => {
@@ -48,6 +53,10 @@ export const useProfile = () => {
             name,
             description,
             permissions
+          ),
+          companies (
+            id,
+            name
           )
         `)
         .eq('id', user.id)
@@ -66,7 +75,10 @@ export const useProfile = () => {
   // Função para verificar se o usuário tem uma permissão específica
   const hasPermission = (permission: string): boolean => {
     if (!profile?.access_levels?.permissions) return false;
-    return profile.access_levels.permissions.includes(permission);
+    const permissions = Array.isArray(profile.access_levels.permissions) 
+      ? profile.access_levels.permissions 
+      : [];
+    return permissions.includes(permission);
   };
 
   // Função para verificar se o usuário pode acessar uma rota
@@ -91,8 +103,14 @@ export const useProfile = () => {
   // Verificar se é super admin
   const isSuperAdmin = profile?.access_levels?.name === 'super_admin';
 
+  // Função para verificar se precisa de redirecionamento de assinatura
+  const needsSubscriptionRedirect = (): boolean => {
+    if (isSuperAdmin) return false;
+    return !profile?.stripe_customer_id;
+  };
+
   // Mapear dados do profile para compatibilidade
-  const mappedProfile: Profile = profile ? {
+  const mappedProfile: Profile | null = profile ? {
     id: profile.id,
     email: profile.email,
     display_name: profile.display_name,
@@ -102,17 +120,25 @@ export const useProfile = () => {
     address: profile.address,
     city: profile.city,
     state: profile.state,
-    zip_code: profile.zip_code,
+    zip_code: profile.zipcode || profile.zip_code,
     avatar_url: profile.avatar_url,
     is_active: profile.is_active,
     access_level_id: profile.access_level_id,
     created_at: profile.created_at,
     updated_at: profile.updated_at,
-    access_levels: profile.access_levels,
+    access_levels: {
+      id: profile.access_levels?.id || '',
+      name: profile.access_levels?.name || '',
+      description: profile.access_levels?.description || '',
+      permissions: Array.isArray(profile.access_levels?.permissions) 
+        ? profile.access_levels.permissions 
+        : []
+    },
     // Campos opcionais que podem não existir
     company_id: profile.company_id || undefined,
     stripe_customer_id: profile.stripe_customer_id || undefined,
     is_super_admin: isSuperAdmin,
+    companies: profile.companies || undefined,
   } : null;
 
   return {
@@ -122,5 +148,6 @@ export const useProfile = () => {
     hasPermission,
     canAccessRoute,
     isSuperAdmin,
+    needsSubscriptionRedirect,
   };
 };

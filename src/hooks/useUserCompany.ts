@@ -1,16 +1,15 @@
 
+import { useCurrentCompany } from './useCurrentCompany';
 import { useProfile } from './useProfile';
 
-// Backward compatibility wrapper - now uses profile instead of user_companies
 export const useUserCompany = () => {
-  const { profile, isLoading, error } = useProfile();
+  const { profile } = useProfile();
+  const { data: currentCompany, isLoading, error } = useCurrentCompany();
 
   return {
-    userCompany: profile ? {
-      company_id: profile.company_id,
-      company: profile.companies
-    } : null,
+    company: currentCompany?.company || null,
+    companyId: currentCompany?.company_id || profile?.company_id || null,
     isLoading,
-    error
+    error,
   };
 };

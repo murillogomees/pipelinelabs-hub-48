@@ -28,6 +28,7 @@ import Integracoes from '@/pages/Integracoes';
 import ConfiguracoesIntegracoes from '@/pages/ConfiguracoesIntegracoes';
 import MarketplaceChannels from '@/pages/MarketplaceChannels';
 import Notificacoes from '@/pages/Notificacoes';
+import Subscription from '@/pages/Subscription';
 
 // Admin Pages
 import Admin from '@/pages/Admin';
@@ -113,6 +114,7 @@ function App() {
                 <Route path="configuracoes-integracoes" element={<ConfiguracoesIntegracoes />} />
                 <Route path="marketplace-channels" element={<MarketplaceChannels />} />
                 <Route path="notificacoes" element={<Notificacoes />} />
+                <Route path="subscription" element={<Subscription />} />
 
                 {/* User Routes */}
                 <Route path="user">
