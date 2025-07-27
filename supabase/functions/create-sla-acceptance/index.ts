@@ -32,8 +32,8 @@ Deno.serve(async (req) => {
 
     // Get user's company
     const { data: userCompany } = await supabaseClient
-      .from('user_companies')
-      .select('company_id')
+      .from('profile')
+      .select('id')
       .eq('user_id', user.id)
       .eq('is_active', true)
       .single()
