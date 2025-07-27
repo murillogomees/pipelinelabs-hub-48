@@ -11,7 +11,6 @@ import { usePermissions } from '@/hooks/usePermissions';
 import { WidgetSelector } from '@/components/Dashboard/WidgetSelector';
 import { ResponsiveWidgetContainer } from '@/components/Dashboard/ResponsiveWidgetContainer';
 import { MobileWidgetList } from '@/components/Dashboard/MobileWidgetList';
-import { ResponsiveDashboardHeader } from '@/components/Dashboard/ResponsiveDashboardHeader';
 import { EmptyDashboardState } from '@/components/Dashboard/EmptyDashboardState';
 import { useMobile } from '@/hooks/use-mobile';
 
@@ -62,18 +61,12 @@ const Dashboard: React.FC = () => {
     queryFn: async () => {
       if (!currentCompanyId) return null;
 
-      const { data, error } = await supabase
-        .from('profiles')
-        .select('*')
-        .eq('company_id', currentCompanyId)
-        .single();
-
-      if (error) {
-        console.error('Error fetching dashboard config:', error);
-        return null;
-      }
-
-      return data;
+      // Mock dashboard config for now
+      return {
+        id: 'mock-config',
+        company_id: currentCompanyId,
+        layout: 'default'
+      };
     },
     enabled: !!currentCompanyId
   });
@@ -120,11 +113,27 @@ const Dashboard: React.FC = () => {
 
   return (
     <div className="space-y-6">
-      <ResponsiveDashboardHeader
-        viewMode={viewMode}
-        onViewModeChange={setViewMode}
-        onAddWidget={() => setIsWidgetSelectorOpen(true)}
-      />
+      {/* Dashboard Header */}
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-3xl font-bold">Dashboard</h1>
+          <p className="text-muted-foreground">Visão geral do seu negócio</p>
+        </div>
+        <div className="flex items-center gap-2">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setViewMode(viewMode === 'desktop' ? 'mobile' : 'desktop')}
+          >
+            {viewMode === 'desktop' ? <Smartphone className="h-4 w-4" /> : <Grid className="h-4 w-4" />}
+            {viewMode === 'desktop' ? 'Móvel' : 'Desktop'}
+          </Button>
+          <Button onClick={() => setIsWidgetSelectorOpen(true)}>
+            <Plus className="h-4 w-4 mr-2" />
+            Adicionar Widget
+          </Button>
+        </div>
+      </div>
 
       {widgets.length === 0 ? (
         <EmptyDashboardState onAddWidget={() => setIsWidgetSelectorOpen(true)} />

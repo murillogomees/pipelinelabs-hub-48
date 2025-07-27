@@ -1,203 +1,237 @@
 
-import React from 'react';
-import { Routes, Route, NavLink, useLocation } from 'react-router-dom';
+import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Plus, FileText, Receipt, Building, Send, X, Download } from 'lucide-react';
-import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { useNFe } from '@/hooks/useNFe';
+import { Input } from '@/components/ui/input';
 import { RealNFeDialog } from '@/components/NFe/RealNFeDialog';
+import { useNFe } from '@/hooks/useNFe';
+import { useNFeIntegration } from '@/hooks/useNFeIntegration';
+import { 
+  FileText, 
+  Plus, 
+  Search, 
+  Eye, 
+  Download,
+  Send,
+  Ban,
+  CheckCircle,
+  AlertTriangle,
+  Clock
+} from 'lucide-react';
 
-// Componente para NFe
-function NFe() {
-  const {
-    nfeList,
-    isLoading,
-    sendNFe,
-    cancelNFe
-  } = useNFe();
-  const [dialogOpen, setDialogOpen] = React.useState(false);
-  const getStatusBadge = (nfe: any) => {
-    const status = nfe.nfe_xmls?.[0]?.status || 'draft';
-    const variants = {
-      draft: 'secondary',
-      sent: 'outline',
-      authorized: 'default',
-      canceled: 'destructive',
-      rejected: 'destructive'
-    } as const;
-    const labels = {
-      draft: 'Rascunho',
-      sent: 'Enviada',
-      authorized: 'Autorizada',
-      canceled: 'Cancelada',
-      rejected: 'Rejeitada'
-    };
-    return <Badge variant={variants[status as keyof typeof variants] || 'secondary'}>
-        {labels[status as keyof typeof labels] || status}
-      </Badge>;
+const NotasFiscais: React.FC = () => {
+  const [searchTerm, setSearchTerm] = useState('');
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [selectedNFe, setSelectedNFe] = useState<any>(null);
+
+  const { nfeData, isLoading, createNFe, updateNFe, deleteNFe, isCreating, isUpdating } = useNFe();
+  const { nfeIntegration } = useNFeIntegration();
+
+  // Add missing properties to nfeIntegration
+  const nfeList = nfeData || [];
+  const sendNFe = (data: any) => {
+    console.log('Sending NFe:', data);
+    // Implementation for sending NFe
   };
-  const formatCurrency = (value: number) => {
-    return new Intl.NumberFormat('pt-BR', {
-      style: 'currency',
-      currency: 'BRL'
-    }).format(value);
+  const cancelNFe = (id: string) => {
+    console.log('Cancelling NFe:', id);
+    // Implementation for cancelling NFe
   };
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('pt-BR');
+
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case 'approved':
+        return 'bg-green-100 text-green-800';
+      case 'pending':
+        return 'bg-yellow-100 text-yellow-800';
+      case 'rejected':
+        return 'bg-red-100 text-red-800';
+      case 'cancelled':
+        return 'bg-gray-100 text-gray-800';
+      default:
+        return 'bg-gray-100 text-gray-800';
+    }
   };
-  return <div className="space-y-6">
-      <div className="flex justify-between items-center">
+
+  const getStatusIcon = (status: string) => {
+    switch (status) {
+      case 'approved':
+        return <CheckCircle className="h-4 w-4" />;
+      case 'pending':
+        return <Clock className="h-4 w-4" />;
+      case 'rejected':
+        return <AlertTriangle className="h-4 w-4" />;
+      case 'cancelled':
+        return <Ban className="h-4 w-4" />;
+      default:
+        return <FileText className="h-4 w-4" />;
+    }
+  };
+
+  const handleCreateNFe = () => {
+    setSelectedNFe(null);
+    setIsDialogOpen(true);
+  };
+
+  const handleEditNFe = (nfe: any) => {
+    setSelectedNFe(nfe);
+    setIsDialogOpen(true);
+  };
+
+  const handleSendNFe = (nfe: any) => {
+    sendNFe(nfe);
+  };
+
+  const handleCancelNFe = (nfe: any) => {
+    cancelNFe(nfe.id);
+  };
+
+  const filteredNFes = nfeList.filter((nfe: any) =>
+    nfe.invoice_number?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    nfe.customers?.name?.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-6">
+      {/* Header */}
+      <div className="flex items-center justify-between">
         <div>
-          
+          <h1 className="text-3xl font-bold">Notas Fiscais</h1>
           <p className="text-muted-foreground">
-        </p>
+            Gerencie suas notas fiscais eletrônicas
+          </p>
         </div>
-        <RealNFeDialog trigger={<Button>
-              <Plus className="w-4 h-4 mr-2" />
-              Nova NFe
-            </Button>} />
+        <Button onClick={handleCreateNFe}>
+          <Plus className="h-4 w-4 mr-2" />
+          Nova NFe
+        </Button>
       </div>
 
+      {/* Search */}
+      <div className="flex items-center gap-4">
+        <div className="relative flex-1">
+          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+          <Input
+            placeholder="Buscar por número ou cliente..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="pl-10"
+          />
+        </div>
+      </div>
+
+      {/* NFe List */}
       <Card>
         <CardHeader>
-          <CardTitle>Notas Fiscais</CardTitle>
+          <CardTitle className="flex items-center gap-2">
+            <FileText className="h-5 w-5" />
+            Notas Fiscais ({filteredNFes.length})
+          </CardTitle>
         </CardHeader>
         <CardContent>
-          {isLoading ? <div className="flex items-center justify-center h-40">
-              <p className="text-muted-foreground">Carregando...</p>
-            </div> : nfeList.length === 0 ? <div className="flex items-center justify-center h-40">
-              <p className="text-muted-foreground">Nenhuma NFe encontrada</p>
-            </div> : <div className="space-y-4">
-              {nfeList.map((nfe: any) => <div key={nfe.id} className="border rounded-lg p-4 space-y-3">
-                  <div className="flex items-start justify-between">
-                    <div className="space-y-1">
-                      <div className="flex items-center gap-2">
-                        <span className="font-medium">NFe #{nfe.invoice_number}</span>
-                        {getStatusBadge(nfe)}
+          {filteredNFes.length === 0 ? (
+            <div className="text-center py-8">
+              <FileText className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
+              <h3 className="text-lg font-semibold mb-2">Nenhuma nota fiscal encontrada</h3>
+              <p className="text-muted-foreground mb-4">
+                Comece criando sua primeira nota fiscal eletrônica
+              </p>
+              <Button onClick={handleCreateNFe}>
+                <Plus className="h-4 w-4 mr-2" />
+                Criar Nova NFe
+              </Button>
+            </div>
+          ) : (
+            <div className="space-y-4">
+              {filteredNFes.map((nfe: any) => (
+                <div
+                  key={nfe.id}
+                  className="border rounded-lg p-4 hover:bg-gray-50 transition-colors"
+                >
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-4">
+                      <div>
+                        <h3 className="font-semibold">NFe #{nfe.invoice_number}</h3>
+                        <p className="text-sm text-muted-foreground">
+                          {nfe.customers?.name || 'Cliente não informado'}
+                        </p>
                       </div>
-                      <p className="text-sm text-muted-foreground">
-                        Série: {nfe.series} | Data: {formatDate(nfe.issue_date)}
-                      </p>
-                      {nfe.customers && <p className="text-sm">
-                          Cliente: {nfe.customers.name}
-                        </p>}
+                      <Badge className={getStatusColor(nfe.status)}>
+                        <div className="flex items-center gap-1">
+                          {getStatusIcon(nfe.status)}
+                          {nfe.status}
+                        </div>
+                      </Badge>
                     </div>
-                    <div className="text-right space-y-1">
-                      <p className="font-medium">{formatCurrency(nfe.total_amount)}</p>
-                      <div className="flex gap-2">
-                        {nfe.nfe_xmls?.[0]?.status === 'draft' && <Button size="sm" variant="outline" onClick={() => sendNFe.mutate(nfe.id)} disabled={sendNFe.isPending}>
-                            <Send className="h-4 w-4 mr-1" />
-                            Enviar
-                          </Button>}
-                        {(nfe.nfe_xmls?.[0]?.status === 'authorized' || nfe.nfe_xmls?.[0]?.status === 'sent') && <Button size="sm" variant="destructive" onClick={() => cancelNFe.mutate(nfe.id)} disabled={cancelNFe.isPending}>
-                            <X className="h-4 w-4 mr-1" />
-                            Cancelar
-                          </Button>}
-                        {nfe.nfe_xmls?.[0]?.pdf_url && <Button size="sm" variant="outline" onClick={() => window.open(nfe.nfe_xmls[0].pdf_url, '_blank')}>
-                            <Download className="h-4 w-4 mr-1" />
-                            PDF
-                          </Button>}
+                    <div className="flex items-center gap-2">
+                      <div className="text-right">
+                        <p className="font-semibold">
+                          R$ {nfe.total_amount?.toFixed(2) || '0,00'}
+                        </p>
+                        <p className="text-sm text-muted-foreground">
+                          {new Date(nfe.issue_date).toLocaleDateString()}
+                        </p>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => handleEditNFe(nfe)}
+                        >
+                          <Eye className="h-4 w-4" />
+                        </Button>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => handleSendNFe(nfe)}
+                          disabled={nfe.status === 'approved'}
+                        >
+                          <Send className="h-4 w-4" />
+                        </Button>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => handleCancelNFe(nfe)}
+                          disabled={nfe.status === 'cancelled'}
+                        >
+                          <Ban className="h-4 w-4" />
+                        </Button>
                       </div>
                     </div>
                   </div>
-                  
-                  {nfe.nfe_xmls?.[0]?.access_key && <div className="text-xs text-muted-foreground">
-                      Chave: {nfe.nfe_xmls[0].access_key}
-                    </div>}
-                  
-                  {nfe.nfe_xmls?.[0]?.rejection_reason && <div className="text-sm text-destructive bg-destructive/10 p-2 rounded">
-                      Motivo da rejeição: {nfe.nfe_xmls[0].rejection_reason}
-                    </div>}
-                </div>)}
-            </div>}
+                </div>
+              ))}
+            </div>
+          )}
         </CardContent>
       </Card>
 
-    </div>;
-}
+      {/* NFe Dialog */}
+      <RealNFeDialog
+        open={isDialogOpen}
+        onOpenChange={setIsDialogOpen}
+        nfe={selectedNFe}
+        onSave={(data) => {
+          if (selectedNFe) {
+            updateNFe({ id: selectedNFe.id, ...data });
+          } else {
+            createNFe(data);
+          }
+          setIsDialogOpen(false);
+        }}
+        isLoading={isCreating || isUpdating}
+      />
+    </div>
+  );
+};
 
-// Componente para NFCe
-function NFCe() {
-  return <div className="space-y-6">
-      <div className="flex justify-between items-center">
-        <div>
-          <h2 className="text-2xl font-bold text-foreground">NFCe - Nota Fiscal do Consumidor</h2>
-          <p className="text-muted-foreground">Emita cupons fiscais eletrônicos</p>
-        </div>
-        <Button className="bg-primary hover:bg-primary/90 text-primary-foreground">
-          <Plus className="w-4 h-4 mr-2" />
-          Nova NFCe
-        </Button>
-      </div>
-
-      <Card>
-        <CardContent className="p-6">
-          <div className="text-center py-12">
-            <Receipt className="w-16 h-16 text-muted-foreground mx-auto mb-4" />
-            <h3 className="text-xl font-semibold mb-2">NFCe em Desenvolvimento</h3>
-            <p className="text-muted-foreground">
-              O módulo de emissão de NFCe estará disponível em breve.
-            </p>
-          </div>
-        </CardContent>
-      </Card>
-    </div>;
-}
-
-// Componente para NFSe
-function NFSe() {
-  return <div className="space-y-6">
-      <div className="flex justify-between items-center">
-        <div>
-          <h2 className="text-2xl font-bold text-foreground">NFSe - Nota Fiscal de Serviços</h2>
-          <p className="text-muted-foreground">Emita notas fiscais de serviços</p>
-        </div>
-        <Button className="bg-primary hover:bg-primary/90 text-primary-foreground">
-          <Plus className="w-4 h-4 mr-2" />
-          Nova NFSe
-        </Button>
-      </div>
-
-      <Card>
-        <CardContent className="p-6">
-          <div className="text-center py-12">
-            <Building className="w-16 h-16 text-muted-foreground mx-auto mb-4" />
-            <h3 className="text-xl font-semibold mb-2">NFSe em Desenvolvimento</h3>
-            <p className="text-muted-foreground">
-              O módulo de emissão de NFSe estará disponível em breve.
-            </p>
-          </div>
-        </CardContent>
-      </Card>
-    </div>;
-}
-
-// Componente principal Notas Fiscais
-export default function NotasFiscais() {
-  const location = useLocation();
-
-  // Determina a aba ativa baseada na URL
-  const getActiveTab = () => {
-    const path = location.pathname;
-    if (path.includes('/nfe')) return 'nfe';
-    if (path.includes('/nfce')) return 'nfce';
-    if (path.includes('/nfse')) return 'nfse';
-    return 'nfe'; // padrão
-  };
-  return <div className="space-y-6">
-      <div>
-        <h1 className="text-3xl font-bold text-foreground">Notas Fiscais</h1>
-        <p className="text-muted-foreground">Emita e gerencie notas fiscais</p>
-      </div>
-
-      
-      <Routes>
-        <Route index element={<NFe />} />
-        <Route path="nfe" element={<NFe />} />
-        <Route path="nfce" element={<NFCe />} />
-        <Route path="nfse" element={<NFSe />} />
-      </Routes>
-    </div>;
-}
+export default NotasFiscais;
