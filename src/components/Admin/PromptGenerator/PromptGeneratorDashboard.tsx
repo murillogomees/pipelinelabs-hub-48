@@ -7,6 +7,20 @@ import { PromptHistory } from './PromptHistory';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Shield } from 'lucide-react';
 
+interface PromptLog {
+  id: string;
+  prompt: string;
+  generated_code: any;
+  model_used: string;
+  temperature: number;
+  status: 'pending' | 'applied' | 'error' | 'rolled_back';
+  error_message?: string;
+  applied_files: string[];
+  created_at: string;
+  applied_at?: string;
+  rolled_back_at?: string;
+}
+
 export const PromptGeneratorDashboard: React.FC = () => {
   const {
     promptLogs,
@@ -86,6 +100,17 @@ export const PromptGeneratorDashboard: React.FC = () => {
     rollbackCode(logId);
   }, [rollbackCode]);
 
+  const handleViewCode = useCallback((log: PromptLog) => {
+    setCurrentGeneration({
+      logId: log.id,
+      generatedCode: log.generated_code
+    });
+  }, []);
+
+  const handleApplyFromHistory = useCallback((logId: string) => {
+    handleApply(logId);
+  }, [handleApply]);
+
   // Memoizar propriedades para evitar re-renders desnecessários
   const promptLogsData = useMemo(() => promptLogs || [], [promptLogs]);
 
@@ -122,6 +147,8 @@ export const PromptGeneratorDashboard: React.FC = () => {
           <PromptHistory
             promptLogs={promptLogsData}
             onRollback={handleRollback}
+            onApplyCode={handleApplyFromHistory}
+            onViewCode={handleViewCode}
             isLoadingLogs={isLoadingLogs}
           />
         </div>
