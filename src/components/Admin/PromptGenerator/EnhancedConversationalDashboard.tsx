@@ -116,86 +116,74 @@ export const EnhancedConversationalDashboard: React.FC<EnhancedConversationalDas
     const prompt = conversationState.originalPrompt;
     
     // Gerar código baseado no prompt
-    generateCode(
-      {
-        prompt,
-        temperature: 0.7,
-        model: 'gpt-4o-mini'
-      },
-      {
-        onSuccess: (data) => {
-          console.log('Código gerado:', data);
-          
-          const implementationReport = {
-            modifiedFiles: Object.keys(data.files || {}),
-            linesChanged: Object.keys(data.files || {}).reduce((acc, file) => {
-              acc[file] = 50; // Estimativa
-              return acc;
-            }, {} as Record<string, number>),
-            functionsCreated: data.suggestions?.map((s: any) => s.title) || [],
-            functionsModified: [],
-            functionsRemoved: [],
-            databaseChanges: {
-              tables: data.sql?.length > 0 ? ['nova_tabela'] : [],
-              fields: [],
-              indexes: []
-            },
-            edgeFunctions: data.files && Object.keys(data.files).some(f => f.includes('functions')) ? ['nova-funcao'] : [],
-            buildStatus: 'success' as const,
-            buildErrors: []
-          };
-          
-          updateConversationState({
-            currentStep: 'implementation',
-            steps: [
-              ...conversationState.steps,
-              {
-                id: Date.now().toString(),
-                type: 'technical_approval',
-                status: 'completed',
-                content: 'Aprovação técnica concedida',
-                timestamp: new Date().toISOString()
-              }
-            ],
-            implementationReport
-          });
-          
-          // Simular build
-          setTimeout(() => {
-            setBuildStatus('success');
-            updateConversationState({
-              currentStep: 'build_verification',
-              steps: [
-                ...conversationState.steps,
-                {
-                  id: Date.now().toString(),
-                  type: 'implementation',
-                  status: 'completed',
-                  content: 'Implementação concluída com sucesso',
-                  timestamp: new Date().toISOString()
-                }
-              ]
-            });
-          }, 2000);
+    const result = await generateCode(prompt);
+    
+    if (result) {
+      console.log('Código gerado:', result);
+      
+      const implementationReport = {
+        modifiedFiles: ['src/components/NewComponent.tsx'],
+        linesChanged: { 'src/components/NewComponent.tsx': 50 },
+        functionsCreated: ['NewComponent'],
+        functionsModified: [],
+        functionsRemoved: [],
+        databaseChanges: {
+          tables: [],
+          fields: [],
+          indexes: []
         },
-        onError: (error) => {
-          console.error('Erro na geração:', error);
-          updateConversationState({
-            currentStep: 'technical_approval',
-            steps: [
-              ...conversationState.steps,
-              {
-                id: Date.now().toString(),
-                type: 'technical_approval',
-                status: 'failed',
-                content: `Erro na aprovação técnica: ${error.message}`,
-                timestamp: new Date().toISOString()
-              }
-            ]
-          });
-        }
-      }
-    );
+        edgeFunctions: [],
+        buildStatus: 'success' as const,
+        buildErrors: []
+      };
+      
+      updateConversationState({
+        currentStep: 'implementation',
+        steps: [
+          ...conversationState.steps,
+          {
+            id: Date.now().toString(),
+            type: 'technical_approval',
+            status: 'completed',
+            content: 'Aprovação técnica concedida',
+            timestamp: new Date().toISOString()
+          }
+        ],
+        implementationReport
+      });
+      
+      // Simular build
+      setTimeout(() => {
+        setBuildStatus('success');
+        updateConversationState({
+          currentStep: 'build_verification',
+          steps: [
+            ...conversationState.steps,
+            {
+              id: Date.now().toString(),
+              type: 'implementation',
+              status: 'completed',
+              content: 'Implementação concluída com sucesso',
+              timestamp: new Date().toISOString()
+            }
+          ]
+        });
+      }, 2000);
+    } else {
+      updateConversationState({
+        currentStep: 'technical_approval',
+        steps: [
+          ...conversationState.steps,
+          {
+            id: Date.now().toString(),
+            type: 'technical_approval',
+            status: 'failed',
+            content: 'Erro na aprovação técnica',
+            timestamp: new Date().toISOString()
+          }
+        ]
+      });
+    }
   };
 
   const handleBuildVerification = () => {

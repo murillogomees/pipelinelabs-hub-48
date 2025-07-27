@@ -95,12 +95,12 @@ export const usePromptGenerator = () => {
 
   // Função para aplicar código
   const applyCode = useMutation({
-    mutationFn: async (variables: { promptId: string; code: string }) => {
+    mutationFn: async (promptId: string) => {
       // Simular aplicação do código
       await new Promise(resolve => setTimeout(resolve, 1000));
       return { success: true };
     },
-    onSuccess: (_, variables) => {
+    onSuccess: (_, promptId) => {
       toast({
         title: 'Código aplicado',
         description: 'O código foi aplicado com sucesso!',

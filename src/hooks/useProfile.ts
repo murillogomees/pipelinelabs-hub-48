@@ -71,7 +71,7 @@ export function useProfile() {
       if (!user) return [];
 
       const { data, error } = await supabase
-        .from('profiles')
+        .from('user_companies')
         .select(`
           id,
           company_id,
@@ -100,7 +100,12 @@ export function useProfile() {
     if (isSuperAdmin) return true;
     
     const permissions = profile?.access_levels?.permissions || [];
-    return permissions.some(p => String(p) === permission);
+    // Handle Json[] type properly
+    const permissionStrings = Array.isArray(permissions) ? 
+      permissions.map(p => String(p)) : 
+      [];
+    
+    return permissionStrings.includes(permission);
   };
 
   const canAccessRoute = (route: string): boolean => {
@@ -131,6 +136,9 @@ export function useProfile() {
     return hasPermission(requiredPermission);
   };
 
+  // Get company_id from user_companies if available
+  const userCompanyId = userCompanies?.[0]?.company_id;
+
   const transformedProfile: Profile | null = profile ? {
     id: profile.id,
     user_id: profile.user_id,
@@ -146,7 +154,7 @@ export function useProfile() {
     avatar_url: profile.avatar_url,
     is_active: profile.is_active,
     access_level_id: profile.access_level_id,
-    company_id: profile.company_id,
+    company_id: userCompanyId,
     stripe_customer_id: profile.stripe_customer_id,
     created_at: profile.created_at,
     updated_at: profile.updated_at,

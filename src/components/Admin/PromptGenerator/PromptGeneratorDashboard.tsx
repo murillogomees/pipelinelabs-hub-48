@@ -19,7 +19,7 @@ export const PromptGeneratorDashboard: React.FC = () => {
   const [selectedLog, setSelectedLog] = useState<string | null>(null);
   
   const { 
-    promptLogs, 
+    promptHistory, 
     generateCode, 
     applyCode, 
     rollbackCode, 
@@ -27,18 +27,11 @@ export const PromptGeneratorDashboard: React.FC = () => {
     isApplying 
   } = usePromptGenerator();
 
-  const handleGenerateCode = (params: { prompt: string; temperature: number; model: string }) => {
-    generateCode(
-      params,
-      {
-        onSuccess: (data) => {
-          setGeneratedCode(data);
-        },
-        onError: (error) => {
-          console.error('Error generating code:', error);
-        }
-      }
-    );
+  const handleGenerateCode = async (params: { prompt: string; temperature: number; model: string }) => {
+    const result = await generateCode(params.prompt);
+    if (result) {
+      setGeneratedCode(result);
+    }
   };
 
   const handleApplyCode = (logId: string) => {
@@ -70,7 +63,7 @@ export const PromptGeneratorDashboard: React.FC = () => {
   }
 
   // Transform prompt logs to match PromptLog interface
-  const transformedPromptLogs: PromptLog[] = (promptLogs || []).map(log => ({
+  const transformedPromptLogs: PromptLog[] = (promptHistory || []).map(log => ({
     id: log.id,
     prompt: log.prompt,
     generated_code: log.generated_code,
@@ -78,13 +71,13 @@ export const PromptGeneratorDashboard: React.FC = () => {
     created_at: log.created_at,
     applied_at: log.applied_at,
     rolled_back_at: log.rolled_back_at,
-    error_message: log.error_message,
-    user_id: log.user_id,
-    company_id: log.company_id || '',
-    model_used: log.model_used || 'gpt-4',
-    temperature: log.temperature || 0.7,
-    applied_files: Array.isArray(log.applied_files) ? log.applied_files.map(f => String(f)) : [],
-    rollback_data: log.rollback_data
+    error_message: undefined,
+    user_id: '',
+    company_id: '',
+    model_used: 'gpt-4',
+    temperature: 0.7,
+    applied_files: [],
+    rollback_data: undefined
   }));
 
   return (

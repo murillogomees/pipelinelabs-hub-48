@@ -56,22 +56,11 @@ export const EnhancedPromptGenerator: React.FC<EnhancedPromptGeneratorProps> = (
   const handleGenerate = async () => {
     if (!currentPrompt.trim()) return;
 
-    generateCode(
-      {
-        prompt: currentPrompt,
-        temperature: 0.7,
-        model: 'gpt-4o-mini'
-      },
-      {
-        onSuccess: (data) => {
-          setGeneratedCode(data);
-          console.log('Código gerado com sucesso:', data);
-        },
-        onError: (error) => {
-          console.error('Erro ao gerar código:', error);
-        }
-      }
-    );
+    const result = await generateCode(currentPrompt);
+    if (result) {
+      setGeneratedCode(result);
+      console.log('Código gerado com sucesso:', result);
+    }
   };
 
   const getSuggestions = () => {
