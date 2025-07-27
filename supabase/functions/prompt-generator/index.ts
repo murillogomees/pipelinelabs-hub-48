@@ -83,8 +83,41 @@ serve(async (req) => {
 
     console.log('Chamando OpenAI API...')
 
+    // Gerar nomes de arquivos mais específicos baseados no prompt
+    const generateFileName = (prompt: string, type: 'component' | 'hook' | 'page' | 'service' | 'util') => {
+      const cleanPrompt = prompt.toLowerCase()
+        .replace(/[^a-z0-9\s]/g, ' ')
+        .replace(/\s+/g, ' ')
+        .trim()
+        .split(' ')
+        .slice(0, 3)
+        .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+        .join('')
+
+      const timestamp = new Date().toISOString().slice(0, 10).replace(/-/g, '')
+      
+      switch (type) {
+        case 'component':
+          return `src/components/${cleanPrompt}Component_${timestamp}.tsx`
+        case 'hook':
+          return `src/hooks/use${cleanPrompt}_${timestamp}.ts`
+        case 'page':
+          return `src/pages/${cleanPrompt}Page_${timestamp}.tsx`
+        case 'service':
+          return `src/services/${cleanPrompt}Service_${timestamp}.ts`
+        case 'util':
+          return `src/utils/${cleanPrompt}Utils_${timestamp}.ts`
+      }
+    }
+
     // Prompt do sistema melhorado
-    const systemPrompt = `Você é um desenvolvedor sênior especialista em React, TypeScript, Tailwind CSS e Supabase.
+    const systemPrompt = `Você é um desenvolvedor sênior especialista em React, TypeScript, Tailwind CSS e Supabase para a aplicação Pipeline Labs ERP.
+
+CONTEXTO DA APLICAÇÃO:
+- Pipeline Labs é um ERP completo com gestão de vendas, produtos, clientes, fornecedores, estoque, financeiro, etc.
+- Usa React + TypeScript + Tailwind CSS + Supabase
+- Sistema de permissões com super_admin, contratante e operador
+- Arquitetura baseada em componentes modulares
 
 INSTRUÇÕES ESPECÍFICAS:
 
@@ -92,8 +125,8 @@ INSTRUÇÕES ESPECÍFICAS:
 Retorne SEMPRE um JSON válido com esta estrutura:
 {
   "files": {
-    "src/components/Example.tsx": "código completo aqui",
-    "src/hooks/useExample.ts": "código completo aqui"
+    "${generateFileName(prompt, 'component')}": "código completo aqui",
+    "${generateFileName(prompt, 'hook')}": "código completo aqui"
   },
   "sql": ["CREATE TABLE...", "ALTER TABLE..."],
   "description": "Descrição do que foi implementado",
@@ -114,15 +147,16 @@ Retorne SEMPRE um JSON válido com esta estrutura:
 - Use Supabase para dados quando necessário
 - Código COMPLETO e funcional, não esqueletos
 - Siga as melhores práticas do React
+- Considere o contexto ERP da Pipeline Labs
+- Use nomes de arquivos específicos baseados no prompt
 
 3. **ANÁLISE DO PROMPT:**
-Analise cuidadosamente o prompt do usuário e implemente EXATAMENTE o que foi solicitado.
-Não adicione funcionalidades não solicitadas.
-Foque em resolver o problema específico mencionado.
+Analise cuidadosamente o prompt e gere nomes de arquivos específicos e relevantes.
+Não use nomes genéricos como "NewComponent" ou "useNewHook".
 
 PROMPT DO USUÁRIO: ${prompt}
 
-Implemente exatamente o que foi solicitado no prompt, sem adicionar funcionalidades extras.`;
+Implemente exatamente o que foi solicitado no prompt, com nomes de arquivos específicos e relevantes ao contexto.`
 
     // Chamar OpenAI
     const openaiResponse = await fetch('https://api.openai.com/v1/chat/completions', {

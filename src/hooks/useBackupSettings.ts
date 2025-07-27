@@ -1,6 +1,8 @@
+
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { useProfile } from "@/hooks/useProfile";
 import { createLogger } from "@/utils/logger";
 
 const backupLogger = createLogger('BackupSettings');
@@ -22,10 +24,15 @@ interface BackupSettings {
 export function useBackupSettings() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const { profile, isSuperAdmin } = useProfile();
 
   const { data: settings, isLoading } = useQuery({
     queryKey: ["backup-settings"],
     queryFn: async (): Promise<BackupSettings | null> => {
+      if (!isSuperAdmin) {
+        throw new Error('Acesso negado: Apenas super administradores podem acessar configurações de backup');
+      }
+
       const { data, error } = await supabase
         .from("backup_settings")
         .select("*")
@@ -38,10 +45,15 @@ export function useBackupSettings() {
 
       return data ? (data as unknown as BackupSettings) : null;
     },
+    enabled: !!profile && isSuperAdmin,
   });
 
   const updateSettingsMutation = useMutation({
     mutationFn: async (settings: Partial<BackupSettings>) => {
+      if (!isSuperAdmin) {
+        throw new Error('Acesso negado: Apenas super administradores podem alterar configurações de backup');
+      }
+
       const { data, error } = await supabase
         .from("backup_settings")
         .upsert(settings as any)
@@ -62,7 +74,7 @@ export function useBackupSettings() {
       backupLogger.error("Error updating backup settings", error);
       toast({
         title: "Erro ao salvar",
-        description: "Não foi possível salvar as configurações de backup.",
+        description: error.message || "Não foi possível salvar as configurações de backup.",
         variant: "destructive",
       });
     },
@@ -70,6 +82,10 @@ export function useBackupSettings() {
 
   const triggerBackupMutation = useMutation({
     mutationFn: async () => {
+      if (!isSuperAdmin) {
+        throw new Error('Acesso negado: Apenas super administradores podem executar backups');
+      }
+
       const { data, error } = await supabase.rpc("trigger_manual_backup");
       
       if (error) throw error;
@@ -86,7 +102,7 @@ export function useBackupSettings() {
       backupLogger.error("Error triggering backup", error);
       toast({
         title: "Erro no backup",
-        description: "Não foi possível iniciar o backup manual.",
+        description: error.message || "Não foi possível iniciar o backup manual.",
         variant: "destructive",
       });
     },
@@ -99,5 +115,6 @@ export function useBackupSettings() {
     triggerBackup: triggerBackupMutation.mutate,
     isUpdating: updateSettingsMutation.isPending,
     isTriggeringBackup: triggerBackupMutation.isPending,
+    canManageBackup: isSuperAdmin,
   };
 }

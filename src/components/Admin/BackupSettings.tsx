@@ -8,6 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Switch } from '@/components/ui/switch';
 import { Separator } from '@/components/ui/separator';
 import { Badge } from '@/components/ui/badge';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Clock, Download, Shield, AlertTriangle } from 'lucide-react';
 import { useBackupSettings } from '@/hooks/useBackupSettings';
 import { useForm } from 'react-hook-form';
@@ -34,7 +35,15 @@ const availableTables = [
 ];
 
 export function BackupSettings() {
-  const { settings, isLoading, updateSettings, triggerBackup, isUpdating, isTriggeringBackup } = useBackupSettings();
+  const { 
+    settings, 
+    isLoading, 
+    updateSettings, 
+    triggerBackup, 
+    isUpdating, 
+    isTriggeringBackup, 
+    canManageBackup 
+  } = useBackupSettings();
   
   const { register, handleSubmit, setValue, watch, formState: { isDirty } } = useForm<BackupForm>({
     defaultValues: {
@@ -67,6 +76,17 @@ export function BackupSettings() {
       : [...currentTables, table];
     setValue('backup_tables', newTables);
   };
+
+  if (!canManageBackup) {
+    return (
+      <Alert variant="destructive">
+        <AlertTriangle className="h-4 w-4" />
+        <AlertDescription>
+          Acesso negado. Apenas super administradores podem gerenciar configurações de backup.
+        </AlertDescription>
+      </Alert>
+    );
+  }
 
   if (isLoading) {
     return (
