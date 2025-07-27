@@ -2,149 +2,69 @@
 import React, { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
-import { SuperAdminGuard } from '@/components/PermissionGuard';
-import { DataTable, renderBadge, renderStatus, renderEmail, Column, Action } from '@/components/ui/data-table';
+import { useToast } from '@/hooks/use-toast';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Plus, Search, Edit, Trash2, UserCheck } from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
+import { Users, Search, Edit, Trash2, UserPlus, Crown, Shield, User } from 'lucide-react';
+import { DataTable, Column, Action } from '@/components/ui/data-table';
 import { UserDialog } from './UserDialog';
-import { useToast } from '@/hooks/use-toast';
 
-interface UserData {
+interface User {
   id: string;
   user_id: string;
-  display_name: string;
   email: string;
+  display_name: string;
   is_active: boolean;
-  user_type: 'super_admin' | 'contratante' | 'operador';
-  company_name: string;
-  company_id: string;
-  access_level_name?: string;
   created_at: string;
+  access_levels: {
+    id: string;
+    name: string;
+    display_name: string;
+  } | null;
 }
 
 export function UsersManagement() {
-  const [showUserDialog, setShowUserDialog] = useState(false);
-  const [selectedUser, setSelectedUser] = useState<any>(undefined);
+  const [showDialog, setShowDialog] = useState(false);
+  const [selectedUser, setSelectedUser] = useState<User | undefined>(undefined);
   const [searchTerm, setSearchTerm] = useState("");
   const { toast } = useToast();
 
   const { data: users = [], refetch, isLoading } = useQuery({
-    queryKey: ['admin-all-users', searchTerm],
-    queryFn: async () => {
-      let query = supabase
-        .from('user_companies')
+    queryKey: ['users-management'],
+    queryFn: async (): Promise<User[]> => {
+      const { data, error } = await supabase
+        .from('profiles')
         .select(`
-          *,
-          profiles:user_id (
-            display_name, 
-            email
-          ),
-          companies:company_id (name),
-          access_levels:access_level_id (
+          id,
+          user_id,
+          email,
+          display_name,
+          is_active,
+          created_at,
+          access_levels (
+            id,
             name,
             display_name
           )
         `)
         .order('created_at', { ascending: false });
 
-      if (searchTerm) {
-        // Filtrar por nome ou email
-        const { data: profilesData } = await supabase
-          .from('profiles')
-          .select('user_id')
-          .or(`display_name.ilike.%${searchTerm}%,email.ilike.%${searchTerm}%`);
-        
-        if (profilesData && profilesData.length > 0) {
-          const userIds = profilesData.map(p => p.user_id);
-          query = query.in('user_id', userIds);
-        } else {
-          return [];
-        }
-      }
-
-      const { data, error } = await query;
       if (error) throw error;
-
-      return (data || []).map(user => ({
-        id: user.id,
-        user_id: user.user_id,
-        display_name: user.profiles?.display_name || 'Sem nome',
-        email: user.profiles?.email || 'Sem email',
-        is_active: user.is_active,
-        user_type: user.user_type,
-        company_name: user.companies?.name || 'Sem empresa',
-        company_id: user.company_id,
-        access_level_name: user.access_levels?.display_name,
-        created_at: user.created_at
-      })) as UserData[];
-    }
+      return data || [];
+    },
+    staleTime: 5 * 60 * 1000,
   });
 
-  const handleEdit = (user: UserData) => {
-    // Transformar dados para o formato esperado pelo modal
-    const transformedUser = {
-      id: user.user_id,
-      user_id: user.user_id,
-      display_name: user.display_name,
-      email: user.email,
-      is_active: user.is_active,
-      user_companies: [{
-        id: user.id,
-        company_id: user.company_id,
-        user_type: user.user_type,
-        permissions: {},
-        access_level_id: null
-      }]
-    };
-    setSelectedUser(transformedUser);
-    setShowUserDialog(true);
-  };
-
-  const handleToggleStatus = async (user: UserData) => {
+  const handleDeleteUser = async (user: User) => {
     try {
-      const { error: profileError } = await supabase
+      const { error } = await supabase
         .from('profiles')
-        .update({ is_active: !user.is_active })
-        .eq('user_id', user.user_id);
-
-      if (profileError) throw profileError;
-
-      const { error: userCompanyError } = await supabase
-        .from('user_companies')
-        .update({ is_active: !user.is_active })
-        .eq('user_id', user.user_id);
-
-      if (userCompanyError) throw userCompanyError;
-
-      toast({
-        title: "Sucesso",
-        description: `Usuário ${!user.is_active ? 'ativado' : 'desativado'} com sucesso`,
-      });
-
-      refetch();
-    } catch (error) {
-      toast({
-        title: "Erro",
-        description: "Falha ao alterar status do usuário",
-        variant: "destructive",
-      });
-    }
-  };
-
-  const handleDelete = async (user: UserData) => {
-    if (!confirm(`Tem certeza que deseja excluir o usuário ${user.display_name}?`)) {
-      return;
-    }
-
-    try {
-      // Primeiro desativar o usuário
-      const { error: deactivateError } = await supabase
-        .from('user_companies')
         .update({ is_active: false })
         .eq('user_id', user.user_id);
 
-      if (deactivateError) throw deactivateError;
+      if (error) throw error;
 
       toast({
         title: "Sucesso",
@@ -153,124 +73,149 @@ export function UsersManagement() {
 
       refetch();
     } catch (error) {
+      console.error('Error deactivating user:', error);
       toast({
         title: "Erro",
-        description: "Falha ao excluir usuário",
+        description: "Falha ao desativar usuário",
         variant: "destructive",
       });
     }
   };
 
-  const columns: Column<UserData>[] = [
+  const getIconForUserType = (userType: string) => {
+    switch (userType) {
+      case 'super_admin':
+        return <Crown className="w-4 h-4 text-amber-500" />;
+      case 'contratante':
+        return <Shield className="w-4 h-4 text-blue-500" />;
+      case 'operador':
+        return <User className="w-4 h-4 text-green-500" />;
+      default:
+        return <User className="w-4 h-4 text-gray-500" />;
+    }
+  };
+
+  const filteredUsers = users.filter(user => 
+    user.display_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    user.email.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
+  const columns: Column<User>[] = [
     {
-      key: 'display_name' as keyof UserData,
-      header: 'Nome',
-      render: (value: string) => (
-        <div className="font-medium">{value}</div>
+      key: 'display_name' as keyof User,
+      header: 'Usuário',
+      render: (value: string, row: User) => (
+        <div className="flex items-center space-x-3">
+          <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
+            {getIconForUserType(row.access_levels?.name || 'operador')}
+          </div>
+          <div>
+            <p className="font-medium">{value}</p>
+            <p className="text-sm text-muted-foreground">{row.email}</p>
+          </div>
+        </div>
       )
     },
     {
-      key: 'email' as keyof UserData,
-      header: 'Email',
-      render: (value: string) => renderEmail(value)
-    },
-    {
-      key: 'user_type' as keyof UserData,
-      header: 'Tipo',
-      render: (value: string) => {
-        const variant = value === 'super_admin' ? 'destructive' : 
-                      value === 'contratante' ? 'default' : 'secondary';
-        return renderBadge(value, variant);
-      }
-    },
-    {
-      key: 'company_name' as keyof UserData,
-      header: 'Empresa'
-    },
-    {
-      key: 'access_level_name' as keyof UserData,
+      key: 'access_levels' as keyof User,
       header: 'Nível de Acesso',
-      render: (value: string) => value || 'N/A'
+      render: (_value: any, row: User) => (
+        <div className="flex items-center space-x-2">
+          {getIconForUserType(row.access_levels?.name || 'operador')}
+          <Badge variant="outline">
+            {row.access_levels?.display_name || 'Não definido'}
+          </Badge>
+        </div>
+      )
     },
     {
-      key: 'is_active' as keyof UserData,
+      key: 'is_active' as keyof User,
       header: 'Status',
-      render: (value: boolean) => renderStatus(value)
+      render: (value: boolean) => (
+        <Badge variant={value ? 'default' : 'secondary'}>
+          {value ? 'Ativo' : 'Inativo'}
+        </Badge>
+      )
     },
     {
-      key: 'created_at' as keyof UserData,
-      header: 'Criado em',
-      render: (value: string) => new Date(value).toLocaleDateString('pt-BR')
+      key: 'created_at' as keyof User,
+      header: 'Data de Criação',
+      render: (value: string) => (
+        <span className="text-sm text-muted-foreground">
+          {new Date(value).toLocaleDateString('pt-BR')}
+        </span>
+      )
     }
   ];
 
-  const actions: Action<UserData>[] = [
+  const actions: Action<User>[] = [
     {
       label: 'Editar',
       icon: Edit,
-      onClick: handleEdit,
+      onClick: (row: User) => {
+        setSelectedUser(row);
+        setShowDialog(true);
+      },
       variant: 'outline' as const
     },
     {
-      label: 'Alternar Status',
-      icon: UserCheck,
-      onClick: handleToggleStatus,
-      variant: 'outline' as const,
-      className: (user: UserData) => user.is_active ? 'text-red-600 hover:text-red-700' : 'text-green-600 hover:text-green-700'
-    },
-    {
-      label: 'Excluir',
+      label: 'Desativar',
       icon: Trash2,
-      onClick: handleDelete,
-      variant: 'destructive' as const,
-      show: (user: UserData) => user.user_type !== 'super_admin'
+      onClick: handleDeleteUser,
+      variant: 'outline' as const,
+      className: 'text-destructive hover:text-destructive'
     }
   ];
 
   return (
-    <SuperAdminGuard>
-      <div className="space-y-6">
-        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-          <div>
-            <h2 className="text-2xl font-bold">Gestão de Usuários</h2>
-            <p className="text-muted-foreground">Gerencie todos os usuários do sistema</p>
+    <div className="space-y-6">
+      <Card>
+        <CardHeader>
+          <div className="flex items-center justify-between">
+            <div className="flex items-center space-x-2">
+              <Users className="w-5 h-5 text-primary" />
+              <CardTitle>Gerenciamento de Usuários</CardTitle>
+            </div>
+            <Button onClick={() => {
+              setSelectedUser(undefined);
+              setShowDialog(true);
+            }}>
+              <UserPlus className="w-4 h-4 mr-2" />
+              Novo Usuário
+            </Button>
           </div>
-          <Button onClick={() => setShowUserDialog(true)}>
-            <Plus className="w-4 h-4 mr-2" />
-            Novo Usuário
-          </Button>
-        </div>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="relative">
+            <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+            <Input
+              placeholder="Buscar usuários..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="pl-10"
+            />
+          </div>
 
-        <div className="relative max-w-md">
-          <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-          <Input
-            placeholder="Buscar por nome ou email..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="pl-10"
+          <DataTable
+            data={filteredUsers}
+            columns={columns}
+            actions={actions}
+            loading={isLoading}
+            emptyMessage="Nenhum usuário encontrado"
           />
-        </div>
+        </CardContent>
+      </Card>
 
-        <DataTable
-          data={users}
-          columns={columns}
-          actions={actions}
-          loading={isLoading}
-          emptyMessage="Nenhum usuário encontrado"
-          className="w-full"
-        />
-
-        <UserDialog
-          open={showUserDialog}
-          onOpenChange={setShowUserDialog}
-          user={selectedUser}
-          onSave={() => {
-            refetch();
-            setShowUserDialog(false);
-            setSelectedUser(undefined);
-          }}
-        />
-      </div>
-    </SuperAdminGuard>
+      <UserDialog
+        open={showDialog}
+        onOpenChange={setShowDialog}
+        user={selectedUser}
+        onSave={() => {
+          refetch();
+          setShowDialog(false);
+          setSelectedUser(undefined);
+        }}
+      />
+    </div>
   );
 }

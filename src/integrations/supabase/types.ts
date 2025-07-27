@@ -2264,6 +2264,7 @@ export type Database = {
       }
       profiles: {
         Row: {
+          access_level_id: string | null
           address: string | null
           avatar_url: string | null
           city: string | null
@@ -2283,6 +2284,7 @@ export type Database = {
           zipcode: string | null
         }
         Insert: {
+          access_level_id?: string | null
           address?: string | null
           avatar_url?: string | null
           city?: string | null
@@ -2302,6 +2304,7 @@ export type Database = {
           zipcode?: string | null
         }
         Update: {
+          access_level_id?: string | null
           address?: string | null
           avatar_url?: string | null
           city?: string | null
@@ -2320,7 +2323,15 @@ export type Database = {
           user_id?: string
           zipcode?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "profiles_access_level_id_fkey"
+            columns: ["access_level_id"]
+            isOneToOne: false
+            referencedRelation: "access_levels"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       prompt_logs: {
         Row: {
@@ -3730,73 +3741,6 @@ export type Database = {
           },
         ]
       }
-      user_companies: {
-        Row: {
-          access_level_id: string | null
-          company_id: string
-          created_at: string
-          department: string | null
-          id: string
-          is_active: boolean
-          permissions: Json | null
-          role: string
-          specific_permissions: Json | null
-          updated_at: string | null
-          user_id: string
-          user_type: Database["public"]["Enums"]["user_type"] | null
-        }
-        Insert: {
-          access_level_id?: string | null
-          company_id: string
-          created_at?: string
-          department?: string | null
-          id?: string
-          is_active?: boolean
-          permissions?: Json | null
-          role?: string
-          specific_permissions?: Json | null
-          updated_at?: string | null
-          user_id: string
-          user_type?: Database["public"]["Enums"]["user_type"] | null
-        }
-        Update: {
-          access_level_id?: string | null
-          company_id?: string
-          created_at?: string
-          department?: string | null
-          id?: string
-          is_active?: boolean
-          permissions?: Json | null
-          role?: string
-          specific_permissions?: Json | null
-          updated_at?: string | null
-          user_id?: string
-          user_type?: Database["public"]["Enums"]["user_type"] | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "fk_user_companies_profiles"
-            columns: ["user_id"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["user_id"]
-          },
-          {
-            foreignKeyName: "user_companies_access_level_id_fkey"
-            columns: ["access_level_id"]
-            isOneToOne: false
-            referencedRelation: "access_levels"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "user_companies_company_id_fkey"
-            columns: ["company_id"]
-            isOneToOne: false
-            referencedRelation: "companies"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
       user_dashboards: {
         Row: {
           company_id: string
@@ -4182,6 +4126,14 @@ export type Database = {
       get_user_company_id: {
         Args: Record<PropertyKey, never>
         Returns: string
+      }
+      get_user_permissions: {
+        Args: { user_uuid: string }
+        Returns: Json
+      }
+      has_permission: {
+        Args: { permission_key: string }
+        Returns: boolean
       }
       has_specific_permission: {
         Args: { permission_key: string; company_uuid?: string }

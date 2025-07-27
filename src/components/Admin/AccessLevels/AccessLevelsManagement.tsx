@@ -10,7 +10,13 @@ import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { DataTable, Column, Action } from '@/components/ui/data-table';
-import type { AccessLevel, AccessLevelWithCount } from './types';
+import type { AccessLevel } from './types';
+
+interface AccessLevelWithCount extends AccessLevel {
+  _count?: {
+    users: number;
+  };
+}
 
 export function AccessLevelsManagement() {
   const [showDialog, setShowDialog] = useState(false);
@@ -46,7 +52,7 @@ export function AccessLevelsManagement() {
 
       return levelsWithCount;
     },
-    staleTime: 5 * 60 * 1000, // 5 minutes
+    staleTime: 5 * 60 * 1000,
   });
 
   const handleDelete = async (level: AccessLevelWithCount) => {

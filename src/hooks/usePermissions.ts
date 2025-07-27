@@ -1,30 +1,29 @@
+
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 
-type UserType = 'super_admin' | 'contratante' | 'operador';
-
 interface UserPermissions {
-  userType: UserType | null;
+  userType: string | null;
   isSuperAdmin: boolean;
   isContratante: boolean;
   isOperador: boolean;
   isAdmin: boolean;
-  companyId: string | null;
-  department: string | null;
-  specificPermissions: Record<string, boolean>;
-  email: string | null;
+  permissions: Record<string, boolean>;
   accessLevel: {
     id: string;
     name: string;
     display_name: string;
     permissions: Record<string, boolean>;
   } | null;
+  email: string | null;
+  isLoading: boolean;
+  error: any;
 }
 
-export function usePermissions() {
+export function usePermissions(): UserPermissions {
   const { data: permissionsData, isLoading, error } = useQuery({
     queryKey: ["user-permissions"],
-    queryFn: async (): Promise<UserPermissions> => {
+    queryFn: async () => {
       try {
         const { data: user, error: userError } = await supabase.auth.getUser();
         
@@ -35,11 +34,9 @@ export function usePermissions() {
             isContratante: false,
             isOperador: false,
             isAdmin: false,
-            companyId: null,
-            department: null,
-            specificPermissions: {},
-            email: null,
-            accessLevel: null
+            permissions: {},
+            accessLevel: null,
+            email: null
           };
         }
 
@@ -48,40 +45,32 @@ export function usePermissions() {
         // Acesso temporário para murilloggomes@gmail.com
         if (userEmail === 'murilloggomes@gmail.com') {
           return {
-            userType: 'super_admin' as UserType,
+            userType: 'super_admin',
             isSuperAdmin: true,
             isContratante: true,
             isOperador: false,
             isAdmin: true,
-            companyId: null,
-            department: null,
-            specificPermissions: {
+            permissions: {
               dashboard: true,
               vendas: true,
               produtos: true,
               clientes: true,
-              fornecedores: true,
+              compras: true,
               estoque: true,
               financeiro: true,
-              relatorios: true,
-              configuracoes: true,
-              admin: true,
-              usuarios: true,
-              empresas: true,
-              sistema: true,
-              seguranca: true,
               notas_fiscais: true,
-              contratos: true,
               producao: true,
-              compras: true,
+              contratos: true,
+              relatorios: true,
+              analytics: true,
+              marketplace_canais: true,
               integracoes: true,
-              super_admin_access: true,
-              system_management: true,
-              security_monitoring: true,
+              configuracoes: true,
+              admin_panel: true,
               user_management: true,
-              company_management: true
+              company_management: true,
+              system_settings: true
             },
-            email: userEmail,
             accessLevel: {
               id: 'temp-super-admin',
               name: 'super_admin',
@@ -91,108 +80,64 @@ export function usePermissions() {
                 vendas: true,
                 produtos: true,
                 clientes: true,
-                fornecedores: true,
+                compras: true,
                 estoque: true,
                 financeiro: true,
-                relatorios: true,
-                configuracoes: true,
-                admin: true,
-                usuarios: true,
-                empresas: true,
-                sistema: true,
-                seguranca: true,
                 notas_fiscais: true,
-                contratos: true,
                 producao: true,
-                compras: true,
+                contratos: true,
+                relatorios: true,
+                analytics: true,
+                marketplace_canais: true,
                 integracoes: true,
-                super_admin_access: true,
-                system_management: true,
-                security_monitoring: true,
+                configuracoes: true,
+                admin_panel: true,
                 user_management: true,
-                company_management: true
+                company_management: true,
+                system_settings: true
               }
-            }
+            },
+            email: userEmail
           };
         }
         
-        // Buscar dados do usuário
-        const { data: userCompaniesData, error: companiesError } = await supabase
-          .from("user_companies")
+        // Buscar dados do perfil do usuário com access_level
+        const { data: profile, error: profileError } = await supabase
+          .from("profiles")
           .select(`
-            user_type, 
-            department, 
-            specific_permissions, 
-            is_active, 
-            company_id, 
-            role, 
-            permissions,
-            access_level_id
+            *,
+            access_levels (
+              id,
+              name,
+              display_name,
+              permissions
+            )
           `)
           .eq("user_id", user.user.id)
           .eq("is_active", true)
-          .order("created_at", { ascending: false })
-          .limit(1)
-          .maybeSingle();
+          .single();
 
-        if (companiesError) {
-          console.error("Error fetching user companies:", companiesError);
-          throw companiesError;
-        }
-
-        if (!userCompaniesData) {
+        if (profileError || !profile) {
+          console.error("Error fetching user profile:", profileError);
           return {
             userType: null,
             isSuperAdmin: false,
             isContratante: false,
             isOperador: false,
             isAdmin: false,
-            companyId: null,
-            department: null,
-            specificPermissions: {},
-            email: userEmail,
-            accessLevel: null
+            permissions: {},
+            accessLevel: null,
+            email: userEmail
           };
         }
 
-        // Buscar access level separadamente se existir
-        let accessLevel = null;
-        if (userCompaniesData.access_level_id) {
-          try {
-            const { data: accessLevelData } = await supabase
-              .from('access_levels')
-              .select('id, name, display_name, permissions')
-              .eq('id', userCompaniesData.access_level_id)
-              .single();
-            
-            if (accessLevelData) {
-              accessLevel = {
-                id: accessLevelData.id,
-                name: accessLevelData.name,
-                display_name: accessLevelData.display_name,
-                permissions: accessLevelData.permissions || {}
-              };
-            }
-          } catch (error) {
-            console.error('Error fetching access level:', error);
-          }
-        }
-
-        const userType = userCompaniesData.user_type as UserType;
-        const specificPermissions = (userCompaniesData.specific_permissions as Record<string, any>) || {};
-        const permissions = (userCompaniesData.permissions as Record<string, any>) || {};
-        const accessLevelPermissions = accessLevel?.permissions || {};
+        const accessLevel = profile.access_levels;
+        const permissions = accessLevel?.permissions || {};
+        const userType = accessLevel?.name || null;
         
-        // Combinar permissões: nível de acesso + específicas + gerais
-        const allPermissions = { 
-          ...accessLevelPermissions, 
-          ...permissions, 
-          ...specificPermissions 
-        };
-        
-        const isSuperAdmin = accessLevel?.name === 'super_admin' || allPermissions.super_admin === true || userType === 'super_admin';
-        const isContratante = accessLevel?.name === 'contratante' || userType === 'contratante';
-        const isOperador = accessLevel?.name === 'operador' || userType === 'operador';
+        const isSuperAdmin = userType === 'super_admin';
+        const isContratante = userType === 'contratante';
+        const isOperador = userType === 'operador';
         const isAdmin = isSuperAdmin || isContratante;
 
         return {
@@ -201,12 +146,10 @@ export function usePermissions() {
           isContratante,
           isOperador,
           isAdmin,
-          companyId: userCompaniesData.company_id,
-          department: userCompaniesData.department,
-          specificPermissions: allPermissions,
-          email: userEmail,
-          accessLevel
-        } as UserPermissions;
+          permissions,
+          accessLevel,
+          email: userEmail
+        };
       } catch (error) {
         console.error("Error in usePermissions:", error);
         throw error;
@@ -227,61 +170,27 @@ export function usePermissions() {
     isContratante: permissionsData?.isContratante || false,
     isOperador: permissionsData?.isOperador || false,
     isAdmin: permissionsData?.isAdmin || false,
-    companyId: permissionsData?.companyId || null,
-    department: permissionsData?.department || null,
-    specificPermissions: permissionsData?.specificPermissions || {},
-    permissions: permissionsData?.specificPermissions || {},
-    email: permissionsData?.email || null,
+    permissions: permissionsData?.permissions || {},
     accessLevel: permissionsData?.accessLevel || null,
+    email: permissionsData?.email || null,
     isLoading,
-    hasFullAccess: permissionsData?.isSuperAdmin || false,
+    error,
     
-    // Funções de conveniência específicas por hierarquia
-    canManageSystem: permissionsData?.isSuperAdmin || false,
-    canManageCompany: permissionsData?.isSuperAdmin || permissionsData?.isContratante || false,
-    canManageUsers: permissionsData?.isSuperAdmin || permissionsData?.isContratante || false,
-    canManagePlans: permissionsData?.isSuperAdmin || false,
-    canAccessAdminPanel: permissionsData?.isSuperAdmin || permissionsData?.isContratante || false,
-    canViewReports: permissionsData?.isSuperAdmin || permissionsData?.isContratante || permissionsData?.specificPermissions?.reports || false,
-    
-    // Super Admin bypass
-    canBypassAllRestrictions: permissionsData?.isSuperAdmin || false,
-    canAccessAnyCompany: permissionsData?.isSuperAdmin || false,
-    canModifyAnyData: permissionsData?.isSuperAdmin || false,
-    canDeleteAnyRecord: permissionsData?.isSuperAdmin || false,
-    
-    // Verificações específicas de permissão por funcionalidade
+    // Funções de conveniência
     hasPermission: (permission: string) => {
       if (permissionsData?.isSuperAdmin) return true;
-      return permissionsData?.specificPermissions?.[permission] === true;
+      return permissionsData?.permissions?.[permission] === true;
     },
     
-    // Verificações por contexto
-    canAccessDepartmentData: (companyId: string, department?: string) => {
-      if (permissionsData?.isSuperAdmin) return true;
-      if (permissionsData?.isContratante && permissionsData?.companyId === companyId) return true;
-      if (permissionsData?.isOperador && permissionsData?.companyId === companyId) {
-        return !department || permissionsData?.department === department;
-      }
-      return false;
-    },
+    canManageSystem: permissionsData?.isSuperAdmin || false,
+    canManageCompany: permissionsData?.isSuperAdmin || permissionsData?.isContratante || false,
+    canAccessAdminPanel: permissionsData?.isSuperAdmin || permissionsData?.isContratante || false,
     
-    canManageCompanyData: (companyId: string) => {
-      if (permissionsData?.isSuperAdmin) return true;
-      return permissionsData?.isContratante && permissionsData?.companyId === companyId;
-    },
-
-    canAccessRoute: (route: string) => {
-      if (permissionsData?.isSuperAdmin) return true;
-      
-      const adminRoutes = ['/app/admin', '/app/configuracoes'];
-      if (adminRoutes.some(adminRoute => route.startsWith(adminRoute))) {
-        return permissionsData?.isContratante || false;
-      }
-      
-      return true;
-    },
-
-    error
+    hasFullAccess: permissionsData?.isSuperAdmin || false,
+    canManageUsers: permissionsData?.isSuperAdmin || permissionsData?.isContratante || false,
+    canAccessDepartmentData: () => true, // Simplificado para nova estrutura
+    canManageCompanyData: () => permissionsData?.isSuperAdmin || permissionsData?.isContratante || false,
+    canAccessRoute: () => true, // Simplificado para nova estrutura
+    canBypassAllRestrictions: permissionsData?.isSuperAdmin || false
   };
 }
