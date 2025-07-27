@@ -1,183 +1,341 @@
-import React, { Suspense } from 'react';
-import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { AnalyticsProvider } from './components/Analytics/AnalyticsProvider';
-import { AuthProvider } from './components/Auth/AuthProvider';
-import { PrivateRoute } from './components/Auth/PrivateRoute';
-import { MainLayout } from './components/Layout/MainLayout';
-import { ErrorBoundary } from 'react-error-boundary';
-import Home from './pages/Home';
-import Login from './pages/Login';
-import SignUp from './pages/SignUp';
-import Pricing from './pages/Pricing';
-import Configuracoes from './pages/Configuracoes';
-import AdminDashboard from './pages/AdminDashboard';
-import AdminPromptGenerator from './pages/AdminPromptGenerator';
-import AdminUsers from './pages/AdminUsers';
-import AdminCompanies from './pages/AdminCompanies';
-import AdminAuditLogs from './pages/AdminAuditLogs';
-import AdminAccessLevels from './pages/AdminAccessLevels';
-import AdminPlans from './pages/AdminPlans';
-import AdminInvoices from './pages/AdminInvoices';
-import AdminSubscriptions from './pages/AdminSubscriptions';
-import AdminIntegrations from './pages/AdminIntegrations';
-import AdminApiKeys from './pages/AdminApiKeys';
-import AdminSettings from './pages/AdminSettings';
-import AdminNotifications from './pages/AdminNotifications';
-import AdminBackups from './pages/AdminBackups';
-import AdminSystem from './pages/AdminSystem';
-import AdminSecurity from './pages/AdminSecurity';
-import AdminSupport from './pages/AdminSupport';
-import AdminBilling from './pages/AdminBilling';
-import AdminAppearance from './pages/AdminAppearance';
-import AdminPerformance from './pages/AdminPerformance';
-import AdminDevTools from './pages/AdminDevTools';
-import AdminPromptTemplates from './pages/AdminPromptTemplates';
-import AdminDocuments from './pages/AdminDocuments';
-import AdminWorkflows from './pages/AdminWorkflows';
-import AdminReports from './pages/AdminReports';
-import AdminMarketplace from './pages/AdminMarketplace';
-import AdminContent from './pages/AdminContent';
-import AdminAi from './pages/AdminAi';
-import AdminExperiments from './pages/AdminExperiments';
-import AdminMobile from './pages/AdminMobile';
-import AdminI18n from './pages/AdminI18n';
-import AdminDev from './pages/AdminDev';
-import AdminPrompt from './pages/AdminPrompt';
-import AdminPromptEditor from './pages/AdminPromptEditor';
-import AdminPromptLibrary from './pages/AdminPromptLibrary';
-import AdminPromptExamples from './pages/AdminPromptExamples';
-import AdminPromptSandbox from './pages/AdminPromptSandbox';
-import AdminPromptWorkflows from './pages/AdminPromptWorkflows';
-import AdminPromptComponents from './pages/AdminPromptComponents';
-import AdminPromptSnippets from './pages/AdminPromptSnippets';
-import AdminPromptBlueprints from './pages/AdminPromptBlueprints';
-import AdminPromptTemplatesNew from './pages/AdminPromptTemplatesNew';
-import AdminPromptTemplatesEdit from './pages/AdminPromptTemplatesEdit';
-import AdminPromptTemplatesView from './pages/AdminPromptTemplatesView';
-import AdminPromptTemplatesList from './pages/AdminPromptTemplatesList';
-import AdminPromptTemplatesCategories from './pages/AdminPromptTemplatesCategories';
-import AdminPromptTemplatesTags from './pages/AdminPromptTemplatesTags';
-import AdminPromptTemplatesAuthors from './pages/AdminPromptTemplatesAuthors';
-import AdminPromptTemplatesCollections from './pages/AdminPromptTemplatesCollections';
-import AdminPromptTemplatesPricing from './pages/AdminPromptTemplatesPricing';
-import AdminPromptTemplatesReviews from './pages/AdminPromptTemplatesReviews';
-import AdminPromptTemplatesAnalytics from './pages/AdminPromptTemplatesAnalytics';
-import AdminPromptTemplatesSettings from './pages/AdminPromptTemplatesSettings';
-import AdminPromptTemplatesIntegrations from './pages/AdminPromptTemplatesIntegrations';
-import AdminPromptTemplatesApi from './pages/AdminPromptTemplatesApi';
-import AdminPromptTemplatesWebhooks from './pages/AdminPromptTemplatesWebhooks';
-import AdminPromptTemplatesMobile from './pages/AdminPromptTemplatesMobile';
-import AdminPromptTemplatesI18n from './pages/AdminPromptTemplatesI18n';
-import AdminPromptTemplatesDev from './pages/AdminPromptTemplatesDev';
-import AdminPromptTemplatesPrompt from './pages/AdminPromptTemplatesPrompt';
-import AdminPromptTemplatesPromptEditor from './pages/AdminPromptTemplatesPromptEditor';
-import AdminPromptTemplatesPromptLibrary from './pages/AdminPromptTemplatesPromptLibrary';
-import AdminPromptTemplatesPromptExamples from './pages/AdminPromptTemplatesPromptExamples';
-import AdminPromptTemplatesPromptSandbox from './pages/AdminPromptTemplatesPromptSandbox';
-import AdminPromptTemplatesPromptWorkflows from './pages/AdminPromptTemplatesPromptWorkflows';
-import AdminPromptTemplatesPromptComponents from './pages/AdminPromptTemplatesPromptComponents';
-import AdminPromptTemplatesPromptSnippets from './pages/AdminPromptTemplatesPromptSnippets';
-import AdminPromptTemplatesPromptBlueprints from './pages/AdminPromptTemplatesPromptBlueprints';
-import AdminAuditoria from './pages/AdminAuditoria';
+import { ReactQueryDevtools } from '@tanstack/react-query-devtools';
+import { Toaster } from '@/components/ui/toaster';
+import { AuthProvider } from '@/components/Auth/AuthProvider';
+import { AnalyticsProvider } from '@/components/Analytics/AnalyticsProvider';
+import { ErrorBoundary } from '@/components/ErrorBoundary/ErrorBoundary';
+import { NetworkStatusIndicator } from '@/components/Network/NetworkStatusIndicator';
+import { MainLayout } from '@/components/Layout/MainLayout';
+import { PrivateRoute } from '@/components/Auth/PrivateRoute';
+import { Suspense, lazy } from 'react';
 
-const queryClient = new QueryClient();
+// Lazy load pages for better performance
+const Dashboard = lazy(() => import('@/pages/Dashboard'));
+const Auth = lazy(() => import('@/pages/Auth'));
+const LandingPage = lazy(() => import('@/pages/LandingPage'));
+const MarketplaceChannels = lazy(() => import('@/pages/MarketplaceChannels'));
+const Configuracoes = lazy(() => import('@/pages/Configuracoes'));
+const AdminUsuarios = lazy(() => import('@/pages/AdminUsuarios'));
+const UserDadosPessoais = lazy(() => import('@/pages/UserDadosPessoais'));
+const NotFound = lazy(() => import('@/pages/NotFound'));
+const Produtos = lazy(() => import('@/pages/Produtos'));
+const Clientes = lazy(() => import('@/pages/Clientes'));
+const Vendas = lazy(() => import('@/pages/Vendas'));
+const Financeiro = lazy(() => import('@/pages/Financeiro'));
+const NotasFiscais = lazy(() => import('@/pages/NotasFiscais'));
+const Producao = lazy(() => import('@/pages/Producao'));
+const Integracoes = lazy(() => import('@/pages/Integracoes'));
+const Compras = lazy(() => import('@/pages/Compras'));
+const Estoque = lazy(() => import('@/pages/Estoque'));
+const Relatorios = lazy(() => import('@/pages/Relatorios'));
+const Analytics = lazy(() => import('@/pages/Analytics'));
+
+// Admin Pages
+const Admin = lazy(() => import('@/pages/Admin'));
+const AdminNiveisAcesso = lazy(() => import('@/pages/AdminNiveisAcesso'));
+const AdminBackup = lazy(() => import('@/pages/AdminBackup'));
+const AdminSeguranca = lazy(() => import('@/pages/AdminSeguranca'));
+const AdminCompressao = lazy(() => import('@/pages/AdminCompressao'));
+const AdminLandingPage = lazy(() => import('@/pages/AdminLandingPage'));
+const AdminPromptGenerator = lazy(() => import('@/pages/AdminPromptGenerator'));
+const AdminVersions = lazy(() => import('@/pages/AdminVersions'));
+const AdminNotifications = lazy(() => import('@/pages/AdminNotifications'));
+const AdminIntegrations = lazy(() => import('@/pages/AdminIntegrations'));
+const AdminCache = lazy(() => import('@/pages/AdminCache'));
+const AdminMonitoring = lazy(() => import('@/pages/AdminMonitoring'));
+const AdminSLA = lazy(() => import('@/pages/AdminSLA'));
+
+// Create a stable query client with network error handling
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      retry: (failureCount, error: any) => {
+        // Don't retry on 4xx errors except 429 (rate limit)
+        if (error?.status >= 400 && error?.status < 500 && error?.status !== 429) {
+          return false;
+        }
+        
+        // Retry network errors up to 3 times
+        return failureCount < 3;
+      },
+      retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000),
+      staleTime: 5 * 60 * 1000, // 5 minutes
+      refetchOnWindowFocus: false, // Reduce unnecessary requests
+      refetchOnReconnect: true, // Refetch when reconnecting
+    },
+    mutations: {
+      retry: 1, // Retry mutations once on network errors
+    },
+  },
+});
 
 function App() {
   return (
-    <QueryClientProvider client={queryClient}>
-      <ErrorBoundary>
+    <ErrorBoundary>
+      <QueryClientProvider client={queryClient}>
         <AuthProvider>
-          <BrowserRouter>
+          <Router>
             <AnalyticsProvider>
-              <Suspense fallback={<div>Carregando...</div>}>
-                <Routes>
-                  <Route path="/" element={<Home />} />
-                  <Route path="/login" element={<Login />} />
-                  <Route path="/sign-up" element={<SignUp />} />
-                  <Route path="/pricing" element={<Pricing />} />
-                  
-                  <Route path="/app" element={<PrivateRoute />}>
-                    <Route element={<MainLayout />}>
-                      <Route path="configuracoes" element={<Configuracoes />} />
-                      <Route path="admin/dashboard" element={<AdminDashboard />} />
-                      <Route path="admin/prompt-generator" element={<AdminPromptGenerator />} />
-                      <Route path="admin/users" element={<AdminUsers />} />
-                      <Route path="admin/companies" element={<AdminCompanies />} />
-                      <Route path="admin/audit-logs" element={<AdminAuditLogs />} />
-                      <Route path="admin/access-levels" element={<AdminAccessLevels />} />
-                      <Route path="admin/plans" element={<AdminPlans />} />
-                      <Route path="admin/invoices" element={<AdminInvoices />} />
-                      <Route path="admin/subscriptions" element={<AdminSubscriptions />} />
-                      <Route path="admin/integrations" element={<AdminIntegrations />} />
-                      <Route path="admin/api-keys" element={<AdminApiKeys />} />
-                      <Route path="admin/settings" element={<AdminSettings />} />
-                      <Route path="admin/notifications" element={<AdminNotifications />} />
-                      <Route path="admin/backups" element={<AdminBackups />} />
-                      <Route path="admin/system" element={<AdminSystem />} />
-                      <Route path="admin/security" element={<AdminSecurity />} />
-                      <Route path="admin/support" element={<AdminSupport />} />
-                      <Route path="admin/billing" element={<AdminBilling />} />
-                      <Route path="admin/appearance" element={<AdminAppearance />} />
-                      <Route path="admin/performance" element={<AdminPerformance />} />
-                      <Route path="admin/dev-tools" element={<AdminDevTools />} />
-                      <Route path="admin/prompt-templates" element={<AdminPromptTemplates />} />
-                      <Route path="admin/documents" element={<AdminDocuments />} />
-                      <Route path="admin/workflows" element={<AdminWorkflows />} />
-                      <Route path="admin/reports" element={<AdminReports />} />
-                      <Route path="admin/marketplace" element={<AdminMarketplace />} />
-                      <Route path="admin/content" element={<AdminContent />} />
-                      <Route path="admin/ai" element={<AdminAi />} />
-                      <Route path="admin/experiments" element={<AdminExperiments />} />
-                      <Route path="admin/mobile" element={<AdminMobile />} />
-                      <Route path="admin/i18n" element={<AdminI18n />} />
-                      <Route path="admin/dev" element={<AdminDev />} />
-                      <Route path="admin/prompt" element={<AdminPrompt />} />
-                      <Route path="admin/prompt-editor" element={<AdminPromptEditor />} />
-                      <Route path="admin/prompt-library" element={<AdminPromptLibrary />} />
-                      <Route path="admin/prompt-examples" element={<AdminPromptExamples />} />
-                      <Route path="admin/prompt-sandbox" element={<AdminPromptSandbox />} />
-                      <Route path="admin/prompt-workflows" element={<AdminPromptWorkflows />} />
-                      <Route path="admin/prompt-components" element={<AdminPromptComponents />} />
-                      <Route path="admin/prompt-snippets" element={<AdminPromptSnippets />} />
-                      <Route path="admin/prompt-blueprints" element={<AdminPromptBlueprints />} />
-                      <Route path="admin/prompt-templates/new" element={<AdminPromptTemplatesNew />} />
-                      <Route path="admin/prompt-templates/edit/:id" element={<AdminPromptTemplatesEdit />} />
-                      <Route path="admin/prompt-templates/view/:id" element={<AdminPromptTemplatesView />} />
-                      <Route path="admin/prompt-templates/list" element={<AdminPromptTemplatesList />} />
-                      <Route path="admin/prompt-templates/categories" element={<AdminPromptTemplatesCategories />} />
-                      <Route path="admin/prompt-templates/tags" element={<AdminPromptTemplatesTags />} />
-                      <Route path="admin/prompt-templates/authors" element={<AdminPromptTemplatesAuthors />} />
-                      <Route path="admin/prompt-templates/collections" element={<AdminPromptTemplatesCollections />} />
-                      <Route path="admin/prompt-templates/pricing" element={<AdminPromptTemplatesPricing />} />
-                      <Route path="admin/prompt-templates/reviews" element={<AdminPromptTemplatesReviews />} />
-                      <Route path="admin/prompt-templates/analytics" element={<AdminPromptTemplatesAnalytics />} />
-                      <Route path="admin/prompt-templates/settings" element={<AdminPromptTemplatesSettings />} />
-                      <Route path="admin/prompt-templates/integrations" element={<AdminPromptTemplatesIntegrations />} />
-                      <Route path="admin/prompt-templates/api" element={<AdminPromptTemplatesApi />} />
-                      <Route path="admin/prompt-templates/webhooks" element={<AdminPromptTemplatesWebhooks />} />
-                      <Route path="admin/prompt-templates/mobile" element={<AdminPromptTemplatesMobile />} />
-                      <Route path="admin/prompt-templates/i18n" element={<AdminPromptTemplatesI18n />} />
-                      <Route path="admin/prompt-templates/dev" element={<AdminPromptTemplatesDev />} />
-                      <Route path="admin/prompt-templates/prompt" element={<AdminPromptTemplatesPrompt />} />
-                      <Route path="admin/prompt-templates/prompt-editor" element={<AdminPromptTemplatesPromptEditor />} />
-                      <Route path="admin/prompt-templates/prompt-library" element={<AdminPromptTemplatesPromptLibrary />} />
-                      <Route path="admin/prompt-templates/prompt-examples" element={<AdminPromptTemplatesPromptExamples />} />
-                      <Route path="admin/prompt-templates/prompt-sandbox" element={<AdminPromptTemplatesPromptSandbox />} />
-                      <Route path="admin/prompt-templates/prompt-workflows" element={<AdminPromptTemplatesPromptWorkflows />} />
-                      <Route path="admin/prompt-templates/prompt-components" element={<AdminPromptTemplatesPromptComponents />} />
-                      <Route path="admin/prompt-templates/prompt-snippets" element={<AdminPromptTemplatesPromptSnippets />} />
-                      <Route path="admin/prompt-templates/prompt-blueprints" element={<AdminPromptTemplatesPromptBlueprints />} />
-                      <Route path="admin/auditoria" element={<AdminAuditoria />} />
-                    </Route>
-                  </Route>
-                </Routes>
-              </Suspense>
+              <div className="App">
+                <NetworkStatusIndicator />
+                
+                <Suspense fallback={
+                  <div className="flex items-center justify-center min-h-screen">
+                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+                  </div>
+                }>
+                  <Routes>
+                    <Route path="/" element={<LandingPage />} />
+                    <Route path="/auth" element={<Auth />} />
+                    
+                    {/* Protected Routes with Sidebar Layout */}
+                    <Route path="/app" element={
+                      <PrivateRoute>
+                        <MainLayout>
+                          <Dashboard />
+                        </MainLayout>
+                      </PrivateRoute>
+                    } />
+                    
+                    <Route path="/app/vendas" element={
+                      <PrivateRoute>
+                        <MainLayout>
+                          <Vendas />
+                        </MainLayout>
+                      </PrivateRoute>
+                    } />
+                    
+                    <Route path="/app/produtos" element={
+                      <PrivateRoute>
+                        <MainLayout>
+                          <Produtos />
+                        </MainLayout>
+                      </PrivateRoute>
+                    } />
+                    
+                    <Route path="/app/clientes" element={
+                      <PrivateRoute>
+                        <MainLayout>
+                          <Clientes />
+                        </MainLayout>
+                      </PrivateRoute>
+                    } />
+                    
+                    <Route path="/app/compras" element={
+                      <PrivateRoute>
+                        <MainLayout>
+                          <Compras />
+                        </MainLayout>
+                      </PrivateRoute>
+                    } />
+                    
+                    <Route path="/app/estoque" element={
+                      <PrivateRoute>
+                        <MainLayout>
+                          <Estoque />
+                        </MainLayout>
+                      </PrivateRoute>
+                    } />
+                    
+                    <Route path="/app/financeiro" element={
+                      <PrivateRoute>
+                        <MainLayout>
+                          <Financeiro />
+                        </MainLayout>
+                      </PrivateRoute>
+                    } />
+                    
+                    <Route path="/app/notas-fiscais" element={
+                      <PrivateRoute>
+                        <MainLayout>
+                          <NotasFiscais />
+                        </MainLayout>
+                      </PrivateRoute>
+                    } />
+                    
+                    <Route path="/app/producao" element={
+                      <PrivateRoute>
+                        <MainLayout>
+                          <Producao />
+                        </MainLayout>
+                      </PrivateRoute>
+                    } />
+                    
+                    <Route path="/app/relatorios" element={
+                      <PrivateRoute>
+                        <MainLayout>
+                          <Relatorios />
+                        </MainLayout>
+                      </PrivateRoute>
+                    } />
+                    
+                    <Route path="/app/analytics" element={
+                      <PrivateRoute>
+                        <MainLayout>
+                          <Analytics />
+                        </MainLayout>
+                      </PrivateRoute>
+                    } />
+                    
+                    <Route path="/app/marketplace-channels" element={
+                      <PrivateRoute>
+                        <MainLayout>
+                          <MarketplaceChannels />
+                        </MainLayout>
+                      </PrivateRoute>
+                    } />
+                    
+                    <Route path="/app/integracoes" element={
+                      <PrivateRoute>
+                        <MainLayout>
+                          <Integracoes />
+                        </MainLayout>
+                      </PrivateRoute>
+                    } />
+                    
+                    <Route path="/app/configuracoes" element={
+                      <PrivateRoute>
+                        <MainLayout>
+                          <Configuracoes />
+                        </MainLayout>
+                      </PrivateRoute>
+                    } />
+                    
+                    {/* Admin Routes */}
+                    <Route path="/app/admin" element={
+                      <PrivateRoute>
+                        <MainLayout>
+                          <Admin />
+                        </MainLayout>
+                      </PrivateRoute>
+                    } />
+                    
+                    <Route path="/app/admin/usuarios" element={
+                      <PrivateRoute>
+                        <MainLayout>
+                          <AdminUsuarios />
+                        </MainLayout>
+                      </PrivateRoute>
+                    } />
+                    
+                    <Route path="/app/admin/niveis-acesso" element={
+                      <PrivateRoute>
+                        <MainLayout>
+                          <AdminNiveisAcesso />
+                        </MainLayout>
+                      </PrivateRoute>
+                    } />
+                    
+                    <Route path="/app/admin/backup" element={
+                      <PrivateRoute>
+                        <MainLayout>
+                          <AdminBackup />
+                        </MainLayout>
+                      </PrivateRoute>
+                    } />
+                    
+                    <Route path="/app/admin/seguranca" element={
+                      <PrivateRoute>
+                        <MainLayout>
+                          <AdminSeguranca />
+                        </MainLayout>
+                      </PrivateRoute>
+                    } />
+                    
+                    <Route path="/app/admin/compressao" element={
+                      <PrivateRoute>
+                        <MainLayout>
+                          <AdminCompressao />
+                        </MainLayout>
+                      </PrivateRoute>
+                    } />
+                    
+                    <Route path="/app/admin/landing-page" element={
+                      <PrivateRoute>
+                        <MainLayout>
+                          <AdminLandingPage />
+                        </MainLayout>
+                      </PrivateRoute>
+                    } />
+                    
+                    <Route path="/app/admin/prompt-generator" element={
+                      <PrivateRoute>
+                        <MainLayout>
+                          <AdminPromptGenerator />
+                        </MainLayout>
+                      </PrivateRoute>
+                    } />
+                    
+                    <Route path="/app/admin/versions" element={
+                      <PrivateRoute>
+                        <MainLayout>
+                          <AdminVersions />
+                        </MainLayout>
+                      </PrivateRoute>
+                    } />
+                    
+                    <Route path="/app/admin/notificacoes" element={
+                      <PrivateRoute>
+                        <MainLayout>
+                          <AdminNotifications />
+                        </MainLayout>
+                      </PrivateRoute>
+                    } />
+                    
+                    <Route path="/app/admin/integracoes" element={
+                      <PrivateRoute>
+                        <MainLayout>
+                          <AdminIntegrations />
+                        </MainLayout>
+                      </PrivateRoute>
+                    } />
+                    
+                    <Route path="/app/admin/cache" element={
+                      <PrivateRoute>
+                        <MainLayout>
+                          <AdminCache />
+                        </MainLayout>
+                      </PrivateRoute>
+                    } />
+                    
+                    <Route path="/app/admin/monitoramento" element={
+                      <PrivateRoute>
+                        <MainLayout>
+                          <AdminMonitoring />
+                        </MainLayout>
+                      </PrivateRoute>
+                    } />
+                    
+                    <Route path="/app/admin/sla" element={
+                      <PrivateRoute>
+                        <MainLayout>
+                          <AdminSLA />
+                        </MainLayout>
+                      </PrivateRoute>
+                    } />
+                    
+                    <Route path="/app/users/:id" element={
+                      <PrivateRoute>
+                        <MainLayout>
+                          <UserDadosPessoais />
+                        </MainLayout>
+                      </PrivateRoute>
+                    } />
+                    
+                    <Route path="*" element={<NotFound />} />
+                  </Routes>
+                </Suspense>
+                
+                <Toaster />
+              </div>
             </AnalyticsProvider>
-          </BrowserRouter>
+          </Router>
         </AuthProvider>
-      </ErrorBoundary>
-    </QueryClientProvider>
+        
+        {import.meta.env.DEV && <ReactQueryDevtools initialIsOpen={false} />}
+      </QueryClientProvider>
+    </ErrorBoundary>
   );
 }
 
