@@ -1,307 +1,303 @@
 
-import React, { useState, useCallback } from 'react';
-import { usePromptGenerator } from '@/hooks/usePromptGenerator';
+import React, { useState, useEffect } from 'react';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import { Separator } from '@/components/ui/separator';
 import { useConversationFlow } from '@/hooks/useConversationFlow';
-import { PromptEditor } from './PromptEditor';
-import { CodeEditor } from './CodeEditor';
-import { PromptHistory } from './PromptHistory';
+import { usePromptGenerator } from '@/hooks/usePromptGenerator';
 import { InitialQuery } from './InitialQuery';
 import { TechnicalApproval } from './TechnicalApproval';
 import { ImplementationReport } from './ImplementationReport';
 import { BuildVerification } from './BuildVerification';
-import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Badge } from '@/components/ui/badge';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Shield, ArrowRight, RotateCcw } from 'lucide-react';
-import { Button } from '@/components/ui/button';
+import { ConversationState, ImplementationReport as IImplementationReport, PromptLog } from './types';
+import { MessageSquare, Zap, CheckCircle, AlertCircle } from 'lucide-react';
 
-export const ConversationalDashboard: React.FC = () => {
-  const {
-    promptLogs,
-    isLoadingLogs,
-    isGenerating,
-    isApplying,
-    generateCode,
-    reviseCode,
-    applyCode,
-    rollbackCode
-  } = usePromptGenerator();
+interface ConversationalDashboardProps {
+  onBackToTraditional: () => void;
+}
 
-  const {
-    conversationState,
-    initializeConversation,
-    addStep,
-    updateCurrentStep,
-    setTechnicalAnalysis,
-    setImplementationReport,
-    moveToNextStep,
-    resetConversation
-  } = useConversationFlow();
+export const ConversationalDashboard: React.FC<ConversationalDashboardProps> = ({
+  onBackToTraditional
+}) => {
+  const { conversationState, updateConversationState, resetConversation } = useConversationFlow();
+  const { promptLogs, generateCode, applyCode, isGenerating, isApplying } = usePromptGenerator();
+  const [buildStatus, setBuildStatus] = useState<'pending' | 'running' | 'success' | 'failed'>('pending');
 
-  const [currentGeneration, setCurrentGeneration] = useState<{
-    logId: string;
-    generatedCode: any;
-  } | null>(null);
+  const handleInitialQuery = (prompt: string) => {
+    // Simulate AI understanding and analysis
+    const mockAnalysis = {
+      affectedFiles: ['src/components/ProductDialog.tsx', 'src/hooks/useProducts.ts'],
+      impactType: 'performance' as const,
+      impactDescription: 'Otimização de performance em listagem de produtos',
+      justification: 'Melhoria necessária para reduzir tempo de carregamento',
+      estimatedChanges: {
+        files: ['ProductDialog.tsx', 'useProducts.ts'],
+        functions: ['handleProductSubmit', 'fetchProducts'],
+        tables: ['products'],
+        edgeFunctions: []
+      }
+    };
 
-  const [isAnalyzing, setIsAnalyzing] = useState(false);
-  const [isRunningBuild, setIsRunningBuild] = useState(false);
-  const [isFixing, setIsFixing] = useState(false);
-
-  const handleGenerate = useCallback(async (params: {
-    prompt: string;
-    temperature: number;
-    model: string;
-  }) => {
-    // Inicializar conversa
-    initializeConversation(params.prompt);
-    setIsAnalyzing(true);
-    
-    // Simular delay para análise
-    setTimeout(() => {
-      setIsAnalyzing(false);
-      moveToNextStep('technical_approval');
-    }, 2000);
-  }, [initializeConversation, moveToNextStep]);
-
-  const handleAnalysisComplete = useCallback((analysis: any) => {
-    setTechnicalAnalysis(analysis);
-    addStep({
-      type: 'initial_query',
-      status: 'completed',
-      content: `Análise concluída: ${analysis.impactDescription}`
+    updateConversationState({
+      currentStep: 'technical_approval',
+      steps: [
+        ...conversationState.steps,
+        {
+          id: Date.now().toString(),
+          type: 'initial_query',
+          status: 'completed',
+          content: prompt,
+          timestamp: new Date().toISOString()
+        }
+      ],
+      technicalAnalysis: mockAnalysis,
+      originalPrompt: prompt
     });
-  }, [setTechnicalAnalysis, addStep]);
+  };
 
-  const handleApprove = useCallback(async () => {
-    moveToNextStep('implementation');
-    
-    try {
-      const result = await new Promise<{
-        logId: string;
-        generatedCode: any;
-      }>((resolve, reject) => {
-        generateCode({
-          prompt: conversationState.originalPrompt,
-          temperature: 0.7,
-          model: 'gpt-4o-mini'
-        }, {
-          onSuccess: (data) => {
-            resolve(data);
-          },
-          onError: (error) => {
-            reject(error);
+  const handleTechnicalApproval = () => {
+    // Simulate implementation
+    const mockImplementation: IImplementationReport = {
+      modifiedFiles: ['src/components/ProductDialog.tsx', 'src/hooks/useProducts.ts'],
+      linesChanged: {
+        'ProductDialog.tsx': 15,
+        'useProducts.ts': 8
+      },
+      functionsCreated: ['optimizeProductQuery'],
+      functionsModified: ['handleProductSubmit'],
+      functionsRemoved: [],
+      databaseChanges: {
+        tables: ['products'],
+        fields: ['indexed_name'],
+        indexes: ['idx_products_name']
+      },
+      edgeFunctions: ['product-optimizer'],
+      buildStatus: 'running',
+      buildErrors: []
+    };
+
+    updateConversationState({
+      currentStep: 'implementation',
+      steps: [
+        ...conversationState.steps,
+        {
+          id: Date.now().toString(),
+          type: 'technical_approval',
+          status: 'completed',
+          content: 'Aprovação técnica concedida',
+          timestamp: new Date().toISOString()
+        }
+      ],
+      implementationReport: mockImplementation
+    });
+
+    // Simulate build verification
+    setTimeout(() => {
+      setBuildStatus('success');
+      updateConversationState({
+        currentStep: 'build_verification',
+        steps: [
+          ...conversationState.steps,
+          {
+            id: Date.now().toString(),
+            type: 'implementation',
+            status: 'completed',
+            content: 'Implementação concluída',
+            timestamp: new Date().toISOString()
           }
-        });
+        ],
+        implementationReport: {
+          ...mockImplementation,
+          buildStatus: 'success'
+        }
       });
-      
-      setCurrentGeneration(result);
-      
-      // Simular relatório de implementação
-      const mockReport = {
-        modifiedFiles: ['src/components/Products/ProductDialog.tsx', 'src/hooks/useProducts.ts'],
-        linesChanged: { 'ProductDialog.tsx': 45, 'useProducts.ts': 23 },
-        functionsCreated: ['validateProduct', 'optimizeProductQuery'],
-        functionsModified: ['handleProductSubmit'],
-        functionsRemoved: [],
-        databaseChanges: {
-          tables: ['products'],
-          fields: ['validation_status'],
-          indexes: ['idx_products_validation']
-        },
-        edgeFunctions: ['product-validation'],
-        buildStatus: 'running' as const,
-        buildErrors: []
-      };
-      
-      setImplementationReport(mockReport);
-      moveToNextStep('build_verification');
-    } catch (error) {
-      console.error('Error in implementation:', error);
-    }
-  }, [conversationState.originalPrompt, generateCode, setImplementationReport, moveToNextStep]);
-
-  const handleReject = useCallback(() => {
-    resetConversation();
-  }, [resetConversation]);
-
-  const handleRunBuild = useCallback(() => {
-    setIsRunningBuild(true);
-    
-    // Simular build
-    setTimeout(() => {
-      setIsRunningBuild(false);
-      
-      const updatedReport = {
-        ...conversationState.implementationReport!,
-        buildStatus: 'success' as const
-      };
-      
-      setImplementationReport(updatedReport);
     }, 3000);
-  }, [conversationState.implementationReport, setImplementationReport]);
+  };
 
-  const handleFixAutomatically = useCallback(() => {
-    setIsFixing(true);
-    
-    // Simular correção automática
-    setTimeout(() => {
-      setIsFixing(false);
-      handleRunBuild();
-    }, 2000);
-  }, [handleRunBuild]);
+  const handleBuildVerification = () => {
+    updateConversationState({
+      currentStep: 'build_verification',
+      steps: [
+        ...conversationState.steps,
+        {
+          id: Date.now().toString(),
+          type: 'build_verification',
+          status: 'completed',
+          content: 'Build verificado com sucesso',
+          timestamp: new Date().toISOString()
+        }
+      ]
+    });
+  };
+
+  const getCurrentStepIcon = () => {
+    switch (conversationState.currentStep) {
+      case 'initial_query':
+        return <MessageSquare className="h-5 w-5" />;
+      case 'technical_approval':
+        return <Zap className="h-5 w-5" />;
+      case 'implementation':
+        return <CheckCircle className="h-5 w-5" />;
+      case 'build_verification':
+        return <AlertCircle className="h-5 w-5" />;
+      default:
+        return <MessageSquare className="h-5 w-5" />;
+    }
+  };
+
+  const getStepTitle = () => {
+    switch (conversationState.currentStep) {
+      case 'initial_query':
+        return 'Consulta Inicial';
+      case 'technical_approval':
+        return 'Aprovação Técnica';
+      case 'implementation':
+        return 'Implementação';
+      case 'build_verification':
+        return 'Verificação de Build';
+      default:
+        return 'Processando';
+    }
+  };
 
   const renderCurrentStep = () => {
     switch (conversationState.currentStep) {
       case 'initial_query':
+        return <InitialQuery onSubmit={handleInitialQuery} />;
+      case 'technical_approval':
         return (
-          <InitialQuery
-            prompt={conversationState.originalPrompt}
-            onAnalysisComplete={handleAnalysisComplete}
-            isAnalyzing={isAnalyzing}
+          <TechnicalApproval
+            analysis={conversationState.technicalAnalysis!}
+            onApprove={handleTechnicalApproval}
+            onReject={resetConversation}
           />
         );
-      
-      case 'technical_approval':
-        return conversationState.technicalAnalysis ? (
-          <TechnicalApproval
-            analysis={conversationState.technicalAnalysis}
-            onApprove={handleApprove}
-            onReject={handleReject}
-            isProcessing={isGenerating}
-          />
-        ) : null;
-      
       case 'implementation':
-        return conversationState.implementationReport ? (
+        return (
           <ImplementationReport
-            report={conversationState.implementationReport}
-            onRunBuild={handleRunBuild}
-            isRunningBuild={isRunningBuild}
+            report={conversationState.implementationReport!}
+            onContinue={handleBuildVerification}
           />
-        ) : null;
-      
+        );
       case 'build_verification':
-        return conversationState.implementationReport ? (
+        return (
           <BuildVerification
-            buildStatus={conversationState.implementationReport.buildStatus}
-            errors={conversationState.implementationReport.buildErrors?.map(error => ({
-              file: 'src/components/example.tsx',
-              line: 1,
-              column: 1,
-              message: error,
-              type: 'error' as const
-            }))}
-            onFixAutomatically={handleFixAutomatically}
-            onRunBuild={handleRunBuild}
-            isFixing={isFixing}
-            isRunning={isRunningBuild}
+            buildStatus={buildStatus}
+            buildErrors={conversationState.implementationReport?.buildErrors || []}
+            onRetry={() => setBuildStatus('running')}
+            onComplete={resetConversation}
           />
-        ) : null;
-      
+        );
       default:
         return null;
     }
   };
 
-  const getStepBadge = (step: string) => {
-    const stepLabels = {
-      initial_query: 'Consulta Inicial',
-      technical_approval: 'Aprovação Técnica',
-      implementation: 'Implementação',
-      build_verification: 'Verificação de Build'
-    };
-    return stepLabels[step as keyof typeof stepLabels];
-  };
+  // Mock prompt logs with correct typing
+  const mockPromptLogs: PromptLog[] = (promptLogs || []).map(log => ({
+    id: log.id,
+    prompt: log.prompt,
+    generated_code: log.generated_code,
+    status: log.status as 'pending' | 'applied' | 'rolled_back' | 'error',
+    created_at: log.created_at,
+    applied_at: log.applied_at,
+    rolled_back_at: log.rolled_back_at,
+    error_message: log.error_message,
+    user_id: log.user_id,
+    company_id: log.company_id,
+    model_used: log.model_used,
+    temperature: log.temperature,
+    applied_files: log.applied_files,
+    rollback_data: log.rollback_data
+  }));
 
   return (
     <div className="space-y-6">
-      <Alert>
-        <Shield className="h-4 w-4" />
-        <AlertDescription>
-          <strong>Painel Técnico Conversacional</strong> - Sistema aprimorado com 4 etapas de interação para 
-          garantir implementações seguras e eficientes. Cada etapa é explicada de forma clara e acessível.
-        </AlertDescription>
-      </Alert>
+      {/* Header */}
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-3">
+          {getCurrentStepIcon()}
+          <div>
+            <h2 className="text-2xl font-bold">Modo Conversacional</h2>
+            <p className="text-muted-foreground">{getStepTitle()}</p>
+          </div>
+        </div>
+        <div className="flex items-center gap-2">
+          <Button variant="outline" onClick={onBackToTraditional}>
+            Modo Tradicional
+          </Button>
+          <Button variant="outline" onClick={resetConversation}>
+            Nova Conversa
+          </Button>
+        </div>
+      </div>
 
-      {/* Progresso das Etapas */}
-      {conversationState.steps.length > 0 && (
+      {/* Progress Steps */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-lg">Progresso da Conversa</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="flex items-center gap-2 mb-4">
+            {['initial_query', 'technical_approval', 'implementation', 'build_verification'].map((step, index) => (
+              <React.Fragment key={step}>
+                <div className={`flex items-center gap-2 px-3 py-1 rounded-full text-sm ${
+                  conversationState.currentStep === step
+                    ? 'bg-primary text-primary-foreground'
+                    : conversationState.steps.some(s => s.type === step && s.status === 'completed')
+                    ? 'bg-green-100 text-green-800'
+                    : 'bg-gray-100 text-gray-500'
+                }`}>
+                  <span>{index + 1}</span>
+                  <span className="capitalize">{step.replace('_', ' ')}</span>
+                </div>
+                {index < 3 && <div className="w-4 h-px bg-gray-300" />}
+              </React.Fragment>
+            ))}
+          </div>
+          <Separator />
+        </CardContent>
+      </Card>
+
+      {/* Current Step Content */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            {getCurrentStepIcon()}
+            {getStepTitle()}
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          {renderCurrentStep()}
+        </CardContent>
+      </Card>
+
+      {/* Recent Logs */}
+      {mockPromptLogs.length > 0 && (
         <Card>
           <CardHeader>
-            <CardTitle className="flex items-center justify-between">
-              <span>Progresso da Conversa</span>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={resetConversation}
-              >
-                <RotateCcw className="h-4 w-4 mr-2" />
-                Reiniciar
-              </Button>
-            </CardTitle>
+            <CardTitle>Histórico Recente</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="flex items-center space-x-2 overflow-x-auto pb-2">
-              {['initial_query', 'technical_approval', 'implementation', 'build_verification'].map((step, index) => {
-                const isActive = conversationState.currentStep === step;
-                const isCompleted = conversationState.steps.some(s => s.type === step && s.status === 'completed');
-                
-                return (
-                  <div key={step} className="flex items-center space-x-2">
-                    <Badge
-                      variant={isActive ? 'default' : isCompleted ? 'secondary' : 'outline'}
-                      className="whitespace-nowrap"
-                    >
-                      {index + 1}. {getStepBadge(step)}
-                    </Badge>
-                    {index < 3 && (
-                      <ArrowRight className="h-4 w-4 text-gray-400" />
-                    )}
+            <div className="space-y-2">
+              {mockPromptLogs.slice(0, 5).map((log) => (
+                <div key={log.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                  <div className="flex-1">
+                    <p className="text-sm font-medium">{log.prompt.slice(0, 60)}...</p>
+                    <p className="text-xs text-muted-foreground">
+                      {new Date(log.created_at).toLocaleString()}
+                    </p>
                   </div>
-                );
-              })}
+                  <Badge variant={log.status === 'applied' ? 'default' : 'secondary'}>
+                    {log.status}
+                  </Badge>
+                </div>
+              ))}
             </div>
           </CardContent>
         </Card>
       )}
-
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <div className="lg:col-span-2 space-y-6">
-          {conversationState.steps.length === 0 ? (
-            <PromptEditor
-              onGenerate={handleGenerate}
-              isGenerating={isGenerating}
-            />
-          ) : (
-            renderCurrentStep()
-          )}
-
-          {currentGeneration && conversationState.currentStep === 'implementation' && (
-            <CodeEditor
-              generatedCode={currentGeneration.generatedCode}
-              logId={currentGeneration.logId}
-              onApply={applyCode}
-              onRevise={reviseCode}
-              isApplying={isApplying}
-              isRevising={isGenerating}
-            />
-          )}
-        </div>
-
-        <div>
-          <PromptHistory
-            promptLogs={promptLogs || []}
-            onRollback={rollbackCode}
-            onApplyCode={applyCode}
-            onViewCode={(log) => {
-              setCurrentGeneration({
-                logId: log.id,
-                generatedCode: log.generated_code
-              });
-            }}
-            isLoadingLogs={isLoadingLogs}
-          />
-        </div>
-      </div>
     </div>
   );
 };

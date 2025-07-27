@@ -1,217 +1,173 @@
 
-import React, { useState, useCallback, useMemo } from 'react';
-import { usePromptGenerator } from '@/hooks/usePromptGenerator';
+import React, { useState } from 'react';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Badge } from '@/components/ui/badge';
 import { ConversationalDashboard } from './ConversationalDashboard';
 import { PromptEditor } from './PromptEditor';
-import { CodeEditor } from './CodeEditor';
+import { CodePreview } from './CodePreview';
 import { PromptHistory } from './PromptHistory';
-import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Shield, Zap, ArrowRight } from 'lucide-react';
-
-interface PromptLog {
-  id: string;
-  prompt: string;
-  generated_code: any;
-  model_used: string;
-  temperature: number;
-  status: 'pending' | 'applied' | 'error' | 'rolled_back';
-  error_message?: string;
-  applied_files: string[];
-  created_at: string;
-  applied_at?: string;
-  rolled_back_at?: string;
-}
+import { usePromptGenerator } from '@/hooks/usePromptGenerator';
+import { Bot, Code, History, MessageSquare, Zap } from 'lucide-react';
+import { PromptLog } from './types';
 
 export const PromptGeneratorDashboard: React.FC = () => {
-  const {
-    promptLogs,
-    isLoadingLogs,
-    isGenerating,
-    isApplying,
-    generateCode,
-    reviseCode,
-    applyCode,
-    rollbackCode
+  const [mode, setMode] = useState<'conversational' | 'traditional'>('conversational');
+  const [generatedCode, setGeneratedCode] = useState<any>(null);
+  const [selectedLog, setSelectedLog] = useState<string | null>(null);
+  
+  const { 
+    promptLogs, 
+    generateCode, 
+    applyCode, 
+    rollbackCode, 
+    isGenerating, 
+    isApplying 
   } = usePromptGenerator();
 
-  const [useConversationalMode, setUseConversationalMode] = useState(true);
-  const [currentGeneration, setCurrentGeneration] = useState<{
-    logId: string;
-    generatedCode: any;
-  } | null>(null);
+  const handleGenerateCode = (prompt: string, temperature: number, model: string) => {
+    generateCode(
+      { prompt, temperature, model },
+      {
+        onSuccess: (data) => {
+          setGeneratedCode(data);
+        },
+        onError: (error) => {
+          console.error('Error generating code:', error);
+        }
+      }
+    );
+  };
 
-  const handleGenerate = useCallback(async (params: {
-    prompt: string;
-    temperature: number;
-    model: string;
-  }) => {
-    try {
-      const result = await new Promise<{
-        logId: string;
-        generatedCode: any;
-      }>((resolve, reject) => {
-        generateCode(params, {
-          onSuccess: (data) => {
-            console.log('Generate success:', data);
-            resolve(data);
-          },
-          onError: (error) => {
-            console.error('Generate error:', error);
-            reject(error);
-          }
-        });
-      });
-      
-      setCurrentGeneration(result);
-    } catch (error) {
-      console.error('Error generating code:', error);
-      setCurrentGeneration(null);
-    }
-  }, [generateCode]);
-
-  const handleRevise = useCallback(async (prompt: string, originalCode: any) => {
-    try {
-      const result = await new Promise<{
-        logId: string;
-        generatedCode: any;
-      }>((resolve, reject) => {
-        reviseCode(prompt, originalCode, {
-          onSuccess: (data) => {
-            console.log('Revise success:', data);
-            resolve(data);
-          },
-          onError: (error) => {
-            console.error('Revise error:', error);
-            reject(error);
-          }
-        });
-      });
-      
-      setCurrentGeneration(result);
-    } catch (error) {
-      console.error('Error revising code:', error);
-    }
-  }, [reviseCode]);
-
-  const handleApply = useCallback((logId: string) => {
+  const handleApplyCode = (logId: string) => {
     applyCode(logId);
-    setCurrentGeneration(null);
-  }, [applyCode]);
+  };
 
-  const handleRollback = useCallback((logId: string) => {
+  const handleRollbackCode = (logId: string) => {
     rollbackCode(logId);
-  }, [rollbackCode]);
+  };
 
-  const handleViewCode = useCallback((log: PromptLog) => {
-    setCurrentGeneration({
-      logId: log.id,
-      generatedCode: log.generated_code
-    });
-  }, []);
+  const handleViewLog = (logId: string) => {
+    setSelectedLog(logId);
+  };
 
-  const handleApplyFromHistory = useCallback((logId: string) => {
-    handleApply(logId);
-  }, [handleApply]);
+  if (mode === 'conversational') {
+    return (
+      <ConversationalDashboard 
+        onBackToTraditional={() => setMode('traditional')}
+      />
+    );
+  }
 
-  // Memoizar propriedades para evitar re-renders desnecessários
-  const promptLogsData = useMemo(() => promptLogs || [], [promptLogs]);
+  // Mock prompt logs with correct typing
+  const mockPromptLogs: PromptLog[] = (promptLogs || []).map(log => ({
+    id: log.id,
+    prompt: log.prompt,
+    generated_code: log.generated_code,
+    status: log.status as 'pending' | 'applied' | 'rolled_back' | 'error',
+    created_at: log.created_at,
+    applied_at: log.applied_at,
+    rolled_back_at: log.rolled_back_at,
+    error_message: log.error_message,
+    user_id: log.user_id,
+    company_id: log.company_id,
+    model_used: log.model_used,
+    temperature: log.temperature,
+    applied_files: log.applied_files,
+    rollback_data: log.rollback_data
+  }));
 
   return (
     <div className="space-y-6">
-      <Alert>
-        <Shield className="h-4 w-4" />
-        <AlertDescription>
-          <strong>Painel Técnico do Desenvolvedor</strong> - Agora com modo conversacional aprimorado! 
-          Escolha entre o modo tradicional ou o novo sistema de 4 etapas para uma experiência mais guiada.
-        </AlertDescription>
-      </Alert>
-
-      {/* Seletor de Modo */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Zap className="h-5 w-5" />
-            Modo de Operação
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div 
-              className={`p-4 rounded-lg border-2 cursor-pointer transition-all ${
-                useConversationalMode ? 'border-blue-500 bg-blue-50' : 'border-gray-200 hover:border-gray-300'
-              }`}
-              onClick={() => setUseConversationalMode(true)}
-            >
-              <h3 className="font-semibold mb-2 flex items-center gap-2">
-                <ArrowRight className="h-4 w-4" />
-                Modo Conversacional (Novo)
-              </h3>
-              <p className="text-sm text-gray-600">
-                Sistema em 4 etapas: Consulta Inicial → Aprovação Técnica → Implementação → Verificação de Build
-              </p>
-              <div className="mt-3 flex flex-wrap gap-1">
-                <span className="text-xs bg-green-100 text-green-700 px-2 py-1 rounded">Guiado</span>
-                <span className="text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded">Seguro</span>
-                <span className="text-xs bg-purple-100 text-purple-700 px-2 py-1 rounded">Explicado</span>
-              </div>
-            </div>
-
-            <div 
-              className={`p-4 rounded-lg border-2 cursor-pointer transition-all ${
-                !useConversationalMode ? 'border-blue-500 bg-blue-50' : 'border-gray-200 hover:border-gray-300'
-              }`}
-              onClick={() => setUseConversationalMode(false)}
-            >
-              <h3 className="font-semibold mb-2">Modo Tradicional</h3>
-              <p className="text-sm text-gray-600">
-                Interface direta de geração e edição de código, ideal para usuários experientes
-              </p>
-              <div className="mt-3 flex flex-wrap gap-1">
-                <span className="text-xs bg-gray-100 text-gray-700 px-2 py-1 rounded">Direto</span>
-                <span className="text-xs bg-gray-100 text-gray-700 px-2 py-1 rounded">Rápido</span>
-                <span className="text-xs bg-gray-100 text-gray-700 px-2 py-1 rounded">Avançado</span>
-              </div>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Renderizar interface baseada no modo selecionado */}
-      {useConversationalMode ? (
-        <ConversationalDashboard />
-      ) : (
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          <div className="space-y-6">
-            <PromptEditor
-              onGenerate={handleGenerate}
-              isGenerating={isGenerating}
-            />
-
-            {currentGeneration && (
-              <CodeEditor
-                generatedCode={currentGeneration.generatedCode}
-                logId={currentGeneration.logId}
-                onApply={handleApply}
-                onRevise={handleRevise}
-                isApplying={isApplying}
-                isRevising={isGenerating}
-              />
-            )}
-          </div>
-
+      {/* Header */}
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-3">
+          <Bot className="h-8 w-8 text-primary" />
           <div>
-            <PromptHistory
-              promptLogs={promptLogsData}
-              onRollback={handleRollback}
-              onApplyCode={handleApplyFromHistory}
-              onViewCode={handleViewCode}
-              isLoadingLogs={isLoadingLogs}
-            />
+            <h1 className="text-3xl font-bold">Gerador de Código IA</h1>
+            <p className="text-muted-foreground">
+              Gere, teste e implemente código automaticamente
+            </p>
           </div>
         </div>
-      )}
+        <div className="flex items-center gap-2">
+          <Button 
+            variant="outline" 
+            onClick={() => setMode('conversational')}
+            className="flex items-center gap-2"
+          >
+            <MessageSquare className="h-4 w-4" />
+            Modo Conversacional
+          </Button>
+          <Badge variant="secondary">Modo Tradicional</Badge>
+        </div>
+      </div>
+
+      {/* Main Content */}
+      <Tabs defaultValue="generator" className="w-full">
+        <TabsList className="grid w-full grid-cols-3">
+          <TabsTrigger value="generator" className="flex items-center gap-2">
+            <Code className="h-4 w-4" />
+            Gerador
+          </TabsTrigger>
+          <TabsTrigger value="preview" className="flex items-center gap-2">
+            <Zap className="h-4 w-4" />
+            Prévia
+          </TabsTrigger>
+          <TabsTrigger value="history" className="flex items-center gap-2">
+            <History className="h-4 w-4" />
+            Histórico
+          </TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="generator" className="space-y-6">
+          <Card>
+            <CardHeader>
+              <CardTitle>Gerador de Código</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <PromptEditor 
+                onGenerate={handleGenerateCode}
+                isGenerating={isGenerating}
+              />
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="preview" className="space-y-6">
+          <Card>
+            <CardHeader>
+              <CardTitle>Prévia do Código</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <CodePreview 
+                code={generatedCode}
+                onApply={handleApplyCode}
+                onRollback={handleRollbackCode}
+                isApplying={isApplying}
+              />
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="history" className="space-y-6">
+          <Card>
+            <CardHeader>
+              <CardTitle>Histórico de Prompts</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <PromptHistory 
+                logs={mockPromptLogs}
+                onViewLog={handleViewLog}
+                onApplyCode={handleApplyCode}
+                onRollbackCode={handleRollbackCode}
+                selectedLogId={selectedLog}
+              />
+            </CardContent>
+          </Card>
+        </TabsContent>
+      </Tabs>
     </div>
   );
 };

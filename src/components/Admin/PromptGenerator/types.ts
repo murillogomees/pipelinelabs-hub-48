@@ -33,7 +33,7 @@ export interface ImplementationReport {
     indexes: string[];
   };
   edgeFunctions: string[];
-  buildStatus: 'success' | 'failed' | 'pending';
+  buildStatus: 'success' | 'failed' | 'pending' | 'running';
   buildErrors?: string[];
 }
 
@@ -44,4 +44,21 @@ export interface ConversationState {
   implementationReport?: ImplementationReport;
   originalPrompt: string;
   logId?: string;
+}
+
+export interface PromptLog {
+  id: string;
+  prompt: string;
+  generated_code: any;
+  status: 'pending' | 'applied' | 'rolled_back' | 'error';
+  created_at: string;
+  applied_at?: string;
+  rolled_back_at?: string;
+  error_message?: string;
+  user_id: string;
+  company_id: string;
+  model_used: string;
+  temperature: number;
+  applied_files?: any;
+  rollback_data?: any;
 }

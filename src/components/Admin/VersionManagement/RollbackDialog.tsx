@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -22,7 +23,7 @@ export const RollbackDialog = ({ version, children }: RollbackDialogProps) => {
   const [reason, setReason] = useState('');
   const [targetEnvironment, setTargetEnvironment] = useState<'production' | 'staging' | 'preview'>('staging');
   
-  const rollbackMutation = useRollback();
+  const { mutateAsync: rollbackMutation, isRollingBack } = useRollback();
   const { canRollbackProduction, canRollbackStaging } = useCanRollback();
 
   const canRollback = () => {
@@ -42,12 +43,12 @@ export const RollbackDialog = ({ version, children }: RollbackDialogProps) => {
     }
 
     try {
-      await rollbackMutation.mutateAsync({
+      await rollbackMutation({
         versionId: version.id,
         reason: reason.trim(),
         targetEnvironment,
         rollbackType: 'manual',
-        rollbackBy: 'admin_user' // Should get from auth context
+        rollbackBy: 'admin_user'
       });
 
       setOpen(false);
@@ -172,10 +173,10 @@ export const RollbackDialog = ({ version, children }: RollbackDialogProps) => {
             </Button>
             <Button 
               onClick={handleRollback}
-              disabled={!reason.trim() || !canRollback() || rollbackMutation.isPending}
+              disabled={!reason.trim() || !canRollback() || isRollingBack}
               variant="destructive"
             >
-              {rollbackMutation.isPending ? 'Executando...' : 'Confirmar Rollback'}
+              {isRollingBack ? 'Executando...' : 'Confirmar Rollback'}
             </Button>
           </div>
         </div>

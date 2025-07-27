@@ -2,9 +2,11 @@
 import { useQuery, useMutation } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { usePermissions } from '@/hooks/usePermissions';
+import { useToast } from '@/hooks/use-toast';
 
 export const useNFeIntegration = () => {
   const { currentCompanyId } = usePermissions();
+  const { toast } = useToast();
 
   const { data: nfeConfig, isLoading, refetch } = useQuery({
     queryKey: ['nfe-config', currentCompanyId],
@@ -28,13 +30,26 @@ export const useNFeIntegration = () => {
   });
 
   const testConnectionMutation = useMutation({
-    mutationFn: async () => {
+    mutationFn: async (config?: any) => {
       const { data, error } = await supabase.functions.invoke('test-nfe-connection', {
-        body: { companyId: currentCompanyId }
+        body: { companyId: currentCompanyId, config }
       });
 
       if (error) throw error;
       return data;
+    },
+    onSuccess: () => {
+      toast({
+        title: 'Sucesso',
+        description: 'Conexão testada com sucesso',
+      });
+    },
+    onError: (error: any) => {
+      toast({
+        title: 'Erro',
+        description: error.message || 'Erro ao testar conexão',
+        variant: 'destructive',
+      });
     }
   });
 
@@ -50,8 +65,50 @@ export const useNFeIntegration = () => {
 
       if (error) throw error;
       return data;
+    },
+    onSuccess: () => {
+      toast({
+        title: 'Sucesso',
+        description: 'Configuração salva com sucesso',
+      });
+      refetch();
+    },
+    onError: (error: any) => {
+      toast({
+        title: 'Erro',
+        description: error.message || 'Erro ao salvar configuração',
+        variant: 'destructive',
+      });
     }
   });
+
+  const validateCertificateMutation = useMutation({
+    mutationFn: async () => {
+      const { data, error } = await supabase.functions.invoke('validate-certificate', {
+        body: { companyId: currentCompanyId }
+      });
+
+      if (error) throw error;
+      return data;
+    }
+  });
+
+  // Helper functions
+  const getConfig = () => {
+    return nfeConfig || {};
+  };
+
+  const isConfigured = Boolean(nfeConfig?.api_token);
+  const isActive = Boolean(nfeConfig?.is_active);
+  const hasValidConfig = () => Boolean(nfeConfig?.certificate_file && nfeConfig?.certificate_password);
+
+  const saveNFeConfig = async (config: any) => {
+    return updateConfigMutation.mutateAsync(config);
+  };
+
+  const validateCertificate = async () => {
+    return validateCertificateMutation.mutateAsync();
+  };
 
   return {
     nfeConfig,
@@ -60,6 +117,16 @@ export const useNFeIntegration = () => {
     updateConfig: updateConfigMutation.mutate,
     isTestingConnection: testConnectionMutation.isPending,
     isUpdatingConfig: updateConfigMutation.isPending,
-    refetch
+    refetch,
+    // Additional properties expected by components
+    saveNFeConfig,
+    getConfig,
+    isConfigured,
+    isActive,
+    isSaving: updateConfigMutation.isPending,
+    testingConnection: testConnectionMutation.isPending,
+    validateCertificate,
+    hasValidConfig,
+    uploadingCertificate: false, // Add this for certificate upload state
   };
 };
