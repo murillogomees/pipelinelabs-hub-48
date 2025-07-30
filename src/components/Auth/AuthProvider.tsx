@@ -1,279 +1,98 @@
 
-import React, { createContext, useContext, useEffect, useState } from 'react';
+import React, { createContext, useContext, useEffect, useState, ReactNode } from 'react';
 import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
 import { createLogger } from '@/utils/logger';
-import { retryWithBackoff, isNetworkError } from '@/utils/networkRetry';
+
+const logger = createLogger('AuthProvider');
 
 interface AuthContextType {
   user: User | null;
   session: Session | null;
-  loading: boolean;
-  isAuthenticated: boolean;
   isLoading: boolean;
-  error: any;
-  networkError: boolean;
   signOut: () => Promise<void>;
-  signIn: (email: string, password: string) => Promise<{ error: any }>;
-  signUp: (email: string, password: string, options?: any) => Promise<{ error: any }>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-const authLogger = createLogger('AuthProvider');
+interface AuthProviderProps {
+  children: ReactNode;
+}
 
-// Cleanup function to remove auth state
-const cleanupAuthState = () => {
-  try {
-    localStorage.removeItem('supabase.auth.token');
-    Object.keys(localStorage).forEach((key) => {
-      if (key.startsWith('supabase.auth.') || key.includes('sb-')) {
-        localStorage.removeItem(key);
-      }
-    });
-    Object.keys(sessionStorage || {}).forEach((key) => {
-      if (key.startsWith('supabase.auth.') || key.includes('sb-')) {
-        sessionStorage.removeItem(key);
-      }
-    });
-  } catch (error) {
-    authLogger.error('Error cleaning up auth state', error);
-  }
-};
-
-export function AuthProvider({ children }: { children: React.ReactNode }) {
+export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [networkError, setNetworkError] = useState(false);
-
-  useEffect(() => {
-    let mounted = true;
-    let retryCount = 0;
-    const maxRetries = 3;
-
-    const initializeAuth = async () => {
-      try {
-        setNetworkError(false);
-        
-        // Set up auth state listener FIRST
-        const { data: { subscription } } = supabase.auth.onAuthStateChange(
-          async (event, session) => {
-            if (!mounted) return;
-
-            authLogger.info('Auth state change', { event, email: session?.user?.email });
-
-            setSession(session);
-            setUser(session?.user ?? null);
-            setLoading(false);
-            setNetworkError(false);
-            
-            // Defer any additional processing
-            if (event === 'SIGNED_IN' && session?.user) {
-              setTimeout(async () => {
-                if (mounted) {
-                  authLogger.info('User signed in successfully');
-                  
-                  // Track login event with retry
-                  try {
-                    await retryWithBackoff(async () => {
-                      const { error } = await supabase.rpc('create_analytics_event', {
-                        p_event_name: 'user:login',
-                        p_device_type: window.innerWidth <= 768 ? 'mobile' : 'desktop',
-                        p_route: window.location.pathname,
-                        p_meta: { user_id: session.user.id, email: session.user.email }
-                      });
-                      if (error) throw error;
-                    });
-                  } catch (error) {
-                    console.error('Error tracking login event:', error);
-                  }
-                }
-              }, 0);
-            }
-
-            if (event === 'SIGNED_OUT') {
-              // Track logout event before cleaning up
-              setTimeout(() => {
-                retryWithBackoff(async () => {
-                  const { error } = await supabase.rpc('create_analytics_event', {
-                    p_event_name: 'user:logout',
-                    p_device_type: window.innerWidth <= 768 ? 'mobile' : 'desktop',
-                    p_route: window.location.pathname,
-                    p_meta: { timestamp: new Date().toISOString() }
-                  });
-                  if (error) throw error;
-                }).catch(() => {}); // Ignore errors on logout
-              }, 0);
-              
-              cleanupAuthState();
-            }
-          }
-        );
-
-        // THEN check for existing session with retry
-        const { data: { session }, error } = await retryWithBackoff(() => 
-          supabase.auth.getSession()
-        );
-        
-        if (error) {
-          authLogger.error('Error getting initial session', error);
-          if (isNetworkError(error)) {
-            setNetworkError(true);
-          }
-        }
-
-        if (mounted) {
-          setSession(session);
-          setUser(session?.user ?? null);
-          setLoading(false);
-        }
-
-        return () => subscription.unsubscribe();
-        
-      } catch (error) {
-        authLogger.error('Error in auth initialization', error);
-        
-        if (isNetworkError(error) && retryCount < maxRetries) {
-          setNetworkError(true);
-          retryCount++;
-          
-          // Retry after delay
-          setTimeout(() => {
-            if (mounted) {
-              initializeAuth();
-            }
-          }, Math.min(1000 * Math.pow(2, retryCount), 10000));
-        } else {
-          if (mounted) {
-            setSession(null);
-            setUser(null);
-            setLoading(false);
-            setNetworkError(isNetworkError(error));
-          }
-        }
-      }
-    };
-
-    initializeAuth();
-
-    return () => {
-      mounted = false;
-    };
-  }, []);
+  const [isLoading, setIsLoading] = useState(true);
 
   const signOut = async () => {
     try {
-      setNetworkError(false);
-      cleanupAuthState();
-      
-      await retryWithBackoff(() => 
-        supabase.auth.signOut({ scope: 'global' })
-      );
-      
-      // Force redirect after a short delay
-      setTimeout(() => {
-        window.location.href = '/auth';
-      }, 100);
-      
+      await supabase.auth.signOut();
     } catch (error) {
-      authLogger.error('Error signing out', error);
-      if (isNetworkError(error)) {
-        setNetworkError(true);
-      }
-      
-      // Force redirect even if signout fails
-      setTimeout(() => {
-        window.location.href = '/auth';
-      }, 1000);
+      console.error('Error signing out:', error);
     }
   };
 
-  const signIn = async (email: string, password: string) => {
-    try {
-      setNetworkError(false);
-      cleanupAuthState();
-      
-      // Try to sign out first
-      try {
-        await retryWithBackoff(() => 
-          supabase.auth.signOut({ scope: 'global' })
-        );
-      } catch (err) {
-        authLogger.warn('Error during pre-signin cleanup', err);
-      }
-      
-      const { data, error } = await retryWithBackoff(() =>
-        supabase.auth.signInWithPassword({ email, password })
-      );
-      
-      if (error) throw error;
-      
-      if (data.user) {
-        // Don't redirect immediately, let the auth state change handle it
-        authLogger.info('Sign in successful, waiting for auth state change...');
-      }
-      
-      return { error: null };
-      
-    } catch (error) {
-      authLogger.error('Sign in error', error);
-      if (isNetworkError(error)) {
-        setNetworkError(true);
-      }
-      return { error };
-    }
-  };
+  useEffect(() => {
+    // Get initial session
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setSession(session);
+      setUser(session?.user ?? null);
+      setIsLoading(false);
+    });
 
-  const signUp = async (email: string, password: string, options: any = {}) => {
-    try {
-      setNetworkError(false);
-      cleanupAuthState();
-      
-      const redirectUrl = `${window.location.origin}/`;
-      
-      const { data, error } = await retryWithBackoff(() =>
-        supabase.auth.signUp({
-          email,
-          password,
-          options: {
-            emailRedirectTo: redirectUrl,
-            data: options.data
+    // Listen for changes
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      async (event, session) => {
+        logger.info(`Auth state change`, { event, email: session?.user?.email });
+        
+        setSession(session);
+        setUser(session?.user ?? null);
+        setIsLoading(false);
+
+        if (event === 'SIGNED_IN' && session?.user) {
+          logger.info('User signed in successfully', session.user.id);
+          
+          // Track login event with error handling
+          try {
+            await supabase.rpc('create_analytics_event', {
+              p_event_name: 'user_login',
+              p_device_type: window.innerWidth <= 768 ? 'mobile' : 'desktop',
+              p_route: window.location.pathname,
+              p_meta: {
+                user_id: session.user.id,
+                email: session.user.email,
+                timestamp: new Date().toISOString()
+              }
+            });
+          } catch (error) {
+            // Only log error once, don't retry for login events
+            console.warn('Failed to track login event:', error);
           }
-        })
-      );
-      
-      return { error };
-      
-    } catch (error) {
-      authLogger.error('Sign up error', error);
-      if (isNetworkError(error)) {
-        setNetworkError(true);
+        }
       }
-      return { error };
-    }
-  };
+    );
+
+    return () => subscription.unsubscribe();
+  }, []);
 
   const value = {
     user,
     session,
-    loading,
-    isAuthenticated: !!user,
-    isLoading: loading,
-    error: null,
-    networkError,
+    isLoading,
     signOut,
-    signIn,
-    signUp,
   };
 
-  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
-}
+  return (
+    <AuthContext.Provider value={value}>
+      {children}
+    </AuthContext.Provider>
+  );
+};
 
-export function useAuth() {
+export const useAuth = () => {
   const context = useContext(AuthContext);
   if (context === undefined) {
     throw new Error('useAuth must be used within an AuthProvider');
   }
   return context;
-}
+};

@@ -1,3 +1,4 @@
+
 import { createContext, useContext, useEffect, ReactNode } from 'react';
 import { useLocation } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
@@ -21,7 +22,7 @@ export const AnalyticsProvider = ({ children }: AnalyticsProviderProps) => {
     try {
       const deviceType = window.innerWidth <= 768 ? 'mobile' : 'desktop';
       
-      await supabase.rpc('create_analytics_event' as any, {
+      await supabase.rpc('create_analytics_event', {
         p_event_name: event.event_name,
         p_device_type: deviceType,
         p_route: location.pathname,
@@ -29,7 +30,11 @@ export const AnalyticsProvider = ({ children }: AnalyticsProviderProps) => {
         p_meta: event.meta || {}
       });
     } catch (error) {
-      console.error('Error tracking event:', error);
+      // Silent fail for analytics to avoid spamming console
+      // Only log if it's not a network/auth related error
+      if (error && typeof error === 'object' && 'code' in error && error.code !== '42P01') {
+        console.warn('Analytics tracking failed:', error);
+      }
     }
   };
 
@@ -51,14 +56,23 @@ export const AnalyticsProvider = ({ children }: AnalyticsProviderProps) => {
     });
   };
 
-  // Track page views automatically
+  // Track page views automatically with debounce
   useEffect(() => {
-    const user = supabase.auth.getUser();
-    user.then(({ data }) => {
-      if (data.user) {
-        trackPageView(location.pathname);
-      }
-    });
+    let timeoutId: NodeJS.Timeout;
+    
+    const trackPage = () => {
+      const user = supabase.auth.getUser();
+      user.then(({ data }) => {
+        if (data.user) {
+          trackPageView(location.pathname);
+        }
+      });
+    };
+
+    // Debounce page tracking to avoid excessive calls
+    timeoutId = setTimeout(trackPage, 500);
+
+    return () => clearTimeout(timeoutId);
   }, [location.pathname]);
 
   const contextValue: AnalyticsContextValue = {

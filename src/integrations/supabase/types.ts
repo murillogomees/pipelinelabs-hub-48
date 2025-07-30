@@ -760,13 +760,14 @@ export type Database = {
           tax_regime: string | null
           trade_name: string | null
           updated_at: string
+          user_id: string | null
           zipcode: string | null
         }
         Insert: {
           address?: string | null
           city?: string | null
           created_at?: string
-          document: string
+          document?: string
           email?: string | null
           fiscal_email?: string | null
           id?: string
@@ -779,6 +780,7 @@ export type Database = {
           tax_regime?: string | null
           trade_name?: string | null
           updated_at?: string
+          user_id?: string | null
           zipcode?: string | null
         }
         Update: {
@@ -798,6 +800,7 @@ export type Database = {
           tax_regime?: string | null
           trade_name?: string | null
           updated_at?: string
+          user_id?: string | null
           zipcode?: string | null
         }
         Relationships: []
@@ -2530,6 +2533,7 @@ export type Database = {
           address: string | null
           avatar_url: string | null
           city: string | null
+          companie_id: string | null
           created_at: string
           display_name: string
           document: string | null
@@ -2550,6 +2554,7 @@ export type Database = {
           address?: string | null
           avatar_url?: string | null
           city?: string | null
+          companie_id?: string | null
           created_at?: string
           display_name: string
           document?: string | null
@@ -2570,6 +2575,7 @@ export type Database = {
           address?: string | null
           avatar_url?: string | null
           city?: string | null
+          companie_id?: string | null
           created_at?: string
           display_name?: string
           document?: string | null
@@ -4083,6 +4089,44 @@ export type Database = {
             columns: ["subscriber_id"]
             isOneToOne: false
             referencedRelation: "subscribers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      user_companies: {
+        Row: {
+          company_id: string
+          created_at: string
+          id: string
+          is_active: boolean
+          role: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          company_id: string
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          role?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          company_id?: string
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          role?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_companies_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
             referencedColumns: ["id"]
           },
         ]
