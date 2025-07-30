@@ -49,11 +49,15 @@ export function useAuthForm() {
 
     try {
       if (isSignUp) {
+        // SECURITY FIX: Add mandatory emailRedirectTo for secure authentication
+        const redirectUrl = `${window.location.origin}/app`;
+        
         // Cadastro
         const { error } = await supabase.auth.signUp({
           email: formData.email,
           password: formData.password,
           options: {
+            emailRedirectTo: redirectUrl,
             data: {
               display_name: formData.name,
               document: formData.document,

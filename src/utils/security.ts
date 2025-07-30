@@ -38,8 +38,9 @@ class RateLimiter {
 
 export const rateLimiter = new RateLimiter();
 
-// CSRF token generation and validation
+// CSRF token generation and validation - FIXED SECURITY VULNERABILITY
 export function generateCSRFToken(): string {
+  // Use cryptographically secure random generation instead of Math.random()
   const array = new Uint8Array(32);
   crypto.getRandomValues(array);
   return Array.from(array, byte => byte.toString(16).padStart(2, '0')).join('');

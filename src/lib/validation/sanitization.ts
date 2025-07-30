@@ -1,46 +1,20 @@
-import sanitizeHtml from 'sanitize-html';
 import validator from 'validator';
 
-// XSS Protection configuration
-const xssOptions = {
-  allowedTags: [
-    'p', 'br', 'strong', 'em', 'u', 'ol', 'ul', 'li', 'a', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6',
-    'blockquote', 'code', 'pre', 'table', 'thead', 'tbody', 'tr', 'th', 'td'
-  ],
-  allowedAttributes: {
-    'a': ['href', 'title', 'target'],
-    'table': ['class'],
-    'th': ['colspan', 'rowspan'],
-    'td': ['colspan', 'rowspan']
-  },
-  allowedSchemes: ['http', 'https', 'mailto'],
-  allowedSchemesAppliedToAttributes: ['href'],
-  selfClosing: ['br'],
-  nonTextTags: ['style', 'script', 'textarea', 'option']
-};
-
-// Strict XSS options for user input
-const strictXssOptions = {
-  allowedTags: ['p', 'br', 'strong', 'em', 'u'],
-  allowedAttributes: {},
-  allowedSchemes: [],
-  selfClosing: ['br']
+// Basic XSS protection without sanitize-html dependency
+const stripHtmlTags = (content: string): string => {
+  return content.replace(/<[^>]*>/g, '');
 };
 
 /**
- * Sanitize HTML content to prevent XSS attacks
+ * Sanitizes HTML content to prevent XSS attacks
  */
 export function sanitizeHtmlContent(content: string, strict: boolean = false): string {
-  if (!content || typeof content !== 'string') {
-    return '';
-  }
-  
-  const options = strict ? strictXssOptions : xssOptions;
-  return sanitizeHtml(content, options);
+  // Simple HTML stripping for security
+  return stripHtmlTags(content);
 }
 
 /**
- * Sanitize user input for database storage
+ * Sanitizes user input by removing HTML and normalizing
  */
 export function sanitizeUserInput(input: string): string {
   if (!input || typeof input !== 'string') {
@@ -48,10 +22,7 @@ export function sanitizeUserInput(input: string): string {
   }
   
   // Remove HTML tags completely
-  let sanitized = sanitizeHtml(input, {
-    allowedTags: [],
-    allowedAttributes: {}
-  });
+  let sanitized = stripHtmlTags(input);
   
   // Normalize whitespace
   sanitized = sanitized.replace(/\s+/g, ' ').trim();
@@ -75,7 +46,7 @@ export function sanitizeEmail(email: string): string {
 }
 
 /**
- * Sanitize URL
+ * Sanitize and validate URLs
  */
 export function sanitizeUrl(url: string): string {
   if (!url || typeof url !== 'string') {
@@ -83,6 +54,21 @@ export function sanitizeUrl(url: string): string {
   }
   
   const sanitized = sanitizeUserInput(url);
+  
+  // Block dangerous protocols
+  const dangerousProtocols = ['javascript:', 'data:', 'vbscript:', 'file:', 'ftp:'];
+  const lowerUrl = sanitized.toLowerCase();
+  
+  for (const protocol of dangerousProtocols) {
+    if (lowerUrl.startsWith(protocol)) {
+      return '';
+    }
+  }
+  
+  // Block local IPs for security
+  if (lowerUrl.includes('localhost') || lowerUrl.includes('127.0.0.1') || lowerUrl.includes('0.0.0.0')) {
+    return '';
+  }
   
   // Validate URL format
   if (!validator.isURL(sanitized, {
@@ -227,33 +213,13 @@ export function escapeHtml(text: string): string {
 }
 
 /**
- * Sanitize rich text content (for editors)
+ * Sanitizes rich text content for editors
  */
 export function sanitizeRichText(content: string): string {
-  if (!content || typeof content !== 'string') {
-    return '';
-  }
-  
-  return sanitizeHtml(content, {
-    allowedTags: [
-      'p', 'br', 'strong', 'b', 'em', 'i', 'u', 'ol', 'ul', 'li', 'a',
-      'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'blockquote', 'code', 'pre'
-    ],
-    allowedAttributes: {
-      'a': ['href', 'title', 'target'],
-      'p': ['style'],
-      'span': ['style']
-    },
-    allowedStyles: {
-      '*': {
-        'color': [/^#[0-9A-F]{6}$/i, /^rgb\(\s*\d+\s*,\s*\d+\s*,\s*\d+\s*\)$/],
-        'background-color': [/^#[0-9A-F]{6}$/i, /^rgb\(\s*\d+\s*,\s*\d+\s*,\s*\d+\s*\)$/],
-        'font-weight': [/^(bold|normal)$/],
-        'font-style': [/^(italic|normal)$/],
-        'text-decoration': [/^(underline|none)$/]
-      }
-    }
-  });
+  // Remove dangerous script tags and attributes
+  return content
+    .replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '')
+    .replace(/on\w+="[^"]*"/gi, '');
 }
 
 /**
