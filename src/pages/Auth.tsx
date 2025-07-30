@@ -5,20 +5,21 @@ import { AuthForm } from '@/components/Auth/AuthForm';
 import { useAuth } from '@/components/Auth/AuthProvider';
 
 export default function Auth() {
-  const { user, isAuthenticated, loading } = useAuth();
+  const { user, session, isLoading } = useAuth();
+  const isAuthenticated = !!session;
   const navigate = useNavigate();
   const location = useLocation();
 
   useEffect(() => {
-    if (isAuthenticated && user && !loading) {
+    if (isAuthenticated && user && !isLoading) {
       // Pegar a rota de origem ou usar /app como padrão
       const from = (location.state as any)?.from?.pathname || '/app';
       navigate(from, { replace: true });
     }
-  }, [isAuthenticated, user, loading, navigate, location]);
+  }, [isAuthenticated, user, isLoading, navigate, location]);
 
   // Se já estiver autenticado, mostrar loading enquanto redireciona
-  if (isAuthenticated && user && !loading) {
+  if (isAuthenticated && user && !isLoading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <div className="text-center">
@@ -30,7 +31,7 @@ export default function Auth() {
   }
 
   // Se ainda estiver carregando, mostrar loading
-  if (loading) {
+  if (isLoading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <div className="text-center">
