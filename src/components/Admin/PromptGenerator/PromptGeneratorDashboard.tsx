@@ -62,22 +62,22 @@ export const PromptGeneratorDashboard: React.FC = () => {
     );
   }
 
-  // Transform prompt logs to match PromptLog interface
+  // Transform prompt logs to match PromptLog interface from types
   const transformedPromptLogs: PromptLog[] = (promptHistory || []).map(log => ({
     id: log.id,
     prompt: log.prompt,
     generated_code: log.generated_code,
-    status: (log.status as 'pending' | 'applied' | 'rolled_back' | 'error') || 'pending',
+    status: log.status as 'pending' | 'applied' | 'rolled_back' | 'error',
     created_at: log.created_at,
     applied_at: log.applied_at,
     rolled_back_at: log.rolled_back_at,
-    error_message: undefined,
-    user_id: '',
-    company_id: '',
-    model_used: 'gpt-4',
-    temperature: 0.7,
-    applied_files: [],
-    rollback_data: undefined
+    error_message: log.error_message,
+    user_id: log.user_id || '',
+    company_id: log.company_id || '',
+    model_used: log.model_used || 'gpt-4o-mini',
+    temperature: log.temperature || 0.7,
+    applied_files: log.applied_files || [],
+    rollback_data: log.rollback_data
   }));
 
   return (

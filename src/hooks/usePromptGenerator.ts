@@ -8,11 +8,18 @@ import { useProfile } from '@/hooks/useProfile';
 interface PromptLog {
   id: string;
   prompt: string;
-  generated_code: string;
-  status: 'pending' | 'applied' | 'rolled_back';
+  generated_code: any;
+  status: 'pending' | 'applied' | 'rolled_back' | 'error';
   created_at: string;
   applied_at?: string;
   rolled_back_at?: string;
+  error_message?: string;
+  user_id?: string;
+  company_id?: string;
+  model_used?: string;
+  temperature?: number;
+  applied_files?: any[];
+  rollback_data?: any;
 }
 
 export const usePromptGenerator = () => {
@@ -38,8 +45,21 @@ export const usePromptGenerator = () => {
         .order('created_at', { ascending: false })
         .limit(50);
 
-      if (error) throw error;
-      return data as PromptLog[];
+      if (error) {
+        console.error('Error fetching prompt history:', error);
+        return [];
+      }
+      
+      console.log('Prompt history data:', data);
+      return (data || []).map(item => ({
+        id: item.id,
+        prompt: item.prompt,
+        generated_code: item.generated_code,
+        status: item.status || 'pending',
+        created_at: item.created_at,
+        applied_at: item.applied_at,
+        rolled_back_at: item.rolled_back_at
+      })) as PromptLog[];
     },
     enabled: !!companyId,
   });
@@ -68,7 +88,8 @@ export const usePromptGenerator = () => {
 
       if (error) throw error;
 
-      const generatedCode = data.generated_code;
+      console.log('Response from edge function:', data);
+      const generatedCode = data?.data || data;
       setGeneratedCode(generatedCode);
 
       // Invalidar cache do histórico

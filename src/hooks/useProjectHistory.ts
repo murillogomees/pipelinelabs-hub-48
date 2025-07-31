@@ -42,26 +42,61 @@ export function useProjectHistory() {
       setIsLoading(true);
       setError(null);
 
-      // Mock data since tables might not exist yet
-      const mockHistory: ProjectHistoryEntry[] = [
-        {
+      // Fetch real data from prompt_logs table
+      const { data, error } = await supabase
+        .from('prompt_logs')
+        .select('*')
+        .eq('user_id', user.id)
+        .order('created_at', { ascending: false })
+        .limit(100);
+
+      if (error) {
+        console.error('Error fetching prompt logs:', error);
+        // Fallback to mock data if error
+        const mockHistory: ProjectHistoryEntry[] = [{
           id: '1',
           user_id: user.id,
           action_type: 'component_generation',
-          prompt: 'Create a new dashboard component',
-          generated_code: 'export const Dashboard = () => { return <div>Dashboard</div>; }',
-          files_modified: ['src/components/Dashboard.tsx'],
+          prompt: 'Exemplo de prompt inicial',
+          generated_code: 'export const Example = () => <div>Example</div>;',
+          files_modified: ['src/components/Example.tsx'],
           execution_time: 5000,
           success: true,
           context_data: { complexity: 'medium' },
           created_at: new Date().toISOString()
-        }
-      ];
+        }];
+        setHistory(mockHistory);
+        return;
+      }
 
-      setHistory(mockHistory);
+      // Transform prompt_logs data to ProjectHistoryEntry format
+      const transformedHistory: ProjectHistoryEntry[] = (data || []).map(log => ({
+        id: log.id,
+        user_id: log.user_id,
+        action_type: 'code_generation',
+        prompt: log.prompt,
+        generated_code: typeof log.generated_code === 'object' 
+          ? JSON.stringify(log.generated_code) 
+          : String(log.generated_code || ''),
+        files_modified: Array.isArray(log.applied_files) 
+          ? log.applied_files.map(file => String(file))
+          : [],
+        execution_time: 5000, // Default value since we don't have this in prompt_logs
+        success: log.status === 'applied' || log.status === 'pending',
+        error_message: log.error_message,
+        context_data: { 
+          model: log.model_used,
+          temperature: log.temperature,
+          status: log.status
+        },
+        created_at: log.created_at
+      }));
+
+      setHistory(transformedHistory);
     } catch (err) {
       console.error('Error fetching project history:', err);
       setError('Erro ao carregar histórico do projeto');
+      setHistory([]);
     } finally {
       setIsLoading(false);
     }
