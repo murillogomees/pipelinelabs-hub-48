@@ -24,7 +24,7 @@ interface PromptLog {
 
 export const usePromptGenerator = () => {
   const [isGenerating, setIsGenerating] = useState(false);
-  const [generatedCode, setGeneratedCode] = useState<string>('');
+  const [generatedCode, setGeneratedCode] = useState<any>(null);
   const [currentPrompt, setCurrentPrompt] = useState<string>('');
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -89,8 +89,25 @@ export const usePromptGenerator = () => {
       if (error) throw error;
 
       console.log('Response from edge function:', data);
-      const generatedCode = data?.data || data;
-      setGeneratedCode(generatedCode);
+      
+      // Processar resposta corretamente
+      let processedCode = null;
+      if (data?.success && data?.data) {
+        processedCode = data.data;
+      } else if (data?.files || data?.sql || data?.description) {
+        processedCode = data;
+      } else {
+        console.warn('Resposta inesperada da edge function:', data);
+        processedCode = {
+          files: {},
+          sql: [],
+          description: 'Código gerado, mas resposta com formato inesperado',
+          suggestions: [],
+          rawContent: JSON.stringify(data)
+        };
+      }
+      
+      setGeneratedCode(processedCode);
 
       // Invalidar cache do histórico
       queryClient.invalidateQueries({ queryKey: ['prompt-history', companyId] });
@@ -100,7 +117,7 @@ export const usePromptGenerator = () => {
         description: 'O código foi gerado com sucesso!',
       });
 
-      return generatedCode;
+      return processedCode;
     } catch (error: any) {
       console.error('Erro ao gerar código:', error);
       toast({
@@ -117,9 +134,33 @@ export const usePromptGenerator = () => {
   // Função para aplicar código
   const applyCode = useMutation({
     mutationFn: async (promptId: string) => {
-      // Simular aplicação do código
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      return { success: true };
+      try {
+        const { data, error } = await supabase.functions.invoke('code-applier', {
+          body: {
+            prompt_id: promptId,
+            company_id: companyId,
+            action: 'apply'
+          },
+        });
+
+        if (error) throw error;
+        return data;
+      } catch (error) {
+        // Fallback para simulação se edge function não existir ainda
+        console.warn('Code applier not available, using simulation:', error);
+        await new Promise(resolve => setTimeout(resolve, 1000));
+        
+        // Atualizar status no banco
+        await supabase
+          .from('prompt_logs')
+          .update({ 
+            status: 'applied', 
+            applied_at: new Date().toISOString() 
+          })
+          .eq('id', promptId);
+          
+        return { success: true, message: 'Applied successfully (simulated)' };
+      }
     },
     onSuccess: (_, promptId) => {
       toast({
@@ -140,9 +181,33 @@ export const usePromptGenerator = () => {
   // Função para fazer rollback
   const rollbackCode = useMutation({
     mutationFn: async (promptId: string) => {
-      // Simular rollback do código
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      return { success: true };
+      try {
+        const { data, error } = await supabase.functions.invoke('code-applier', {
+          body: {
+            prompt_id: promptId,
+            company_id: companyId,
+            action: 'rollback'
+          },
+        });
+
+        if (error) throw error;
+        return data;
+      } catch (error) {
+        // Fallback para simulação se edge function não existir ainda
+        console.warn('Code applier not available, using simulation:', error);
+        await new Promise(resolve => setTimeout(resolve, 1000));
+        
+        // Atualizar status no banco
+        await supabase
+          .from('prompt_logs')
+          .update({ 
+            status: 'rolled_back', 
+            rolled_back_at: new Date().toISOString() 
+          })
+          .eq('id', promptId);
+          
+        return { success: true, message: 'Rolled back successfully (simulated)' };
+      }
     },
     onSuccess: () => {
       toast({

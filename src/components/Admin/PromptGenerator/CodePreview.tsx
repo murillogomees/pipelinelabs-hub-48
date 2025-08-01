@@ -47,8 +47,11 @@ export const CodePreview: React.FC<CodePreviewProps> = ({
     }
   };
 
-  const hasFiles = generatedCode.files && Object.keys(generatedCode.files).length > 0;
-  const hasSql = generatedCode.sql && generatedCode.sql.length > 0;
+  // Melhor validação dos dados
+  const hasFiles = generatedCode?.files && typeof generatedCode.files === 'object' && Object.keys(generatedCode.files).length > 0;
+  const hasSql = generatedCode?.sql && Array.isArray(generatedCode.sql) && generatedCode.sql.length > 0;
+  const hasDescription = generatedCode?.description && typeof generatedCode.description === 'string';
+  const hasSuggestions = generatedCode?.suggestions && Array.isArray(generatedCode.suggestions) && generatedCode.suggestions.length > 0;
 
   return (
     <Card>
@@ -60,10 +63,26 @@ export const CodePreview: React.FC<CodePreviewProps> = ({
       </CardHeader>
       <CardContent className="space-y-4">
         {/* Description */}
-        {generatedCode.description && (
+        {hasDescription && (
           <div className="p-3 bg-muted rounded-lg">
             <h4 className="font-medium text-sm mb-2">Descrição</h4>
             <p className="text-sm text-muted-foreground">{generatedCode.description}</p>
+          </div>
+        )}
+
+        {/* Debug info se necessário */}
+        {generatedCode?.parseError && (
+          <div className="p-3 bg-red-50 border border-red-200 rounded-lg">
+            <h4 className="font-medium text-sm mb-2 text-red-800">Erro de Parse</h4>
+            <p className="text-sm text-red-600">{generatedCode.parseError}</p>
+            {generatedCode?.rawContent && (
+              <details className="mt-2">
+                <summary className="text-sm font-medium text-red-700 cursor-pointer">Ver conteúdo bruto</summary>
+                <pre className="text-xs mt-2 p-2 bg-red-100 rounded overflow-auto max-h-32">
+                  {generatedCode.rawContent}
+                </pre>
+              </details>
+            )}
           </div>
         )}
 
@@ -116,7 +135,7 @@ export const CodePreview: React.FC<CodePreviewProps> = ({
         )}
 
         {/* Suggestions */}
-        {generatedCode.suggestions && generatedCode.suggestions.length > 0 && (
+        {hasSuggestions && (
           <div className="space-y-2">
             <div className="flex items-center gap-2">
               <AlertCircle className="h-4 w-4" />
@@ -129,12 +148,33 @@ export const CodePreview: React.FC<CodePreviewProps> = ({
                     <Badge variant={suggestion.type === 'improvement' ? 'default' : 'secondary'}>
                       {suggestion.type === 'improvement' ? 'Melhoria' : 'Sugestão'}
                     </Badge>
-                    <span className="text-sm font-medium">{suggestion.title}</span>
+                    <span className="text-sm font-medium">{suggestion.title || 'Sugestão'}</span>
                   </div>
-                  <p className="text-sm text-muted-foreground">{suggestion.description}</p>
+                  <p className="text-sm text-muted-foreground">{suggestion.description || 'Sem descrição'}</p>
                 </div>
               ))}
             </div>
+          </div>
+        )}
+
+        {/* Informações técnicas extras */}
+        {!hasFiles && !hasSql && !hasDescription && !hasSuggestions && (
+          <div className="p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
+            <div className="flex items-center gap-2 mb-2">
+              <AlertCircle className="h-4 w-4 text-yellow-600" />
+              <span className="font-medium text-sm text-yellow-800">Dados Incompletos</span>
+            </div>
+            <p className="text-sm text-yellow-700">
+              O código foi gerado mas os dados podem estar em formato inesperado.
+            </p>
+            {generatedCode && (
+              <details className="mt-2">
+                <summary className="text-sm font-medium text-yellow-700 cursor-pointer">Ver dados brutos</summary>
+                <pre className="text-xs mt-2 p-2 bg-yellow-100 rounded overflow-auto max-h-32">
+                  {JSON.stringify(generatedCode, null, 2)}
+                </pre>
+              </details>
+            )}
           </div>
         )}
 
