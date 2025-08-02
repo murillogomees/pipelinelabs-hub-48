@@ -14,7 +14,14 @@ import { cn } from '@/lib/utils';
 
 export default function LandingPage() {
   const { sections, isLoading: isContentLoading, getSection } = useLandingPageContent();
-  const { plans, isLoading: isPlansLoading } = useLandingPagePlans();
+  const { plans, isLoading: isPlansLoading, error: plansError } = useLandingPagePlans();
+
+  console.log('LandingPage render:', { 
+    isContentLoading, 
+    isPlansLoading, 
+    plansError,
+    sectionsCount: sections?.length 
+  });
 
   if (isContentLoading || isPlansLoading) {
     return (
@@ -22,6 +29,11 @@ export default function LandingPage() {
         <div className="text-center space-y-4">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto"></div>
           <p className="text-muted-foreground">Carregando conteúdo...</p>
+          {plansError && (
+            <p className="text-sm text-muted-foreground">
+              Problemas ao carregar planos, usando dados padrão...
+            </p>
+          )}
         </div>
       </div>
     );
