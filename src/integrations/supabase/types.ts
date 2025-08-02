@@ -1140,6 +1140,42 @@ export type Database = {
         }
         Relationships: []
       }
+      csrf_tokens: {
+        Row: {
+          created_at: string | null
+          expires_at: string | null
+          id: string
+          ip_address: unknown | null
+          session_id: string | null
+          token: string
+          used_at: string | null
+          user_agent: string | null
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          expires_at?: string | null
+          id?: string
+          ip_address?: unknown | null
+          session_id?: string | null
+          token: string
+          used_at?: string | null
+          user_agent?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          expires_at?: string | null
+          id?: string
+          ip_address?: unknown | null
+          session_id?: string | null
+          token?: string
+          used_at?: string | null
+          user_agent?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       customer_stripe: {
         Row: {
           attrs: Json | null
@@ -4421,6 +4457,14 @@ export type Database = {
         Args: Record<PropertyKey, never> | { company_uuid: string }
         Returns: string
       }
+      generate_csrf_token: {
+        Args: {
+          p_session_id?: string
+          p_ip_address?: unknown
+          p_user_agent?: string
+        }
+        Returns: string
+      }
       generate_nfe_access_key: {
         Args: {
           company_cnpj: string
@@ -4637,6 +4681,10 @@ export type Database = {
       }
       validate_cnpj: {
         Args: { cnpj_input: string }
+        Returns: boolean
+      }
+      validate_csrf_token: {
+        Args: { p_token: string; p_ip_address?: unknown; p_user_agent?: string }
         Returns: boolean
       }
       validate_document: {
