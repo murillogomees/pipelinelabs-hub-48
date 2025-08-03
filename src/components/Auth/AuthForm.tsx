@@ -8,7 +8,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { AuthFormFields } from './components/AuthFormFields';
 import { useAuthForm } from './hooks/useAuthForm';
 import { PasswordStrengthValidator } from '@/components/Security/PasswordStrengthValidator';
-import { CSRFToken, CSRFProvider } from '@/components/Security/CSRFProtection';
+import { supabase } from '@/integrations/supabase/client';
+import { useToast } from '@/hooks/use-toast';
 
 export function AuthForm() {
   const [isSignUp, setIsSignUp] = useState(false);
@@ -24,11 +25,8 @@ export function AuthForm() {
   });
 
   const [isPasswordValid, setIsPasswordValid] = useState(false);
-
-  const { 
-    isLoading, 
-    handleSubmit
-  } = useAuthForm();
+  const [isLoading, setIsLoading] = useState(false);
+  const { toast } = useToast();
 
   const handleFormSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -38,7 +36,66 @@ export function AuthForm() {
       return;
     }
 
-    await handleSubmit(e);
+    setIsLoading(true);
+    
+    try {
+      if (isSignUp) {
+        const redirectUrl = `${window.location.origin}/app`;
+        
+        const { error } = await supabase.auth.signUp({
+          email: formData.email,
+          password: formData.password,
+          options: {
+            emailRedirectTo: redirectUrl,
+            data: {
+              display_name: `${formData.firstName} ${formData.lastName}`,
+              document: formData.document,
+              phone: formData.phone,
+              company_name: formData.companyName
+            }
+          }
+        });
+
+        if (error) throw error;
+
+        toast({
+          title: "Sucesso",
+          description: "Cadastro realizado com sucesso! Verifique seu email para confirmar a conta.",
+        });
+      } else {
+        const { error } = await supabase.auth.signInWithPassword({
+          email: formData.email,
+          password: formData.password,
+        });
+
+        if (error) throw error;
+
+        toast({
+          title: "Sucesso", 
+          description: "Login realizado com sucesso!",
+        });
+      }
+    } catch (error: any) {
+      console.error("Auth error:", error);
+      
+      let message = "Erro inesperado. Tente novamente.";
+      
+      if (error.message?.includes("Invalid login credentials")) {
+        message = "Email ou senha incorretos";
+      } else if (error.message?.includes("User already registered")) {
+        message = "Este email já está cadastrado";
+      } else if (error.message?.includes("Password should be at least")) {
+        message = "A senha deve ter pelo menos 6 caracteres";
+      }
+
+      toast({
+        title: "Erro",
+        description: message,
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const handleFormDataChange = (updates: Partial<typeof formData>) => {
@@ -55,8 +112,7 @@ export function AuthForm() {
   };
 
   return (
-    <CSRFProvider>
-      <Card className="w-full max-w-md mx-auto">
+    <Card className="w-full max-w-md mx-auto">
         <CardHeader>
           <CardTitle>Pipeline Labs</CardTitle>
           <CardDescription>
@@ -81,7 +137,6 @@ export function AuthForm() {
             </TabsList>
 
             <form onSubmit={handleFormSubmit} className="space-y-4">
-              <CSRFToken />
               
               <TabsContent value="signin" className="space-y-4">
                 <div className="space-y-2">
@@ -134,6 +189,5 @@ export function AuthForm() {
           </Tabs>
         </CardContent>
       </Card>
-    </CSRFProvider>
   );
 }

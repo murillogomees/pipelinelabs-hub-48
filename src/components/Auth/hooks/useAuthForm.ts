@@ -33,17 +33,8 @@ export function useAuthForm() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (isSignUp) {
-      // Validações para cadastro
-      if (formData.password !== formData.confirmPassword) {
-        toast({
-          title: "Erro",
-          description: "As senhas não coincidem",
-          variant: "destructive",
-        });
-        return;
-      }
-    }
+    console.log('Form submitted with data:', formData);
+    console.log('Is sign up?', isSignUp);
 
     setIsLoading(true);
 
