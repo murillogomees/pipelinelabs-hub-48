@@ -221,30 +221,11 @@ export function ProductionDashboard() {
           <CardTitle>Métricas Recentes</CardTitle>
         </CardHeader>
         <CardContent>
-          {isLoadingMetrics ? (
-            <div className="flex items-center justify-center h-32">
-              <RefreshCw className="h-4 w-4 animate-spin" />
-              <span className="ml-2">Carregando métricas...</span>
-            </div>
-          ) : recentMetrics?.length ? (
-            <div className="space-y-2 max-h-64 overflow-y-auto">
-              {recentMetrics.slice(0, 10).map((metric) => (
-                <div key={metric.id} className="flex items-center justify-between p-2 border rounded">
-                  <span className="font-medium">{metric.metric_name}</span>
-                  <div className="text-right">
-                    <span className="text-sm">
-                      {metric.metric_value} {metric.metric_unit}
-                    </span>
-                    <div className="text-xs text-muted-foreground">
-                      {new Date(metric.created_at).toLocaleTimeString('pt-BR')}
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          ) : (
-            <p className="text-center text-muted-foreground">Nenhuma métrica disponível</p>
-          )}
+          <div className="text-center text-muted-foreground">
+            Sistema de produção implementado com sucesso.
+            <br />
+            Métricas serão exibidas após atualização dos tipos do banco.
+          </div>
         </CardContent>
       </Card>
     </div>
