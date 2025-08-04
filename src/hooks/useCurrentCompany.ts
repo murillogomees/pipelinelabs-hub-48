@@ -1,62 +1,60 @@
 
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
-import { useProfile } from './useProfile';
+import { useAuth } from '@/components/Auth/AuthProvider';
 
 export const useCurrentCompany = () => {
-  const { profile, isSuperAdmin } = useProfile();
+  const { user } = useAuth();
   
   return useQuery({
-    queryKey: ['current-company'],
+    queryKey: ['current-company', user?.id],
     queryFn: async () => {
-      // Para super admin, sempre retornar Pipeline Labs ou primeira empresa
-      if (isSuperAdmin) {
-        const { data: company, error: companyError } = await supabase
-          .from('companies')
-          .select('id, name')
-          .eq('name', 'Pipeline Labs')
-          .maybeSingle();
-
-        if (!companyError && company) {
-          return {
-            company_id: company.id,
-            company: company
-          };
-        }
-
-        // Fallback para primeira empresa
-        const { data: fallbackCompany, error: fallbackError } = await supabase
-          .from('companies')
-          .select('id, name')
-          .order('created_at')
-          .limit(1)
-          .maybeSingle();
-        
-        if (!fallbackError && fallbackCompany) {
-          return {
-            company_id: fallbackCompany.id,
-            company: fallbackCompany
-          };
-        }
+      if (!user?.id) {
+        throw new Error('Usuário não autenticado');
       }
 
-      // Para usuários normais, buscar primeira empresa disponível
+      // Buscar empresa do usuário através da relação user_companies
+      const { data: userCompany, error: userCompanyError } = await supabase
+        .from('user_companies')
+        .select(`
+          company_id,
+          role,
+          companies!inner (
+            id,
+            name,
+            document
+          )
+        `)
+        .eq('user_id', user.id)
+        .eq('is_active', true)
+        .maybeSingle();
+
+      if (!userCompanyError && userCompany) {
+        return {
+          company_id: userCompany.company_id,
+          company: userCompany.companies,
+          role: userCompany.role
+        };
+      }
+
+      // Se não encontrou, buscar primeira empresa disponível como fallback
       const { data: firstCompany, error } = await supabase
         .from('companies')
-        .select('id, name')
+        .select('id, name, document')
         .limit(1)
         .maybeSingle();
 
       if (!error && firstCompany) {
         return {
           company_id: firstCompany.id,
-          company: firstCompany
+          company: firstCompany,
+          role: 'operador' // role padrão para fallback
         };
       }
 
       throw new Error('Nenhuma empresa encontrada');
     },
-    enabled: !!profile,
+    enabled: !!user?.id,
     retry: false
   });
 };
