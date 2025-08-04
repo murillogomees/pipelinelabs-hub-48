@@ -52,7 +52,7 @@ export function useProductionConfig() {
 
   const updateConfig = async (key: string, value: any) => {
     try {
-      const { error } = await supabase
+      const { error } = await (supabase as any)
         .from('production_config')
         .update({ 
           config_value: value,

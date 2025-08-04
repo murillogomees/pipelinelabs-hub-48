@@ -206,7 +206,7 @@ export const EnhancedConversationalDashboard: React.FC<EnhancedConversationalDas
     const prompt = conversationState.originalPrompt;
     const result = await generateCode(prompt);
     
-    if (result) {
+    if (result !== null) {
       console.log('Código gerado:', result);
       
       const implementationReport = {

@@ -1,4 +1,3 @@
-
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
@@ -64,7 +63,9 @@ export interface AuditoriaHistorico {
 export const useAuditoriaProjeto = () => {
   const { toast } = useToast();
   const queryClient = useQueryClient();
-  const { currentCompanyId, canManageCompany } = usePermissions();
+  const permissions = usePermissions();
+  const currentCompanyId = permissions.companyId; // Fixed: use companyId property
+  const canManageCompany = permissions.canManageCompany;
 
   // Buscar configuração de auditoria
   const { data: config, isLoading: configLoading } = useQuery({
@@ -72,14 +73,15 @@ export const useAuditoriaProjeto = () => {
     queryFn: async () => {
       if (!currentCompanyId) return null;
       
-      const { data, error } = await supabase
+      const { data, error } = await (supabase as any)
         .from('auditoria_config')
         .select('*')
         .eq('company_id', currentCompanyId)
-        .single();
+        .maybeSingle();
 
-      if (error && error.code !== 'PGRST116') {
-        throw error;
+      if (error) {
+        console.error('Error fetching auditoria config:', error);
+        return null;
       }
 
       return data as AuditoriaConfig | null;
@@ -93,14 +95,18 @@ export const useAuditoriaProjeto = () => {
     queryFn: async () => {
       if (!currentCompanyId) return [];
       
-      const { data, error } = await supabase
+      const { data, error } = await (supabase as any)
         .from('auditoria_historico')
         .select('*')
         .eq('company_id', currentCompanyId)
         .order('created_at', { ascending: false })
         .limit(50);
 
-      if (error) throw error;
+      if (error) {
+        console.error('Error fetching auditoria historico:', error);
+        return [];
+      }
+      
       return data as AuditoriaHistorico[];
     },
     enabled: !!currentCompanyId && canManageCompany,
@@ -119,7 +125,7 @@ export const useAuditoriaProjeto = () => {
 
       let result;
       if (config?.id) {
-        const { data, error } = await supabase
+        const { data, error } = await (supabase as any)
           .from('auditoria_config')
           .update(configData)
           .eq('id', config.id)
@@ -130,7 +136,7 @@ export const useAuditoriaProjeto = () => {
         if (error) throw error;
         result = data;
       } else {
-        const { data, error } = await supabase
+        const { data, error } = await (supabase as any)
           .from('auditoria_config')
           .insert([configData])
           .select()

@@ -29,6 +29,9 @@ export interface Action<T> {
   show?: (row: T) => boolean;
 }
 
+// Export types for easier import
+export type { Column as DataTableColumn, Action as DataTableAction };
+
 interface DataTableProps<T> {
   data: T[];
   columns: Column<T>[];

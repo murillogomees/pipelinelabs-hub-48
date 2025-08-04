@@ -57,7 +57,7 @@ export const EnhancedPromptGenerator: React.FC<EnhancedPromptGeneratorProps> = (
     if (!currentPrompt.trim()) return;
 
     const result = await generateCode(currentPrompt);
-    if (result) {
+    if (result !== null) {
       setGeneratedCode(result);
       console.log('Código gerado com sucesso:', result);
     }

@@ -42,7 +42,7 @@ export function useProductionMetrics() {
   const { data: recentMetrics, isLoading } = useQuery({
     queryKey: ['production-metrics', environment],
     queryFn: async () => {
-      const { data, error } = await supabase
+      const { data, error } = await (supabase as any)
         .from('performance_metrics')
         .select('*')
         .eq('environment', environment)

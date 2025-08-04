@@ -72,7 +72,7 @@ export function AppSidebar() {
                   const isActiveSection = item.submenu?.some(sub => location.pathname.startsWith(sub.path));
 
                   return (
-                    <SidebarMenuItem key={item.id}>
+                    <SidebarMenuItem key={item.title}>
                       {hasSubmenu ? (
                         <>
                           <SidebarMenuButton
@@ -91,7 +91,7 @@ export function AppSidebar() {
                           {isExpanded && (
                             <SidebarMenuSub>
                               {item.submenu.map((subItem) => (
-                                <SidebarMenuSubItem key={subItem.id}>
+                                <SidebarMenuSubItem key={subItem.title}>
                                   <SidebarMenuSubButton
                                     asChild
                                     isActive={location.pathname === subItem.path || location.pathname.startsWith(subItem.path)}
