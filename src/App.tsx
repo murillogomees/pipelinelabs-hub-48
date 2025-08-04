@@ -3,7 +3,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider } from '@/components/Auth/AuthProvider';
 import { PermissionProvider } from '@/components/PermissionProvider';
-import { AnalyticsProvider } from '@/components/Analytics/AnalyticsProvider';
+// import { AnalyticsProvider } from '@/components/Analytics/AnalyticsProvider';
 import { Toaster } from '@/components/ui/sonner';
 import { MainLayout } from '@/components/Layout/MainLayout';
 import { ProtectedRoute } from '@/components/ProtectedRoute';
@@ -72,7 +72,7 @@ function App() {
       <BrowserRouter>
         <AuthProvider>
           <PermissionProvider>
-            <AnalyticsProvider>
+            {/* <AnalyticsProvider> */}
               <Routes>
                 {/* Public Routes */}
                 <Route path="/" element={<LandingPage />} />
@@ -194,7 +194,7 @@ function App() {
               <Route path="*" element={<NotFound />} />
               </Routes>
               <Toaster />
-            </AnalyticsProvider>
+            {/* </AnalyticsProvider> */}
           </PermissionProvider>
         </AuthProvider>
       </BrowserRouter>

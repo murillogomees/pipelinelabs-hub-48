@@ -72,7 +72,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         if (event === 'SIGNED_IN' && session?.user) {
           logger.info('User signed in successfully', session.user.id);
           
-          // Track login event with error handling
+          // Analytics temporariamente desabilitado
+          /*
           try {
             await supabase.rpc('create_analytics_event', {
               p_event_name: 'user_login',
@@ -87,6 +88,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
           } catch (error) {
             // Silently ignore analytics errors
           }
+          */
         }
       }
     );
