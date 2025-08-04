@@ -6,7 +6,7 @@ import { PermissionGuard } from '@/components/PermissionGuard';
 
 export default function AdminProducao() {
   return (
-    <PermissionGuard requiredPermission="admin">
+    <PermissionGuard requiredPermissions={["admin_panel"]}>
       <MainLayout>
         <div className="flex-1 space-y-4 p-4 md:p-8 pt-6">
           <PageHeader

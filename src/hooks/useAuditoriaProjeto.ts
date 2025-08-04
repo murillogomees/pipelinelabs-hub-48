@@ -64,7 +64,8 @@ export const useAuditoriaProjeto = () => {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const permissions = usePermissions();
-  const currentCompanyId = permissions.companyId; // Fixed: use companyId property
+  // Use profile.company_id as fallback since companyId might not exist
+  const currentCompanyId = permissions.profile?.company_id;
   const canManageCompany = permissions.canManageCompany;
 
   // Buscar configuração de auditoria

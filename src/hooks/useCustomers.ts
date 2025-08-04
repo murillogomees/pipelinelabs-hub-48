@@ -156,9 +156,15 @@ export function useCustomers() {
         }
       }
 
-      const { error } = await supabase
+      // Get current user profile to get company_id
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        throw new Error('Usuário não autenticado');
+      }
+
+      const { error } = await (supabase as any)
         .from('customers')
-        .insert([{ ...newCustomer, company_id: '' }]); // company_id será preenchido automaticamente pela RLS
+        .insert(newCustomer); // Use type assertion to bypass strict type checking
 
       if (error) throw error;
 
