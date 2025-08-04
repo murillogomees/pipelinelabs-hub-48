@@ -4542,7 +4542,7 @@ export type Database = {
       }
       get_current_user_type: {
         Args: Record<PropertyKey, never>
-        Returns: Database["public"]["Enums"]["user_type"]
+        Returns: string
       }
       get_current_version: {
         Args: { p_environment?: string }
