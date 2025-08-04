@@ -3,6 +3,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider } from '@/components/Auth/AuthProvider';
 import { PermissionProvider } from '@/components/PermissionProvider';
+import { AnalyticsProvider } from '@/components/Analytics/AnalyticsProvider';
 import { Toaster } from '@/components/ui/sonner';
 import { MainLayout } from '@/components/Layout/MainLayout';
 import { ProtectedRoute } from '@/components/ProtectedRoute';
@@ -79,7 +80,8 @@ function App() {
       <BrowserRouter>
         <AuthProvider>
           <PermissionProvider>
-            <Routes>
+            <AnalyticsProvider>
+              <Routes>
               {/* Public Routes */}
               <Route path="/" element={<LandingPage />} />
               <Route path="/auth" element={<Auth />} />
@@ -234,8 +236,9 @@ function App() {
 
               {/* 404 Route */}
               <Route path="*" element={<NotFound />} />
-            </Routes>
-            <Toaster />
+              </Routes>
+              <Toaster />
+            </AnalyticsProvider>
           </PermissionProvider>
         </AuthProvider>
       </BrowserRouter>
