@@ -33,8 +33,23 @@ export function AuthForm() {
   const handleFormSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
+    // Validation
+    if (!formData.email || !formData.password) {
+      toast({
+        title: "Erro",
+        description: "Por favor, preencha email e senha",
+        variant: "destructive",
+      });
+      return;
+    }
+
     // For sign up, ensure password is valid
     if (isSignUp && !isPasswordValid) {
+      toast({
+        title: "Erro",
+        description: "Por favor, use uma senha mais forte",
+        variant: "destructive",
+      });
       return;
     }
 
@@ -42,10 +57,10 @@ export function AuthForm() {
     
     try {
       if (isSignUp) {
-        const redirectUrl = `${window.location.origin}/app`;
+        const redirectUrl = `${window.location.origin}/auth`;
         
         const { error } = await supabase.auth.signUp({
-          email: formData.email,
+          email: formData.email.trim(),
           password: formData.password,
           options: {
             emailRedirectTo: redirectUrl,
@@ -65,8 +80,8 @@ export function AuthForm() {
           description: "Cadastro realizado com sucesso! Verifique seu email para confirmar a conta.",
         });
       } else {
-        const { error } = await supabase.auth.signInWithPassword({
-          email: formData.email,
+        const { data, error } = await supabase.auth.signInWithPassword({
+          email: formData.email.trim(),
           password: formData.password,
         });
 
@@ -78,7 +93,9 @@ export function AuthForm() {
         });
 
         // Redirecionar para o dashboard após login bem-sucedido
-        navigate('/app/dashboard');
+        if (data?.user) {
+          navigate('/');
+        }
       }
     } catch (error: any) {
       console.error("Auth error:", error);
@@ -86,11 +103,15 @@ export function AuthForm() {
       let message = "Erro inesperado. Tente novamente.";
       
       if (error.message?.includes("Invalid login credentials")) {
-        message = "Email ou senha incorretos";
+        message = "Email ou senha incorretos. Verifique seus dados e tente novamente.";
       } else if (error.message?.includes("User already registered")) {
-        message = "Este email já está cadastrado";
+        message = "Este email já está cadastrado. Tente fazer login ou usar outro email.";
       } else if (error.message?.includes("Password should be at least")) {
         message = "A senha deve ter pelo menos 6 caracteres";
+      } else if (error.message?.includes("Email not confirmed")) {
+        message = "Confirme seu email antes de fazer login";
+      } else if (error.message?.includes("Signup disabled")) {
+        message = "Cadastro temporariamente desabilitado";
       }
 
       toast({

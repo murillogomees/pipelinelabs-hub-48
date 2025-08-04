@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import { useCSRF } from '@/components/Security';
+import { useCSRF } from '@/components/Security/CSRFProtection';
 
 interface SecurityMetrics {
   failedAttempts: number;
