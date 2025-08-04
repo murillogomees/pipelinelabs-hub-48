@@ -9,7 +9,7 @@ export function Footer() {
             <Link to="/privacidade" className="text-sm text-muted-foreground hover:text-primary transition-colors">
               Política de Privacidade
             </Link>
-            <Link to="/termos-de-uso" className="text-sm text-muted-foreground hover:text-primary transition-colors">
+            <Link to="/termos" className="text-sm text-muted-foreground hover:text-primary transition-colors">
               Termos de Uso
             </Link>
             <Link to="/sla" className="text-sm text-muted-foreground hover:text-primary transition-colors">
@@ -17,9 +17,6 @@ export function Footer() {
             </Link>
             <Link to="/app/user/dados-pessoais" className="text-sm text-muted-foreground hover:text-primary transition-colors">
               Meus Dados (LGPD)
-            </Link>
-            <Link to="/app/user/termos-aceitos" className="text-sm text-muted-foreground hover:text-primary transition-colors">
-              Termos Aceitos
             </Link>
           </div>
         </div>

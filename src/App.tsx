@@ -55,7 +55,6 @@ import SLA from '@/pages/SLA';
 import Privacidade from '@/pages/Privacidade';
 import TermosDeUso from '@/pages/TermosDeUso';
 import NotFound from '@/pages/NotFound';
-import { BreakpointTester } from '@/components/Testing/BreakpointTester';
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -75,13 +74,12 @@ function App() {
           <PermissionProvider>
             <AnalyticsProvider>
               <Routes>
-              {/* Public Routes */}
-              <Route path="/" element={<LandingPage />} />
-              <Route path="/auth" element={<Auth />} />
-              <Route path="/sla" element={<SLA />} />
-              <Route path="/privacidade" element={<Privacidade />} />
-              <Route path="/termos" element={<TermosDeUso />} />
-              <Route path="/breakpoint-test" element={<BreakpointTester />} />
+                {/* Public Routes */}
+                <Route path="/" element={<LandingPage />} />
+                <Route path="/auth" element={<Auth />} />
+                <Route path="/sla" element={<SLA />} />
+                <Route path="/privacidade" element={<Privacidade />} />
+                <Route path="/termos" element={<TermosDeUso />} />
 
               {/* Protected App Routes */}
               <Route 

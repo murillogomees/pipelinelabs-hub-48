@@ -1,4 +1,5 @@
 
+import { Link } from 'react-router-dom';
 import { Button } from "@/components/ui/button";
 import { Home, ArrowLeft } from "lucide-react";
 
@@ -15,10 +16,10 @@ const NotFound = () => {
             Voltar
           </Button>
           <Button asChild>
-            <a href="/app">
+            <Link to="/app">
               <Home className="w-4 h-4 mr-2" />
               Ir para Dashboard
-            </a>
+            </Link>
           </Button>
         </div>
       </div>

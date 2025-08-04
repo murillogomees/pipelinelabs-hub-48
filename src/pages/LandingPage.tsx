@@ -102,7 +102,7 @@ export default function LandingPage() {
               © {new Date().getFullYear()} Pipeline Labs. Todos os direitos reservados.
             </span>
             <div className="flex flex-wrap gap-4 sm:gap-6">
-              <Link to="/termos-de-uso" className="hover:text-foreground transition-colors">
+              <Link to="/termos" className="hover:text-foreground transition-colors">
                 Termos de Uso
               </Link>
               <Link to="/privacidade" className="hover:text-foreground transition-colors">
