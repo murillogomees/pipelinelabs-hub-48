@@ -3,11 +3,20 @@ import { useAnalyticsContext } from './AnalyticsProvider';
 
 // Hook para rastrear automaticamente eventos comuns
 export const useAutoTrack = () => {
-  const { trackUserAction } = useAnalyticsContext();
+  // Verificar se o contexto está disponível
+  let trackUserAction: ((action: string, meta?: Record<string, any>) => void) | null = null;
+  
+  try {
+    const context = useAnalyticsContext();
+    trackUserAction = context.trackUserAction;
+  } catch (error) {
+    // Analytics provider não está disponível, usar funções vazias
+    trackUserAction = () => {};
+  }
 
   // Função para rastrear criação de registros
   const trackCreate = (entityType: string, entityId?: string) => {
-    trackUserAction(`${entityType}:criado`, {
+    trackUserAction?.(`${entityType}:criado`, {
       entity_type: entityType,
       entity_id: entityId,
       action_time: new Date().toISOString()
@@ -16,7 +25,7 @@ export const useAutoTrack = () => {
 
   // Função para rastrear edição de registros
   const trackUpdate = (entityType: string, entityId?: string) => {
-    trackUserAction(`${entityType}:editado`, {
+    trackUserAction?.(`${entityType}:editado`, {
       entity_type: entityType,
       entity_id: entityId,
       action_time: new Date().toISOString()
@@ -25,7 +34,7 @@ export const useAutoTrack = () => {
 
   // Função para rastrear exclusão de registros
   const trackDelete = (entityType: string, entityId?: string) => {
-    trackUserAction(`${entityType}:excluido`, {
+    trackUserAction?.(`${entityType}:excluido`, {
       entity_type: entityType,
       entity_id: entityId,
       action_time: new Date().toISOString()
@@ -34,7 +43,7 @@ export const useAutoTrack = () => {
 
   // Função para rastrear visualização de registros
   const trackView = (entityType: string, entityId?: string) => {
-    trackUserAction(`${entityType}:visualizado`, {
+    trackUserAction?.(`${entityType}:visualizado`, {
       entity_type: entityType,
       entity_id: entityId,
       action_time: new Date().toISOString()
@@ -43,7 +52,7 @@ export const useAutoTrack = () => {
 
   // Função para rastrear ações específicas (ex: emitir nota, abrir PDV)
   const trackAction = (actionName: string, meta?: Record<string, any>) => {
-    trackUserAction(actionName, {
+    trackUserAction?.(actionName, {
       ...meta,
       action_time: new Date().toISOString()
     });
