@@ -33,6 +33,8 @@ import Subscription from '@/pages/Subscription';
 
 // Admin Pages
 import Admin from '@/pages/Admin';
+import AdminUsuarios from '@/pages/AdminUsuarios';
+import AdminEmpresas from '@/pages/AdminEmpresas';
 import AdminAuditLogs from '@/pages/AdminAuditLogs';
 import AdminIntegracoes from '@/pages/AdminIntegracoes';
 import AdminNFeConfig from '@/pages/AdminNFeConfig';
@@ -121,6 +123,16 @@ function App() {
                 <Route path="admin" element={
                   <ProtectedRoute requireSuperAdmin>
                     <Admin />
+                  </ProtectedRoute>
+                } />
+                <Route path="admin/usuarios" element={
+                  <ProtectedRoute requireSuperAdmin>
+                    <AdminUsuarios />
+                  </ProtectedRoute>
+                } />
+                <Route path="admin/empresas" element={
+                  <ProtectedRoute requireSuperAdmin>
+                    <AdminEmpresas />
                   </ProtectedRoute>
                 } />
                 <Route path="admin/audit-logs" element={
