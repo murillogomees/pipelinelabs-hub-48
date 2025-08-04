@@ -8,12 +8,15 @@ import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
-import { Plus, Minus, Trash2, Search } from 'lucide-react';
+import { Plus, Minus, Trash2, Search, X, Check, ShoppingCart } from 'lucide-react';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { useProducts } from '@/components/Products/hooks/useProducts';
 import { useCustomers } from '@/hooks/useCustomers';
 import { useCreateSale, Sale, CreateSaleData } from '@/hooks/useSales';
 import { useToast } from '@/hooks/use-toast';
+import { useMobile } from '@/hooks/use-mobile';
+import { FormSection } from '@/components/ui/form-section';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 interface SaleDialogProps {
   isOpen: boolean;
@@ -36,8 +39,10 @@ export function SaleDialog({ isOpen, onClose, sale }: SaleDialogProps) {
   const { data: products = [] } = useProducts();
   const { customers = [] } = useCustomers();
   const createSale = useCreateSale();
+  const isMobile = useMobile();
 
   const [searchProduct, setSearchProduct] = useState('');
+  const [activeTab, setActiveTab] = useState('info');
   const [formData, setFormData] = useState({
     customer_id: '',
     notes: '',
@@ -72,8 +77,9 @@ export function SaleDialog({ isOpen, onClose, sale }: SaleDialogProps) {
         discount: 0,
       });
       setItems([]);
+      setActiveTab('info');
     }
-  }, [sale]);
+  }, [sale, isOpen]);
 
   const addProduct = (productId: string) => {
     const product = products.find(p => p.id === productId);
@@ -177,229 +183,508 @@ export function SaleDialog({ isOpen, onClose, sale }: SaleDialogProps) {
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-6xl max-h-[90vh] overflow-y-auto">
-        <DialogHeader>
-          <DialogTitle>
-            {sale ? 'Editar Venda' : 'Nova Venda'}
-          </DialogTitle>
-        </DialogHeader>
+      <DialogContent className={`${isMobile ? 'max-w-[95vw] h-[90vh] p-0' : 'max-w-6xl max-h-[90vh]'} overflow-hidden`}>
+        {/* Header Mobile Otimizado */}
+        <div className={`sticky top-0 z-20 bg-background border-b ${isMobile ? 'p-4' : 'p-6'}`}>
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={onClose}
+                className="h-9 w-9 p-0"
+              >
+                <X className="h-5 w-5" />
+              </Button>
+              <div>
+                <h2 className="text-lg font-semibold tracking-tight">
+                  {sale ? 'Editar Pedido' : 'Novo Pedido'}
+                </h2>
+                {!isMobile && (
+                  <p className="text-sm text-muted-foreground">
+                    {sale ? `Editando pedido #${sale.sale_number}` : 'Criar um novo pedido de venda'}
+                  </p>
+                )}
+              </div>
+            </div>
 
-        <form onSubmit={handleSubmit} className="space-y-6">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {/* Informações da Venda */}
-            <Card>
-              <CardHeader>
-                <CardTitle>Informações da Venda</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div>
-                  <Label htmlFor="customer">Cliente (opcional)</Label>
-                  <Select
-                    value={formData.customer_id}
-                    onValueChange={(value) => setFormData(prev => ({ ...prev, customer_id: value }))}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Selecionar cliente..." />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {customers.map((customer) => (
-                        <SelectItem key={customer.id} value={customer.id}>
-                          {customer.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
+            {!isMobile && (
+              <div className="flex gap-2">
+                <Button variant="ghost" onClick={onClose}>
+                  Cancelar
+                </Button>
+                <Button 
+                  onClick={handleSubmit}
+                  disabled={createSale.isPending || items.length === 0}
+                  className="bg-primary text-primary-foreground"
+                >
+                  <Check className="w-4 h-4 mr-2" />
+                  {createSale.isPending ? 'Salvando...' : (sale ? 'Atualizar' : 'Criar Pedido')}
+                </Button>
+              </div>
+            )}
+          </div>
+        </div>
 
-                <div>
-                  <Label htmlFor="notes">Observações</Label>
-                  <Textarea
-                    id="notes"
-                    placeholder="Observações da venda..."
-                    value={formData.notes}
-                    onChange={(e) => setFormData(prev => ({ ...prev, notes: e.target.value }))}
-                  />
-                </div>
+        {/* Conteúdo */}
+        <div className={`flex-1 overflow-y-auto ${isMobile ? 'px-4 pb-20' : 'p-6 pt-0'}`}>
+          {isMobile ? (
+            /* Layout Mobile com Tabs */
+            <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+              <div className="sticky top-0 z-10 bg-background py-4 -mx-4 px-4 border-b mb-4">
+                <TabsList className="grid w-full grid-cols-3 bg-muted/30">
+                  <TabsTrigger value="info" className="text-xs">Informações</TabsTrigger>
+                  <TabsTrigger value="items" className="text-xs">
+                    Itens ({items.length})
+                  </TabsTrigger>
+                  <TabsTrigger value="summary" className="text-xs">Resumo</TabsTrigger>
+                </TabsList>
+              </div>
 
-                <div>
-                  <Label htmlFor="discount">Desconto (R$)</Label>
-                  <Input
-                    id="discount"
-                    type="number"
-                    min="0"
-                    step="0.01"
-                    value={formData.discount}
-                    onChange={(e) => setFormData(prev => ({ ...prev, discount: Number(e.target.value) }))}
-                  />
-                </div>
-              </CardContent>
-            </Card>
+              {/* Tab Informações */}
+              <TabsContent value="info" className="space-y-4 mt-0">
+                <FormSection title="Dados do Pedido" showDivider={false}>
+                  <div className="space-y-4">
+                    <div>
+                      <Label htmlFor="customer">Cliente (opcional)</Label>
+                      <Select
+                        value={formData.customer_id}
+                        onValueChange={(value) => setFormData(prev => ({ ...prev, customer_id: value }))}
+                      >
+                        <SelectTrigger className="h-12 text-base">
+                          <SelectValue placeholder="Selecionar cliente..." />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {customers.map((customer) => (
+                            <SelectItem key={customer.id} value={customer.id}>
+                              {customer.name}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
 
-            {/* Busca de Produtos */}
-            <Card>
-              <CardHeader>
-                <CardTitle>Adicionar Produtos</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div>
-                  <Label htmlFor="searchProduct">Buscar produto</Label>
+                    <div>
+                      <Label htmlFor="notes">Observações</Label>
+                      <Textarea
+                        id="notes"
+                        placeholder="Observações do pedido..."
+                        value={formData.notes}
+                        onChange={(e) => setFormData(prev => ({ ...prev, notes: e.target.value }))}
+                        className="min-h-[100px] text-base resize-none"
+                      />
+                    </div>
+
+                    <div>
+                      <Label htmlFor="discount">Desconto (R$)</Label>
+                      <Input
+                        id="discount"
+                        type="number"
+                        min="0"
+                        step="0.01"
+                        value={formData.discount}
+                        onChange={(e) => setFormData(prev => ({ ...prev, discount: Number(e.target.value) }))}
+                        className="h-12 text-base"
+                      />
+                    </div>
+                  </div>
+                </FormSection>
+              </TabsContent>
+
+              {/* Tab Itens */}
+              <TabsContent value="items" className="space-y-4 mt-0">
+                <FormSection title="Buscar Produtos" showDivider={false}>
                   <div className="relative">
-                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
+                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-5 h-5" />
                     <Input
-                      id="searchProduct"
                       placeholder="Nome ou código do produto..."
                       value={searchProduct}
                       onChange={(e) => setSearchProduct(e.target.value)}
-                      className="pl-10"
+                      className="pl-12 h-12 text-base"
                     />
                   </div>
-                </div>
 
-                <div className="max-h-64 overflow-y-auto space-y-2">
-                  {filteredProducts.map((product) => (
-                    <div
-                      key={product.id}
-                      className="flex items-center justify-between p-2 border rounded-lg hover:bg-muted/50 cursor-pointer"
-                      onClick={() => addProduct(product.id)}
-                    >
-                      <div>
-                        <p className="font-medium">{product.name}</p>
-                        <p className="text-sm text-muted-foreground">{product.code}</p>
-                      </div>
-                      <div className="text-right">
-                        <p className="font-medium">R$ {Number(product.price).toFixed(2)}</p>
-                        <p className="text-sm text-muted-foreground">Estoque: {product.stock_quantity}</p>
-                      </div>
+                  {searchProduct && (
+                    <div className="max-h-48 overflow-y-auto space-y-2 bg-muted/30 rounded-lg p-2">
+                      {filteredProducts.map((product) => (
+                        <div
+                          key={product.id}
+                          className="flex items-center justify-between p-3 bg-background rounded-lg hover:bg-accent cursor-pointer transition-colors"
+                          onClick={() => addProduct(product.id)}
+                        >
+                          <div className="flex-1 min-w-0">
+                            <p className="font-medium truncate">{product.name}</p>
+                            <p className="text-sm text-muted-foreground">{product.code}</p>
+                          </div>
+                          <div className="text-right">
+                            <p className="font-semibold text-primary">R$ {Number(product.price).toFixed(2)}</p>
+                            <p className="text-xs text-muted-foreground">Est: {product.stock_quantity}</p>
+                          </div>
+                        </div>
+                      ))}
                     </div>
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
-          </div>
+                  )}
+                </FormSection>
 
-          {/* Itens da Venda */}
-          <Card>
-            <CardHeader>
-              <CardTitle>Itens da Venda ({items.length} itens)</CardTitle>
-            </CardHeader>
-            <CardContent>
-              {items.length === 0 ? (
-                <p className="text-center text-muted-foreground py-8">
-                  Nenhum item adicionado
-                </p>
-              ) : (
-                <div className="overflow-x-auto">
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead>Produto</TableHead>
-                        <TableHead>Qtd</TableHead>
-                        <TableHead>Preço Unit.</TableHead>
-                        <TableHead>Desconto</TableHead>
-                        <TableHead>Total</TableHead>
-                        <TableHead>Ações</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
+                <FormSection title={`Itens Adicionados (${items.length})`} showDivider={false}>
+                  {items.length === 0 ? (
+                    <div className="text-center py-8 bg-muted/30 rounded-lg">
+                      <ShoppingCart className="w-12 h-12 mx-auto text-muted-foreground/50 mb-3" />
+                      <p className="text-muted-foreground">Nenhum item adicionado</p>
+                      <p className="text-sm text-muted-foreground">Busque produtos acima para adicionar</p>
+                    </div>
+                  ) : (
+                    <div className="space-y-3">
                       {items.map((item) => (
-                        <TableRow key={item.product_id}>
-                          <TableCell>
-                            <div>
-                              <p className="font-medium">{item.product_name}</p>
+                        <div key={item.product_id} className="bg-background border rounded-lg p-4">
+                          <div className="flex justify-between items-start mb-3">
+                            <div className="flex-1 min-w-0">
+                              <h4 className="font-medium truncate">{item.product_name}</h4>
                               <p className="text-sm text-muted-foreground">{item.product_code}</p>
                             </div>
-                          </TableCell>
-                          <TableCell>
-                            <div className="flex items-center gap-1">
-                              <Button
-                                type="button"
-                                size="sm"
-                                variant="outline"
-                                onClick={() => updateItemQuantity(item.product_id, item.quantity - 1)}
-                              >
-                                <Minus className="h-3 w-3" />
-                              </Button>
-                              <span className="w-8 text-center">{item.quantity}</span>
-                              <Button
-                                type="button"
-                                size="sm"
-                                variant="outline"
-                                onClick={() => updateItemQuantity(item.product_id, item.quantity + 1)}
-                              >
-                                <Plus className="h-3 w-3" />
-                              </Button>
-                            </div>
-                          </TableCell>
-                          <TableCell>R$ {item.unit_price.toFixed(2)}</TableCell>
-                          <TableCell>
-                            <Input
-                              type="number"
-                              min="0"
-                              step="0.01"
-                              value={item.discount}
-                              onChange={(e) => updateItemDiscount(item.product_id, Number(e.target.value))}
-                              className="w-20"
-                            />
-                          </TableCell>
-                          <TableCell className="font-medium">
-                            R$ {item.total_price.toFixed(2)}
-                          </TableCell>
-                          <TableCell>
                             <Button
-                              type="button"
+                              variant="ghost"
                               size="sm"
-                              variant="destructive"
                               onClick={() => removeItem(item.product_id)}
+                              className="h-8 w-8 p-0 text-destructive"
                             >
-                              <Trash2 className="h-3 w-3" />
+                              <Trash2 className="h-4 w-4" />
                             </Button>
-                          </TableCell>
-                        </TableRow>
+                          </div>
+
+                          <div className="grid grid-cols-2 gap-3">
+                            <div>
+                              <Label className="text-xs">Quantidade</Label>
+                              <div className="flex items-center gap-1 mt-1">
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={() => updateItemQuantity(item.product_id, item.quantity - 1)}
+                                  className="h-8 w-8 p-0"
+                                >
+                                  <Minus className="h-3 w-3" />
+                                </Button>
+                                <span className="flex-1 text-center font-medium">{item.quantity}</span>
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={() => updateItemQuantity(item.product_id, item.quantity + 1)}
+                                  className="h-8 w-8 p-0"
+                                >
+                                  <Plus className="h-3 w-3" />
+                                </Button>
+                              </div>
+                            </div>
+                            <div>
+                              <Label className="text-xs">Desconto (R$)</Label>
+                              <Input
+                                type="number"
+                                min="0"
+                                step="0.01"
+                                value={item.discount}
+                                onChange={(e) => updateItemDiscount(item.product_id, Number(e.target.value))}
+                                className="h-8 text-sm mt-1"
+                              />
+                            </div>
+                          </div>
+
+                          <div className="flex justify-between items-center mt-3 pt-3 border-t">
+                            <span className="text-sm text-muted-foreground">
+                              R$ {item.unit_price.toFixed(2)} × {item.quantity}
+                            </span>
+                            <span className="font-semibold text-primary">
+                              R$ {item.total_price.toFixed(2)}
+                            </span>
+                          </div>
+                        </div>
                       ))}
-                    </TableBody>
-                  </Table>
-                </div>
-              )}
-            </CardContent>
-          </Card>
+                    </div>
+                  )}
+                </FormSection>
+              </TabsContent>
 
-          {/* Resumo */}
-          <Card>
-            <CardHeader>
-              <CardTitle>Resumo da Venda</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-2">
-                <div className="flex justify-between">
-                  <span>Subtotal:</span>
-                  <span>R$ {subtotal.toFixed(2)}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span>Desconto:</span>
-                  <span>R$ {formData.discount.toFixed(2)}</span>
-                </div>
-                <Separator />
-                <div className="flex justify-between text-lg font-bold">
-                  <span>Total:</span>
-                  <span>R$ {total.toFixed(2)}</span>
-                </div>
+              {/* Tab Resumo */}
+              <TabsContent value="summary" className="space-y-4 mt-0">
+                <FormSection title="Resumo do Pedido" showDivider={false}>
+                  <div className="bg-muted/30 rounded-lg p-4 space-y-3">
+                    <div className="flex justify-between items-center">
+                      <span className="text-muted-foreground">Itens ({items.length})</span>
+                      <span>R$ {subtotal.toFixed(2)}</span>
+                    </div>
+                    
+                    <div className="flex justify-between items-center">
+                      <span className="text-muted-foreground">Desconto</span>
+                      <span>- R$ {formData.discount.toFixed(2)}</span>
+                    </div>
+                    
+                    <Separator />
+                    
+                    <div className="flex justify-between items-center">
+                      <span className="text-lg font-semibold">Total</span>
+                      <span className="text-xl font-bold text-primary">R$ {total.toFixed(2)}</span>
+                    </div>
+                  </div>
+
+                  {formData.customer_id && (
+                    <div className="bg-background border rounded-lg p-4">
+                      <h4 className="font-medium mb-2">Cliente</h4>
+                      <p className="text-sm text-muted-foreground">
+                        {customers.find(c => c.id === formData.customer_id)?.name || 'Cliente selecionado'}
+                      </p>
+                    </div>
+                  )}
+
+                  {formData.notes && (
+                    <div className="bg-background border rounded-lg p-4">
+                      <h4 className="font-medium mb-2">Observações</h4>
+                      <p className="text-sm text-muted-foreground">{formData.notes}</p>
+                    </div>
+                  )}
+                </FormSection>
+              </TabsContent>
+            </Tabs>
+          ) : (
+            /* Layout Desktop */
+            <form onSubmit={handleSubmit} className="space-y-6">
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                {/* Informações da Venda */}
+                <Card className="border-0 shadow-sm">
+                  <CardHeader>
+                    <CardTitle>Informações do Pedido</CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    <div>
+                      <Label htmlFor="customer">Cliente (opcional)</Label>
+                      <Select
+                        value={formData.customer_id}
+                        onValueChange={(value) => setFormData(prev => ({ ...prev, customer_id: value }))}
+                      >
+                        <SelectTrigger>
+                          <SelectValue placeholder="Selecionar cliente..." />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {customers.map((customer) => (
+                            <SelectItem key={customer.id} value={customer.id}>
+                              {customer.name}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+
+                    <div>
+                      <Label htmlFor="notes">Observações</Label>
+                      <Textarea
+                        id="notes"
+                        placeholder="Observações do pedido..."
+                        value={formData.notes}
+                        onChange={(e) => setFormData(prev => ({ ...prev, notes: e.target.value }))}
+                      />
+                    </div>
+
+                    <div>
+                      <Label htmlFor="discount">Desconto (R$)</Label>
+                      <Input
+                        id="discount"
+                        type="number"
+                        min="0"
+                        step="0.01"
+                        value={formData.discount}
+                        onChange={(e) => setFormData(prev => ({ ...prev, discount: Number(e.target.value) }))}
+                      />
+                    </div>
+                  </CardContent>
+                </Card>
+
+                {/* Busca de Produtos */}
+                <Card className="border-0 shadow-sm">
+                  <CardHeader>
+                    <CardTitle>Adicionar Produtos</CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    <div>
+                      <Label htmlFor="searchProduct">Buscar produto</Label>
+                      <div className="relative">
+                        <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
+                        <Input
+                          id="searchProduct"
+                          placeholder="Nome ou código do produto..."
+                          value={searchProduct}
+                          onChange={(e) => setSearchProduct(e.target.value)}
+                          className="pl-10"
+                        />
+                      </div>
+                    </div>
+
+                    <div className="max-h-64 overflow-y-auto space-y-2">
+                      {filteredProducts.map((product) => (
+                        <div
+                          key={product.id}
+                          className="flex items-center justify-between p-3 border rounded-lg hover:bg-muted/50 cursor-pointer transition-colors"
+                          onClick={() => addProduct(product.id)}
+                        >
+                          <div>
+                            <p className="font-medium">{product.name}</p>
+                            <p className="text-sm text-muted-foreground">{product.code}</p>
+                          </div>
+                          <div className="text-right">
+                            <p className="font-medium">R$ {Number(product.price).toFixed(2)}</p>
+                            <p className="text-sm text-muted-foreground">Estoque: {product.stock_quantity}</p>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </CardContent>
+                </Card>
               </div>
-            </CardContent>
-          </Card>
 
-          {/* Ações */}
-          <div className="flex justify-end gap-4">
-            <Button type="button" variant="outline" onClick={onClose}>
-              Cancelar
-            </Button>
-            <Button 
-              type="submit" 
-              disabled={createSale.isPending || items.length === 0}
-            >
-              {createSale.isPending ? 'Salvando...' : (sale ? 'Atualizar' : 'Criar Venda')}
-            </Button>
+              {/* Itens da Venda */}
+              <Card className="border-0 shadow-sm">
+                <CardHeader>
+                  <CardTitle>Itens do Pedido ({items.length} itens)</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  {items.length === 0 ? (
+                    <div className="text-center py-12">
+                      <ShoppingCart className="w-12 h-12 mx-auto text-muted-foreground/50 mb-4" />
+                      <p className="text-muted-foreground text-lg mb-2">Nenhum item adicionado</p>
+                      <p className="text-sm text-muted-foreground">Busque produtos acima para adicionar ao pedido</p>
+                    </div>
+                  ) : (
+                    <div className="overflow-x-auto">
+                      <Table>
+                        <TableHeader>
+                          <TableRow>
+                            <TableHead>Produto</TableHead>
+                            <TableHead>Qtd</TableHead>
+                            <TableHead>Preço Unit.</TableHead>
+                            <TableHead>Desconto</TableHead>
+                            <TableHead>Total</TableHead>
+                            <TableHead>Ações</TableHead>
+                          </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                          {items.map((item) => (
+                            <TableRow key={item.product_id}>
+                              <TableCell>
+                                <div>
+                                  <p className="font-medium">{item.product_name}</p>
+                                  <p className="text-sm text-muted-foreground">{item.product_code}</p>
+                                </div>
+                              </TableCell>
+                              <TableCell>
+                                <div className="flex items-center gap-1">
+                                  <Button
+                                    type="button"
+                                    size="sm"
+                                    variant="outline"
+                                    onClick={() => updateItemQuantity(item.product_id, item.quantity - 1)}
+                                  >
+                                    <Minus className="h-3 w-3" />
+                                  </Button>
+                                  <span className="w-8 text-center font-medium">{item.quantity}</span>
+                                  <Button
+                                    type="button"
+                                    size="sm"
+                                    variant="outline"
+                                    onClick={() => updateItemQuantity(item.product_id, item.quantity + 1)}
+                                  >
+                                    <Plus className="h-3 w-3" />
+                                  </Button>
+                                </div>
+                              </TableCell>
+                              <TableCell>R$ {item.unit_price.toFixed(2)}</TableCell>
+                              <TableCell>
+                                <Input
+                                  type="number"
+                                  min="0"
+                                  step="0.01"
+                                  value={item.discount}
+                                  onChange={(e) => updateItemDiscount(item.product_id, Number(e.target.value))}
+                                  className="w-20"
+                                />
+                              </TableCell>
+                              <TableCell className="font-medium text-primary">
+                                R$ {item.total_price.toFixed(2)}
+                              </TableCell>
+                              <TableCell>
+                                <Button
+                                  type="button"
+                                  size="sm"
+                                  variant="ghost"
+                                  onClick={() => removeItem(item.product_id)}
+                                  className="text-destructive hover:text-destructive"
+                                >
+                                  <Trash2 className="h-4 w-4" />
+                                </Button>
+                              </TableCell>
+                            </TableRow>
+                          ))}
+                        </TableBody>
+                      </Table>
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+
+              {/* Resumo */}
+              <Card className="border-0 shadow-sm">
+                <CardHeader>
+                  <CardTitle>Resumo do Pedido</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-3">
+                    <div className="flex justify-between">
+                      <span>Subtotal ({items.length} itens):</span>
+                      <span>R$ {subtotal.toFixed(2)}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span>Desconto:</span>
+                      <span>- R$ {formData.discount.toFixed(2)}</span>
+                    </div>
+                    <Separator />
+                    <div className="flex justify-between text-xl font-bold">
+                      <span>Total:</span>
+                      <span className="text-primary">R$ {total.toFixed(2)}</span>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            </form>
+          )}
+        </div>
+
+        {/* Botões de Ação Mobile Fixos */}
+        {isMobile && (
+          <div className="sticky bottom-0 z-20 bg-background border-t p-4">
+            <div className="flex gap-3">
+              <Button 
+                variant="outline" 
+                onClick={onClose}
+                className="flex-1 h-12 font-medium"
+              >
+                Cancelar
+              </Button>
+              <Button 
+                onClick={handleSubmit}
+                disabled={createSale.isPending || items.length === 0}
+                className="flex-1 h-12 font-medium bg-primary text-primary-foreground"
+              >
+                {createSale.isPending ? (
+                  <div className="flex items-center gap-2">
+                    <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin" />
+                    <span>Salvando...</span>
+                  </div>
+                ) : (
+                  <div className="flex items-center gap-2">
+                    <Check className="w-4 h-4" />
+                    <span>{sale ? 'Atualizar' : 'Criar Pedido'}</span>
+                  </div>
+                )}
+              </Button>
+            </div>
           </div>
-        </form>
+        )}
       </DialogContent>
     </Dialog>
   );
