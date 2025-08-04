@@ -2105,6 +2105,33 @@ export type Database = {
         }
         Relationships: []
       }
+      performance_metrics: {
+        Row: {
+          created_at: string | null
+          environment: string
+          id: string
+          metric_name: string
+          metric_unit: string
+          metric_value: number
+        }
+        Insert: {
+          created_at?: string | null
+          environment?: string
+          id?: string
+          metric_name: string
+          metric_unit?: string
+          metric_value: number
+        }
+        Update: {
+          created_at?: string | null
+          environment?: string
+          id?: string
+          metric_name?: string
+          metric_unit?: string
+          metric_value?: number
+        }
+        Relationships: []
+      }
       plans: {
         Row: {
           active: boolean | null
@@ -2322,6 +2349,36 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      production_config: {
+        Row: {
+          config_key: string
+          config_value: Json
+          created_at: string | null
+          environment: string
+          id: string
+          is_active: boolean | null
+          updated_at: string | null
+        }
+        Insert: {
+          config_key: string
+          config_value?: Json
+          created_at?: string | null
+          environment?: string
+          id?: string
+          is_active?: boolean | null
+          updated_at?: string | null
+        }
+        Update: {
+          config_key?: string
+          config_value?: Json
+          created_at?: string | null
+          environment?: string
+          id?: string
+          is_active?: boolean | null
+          updated_at?: string | null
+        }
+        Relationships: []
       }
       production_orders: {
         Row: {
@@ -4314,7 +4371,7 @@ export type Database = {
         Args: {
           p_identifier: string
           p_max_requests?: number
-          p_window_minutes?: number
+          p_window_seconds?: number
         }
         Returns: boolean
       }
@@ -4558,6 +4615,10 @@ export type Database = {
         Args: Record<PropertyKey, never>
         Returns: number
       }
+      get_production_config: {
+        Args: { p_config_key: string }
+        Returns: Json
+      }
       get_security_config: {
         Args: { p_config_key: string }
         Returns: Json
@@ -4634,6 +4695,15 @@ export type Database = {
           p_user_agent?: string
           p_event_data?: Json
           p_risk_level?: string
+        }
+        Returns: string
+      }
+      record_performance_metric: {
+        Args: {
+          p_metric_name: string
+          p_metric_value: number
+          p_metric_unit?: string
+          p_environment?: string
         }
         Returns: string
       }
