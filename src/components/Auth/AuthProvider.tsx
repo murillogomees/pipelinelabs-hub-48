@@ -85,8 +85,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
               }
             });
           } catch (error) {
-            // Only log error once, don't retry for login events
-            console.warn('Failed to track login event:', error);
+            // Silently ignore analytics errors
           }
         }
       }

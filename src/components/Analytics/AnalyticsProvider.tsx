@@ -30,11 +30,8 @@ export const AnalyticsProvider = ({ children }: AnalyticsProviderProps) => {
         p_meta: event.meta || {}
       });
     } catch (error) {
-      // Silent fail for analytics to avoid spamming console
-      // Only log if it's not a network/auth related error
-      if (error && typeof error === 'object' && 'code' in error && error.code !== '42P01') {
-        console.warn('Analytics tracking failed:', error);
-      }
+      // Silently ignore analytics errors to keep console clean
+      // Only track critical application errors, not analytics failures
     }
   };
 
