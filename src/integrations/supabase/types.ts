@@ -4761,6 +4761,10 @@ export type Database = {
         Args: { doc: string; doc_type: string }
         Returns: boolean
       }
+      validate_password: {
+        Args: { password_text: string }
+        Returns: boolean
+      }
       validate_sensitive_operation: {
         Args: {
           p_operation: string
