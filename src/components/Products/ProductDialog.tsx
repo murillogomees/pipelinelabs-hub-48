@@ -10,7 +10,7 @@ import { ProductCategoryForm } from './forms/ProductCategoryForm';
 import { useCreateProduct, useUpdateProduct } from './hooks/useProducts';
 import { Product } from './types';
 import { ProductFormData } from './schema';
-// import { useAutoTrack } from '@/components/Analytics';
+import { useAutoTrack } from '@/components/Analytics';
 
 interface ProductDialogProps {
   open: boolean;
@@ -35,7 +35,7 @@ export function ProductDialog({ open, onOpenChange, product }: ProductDialogProp
 
   const createMutation = useCreateProduct();
   const updateMutation = useUpdateProduct();
-  // const { trackCreate, trackUpdate } = useAutoTrack();
+  const { trackCreate, trackUpdate } = useAutoTrack();
 
   const handleFormChange = (field: string, value: any) => {
     setFormData(prev => ({
@@ -51,7 +51,7 @@ export function ProductDialog({ open, onOpenChange, product }: ProductDialogProp
           id: product.id,
           ...formData
         });
-        // trackUpdate('produto', product.id);
+        trackUpdate('produto', product.id);
       } else {
         if (!formData.code || !formData.name || formData.price === undefined) {
           alert('Código, nome e preço são obrigatórios');
@@ -106,7 +106,7 @@ export function ProductDialog({ open, onOpenChange, product }: ProductDialogProp
           observations: formData.observations || null,
           category_id: formData.category_id || null,
         });
-        // trackCreate('produto', result?.id);
+        trackCreate('produto', result?.id);
       }
       onOpenChange(false);
       setFormData({});
