@@ -1,101 +1,27 @@
 
 import React, { useState } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Plus, Search, Edit, Trash2, Shield, Users } from 'lucide-react';
 import { AccessLevelDialog } from './AccessLevelDialog';
-import { useQuery } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
-import { useToast } from '@/hooks/use-toast';
 import { DataTable, Column, Action } from '@/components/ui/data-table';
+import { useAccessLevels } from '@/hooks/useAccessLevels';
 import type { AccessLevel } from './types';
-
-interface AccessLevelWithCount extends AccessLevel {
-  _count?: {
-    users: number;
-  };
-}
+import type { AccessLevelWithCount } from '@/hooks/useAccessLevels';
 
 export function AccessLevelsManagement() {
   const [showDialog, setShowDialog] = useState(false);
   const [selectedLevel, setSelectedLevel] = useState<AccessLevel | undefined>(undefined);
   const [searchTerm, setSearchTerm] = useState("");
-  const { toast } = useToast();
-
-  const { data: accessLevels = [], refetch, isLoading } = useQuery({
-    queryKey: ['access-levels'],
-    queryFn: async (): Promise<AccessLevelWithCount[]> => {
-      const { data: levelsData, error: levelsError } = await supabase
-        .from('access_levels')
-        .select('*')
-        .order('created_at', { ascending: false });
-
-      if (levelsError) throw levelsError;
-
-      // Count users for each access level
-      const levelsWithCount = await Promise.all(
-        (levelsData || []).map(async (level: any) => {
-          const { count } = await supabase
-            .from('profiles')
-            .select('*', { count: 'exact', head: true })
-            .eq('access_level_id', level.id)
-            .eq('is_active', true);
-          
-          return {
-            ...level,
-            _count: { users: count || 0 }
-          } as AccessLevelWithCount;
-        })
-      );
-
-      return levelsWithCount;
-    },
-    staleTime: 5 * 60 * 1000,
-  });
-
-  const handleDelete = async (level: AccessLevelWithCount) => {
-    if (level.is_system) {
-      toast({
-        title: "Erro",
-        description: "Níveis de acesso do sistema não podem ser excluídos",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    if (level._count?.users && level._count.users > 0) {
-      toast({
-        title: "Erro",
-        description: "Não é possível excluir um nível de acesso que possui usuários",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    try {
-      const { error } = await supabase
-        .from('access_levels')
-        .delete()
-        .eq('id', level.id);
-
-      if (error) throw error;
-
-      toast({
-        title: "Sucesso",
-        description: "Nível de acesso excluído com sucesso",
-      });
-
-      refetch();
-    } catch (error) {
-      toast({
-        title: "Erro",
-        description: "Falha ao excluir nível de acesso",
-        variant: "destructive",
-      });
-    }
-  };
+  
+  const { 
+    accessLevels, 
+    isLoading, 
+    refetch, 
+    deleteAccessLevel,
+    isDeleting 
+  } = useAccessLevels();
 
   const filteredLevels = accessLevels.filter(level => 
     level.display_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -166,7 +92,7 @@ export function AccessLevelsManagement() {
     {
       label: 'Excluir',
       icon: Trash2,
-      onClick: handleDelete,
+      onClick: deleteAccessLevel,
       variant: 'outline' as const,
       className: 'text-destructive hover:text-destructive'
     }
@@ -213,7 +139,6 @@ export function AccessLevelsManagement() {
         onOpenChange={setShowDialog}
         accessLevel={selectedLevel}
         onSave={() => {
-          refetch();
           setShowDialog(false);
           setSelectedLevel(undefined);
         }}
