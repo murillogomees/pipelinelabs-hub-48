@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { ArrowLeft, Save } from 'lucide-react';
+import { ArrowLeft, Save, CheckCircle } from 'lucide-react';
 import { ProductBasicForm } from '../forms/ProductBasicForm';
 import { ProductStockForm } from '../forms/ProductStockForm';
 import { ProductPriceForm } from '../forms/ProductPriceForm';
@@ -11,6 +11,8 @@ import { ProductCategoryForm } from '../forms/ProductCategoryForm';
 import { useCreateProduct } from '../hooks/useProducts';
 import { ProductFormData } from '../schema';
 import { useAutoTrack } from '@/components/Analytics';
+import { useMobile } from '@/hooks/use-mobile';
+import { toast } from '@/hooks/use-toast';
 
 interface ProductCreateProps {
   onSuccess: () => void;
@@ -33,6 +35,7 @@ export function ProductCreate({ onSuccess, onCancel }: ProductCreateProps) {
 
   const createMutation = useCreateProduct();
   const { trackCreate } = useAutoTrack();
+  const isMobile = useMobile();
 
   const handleFormChange = (field: string, value: any) => {
     setFormData(prev => ({
@@ -44,7 +47,11 @@ export function ProductCreate({ onSuccess, onCancel }: ProductCreateProps) {
   const handleSave = async () => {
     try {
       if (!formData.code || !formData.name || formData.price === undefined) {
-        alert('Código, nome e preço são obrigatórios');
+        toast({
+          title: "Campos obrigatórios",
+          description: "Código, nome e preço são obrigatórios",
+          variant: "destructive",
+        });
         return;
       }
 
@@ -100,101 +107,235 @@ export function ProductCreate({ onSuccess, onCancel }: ProductCreateProps) {
       
       trackCreate('produto', result?.id);
       setFormData({});
+      toast({
+        title: "Produto criado!",
+        description: "O produto foi cadastrado com sucesso.",
+      });
       onSuccess();
     } catch (error) {
       console.error('Erro ao salvar produto:', error);
+      toast({
+        title: "Erro ao salvar",
+        description: "Ocorreu um erro ao cadastrar o produto. Tente novamente.",
+        variant: "destructive",
+      });
     }
   };
 
   const isLoading = createMutation.isPending;
 
   return (
-    <div className="space-y-6">
-      <Card>
-        <CardHeader>
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-4">
-              <Button 
-                variant="ghost" 
-                size="sm" 
-                onClick={onCancel}
-                className="p-2"
-              >
-                <ArrowLeft className="w-4 h-4" />
-              </Button>
-              <div>
-                <CardTitle>Cadastrar Novo Produto</CardTitle>
-                <p className="text-sm text-muted-foreground mt-1">
-                  Preencha as informações do produto nas abas abaixo
+    <div className="container-fluid px-4 py-6 max-w-full">
+      {/* Header Mobile Otimizado */}
+      <div className="sticky top-0 z-10 bg-background/95 backdrop-blur-sm border-b mb-6 -mx-4 px-4 py-4">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <Button 
+              variant="ghost" 
+              size="sm" 
+              onClick={onCancel}
+              className="h-9 w-9 p-0 hover:bg-accent"
+            >
+              <ArrowLeft className="w-5 h-5" />
+            </Button>
+            <div>
+              <h1 className="text-lg font-semibold tracking-tight">Novo Produto</h1>
+              {!isMobile && (
+                <p className="text-sm text-muted-foreground">
+                  Preencha as informações do produto
                 </p>
-              </div>
+              )}
             </div>
+          </div>
+          
+          {!isMobile && (
             <div className="flex gap-2">
               <Button 
-                variant="outline" 
+                variant="ghost" 
                 onClick={onCancel}
                 disabled={isLoading}
+                className="text-muted-foreground"
               >
                 Cancelar
               </Button>
               <Button 
                 onClick={handleSave}
                 disabled={isLoading}
+                className="bg-primary text-primary-foreground hover:bg-primary/90"
               >
                 <Save className="w-4 h-4 mr-2" />
-                {isLoading ? 'Salvando...' : 'Salvar Produto'}
+                {isLoading ? 'Salvando...' : 'Salvar'}
               </Button>
             </div>
-          </div>
-        </CardHeader>
+          )}
+        </div>
+      </div>
 
-        <CardContent>
-          <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-            <TabsList className="grid w-full grid-cols-5">
-              <TabsTrigger value="dados">Dados</TabsTrigger>
-              <TabsTrigger value="categoria">Categoria</TabsTrigger>
-              <TabsTrigger value="estoque">Estoque</TabsTrigger>
-              <TabsTrigger value="preco">Preço</TabsTrigger>
-              <TabsTrigger value="tributacao">Tributação</TabsTrigger>
+      {/* Formulário Mobile-First */}
+      <div className="space-y-6">
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+          {/* Tabs Mobile Otimizadas */}
+          <div className="mb-6">
+            <TabsList className={`
+              grid w-full bg-muted/30 p-1 rounded-lg
+              ${isMobile ? 'grid-cols-2 gap-1' : 'grid-cols-5 gap-1'}
+            `}>
+              <TabsTrigger 
+                value="dados" 
+                className="data-[state=active]:bg-background data-[state=active]:shadow-sm text-xs sm:text-sm font-medium"
+              >
+                {isMobile ? 'Dados' : 'Dados Básicos'}
+              </TabsTrigger>
+              <TabsTrigger 
+                value="categoria"
+                className="data-[state=active]:bg-background data-[state=active]:shadow-sm text-xs sm:text-sm font-medium"
+              >
+                Categoria
+              </TabsTrigger>
+              {!isMobile && (
+                <>
+                  <TabsTrigger 
+                    value="estoque"
+                    className="data-[state=active]:bg-background data-[state=active]:shadow-sm text-xs sm:text-sm font-medium"
+                  >
+                    Estoque
+                  </TabsTrigger>
+                  <TabsTrigger 
+                    value="preco"
+                    className="data-[state=active]:bg-background data-[state=active]:shadow-sm text-xs sm:text-sm font-medium"
+                  >
+                    Preços
+                  </TabsTrigger>
+                  <TabsTrigger 
+                    value="tributacao"
+                    className="data-[state=active]:bg-background data-[state=active]:shadow-sm text-xs sm:text-sm font-medium"
+                  >
+                    Tributação
+                  </TabsTrigger>
+                </>
+              )}
             </TabsList>
+            
+            {/* Tabs Mobile em Lista Vertical */}
+            {isMobile && (
+              <div className="mt-4 grid grid-cols-1 gap-2">
+                <TabsTrigger 
+                  value="estoque"
+                  className="w-full justify-start data-[state=active]:bg-background data-[state=active]:shadow-sm text-sm font-medium py-3"
+                >
+                  📦 Estoque e Inventário
+                </TabsTrigger>
+                <TabsTrigger 
+                  value="preco"
+                  className="w-full justify-start data-[state=active]:bg-background data-[state=active]:shadow-sm text-sm font-medium py-3"
+                >
+                  💰 Preços e Margens
+                </TabsTrigger>
+                <TabsTrigger 
+                  value="tributacao"
+                  className="w-full justify-start data-[state=active]:bg-background data-[state=active]:shadow-sm text-sm font-medium py-3"
+                >
+                  📊 Impostos e Tributação
+                </TabsTrigger>
+              </div>
+            )}
+          </div>
 
-            <TabsContent value="dados" className="space-y-4 mt-6">
-              <ProductBasicForm 
-                data={formData} 
-                onChange={handleFormChange}
-              />
+          {/* Conteúdo das Abas */}
+          <div className="space-y-6">
+            <TabsContent value="dados" className="space-y-0 mt-0">
+              <Card className="border-0 shadow-sm bg-card/50">
+                <CardContent className="p-4 sm:p-6">
+                  <ProductBasicForm 
+                    data={formData} 
+                    onChange={handleFormChange}
+                  />
+                </CardContent>
+              </Card>
             </TabsContent>
 
-            <TabsContent value="categoria" className="space-y-4 mt-6">
-              <ProductCategoryForm 
-                data={formData} 
-                onChange={handleFormChange}
-              />
+            <TabsContent value="categoria" className="space-y-0 mt-0">
+              <Card className="border-0 shadow-sm bg-card/50">
+                <CardContent className="p-4 sm:p-6">
+                  <ProductCategoryForm 
+                    data={formData} 
+                    onChange={handleFormChange}
+                  />
+                </CardContent>
+              </Card>
             </TabsContent>
 
-            <TabsContent value="estoque" className="space-y-4 mt-6">
-              <ProductStockForm 
-                data={formData} 
-                onChange={handleFormChange}
-              />
+            <TabsContent value="estoque" className="space-y-0 mt-0">
+              <Card className="border-0 shadow-sm bg-card/50">
+                <CardContent className="p-4 sm:p-6">
+                  <ProductStockForm 
+                    data={formData} 
+                    onChange={handleFormChange}
+                  />
+                </CardContent>
+              </Card>
             </TabsContent>
 
-            <TabsContent value="preco" className="space-y-4 mt-6">
-              <ProductPriceForm 
-                data={formData} 
-                onChange={handleFormChange}
-              />
+            <TabsContent value="preco" className="space-y-0 mt-0">
+              <Card className="border-0 shadow-sm bg-card/50">
+                <CardContent className="p-4 sm:p-6">
+                  <ProductPriceForm 
+                    data={formData} 
+                    onChange={handleFormChange}
+                  />
+                </CardContent>
+              </Card>
             </TabsContent>
 
-            <TabsContent value="tributacao" className="space-y-4 mt-6">
-              <ProductTaxForm 
-                data={formData} 
-                onChange={handleFormChange}
-              />
+            <TabsContent value="tributacao" className="space-y-0 mt-0">
+              <Card className="border-0 shadow-sm bg-card/50">
+                <CardContent className="p-4 sm:p-6">
+                  <ProductTaxForm 
+                    data={formData} 
+                    onChange={handleFormChange}
+                  />
+                </CardContent>
+              </Card>
             </TabsContent>
-          </Tabs>
-        </CardContent>
-      </Card>
+          </div>
+        </Tabs>
+      </div>
+
+      {/* Botões de Ação Mobile Fixos */}
+      {isMobile && (
+        <div className="fixed bottom-0 left-0 right-0 p-4 bg-background/95 backdrop-blur-sm border-t z-20">
+          <div className="flex gap-3 max-w-sm mx-auto">
+            <Button 
+              variant="outline" 
+              onClick={onCancel}
+              disabled={isLoading}
+              className="flex-1 h-12 text-base font-medium"
+            >
+              Cancelar
+            </Button>
+            <Button 
+              onClick={handleSave}
+              disabled={isLoading}
+              className="flex-1 h-12 text-base font-medium bg-primary text-primary-foreground hover:bg-primary/90 disabled:opacity-50"
+            >
+              {isLoading ? (
+                <div className="flex items-center gap-2">
+                  <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin" />
+                  <span>Salvando...</span>
+                </div>
+              ) : (
+                <div className="flex items-center gap-2">
+                  <CheckCircle className="w-4 h-4" />
+                  <span>Salvar</span>
+                </div>
+              )}
+            </Button>
+          </div>
+        </div>
+      )}
+      
+      {/* Espaçamento para botões fixos mobile */}
+      {isMobile && <div className="h-20" />}
     </div>
   );
 }
