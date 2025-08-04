@@ -1,14 +1,12 @@
 export { default as SecureForm } from './SecureForm';
 export { default as SecureInput } from './SecureInput';
 export { default as SecureTextarea } from './SecureTextarea';
-export { default as SecureAuthProvider, useSecureAuth } from './SecureAuthProvider';
 export { CSRFProvider, useCSRF, CSRFToken } from './CSRFProtection';
 export { SecurityHeaders } from './SecurityHeaders';
 export { default as EnhancedSecurityProvider, useEnhancedSecurityContext } from './EnhancedSecurityProvider';
 export * from './SecureForm';
 export * from './SecureInput';
 export * from './SecureTextarea';
-export * from './SecureAuthProvider';
 export * from './CSRFProtection';
 export * from './SecurityHeaders';
 export * from './EnhancedSecurityProvider';

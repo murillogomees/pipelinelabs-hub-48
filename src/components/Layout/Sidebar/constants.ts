@@ -225,25 +225,11 @@ export const menuItems = [
         order: 1,
       },
       {
-        id: 'admin-usuarios',
-        title: 'Usuários',
-        path: '/app/admin/usuarios',
-        href: '/app/admin/usuarios',
-        order: 2,
-      },
-      {
-        id: 'admin-niveis-acesso',
-        title: 'Níveis de Acesso',
-        path: '/app/admin/niveis-acesso',
-        href: '/app/admin/niveis-acesso',
-        order: 3,
-      },
-      {
         id: 'admin-audit-logs',
         title: 'Logs de Auditoria',
         path: '/app/admin/audit-logs',
         href: '/app/admin/audit-logs',
-        order: 4,
+        order: 2,
       },
       {
         id: 'admin-integracoes',
@@ -281,10 +267,10 @@ export const menuItems = [
         order: 9,
       },
       {
-        id: 'admin-seguranca',
-        title: 'Segurança',
-        path: '/app/admin/seguranca',
-        href: '/app/admin/seguranca',
+        id: 'admin-seguranca-config',
+        title: 'Configurações de Segurança',
+        path: '/app/admin/seguranca-config',
+        href: '/app/admin/seguranca-config',
         order: 10,
       },
       {
@@ -314,13 +300,6 @@ export const menuItems = [
         path: '/app/admin/compressao',
         href: '/app/admin/compressao',
         order: 14,
-      },
-      {
-        id: 'admin-prompt-generator',
-        title: 'Prompt Generator',
-        path: '/app/admin/prompt-generator',
-        href: '/app/admin/prompt-generator',
-        order: 15,
       },
       {
         id: 'admin-landing-page',

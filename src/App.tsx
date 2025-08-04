@@ -33,24 +33,17 @@ import Subscription from '@/pages/Subscription';
 
 // Admin Pages
 import Admin from '@/pages/Admin';
-import AdminUsuarios from '@/pages/AdminUsuarios';
-import AdminNiveisAcesso from '@/pages/AdminNiveisAcesso';
 import AdminAuditLogs from '@/pages/AdminAuditLogs';
 import AdminIntegracoes from '@/pages/AdminIntegracoes';
-import AdminIntegrations from '@/pages/AdminIntegrations';
 import AdminNFeConfig from '@/pages/AdminNFeConfig';
 import AdminVersions from '@/pages/AdminVersions';
 import AdminMonitoramento from '@/pages/AdminMonitoramento';
-import AdminMonitoring from '@/pages/AdminMonitoring';
 import AdminSLA from '@/pages/AdminSLA';
-import AdminSeguranca from '@/pages/AdminSeguranca';
 import AdminSegurancaConfig from '@/pages/AdminSegurancaConfig';
 import AdminNotificacoes from '@/pages/AdminNotificacoes';
-import AdminNotifications from '@/pages/AdminNotifications';
 import AdminBackup from '@/pages/AdminBackup';
 import AdminCache from '@/pages/AdminCache';
 import AdminCompressao from '@/pages/AdminCompressao';
-import AdminPromptGenerator from '@/pages/AdminPromptGenerator';
 import AdminLandingPage from '@/pages/AdminLandingPage';
 import AdminAuditoria from '@/pages/AdminAuditoria';
 
@@ -132,16 +125,6 @@ function App() {
                     <Admin />
                   </ProtectedRoute>
                 } />
-                <Route path="admin/usuarios" element={
-                  <ProtectedRoute requireSuperAdmin>
-                    <AdminUsuarios />
-                  </ProtectedRoute>
-                } />
-                <Route path="admin/niveis-acesso" element={
-                  <ProtectedRoute requireSuperAdmin>
-                    <AdminNiveisAcesso />
-                  </ProtectedRoute>
-                } />
                 <Route path="admin/audit-logs" element={
                   <ProtectedRoute requireSuperAdmin>
                     <AdminAuditLogs />
@@ -150,11 +133,6 @@ function App() {
                 <Route path="admin/integracoes" element={
                   <ProtectedRoute requireSuperAdmin>
                     <AdminIntegracoes />
-                  </ProtectedRoute>
-                } />
-                <Route path="admin/integrations" element={
-                  <ProtectedRoute requireSuperAdmin>
-                    <AdminIntegrations />
                   </ProtectedRoute>
                 } />
                 <Route path="admin/nfe-config" element={
@@ -172,19 +150,9 @@ function App() {
                     <AdminMonitoramento />
                   </ProtectedRoute>
                 } />
-                <Route path="admin/monitoring" element={
-                  <ProtectedRoute requireSuperAdmin>
-                    <AdminMonitoring />
-                  </ProtectedRoute>
-                } />
                 <Route path="admin/sla" element={
                   <ProtectedRoute requireSuperAdmin>
                     <AdminSLA />
-                  </ProtectedRoute>
-                } />
-                <Route path="admin/seguranca" element={
-                  <ProtectedRoute requireSuperAdmin>
-                    <AdminSeguranca />
                   </ProtectedRoute>
                 } />
                 <Route path="admin/seguranca-config" element={
@@ -195,11 +163,6 @@ function App() {
                 <Route path="admin/notificacoes" element={
                   <ProtectedRoute requireSuperAdmin>
                     <AdminNotificacoes />
-                  </ProtectedRoute>
-                } />
-                <Route path="admin/notifications" element={
-                  <ProtectedRoute requireSuperAdmin>
-                    <AdminNotifications />
                   </ProtectedRoute>
                 } />
                 <Route path="admin/backup" element={
@@ -215,11 +178,6 @@ function App() {
                 <Route path="admin/compressao" element={
                   <ProtectedRoute requireSuperAdmin>
                     <AdminCompressao />
-                  </ProtectedRoute>
-                } />
-                <Route path="admin/prompt-generator" element={
-                  <ProtectedRoute requireSuperAdmin>
-                    <AdminPromptGenerator />
                   </ProtectedRoute>
                 } />
                 <Route path="admin/landing-page" element={
