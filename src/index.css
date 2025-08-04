@@ -215,16 +215,23 @@ All colors MUST be HSL.
 }
 
 @layer components {
-  /* Mobile-optimized button variants */
+  /* Mobile-optimized button variants - Enhanced */
   .btn-mobile {
-    @apply min-h-[44px] px-4 py-2 text-sm sm:text-base;
-    @apply touch-manipulation;
+    @apply min-h-[44px] px-4 py-2 text-base font-medium;
+    @apply touch-manipulation transition-all duration-200;
+    @apply active:scale-[0.95] transform-gpu;
+    @apply focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring;
+    font-size: 16px; /* Prevent iOS zoom */
   }
   
-  /* Mobile-optimized input fields */
+  /* Mobile-optimized input fields - Enhanced */
   .input-mobile {
-    @apply min-h-[44px] text-base; /* Prevent zoom on iOS */
-    @apply touch-manipulation;
+    @apply min-h-[44px] px-3 py-2 sm:px-4 sm:py-3;
+    @apply text-base border border-input rounded-md bg-background;
+    @apply placeholder:text-muted-foreground touch-manipulation;
+    @apply focus:outline-none focus:ring-2 focus:ring-ring focus:border-transparent;
+    @apply transition-all duration-200;
+    font-size: 16px; /* Prevent iOS zoom */
   }
   
   /* Mobile-optimized cards */
