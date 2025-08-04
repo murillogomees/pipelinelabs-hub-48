@@ -168,7 +168,7 @@ export function AccessLevelDialog({ open, onOpenChange, accessLevel, onSave }: A
     if (open) {
       reset(initialValues);
     }
-  }, [open, initialValues, reset]);
+  }, [open, reset, accessLevel?.id]); // Use accessLevel.id instead of initialValues
 
   // Reset form when dialog closes
   const handleDialogChange = useCallback((newOpen: boolean) => {
@@ -176,10 +176,10 @@ export function AccessLevelDialog({ open, onOpenChange, accessLevel, onSave }: A
     if (!newOpen) {
       // Dialog is closing, reset to prevent stale data
       setTimeout(() => {
-        reset(initialValues);
+        reset();
       }, 100);
     }
-  }, [onOpenChange, reset, initialValues]);
+  }, [onOpenChange, reset]);
 
   const handleDisplayNameChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
