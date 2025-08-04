@@ -46,20 +46,26 @@ export function useCustomers() {
   }) => {
     try {
       setLoading(true);
+      
+      if (!currentCompany?.company_id) {
+        console.log('No current company available for fetching customers');
+        setCustomers([]);
+        return;
+      }
+
       const { search, status, page = 1, pageSize = 100 } = options || {};
       
       let query = supabase
         .from('customers')
-        .select('*', { count: 'exact' });
+        .select('*', { count: 'exact' })
+        .eq('company_id', currentCompany.company_id);
 
       // Usar índices otimizados para filtros
       if (search) {
-        // Usar índice idx_customers_name_search para busca por nome
         query = query.or(`name.ilike.%${search}%, document.ilike.%${search}%`);
       }
       
       if (status !== undefined) {
-        // Usar índice idx_customers_company_active
         query = query.eq('is_active', status);
       }
 
@@ -68,7 +74,7 @@ export function useCustomers() {
       const to = from + pageSize - 1;
       query = query.range(from, to);
 
-      // Ordenação usando índice idx_customers_name
+      // Ordenação
       query = query.order('name', { ascending: true });
       
       const { data, error } = await query;
@@ -198,6 +204,15 @@ export function useCustomers() {
 
   const updateCustomer = async (id: string, updates: Partial<NewCustomer>) => {
     try {
+      if (!currentCompany?.company_id) {
+        toast({
+          variant: "destructive",
+          title: "Erro de empresa",
+          description: "Não foi possível identificar a empresa atual.",
+        });
+        return;
+      }
+
       // Validação
       if (updates.name !== undefined) {
         const validationError = validateCustomer(updates as NewCustomer);
@@ -227,7 +242,8 @@ export function useCustomers() {
       const { error } = await supabase
         .from('customers')
         .update(updates)
-        .eq('id', id);
+        .eq('id', id)
+        .eq('company_id', currentCompany.company_id);
 
       if (error) throw error;
 
@@ -249,10 +265,20 @@ export function useCustomers() {
 
   const toggleCustomerStatus = async (id: string, isActive: boolean) => {
     try {
+      if (!currentCompany?.company_id) {
+        toast({
+          variant: "destructive",
+          title: "Erro de empresa",
+          description: "Não foi possível identificar a empresa atual.",
+        });
+        return;
+      }
+
       const { error } = await supabase
         .from('customers')
         .update({ is_active: isActive })
-        .eq('id', id);
+        .eq('id', id)
+        .eq('company_id', currentCompany.company_id);
 
       if (error) throw error;
 
@@ -274,10 +300,20 @@ export function useCustomers() {
 
   const deleteCustomer = async (id: string) => {
     try {
+      if (!currentCompany?.company_id) {
+        toast({
+          variant: "destructive",
+          title: "Erro de empresa",
+          description: "Não foi possível identificar a empresa atual.",
+        });
+        return;
+      }
+
       const { error } = await supabase
         .from('customers')
         .delete()
-        .eq('id', id);
+        .eq('id', id)
+        .eq('company_id', currentCompany.company_id);
 
       if (error) throw error;
 
@@ -298,8 +334,10 @@ export function useCustomers() {
   };
 
   useEffect(() => {
-    fetchCustomers();
-  }, []);
+    if (currentCompany?.company_id) {
+      fetchCustomers();
+    }
+  }, [currentCompany?.company_id]);
 
   return {
     customers,
