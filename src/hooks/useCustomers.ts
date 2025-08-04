@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import { useCurrentCompany } from './useCurrentCompany';
 
 export interface Customer {
   id: string;
@@ -35,6 +36,7 @@ export function useCustomers() {
   const [customers, setCustomers] = useState<Customer[]>([]);
   const [loading, setLoading] = useState(true);
   const { toast } = useToast();
+  const { data: currentCompany } = useCurrentCompany();
 
   const fetchCustomers = async (options?: {
     search?: string;
@@ -156,15 +158,25 @@ export function useCustomers() {
         }
       }
 
-      // Get current user profile to get company_id
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) {
-        throw new Error('Usuário não autenticado');
+      // Verificar se há empresa atual
+      if (!currentCompany?.company_id) {
+        toast({
+          variant: "destructive",
+          title: "Erro de empresa",
+          description: "Não foi possível identificar a empresa atual.",
+        });
+        return;
       }
 
-      const { error } = await (supabase as any)
+      // Criar cliente com company_id
+      const customerData = {
+        ...newCustomer,
+        company_id: currentCompany.company_id
+      };
+
+      const { error } = await supabase
         .from('customers')
-        .insert(newCustomer); // Use type assertion to bypass strict type checking
+        .insert(customerData);
 
       if (error) throw error;
 
