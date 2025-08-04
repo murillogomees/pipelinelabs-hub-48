@@ -8,6 +8,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { AlertTriangle, Shield, Clock, Users, Activity } from 'lucide-react';
 import { toast } from 'sonner';
 import { usePermissions } from '@/hooks/usePermissions';
+import { logger } from '@/utils/logger';
 
 interface SecurityEvent {
   id: string;
@@ -89,7 +90,7 @@ export function SecurityMonitoringDashboard() {
       });
 
     } catch (error) {
-      console.error('Failed to fetch security data:', error);
+      logger.error('Failed to fetch security data', error);
       toast.error('Erro ao carregar dados de segurança');
     } finally {
       setLoading(false);

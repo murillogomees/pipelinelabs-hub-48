@@ -11,6 +11,7 @@ import { useAuthForm } from './hooks/useAuthForm';
 import { PasswordStrengthValidator } from '@/components/Security/PasswordStrengthValidator';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import { logger } from '@/utils/logger';
 
 export function AuthForm() {
   const [isSignUp, setIsSignUp] = useState(false);
@@ -98,7 +99,7 @@ export function AuthForm() {
         }
       }
     } catch (error: any) {
-      console.error("Auth error:", error);
+      logger.authEvent(isSignUp ? 'signup' : 'signin', false, undefined, { error: error.message });
       
       let message = "Erro inesperado. Tente novamente.";
       
