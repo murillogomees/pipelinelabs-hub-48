@@ -17,11 +17,25 @@ import { Link } from 'react-router-dom';
 export default function Admin() {
   const adminSections = [
     {
-      title: 'Usuários e Empresas',
-      description: 'Gerencie usuários e empresas do sistema',
+      title: 'Usuários',
+      description: 'Gerencie usuários do sistema',
       icon: Users,
       href: '/app/admin/usuarios',
       color: 'text-blue-600'
+    },
+    {
+      title: 'Empresas',
+      description: 'Gerencie empresas cadastradas',
+      icon: Users,
+      href: '/app/admin/empresas',
+      color: 'text-blue-500'
+    },
+    {
+      title: 'Níveis de Acesso',
+      description: 'Gerencie permissões e níveis de acesso',
+      icon: Shield,
+      href: '/app/admin/access-levels',
+      color: 'text-emerald-600'
     },
     {
       title: 'Integrações',
