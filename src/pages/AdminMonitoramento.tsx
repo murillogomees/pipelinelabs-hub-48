@@ -25,7 +25,7 @@ import { AdminPageLayout } from '@/components/Admin/AdminPageLayout';
 
 export default function AdminMonitoramento() {
   const [selectedPeriod, setSelectedPeriod] = useState('24h');
-  const [selectedCompany, setSelectedCompany] = useState('');
+  const [selectedCompany, setSelectedCompany] = useState('all');
 
   // Mock data queries for now
   const { data: systemStats, isLoading: isLoadingStats } = useQuery({
@@ -143,7 +143,7 @@ export default function AdminMonitoramento() {
                     <SelectValue placeholder="Todas as empresas" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">Todas as empresas</SelectItem>
+                    <SelectItem value="all">Todas as empresas</SelectItem>
                     {companies?.map((company: any) => (
                       <SelectItem key={company.id} value={company.id}>
                         {company.legal_name}
