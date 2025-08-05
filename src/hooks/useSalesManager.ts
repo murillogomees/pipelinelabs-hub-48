@@ -33,6 +33,13 @@ interface SearchFilters {
   max_amount?: number;
 }
 
+interface SaleAnalytics {
+  totalRevenue: number;
+  totalSales: number;
+  averageTicket: number;
+  period: string;
+}
+
 export function useSalesManager() {
   const [isLoading, setIsLoading] = useState(false);
   const [filters, setFilters] = useState<SearchFilters>({});
@@ -116,7 +123,7 @@ export function useSalesManager() {
   const sales = salesData?.sales || [];
   const totalSales = salesData?.count || 0;
 
-  const createSale = useCallback(async (saleData: SaleData): Promise<any> => {
+  const createSale = useCallback(async (saleData: SaleData) => {
     setIsLoading(true);
     
     try {
@@ -124,7 +131,6 @@ export function useSalesManager() {
         throw new Error('Empresa não selecionada');
       }
 
-      // Preparar dados baseados no schema real
       const insertData = {
         sale_number: saleData.sale_number,
         customer_id: saleData.customer_id,
@@ -173,7 +179,7 @@ export function useSalesManager() {
     }
   }, [currentCompany?.id, invalidateSalesCache, queryClient, toast]);
 
-  const updateSale = useCallback(async (saleId: string, saleData: Partial<SaleData>): Promise<any> => {
+  const updateSale = useCallback(async (saleId: string, saleData: Partial<SaleData>) => {
     setIsLoading(true);
     
     try {
@@ -216,7 +222,7 @@ export function useSalesManager() {
     }
   }, [currentCompany?.id, salesData, updateSalesCache, toast]);
 
-  const cancelSale = useCallback(async (saleId: string, reason?: string): Promise<void> => {
+  const cancelSale = useCallback(async (saleId: string, reason?: string) => {
     setIsLoading(true);
     
     try {
@@ -256,6 +262,38 @@ export function useSalesManager() {
     }
   }, [currentCompany?.id, salesData, updateSalesCache, toast]);
 
+  const getSaleAnalytics = useCallback(async (period: string): Promise<SaleAnalytics> => {
+    try {
+      if (!currentCompany?.id) {
+        return { totalRevenue: 0, totalSales: 0, averageTicket: 0, period };
+      }
+
+      const { data: salesData } = await supabase
+        .from('sales')
+        .select('total_amount, status')
+        .eq('company_id', currentCompany.id)
+        .eq('status', 'completed');
+
+      if (!salesData) {
+        return { totalRevenue: 0, totalSales: 0, averageTicket: 0, period };
+      }
+
+      const totalRevenue = salesData.reduce((sum, sale) => sum + Number(sale.total_amount || 0), 0);
+      const totalSales = salesData.length;
+      const averageTicket = totalSales > 0 ? totalRevenue / totalSales : 0;
+
+      return {
+        totalRevenue,
+        totalSales,
+        averageTicket,
+        period
+      };
+    } catch (error) {
+      console.error('Error fetching sale analytics:', error);
+      return { totalRevenue: 0, totalSales: 0, averageTicket: 0, period };
+    }
+  }, [currentCompany?.id]);
+
   const searchSales = useCallback((newFilters: SearchFilters) => {
     setFilters(newFilters);
     setPage(1);
@@ -292,6 +330,7 @@ export function useSalesManager() {
     searchSales,
     loadMore,
     refreshSales,
+    getSaleAnalytics,
     getSaleById: useCallback((id: string) => 
       sales.find(s => s.id === id), [sales]
     ),

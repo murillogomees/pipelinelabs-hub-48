@@ -8,12 +8,29 @@ import { Button } from '@/components/ui/button';
 import { Plus, Loader2 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 
+interface Sale {
+  id?: string;
+  sale_number?: string;
+  customer_id?: string;
+  sale_type: 'traditional' | 'pos';
+  status: 'pending' | 'completed' | 'cancelled';
+  total_amount: number;
+  discount_amount?: number;
+  tax_amount?: number;
+  payment_method?: string;
+  payment_status?: 'pending' | 'paid' | 'partial' | 'cancelled';
+  notes?: string;
+  sale_date?: string;
+  created_at?: string;
+  updated_at?: string;
+}
+
 export default function Vendas() {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const [editingSale, setEditingSale] = useState(null);
+  const [editingSale, setEditingSale] = useState<Sale | null>(null);
 
   const {
-    sales,
+    sales: rawSales,
     totalSales,
     isLoading,
     filters,
@@ -26,6 +43,21 @@ export default function Vendas() {
     pendingSales,
     completedSales
   } = useSalesManager();
+
+  // Transform raw sales data to match the expected Sale interface
+  const sales: Sale[] = rawSales.map(sale => ({
+    id: sale.id,
+    sale_number: sale.sale_number,
+    customer_id: sale.customer_id,
+    sale_type: 'traditional' as const, // Default since it's not in the database
+    status: (sale.status as 'pending' | 'completed' | 'cancelled') || 'pending',
+    total_amount: sale.total_amount || 0,
+    discount_amount: sale.discount || 0,
+    payment_method: sale.payment_method,
+    notes: sale.notes,
+    created_at: sale.created_at,
+    updated_at: sale.updated_at
+  }));
 
   const handleCreateSale = async (saleData: any) => {
     try {
@@ -48,7 +80,7 @@ export default function Vendas() {
     }
   };
 
-  const handleEditSale = (sale: any) => {
+  const handleEditSale = (sale: Sale) => {
     setEditingSale(sale);
     setIsDialogOpen(true);
   };

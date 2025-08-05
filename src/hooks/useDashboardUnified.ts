@@ -116,7 +116,7 @@ export function useDashboardUnified() {
           created_at: c.created_at
         }));
 
-      // Vendas recentes
+      // Vendas recentes - without customer property since it doesn't exist in the database
       const recentSales = sales
         .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
         .slice(0, 5)
@@ -126,7 +126,7 @@ export function useDashboardUnified() {
           total_amount: s.total_amount,
           status: s.status,
           created_at: s.created_at,
-          customer: s.customer
+          customer_id: s.customer_id
         }));
 
       setDashboardData({

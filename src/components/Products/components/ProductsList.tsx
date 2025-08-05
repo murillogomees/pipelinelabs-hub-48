@@ -1,306 +1,449 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { 
   Search, 
-  Filter, 
-  Package, 
-  AlertTriangle, 
+  Plus, 
   Edit, 
-  Copy, 
-  Trash2,
-  MoreVertical 
+  Trash2, 
+  Package, 
+  AlertTriangle,
+  Filter,
+  SortAsc,
+  SortDesc,
+  Eye,
+  MoreHorizontal
 } from 'lucide-react';
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table';
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { useProducts, useDeleteProduct, useDuplicateProduct } from '../hooks/useProducts';
-import { Product } from '../types';
-import { Skeleton } from '@/components/ui/skeleton';
+import { useProductsManager } from '@/hooks/useProductsManager';
 import { ProductDialog } from '../ProductDialog';
-import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
+import { useToast } from '@/hooks/use-toast';
 
-interface ProductsListProps {
-  onProductSelect: (product: Product) => void;
-  onNewProduct: () => void;
+interface Product {
+  id: string;
+  name: string;
+  description?: string;
+  code: string;
+  price?: number;
+  cost_price?: number;
+  stock_quantity?: number;
+  min_stock?: number;
+  max_stock?: number;
+  unit?: string;
+  barcode?: string;
+  is_active?: boolean;
+  weight?: number;
+  dimensions?: string;
+  supplier_id?: string;
+  created_at: string;
+  updated_at: string;
 }
 
-export function ProductsList({ onProductSelect, onNewProduct }: ProductsListProps) {
-  const { data: products, isLoading, error } = useProducts();
-  const deleteProduct = useDeleteProduct();
-  const duplicateProduct = useDuplicateProduct();
+export function ProductsList() {
   const [searchTerm, setSearchTerm] = useState('');
-  const [editProduct, setEditProduct] = useState<Product | null>(null);
-  const [productToDelete, setProductToDelete] = useState<Product | null>(null);
-  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
-  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [sortField, setSortField] = useState<keyof Product>('name');
+  const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc');
+  const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [showInactive, setShowInactive] = useState(false);
 
-  const filteredProducts = products?.filter(product =>
-    product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    product.code.toLowerCase().includes(searchTerm.toLowerCase())
-  ) || [];
+  const {
+    products,
+    totalProducts,
+    isLoading,
+    createProduct,
+    updateProduct,
+    deleteProduct,
+    searchProducts,
+    lowStockProducts,
+    outOfStockProducts
+  } = useProductsManager();
 
-  const lowStockProducts = products?.filter(p => p.stock_quantity <= (p.min_stock || 0)) || [];
-  const totalValue = products?.reduce((sum, p) => sum + (p.price * p.stock_quantity), 0) || 0;
+  const { toast } = useToast();
+
+  // Filter and sort products
+  const filteredProducts = products
+    .filter(product => {
+      const matchesSearch = product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                           product.code.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                           (product.barcode && product.barcode.toLowerCase().includes(searchTerm.toLowerCase()));
+      
+      const matchesActiveFilter = showInactive ? true : product.is_active !== false;
+      
+      return matchesSearch && matchesActiveFilter;
+    })
+    .sort((a, b) => {
+      const aValue = a[sortField];
+      const bValue = b[sortField];
+      
+      if (aValue === undefined || aValue === null) return 1;
+      if (bValue === undefined || bValue === null) return -1;
+      
+      if (typeof aValue === 'string' && typeof bValue === 'string') {
+        return sortDirection === 'asc' 
+          ? aValue.localeCompare(bValue)
+          : bValue.localeCompare(aValue);
+      }
+      
+      if (typeof aValue === 'number' && typeof bValue === 'number') {
+        return sortDirection === 'asc' ? aValue - bValue : bValue - aValue;
+      }
+      
+      return 0;
+    });
+
+  const handleSort = (field: keyof Product) => {
+    if (sortField === field) {
+      setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
+    } else {
+      setSortField(field);
+      setSortDirection('asc');
+    }
+  };
 
   const handleEdit = (product: Product) => {
-    setEditProduct(product);
-    setIsEditDialogOpen(true);
+    setSelectedProduct(product);
+    setIsDialogOpen(true);
   };
 
-  const handleDuplicate = async (product: Product) => {
-    await duplicateProduct.mutateAsync(product.id);
-  };
-
-  const handleDelete = (product: Product) => {
-    setProductToDelete(product);
-    setIsDeleteDialogOpen(true);
-  };
-
-  const confirmDelete = async () => {
-    if (productToDelete) {
-      await deleteProduct.mutateAsync(productToDelete.id);
-      setIsDeleteDialogOpen(false);
-      setProductToDelete(null);
+  const handleDelete = async (productId: string) => {
+    if (window.confirm('Tem certeza que deseja desativar este produto?')) {
+      try {
+        await deleteProduct(productId);
+      } catch (error) {
+        // Error already handled in hook
+      }
     }
   };
 
-  const getStatusBadge = (product: Product) => {
-    if (product.stock_quantity === 0) {
-      return <Badge variant="destructive">Esgotado</Badge>;
+  const handleSubmitProduct = async (productData: any) => {
+    try {
+      if (selectedProduct) {
+        await updateProduct(selectedProduct.id, productData);
+      } else {
+        await createProduct(productData);
+      }
+      setIsDialogOpen(false);
+      setSelectedProduct(null);
+    } catch (error) {
+      // Error already handled in the hook
     }
-    if (product.stock_quantity <= (product.min_stock || 0)) {
-      return <Badge variant="secondary">Estoque Baixo</Badge>;
-    }
-    return <Badge variant="default">Ativo</Badge>;
   };
 
-  if (error) {
-    return (
-      <div className="text-center py-8">
-        <h2 className="text-xl font-semibold text-destructive">Erro ao carregar produtos</h2>
-        <p className="text-muted-foreground mt-2">Tente novamente mais tarde.</p>
-      </div>
-    );
-  }
+  const getStockStatus = (product: Product) => {
+    const stock = Number(product.stock_quantity || 0);
+    const minStock = Number(product.min_stock || 0);
+    
+    if (stock === 0) {
+      return { status: 'out', label: 'Sem estoque', variant: 'destructive' as const };
+    } else if (stock <= minStock) {
+      return { status: 'low', label: 'Estoque baixo', variant: 'secondary' as const };
+    } else {
+      return { status: 'ok', label: 'Em estoque', variant: 'default' as const };
+    }
+  };
+
+  const formatCurrency = (value?: number) => {
+    if (!value) return 'R$ 0,00';
+    return new Intl.NumberFormat('pt-BR', {
+      style: 'currency',
+      currency: 'BRL'
+    }).format(value);
+  };
 
   return (
     <div className="space-y-6">
+      {/* Header */}
+      <div className="flex justify-between items-center">
+        <div>
+          <h2 className="text-2xl font-bold text-gray-900">Produtos</h2>
+          <p className="text-gray-600">
+            {totalProducts} produtos cadastrados
+          </p>
+        </div>
+        <Button
+          onClick={() => {
+            setSelectedProduct(null);
+            setIsDialogOpen(true);
+          }}
+          disabled={isLoading}
+        >
+          <Plus className="h-4 w-4 mr-2" />
+          Novo Produto
+        </Button>
+      </div>
+
       {/* Stats Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
         <Card>
-          <CardContent className="p-4">
-            <div className="flex items-center">
-              <Package className="w-8 h-8 text-primary mr-3" />
-              <div>
-                <p className="text-sm text-muted-foreground">Total de Produtos</p>
-                {isLoading ? (
-                  <Skeleton className="h-8 w-16" />
-                ) : (
-                  <p className="text-2xl font-bold">{products?.length || 0}</p>
-                )}
-              </div>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-medium text-gray-600 flex items-center">
+              <Package className="h-4 w-4 mr-2" />
+              Total de Produtos
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{totalProducts}</div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-medium text-gray-600 flex items-center">
+              <AlertTriangle className="h-4 w-4 mr-2 text-orange-500" />
+              Estoque Baixo
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold text-orange-600">
+              {lowStockProducts.length}
             </div>
           </CardContent>
         </Card>
-        
+
         <Card>
-          <CardContent className="p-4">
-            <div className="flex items-center">
-              <AlertTriangle className="w-8 h-8 text-destructive mr-3" />
-              <div>
-                <p className="text-sm text-muted-foreground">Estoque Baixo</p>
-                {isLoading ? (
-                  <Skeleton className="h-8 w-16" />
-                ) : (
-                  <p className="text-2xl font-bold">{lowStockProducts.length}</p>
-                )}
-              </div>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-medium text-gray-600 flex items-center">
+              <AlertTriangle className="h-4 w-4 mr-2 text-red-500" />
+              Sem Estoque
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold text-red-600">
+              {outOfStockProducts.length}
             </div>
           </CardContent>
         </Card>
-        
+
         <Card>
-          <CardContent className="p-4">
-            <div>
-              <p className="text-sm text-muted-foreground">Valor Total</p>
-              {isLoading ? (
-                <Skeleton className="h-8 w-24" />
-              ) : (
-                <p className="text-2xl font-bold">
-                  {new Intl.NumberFormat('pt-BR', {
-                    style: 'currency',
-                    currency: 'BRL',
-                  }).format(totalValue)}
-                </p>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-medium text-gray-600">
+              Valor Total
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">
+              {formatCurrency(
+                products.reduce((sum, p) => sum + (Number(p.price || 0) * Number(p.stock_quantity || 0)), 0)
               )}
             </div>
           </CardContent>
         </Card>
-        
-        <Card>
-          <CardContent className="p-4">
-            <div className="text-center">
-              <Button 
-                onClick={onNewProduct}
-                className="w-full"
-                variant="outline"
-              >
-                <Package className="w-4 h-4 mr-2" />
-                Novo Produto
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
       </div>
 
-      {/* Search and Filters */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Lista de Produtos</CardTitle>
-          <div className="flex flex-col sm:flex-row gap-2">
-            <div className="relative flex-1">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
-              <Input 
-                placeholder="Buscar produtos..." 
-                className="pl-10"
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-              />
-            </div>
-            <Button variant="outline" className="w-full sm:w-auto">
-              <Filter className="w-4 h-4 mr-2" />
-              Filtros
-            </Button>
-          </div>
-        </CardHeader>
+      {/* Filters */}
+      <div className="flex flex-col sm:flex-row gap-4">
+        <div className="relative flex-1">
+          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+          <Input
+            placeholder="Buscar por nome, código ou código de barras..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="pl-10"
+          />
+        </div>
         
-        <CardContent>
-          <div className="overflow-x-auto">
-            <table className="w-full">
-              <thead>
-                <tr className="border-b">
-                  <th className="text-left py-3 px-4">Código</th>
-                  <th className="text-left py-3 px-4">Nome</th>
-                  <th className="text-left py-3 px-4">Estoque</th>
-                  <th className="text-left py-3 px-4">Preço</th>
-                  <th className="text-left py-3 px-4">Status</th>
-                  <th className="text-left py-3 px-4">Ações</th>
-                </tr>
-              </thead>
-              <tbody>
-                {isLoading ? (
-                  Array.from({ length: 5 }).map((_, i) => (
-                    <tr key={i} className="border-b">
-                      <td className="py-3 px-4"><Skeleton className="h-4 w-16" /></td>
-                      <td className="py-3 px-4"><Skeleton className="h-4 w-32" /></td>
-                      <td className="py-3 px-4"><Skeleton className="h-4 w-16" /></td>
-                      <td className="py-3 px-4"><Skeleton className="h-4 w-20" /></td>
-                      <td className="py-3 px-4"><Skeleton className="h-4 w-16" /></td>
-                      <td className="py-3 px-4"><Skeleton className="h-8 w-16" /></td>
-                    </tr>
-                  ))
-                ) : filteredProducts.length === 0 ? (
-                  <tr>
-                    <td colSpan={6} className="text-center py-8 text-muted-foreground">
-                      {searchTerm ? 'Nenhum produto encontrado com este termo.' : 'Nenhum produto encontrado. Clique em "Novo Produto" para adicionar seu primeiro produto.'}
-                    </td>
-                  </tr>
-                ) : (
-                  filteredProducts.map((produto) => (
-                    <tr 
-                      key={produto.id} 
-                      className="border-b hover:bg-muted/50 cursor-pointer"
-                      onClick={() => onProductSelect(produto)}
-                    >
-                      <td className="py-3 px-4 font-medium">{produto.code}</td>
-                      <td className="py-3 px-4">{produto.name}</td>
-                      <td className="py-3 px-4">
-                        <span className={produto.stock_quantity <= (produto.min_stock || 0) ? 'text-destructive font-medium' : ''}>
-                          {produto.stock_quantity} un.
-                        </span>
-                      </td>
-                      <td className="py-3 px-4 font-medium">
-                        {new Intl.NumberFormat('pt-BR', {
-                          style: 'currency',
-                          currency: 'BRL',
-                        }).format(produto.price)}
-                      </td>
-                      <td className="py-3 px-4">
-                        {getStatusBadge(produto)}
-                      </td>
-                      <td className="py-3 px-4">
+        <div className="flex gap-2">
+          <Button
+            variant={showInactive ? "default" : "outline"}
+            onClick={() => setShowInactive(!showInactive)}
+            size="sm"
+          >
+            <Filter className="h-4 w-4 mr-2" />
+            {showInactive ? 'Todos' : 'Apenas Ativos'}
+          </Button>
+        </div>
+      </div>
+
+      {/* Products Table */}
+      <Card>
+        <CardContent className="p-0">
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead 
+                  className="cursor-pointer hover:bg-gray-50"
+                  onClick={() => handleSort('name')}
+                >
+                  <div className="flex items-center">
+                    Nome
+                    {sortField === 'name' && (
+                      sortDirection === 'asc' ? 
+                        <SortAsc className="ml-2 h-4 w-4" /> : 
+                        <SortDesc className="ml-2 h-4 w-4" />
+                    )}
+                  </div>
+                </TableHead>
+                <TableHead 
+                  className="cursor-pointer hover:bg-gray-50"
+                  onClick={() => handleSort('code')}
+                >
+                  <div className="flex items-center">
+                    Código
+                    {sortField === 'code' && (
+                      sortDirection === 'asc' ? 
+                        <SortAsc className="ml-2 h-4 w-4" /> : 
+                        <SortDesc className="ml-2 h-4 w-4" />
+                    )}
+                  </div>
+                </TableHead>
+                <TableHead 
+                  className="cursor-pointer hover:bg-gray-50"
+                  onClick={() => handleSort('price')}
+                >
+                  <div className="flex items-center">
+                    Preço
+                    {sortField === 'price' && (
+                      sortDirection === 'asc' ? 
+                        <SortAsc className="ml-2 h-4 w-4" /> : 
+                        <SortDesc className="ml-2 h-4 w-4" />
+                    )}
+                  </div>
+                </TableHead>
+                <TableHead 
+                  className="cursor-pointer hover:bg-gray-50"
+                  onClick={() => handleSort('stock_quantity')}
+                >
+                  <div className="flex items-center">
+                    Estoque
+                    {sortField === 'stock_quantity' && (
+                      sortDirection === 'asc' ? 
+                        <SortAsc className="ml-2 h-4 w-4" /> : 
+                        <SortDesc className="ml-2 h-4 w-4" />
+                    )}
+                  </div>
+                </TableHead>
+                <TableHead>Status</TableHead>
+                <TableHead>Ações</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {isLoading ? (
+                <TableRow>
+                  <TableCell colSpan={6} className="text-center py-8">
+                    Carregando produtos...
+                  </TableCell>
+                </TableRow>
+              ) : filteredProducts.length === 0 ? (
+                <TableRow>
+                  <TableCell colSpan={6} className="text-center py-8">
+                    {searchTerm ? 'Nenhum produto encontrado' : 'Nenhum produto cadastrado'}
+                  </TableCell>
+                </TableRow>
+              ) : (
+                filteredProducts.map((product) => {
+                  const stockStatus = getStockStatus(product);
+                  return (
+                    <TableRow key={product.id}>
+                      <TableCell>
+                        <div>
+                          <div className="font-medium">{product.name}</div>
+                          {product.description && (
+                            <div className="text-sm text-gray-500 truncate max-w-xs">
+                              {product.description}
+                            </div>
+                          )}
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <div className="font-mono text-sm">{product.code}</div>
+                        {product.barcode && (
+                          <div className="text-xs text-gray-500 font-mono">
+                            {product.barcode}
+                          </div>
+                        )}
+                      </TableCell>
+                      <TableCell>
+                        <div>{formatCurrency(product.price)}</div>
+                        {product.cost_price && (
+                          <div className="text-xs text-gray-500">
+                            Custo: {formatCurrency(product.cost_price)}
+                          </div>
+                        )}
+                      </TableCell>
+                      <TableCell>
+                        <div className="flex items-center">
+                          <span className="font-medium">
+                            {product.stock_quantity || 0}
+                          </span>
+                          {product.unit && (
+                            <span className="text-sm text-gray-500 ml-1">
+                              {product.unit}
+                            </span>
+                          )}
+                        </div>
+                        {product.min_stock && (
+                          <div className="text-xs text-gray-500">
+                            Mín: {product.min_stock}
+                          </div>
+                        )}
+                      </TableCell>
+                      <TableCell>
+                        <div className="flex flex-col gap-1">
+                          <Badge variant={stockStatus.variant}>
+                            {stockStatus.label}
+                          </Badge>
+                          {product.is_active === false && (
+                            <Badge variant="secondary">Inativo</Badge>
+                          )}
+                        </div>
+                      </TableCell>
+                      <TableCell>
                         <DropdownMenu>
                           <DropdownMenuTrigger asChild>
-                            <Button 
-                              variant="ghost" 
-                              size="sm"
-                              onClick={(e) => e.stopPropagation()}
-                            >
-                              <MoreVertical className="w-4 h-4" />
+                            <Button variant="ghost" className="h-8 w-8 p-0">
+                              <MoreHorizontal className="h-4 w-4" />
                             </Button>
                           </DropdownMenuTrigger>
                           <DropdownMenuContent align="end">
-                            <DropdownMenuItem onClick={() => handleEdit(produto)}>
-                              <Edit className="w-4 h-4 mr-2" />
+                            <DropdownMenuLabel>Ações</DropdownMenuLabel>
+                            <DropdownMenuItem onClick={() => handleEdit(product)}>
+                              <Edit className="mr-2 h-4 w-4" />
                               Editar
                             </DropdownMenuItem>
-                            <DropdownMenuItem onClick={() => handleDuplicate(produto)}>
-                              <Copy className="w-4 h-4 mr-2" />
-                              Duplicar
-                            </DropdownMenuItem>
+                            <DropdownMenuSeparator />
                             <DropdownMenuItem 
-                              onClick={() => handleDelete(produto)}
-                              className="text-destructive"
+                              onClick={() => handleDelete(product.id)}
+                              className="text-red-600"
                             >
-                              <Trash2 className="w-4 h-4 mr-2" />
-                              Excluir
+                              <Trash2 className="mr-2 h-4 w-4" />
+                              Desativar
                             </DropdownMenuItem>
                           </DropdownMenuContent>
                         </DropdownMenu>
-                      </td>
-                    </tr>
-                  ))
-                )}
-              </tbody>
-            </table>
-          </div>
+                      </TableCell>
+                    </TableRow>
+                  );
+                })
+              )}
+            </TableBody>
+          </Table>
         </CardContent>
       </Card>
 
-      {/* Modal de Edição */}
       <ProductDialog
-        open={isEditDialogOpen}
-        onOpenChange={setIsEditDialogOpen}
-        product={editProduct}
+        open={isDialogOpen}
+        onOpenChange={setIsDialogOpen}
+        product={selectedProduct}
+        onSubmit={handleSubmitProduct}
       />
-
-      {/* Modal de Confirmação de Exclusão */}
-      <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Confirmar exclusão</AlertDialogTitle>
-            <AlertDialogDescription>
-              Tem certeza que deseja excluir o produto "{productToDelete?.name}"? 
-              Esta ação não pode ser desfeita.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancelar</AlertDialogCancel>
-            <AlertDialogAction 
-              onClick={confirmDelete}
-              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-            >
-              Excluir
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
     </div>
   );
 }

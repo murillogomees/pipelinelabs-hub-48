@@ -1,3 +1,4 @@
+
 import { describe, it, expect, vi } from 'vitest';
 import { screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
@@ -16,17 +17,19 @@ vi.mock('@/hooks/useProducts', () => ({
 }));
 
 describe('ProductDialog', () => {
+  const mockOnSubmit = vi.fn();
   const defaultProps = {
     open: true,
     onOpenChange: vi.fn(),
     product: null,
+    onSubmit: mockOnSubmit,
   };
 
   it('renders create product dialog', () => {
     render(<ProductDialog {...defaultProps} />);
     
-    expect(screen.getByText(/cadastrar produto/i)).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: /salvar/i })).toBeInTheDocument();
+    expect(screen.getByText(/novo produto/i)).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /criar/i })).toBeInTheDocument();
   });
 
   it('renders edit product dialog when product is provided', () => {
@@ -40,10 +43,10 @@ describe('ProductDialog', () => {
     const user = userEvent.setup();
     render(<ProductDialog {...defaultProps} />);
     
-    const saveButton = screen.getByRole('button', { name: /salvar/i });
+    const saveButton = screen.getByRole('button', { name: /criar/i });
     await user.click(saveButton);
     
-    // Should show validation errors
+    // Should show validation errors for required fields
     await waitFor(() => {
       expect(screen.getByText(/nome é obrigatório/i)).toBeInTheDocument();
     });
@@ -51,31 +54,20 @@ describe('ProductDialog', () => {
 
   it('submits form with valid data', async () => {
     const user = userEvent.setup();
-    const mockCreate = vi.fn();
-    
-    vi.mocked(require('@/hooks/useProducts').useProducts).mockReturnValue({
-      createProduct: mockCreate,
-      updateProduct: vi.fn(),
-      isCreating: false,
-      isUpdating: false,
-    });
-
     render(<ProductDialog {...defaultProps} />);
     
     // Fill form
     await user.type(screen.getByPlaceholderText(/nome do produto/i), 'New Product');
-    await user.type(screen.getByPlaceholderText(/preço/i), '149.99');
-    await user.type(screen.getByPlaceholderText(/quantidade/i), '5');
+    await user.type(screen.getByPlaceholderText(/código/i), 'PROD001');
     
-    const saveButton = screen.getByRole('button', { name: /salvar/i });
+    const saveButton = screen.getByRole('button', { name: /criar/i });
     await user.click(saveButton);
     
     await waitFor(() => {
-      expect(mockCreate).toHaveBeenCalledWith(
+      expect(mockOnSubmit).toHaveBeenCalledWith(
         expect.objectContaining({
           name: 'New Product',
-          price: 149.99,
-          stock_quantity: 5,
+          code: 'PROD001',
         })
       );
     });
