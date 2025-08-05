@@ -1,5 +1,4 @@
-import React, { useMemo, useCallback, useEffect } from 'react';
-import { useForm } from 'react-hook-form';
+import React, { useState, useCallback, useMemo } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -92,68 +91,46 @@ const permissionCategories = [
   }
 ];
 
-type FormData = {
-  name: string;
-  display_name: string;
-  description: string;
-  is_active: boolean;
-  is_system?: boolean;
-  permissions: Record<string, boolean>;
-};
-
 export function AccessLevelDialog({ open, onOpenChange, accessLevel, onSave }: AccessLevelDialogProps) {
   const { createAccessLevel, updateAccessLevel, isCreating, isUpdating } = useAccessLevels();
   
-  // Use react-hook-form directly with a key to force remount
-  const formKey = `access-level-${accessLevel?.id || 'new'}-${open}`;
-  
-  const form = useForm<FormData>({
-    defaultValues: {
+  // Initialize form data based on accessLevel - only when dialog opens
+  const initialFormData = useMemo(() => {
+    if (accessLevel) {
+      return {
+        name: accessLevel.name || '',
+        display_name: accessLevel.display_name || '',
+        description: accessLevel.description || '',
+        is_active: accessLevel.is_active ?? true,
+        permissions: accessLevel.permissions || {}
+      };
+    }
+    return {
       name: '',
       display_name: '',
       description: '',
       is_active: true,
       permissions: {}
-    }
-  });
+    };
+  }, [accessLevel?.id, open]); // Only recalculate when accessLevel ID or dialog state changes
 
-  const { handleSubmit, watch, setValue, reset, formState: { isSubmitting } } = form;
-  
-  // Watch specific fields
-  const displayName = watch('display_name');
-  const name = watch('name');
-  const description = watch('description');
-  const isActive = watch('is_active');
-  const permissions = watch('permissions');
+  // Controlled form state - no effects, no automatic resets
+  const [formData, setFormData] = useState(initialFormData);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  // Reset form with proper data when dialog opens
-  useEffect(() => {
-    if (open) {
-      if (accessLevel) {
-        reset({
-          name: accessLevel.name || '',
-          display_name: accessLevel.display_name || '',
-          description: accessLevel.description || '',
-          is_active: accessLevel.is_active ?? true,
-          permissions: accessLevel.permissions || {}
-        });
-      } else {
-        reset({
-          name: '',
-          display_name: '',
-          description: '',
-          is_active: true,
-          permissions: {}
-        });
-      }
-    }
-  }, [open, accessLevel?.id, reset]);
+  // Update form data when initialFormData changes (when dialog opens with different data)
+  React.useEffect(() => {
+    setFormData(initialFormData);
+  }, [initialFormData]);
 
-  const onSubmit = useCallback(async (data: FormData) => {
+  const handleSubmit = useCallback(async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsSubmitting(true);
+    
     try {
       const submitData = {
-        ...data,
-        is_system: data.is_system || false
+        ...formData,
+        is_system: false
       };
       
       if (accessLevel) {
@@ -178,35 +155,44 @@ export function AccessLevelDialog({ open, onOpenChange, accessLevel, onSave }: A
         description: error?.message || 'Falha ao salvar nível de acesso',
         variant: 'destructive'
       });
+    } finally {
+      setIsSubmitting(false);
     }
-  }, [accessLevel, createAccessLevel, updateAccessLevel, onSave, onOpenChange]);
+  }, [formData, accessLevel, createAccessLevel, updateAccessLevel, onSave, onOpenChange]);
 
   const handleDisplayNameChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
-    setValue('display_name', value);
-    if (!accessLevel) {
-      setValue('name', value.toLowerCase().replace(/\s+/g, '_'));
-    }
-  }, [setValue, accessLevel]);
+    setFormData(prev => ({
+      ...prev,
+      display_name: value,
+      name: !accessLevel ? value.toLowerCase().replace(/\s+/g, '_') : prev.name
+    }));
+  }, [accessLevel]);
+
+  const handleFieldChange = useCallback((field: string, value: any) => {
+    setFormData(prev => ({ ...prev, [field]: value }));
+  }, []);
 
   const handlePermissionToggle = useCallback((permission: string) => {
-    const currentPermissions = permissions || {};
-    setValue('permissions', {
-      ...currentPermissions,
-      [permission]: !currentPermissions[permission]
-    });
-  }, [permissions, setValue]);
+    setFormData(prev => ({
+      ...prev,
+      permissions: {
+        ...prev.permissions,
+        [permission]: !prev.permissions[permission]
+      }
+    }));
+  }, []);
 
   const enabledPermissions = useMemo(() => {
-    return Object.values(permissions || {}).filter(Boolean).length;
-  }, [permissions]);
+    return Object.values(formData.permissions).filter(Boolean).length;
+  }, [formData.permissions]);
 
   const totalPermissions = useMemo(() => {
     return permissionCategories.reduce((acc, cat) => acc + cat.permissions.length, 0);
   }, []);
 
   return (
-    <Dialog key={formKey} open={open} onOpenChange={onOpenChange}>
+    <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[800px] max-h-[90vh] overflow-hidden flex flex-col">
         <DialogHeader>
           <DialogTitle className="text-xl font-semibold">
@@ -218,13 +204,13 @@ export function AccessLevelDialog({ open, onOpenChange, accessLevel, onSave }: A
         </DialogHeader>
         
         <div className="flex-1 overflow-y-auto">
-          <form onSubmit={handleSubmit(onSubmit)} className="space-y-6 p-1">
+          <form onSubmit={handleSubmit} className="space-y-6 p-1">
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label htmlFor="display_name">Nome de Exibição</Label>
                 <Input
                   id="display_name"
-                  value={displayName || ''}
+                  value={formData.display_name}
                   onChange={handleDisplayNameChange}
                   placeholder="Ex: Administrador da Empresa"
                 />
@@ -234,7 +220,7 @@ export function AccessLevelDialog({ open, onOpenChange, accessLevel, onSave }: A
                 <Label htmlFor="name">Nome Interno</Label>
                 <Input
                   id="name"
-                  value={name || ''}
+                  value={formData.name}
                   disabled={accessLevel?.is_system}
                   placeholder="Ex: admin_empresa"
                   readOnly={!!accessLevel}
@@ -246,8 +232,8 @@ export function AccessLevelDialog({ open, onOpenChange, accessLevel, onSave }: A
               <Label htmlFor="description">Descrição</Label>
               <Textarea
                 id="description"
-                value={description || ''}
-                onChange={(e) => setValue('description', e.target.value)}
+                value={formData.description}
+                onChange={(e) => handleFieldChange('description', e.target.value)}
                 placeholder="Descreva as responsabilidades deste nível de acesso"
                 rows={3}
               />
@@ -255,8 +241,8 @@ export function AccessLevelDialog({ open, onOpenChange, accessLevel, onSave }: A
 
             <div className="flex items-center space-x-2">
               <Switch
-                checked={isActive || false}
-                onCheckedChange={(checked) => setValue('is_active', checked)}
+                checked={formData.is_active}
+                onCheckedChange={(checked) => handleFieldChange('is_active', checked)}
               />
               <Label>Nível de acesso ativo</Label>
             </div>
@@ -277,7 +263,7 @@ export function AccessLevelDialog({ open, onOpenChange, accessLevel, onSave }: A
               </CardHeader>
               <CardContent className="space-y-6">
                 {permissionCategories.map((category) => {
-                  const categoryPermissions = category.permissions.filter(p => permissions?.[p.key]);
+                  const categoryPermissions = category.permissions.filter(p => formData.permissions[p.key]);
                   
                   return (
                     <div key={category.name} className="space-y-3">
@@ -294,7 +280,7 @@ export function AccessLevelDialog({ open, onOpenChange, accessLevel, onSave }: A
                       
                       <div className="grid grid-cols-1 gap-3">
                         {category.permissions.map((permission) => {
-                          const isEnabled = permissions?.[permission.key] || false;
+                          const isEnabled = formData.permissions[permission.key] || false;
                           
                           return (
                             <div
