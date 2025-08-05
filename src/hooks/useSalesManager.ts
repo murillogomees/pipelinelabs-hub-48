@@ -6,17 +6,18 @@ import { useCurrentCompany } from './useCurrentCompany';
 import { useToast } from './use-toast';
 import { useCache } from './useCache';
 
-interface SaleData {
+// Simple sale data interface to avoid deep type instantiation
+interface SimpleSaleData {
   id?: string;
   sale_number?: string;
   customer_id?: string;
-  sale_type: 'traditional' | 'pos';
-  status: 'pending' | 'completed' | 'cancelled';
+  sale_type?: string;
+  status?: string;
   total_amount: number;
-  discount_amount?: number;
+  discount?: number;
   tax_amount?: number;
   payment_method?: string;
-  payment_status?: 'pending' | 'paid' | 'partial' | 'cancelled';
+  payment_status?: string;
   notes?: string;
   sale_date?: string;
 }
@@ -33,13 +34,6 @@ interface SearchFilters {
   max_amount?: number;
 }
 
-interface SaleAnalytics {
-  totalRevenue: number;
-  totalSales: number;
-  averageTicket: number;
-  period: string;
-}
-
 export function useSalesManager() {
   const [isLoading, setIsLoading] = useState(false);
   const [filters, setFilters] = useState<SearchFilters>({});
@@ -51,7 +45,8 @@ export function useSalesManager() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
-  const cacheKey = `sales-${currentCompany?.id}-${JSON.stringify(filters)}-${page}`;
+  // Simplify the cache usage
+  const cacheKey = `sales-${currentCompany?.id}`;
   const { 
     data: salesData, 
     invalidateCache: invalidateSalesCache,
@@ -62,52 +57,11 @@ export function useSalesManager() {
     fetcher: async () => {
       if (!currentCompany?.id) return { sales: [], count: 0 };
 
-      let query = supabase
+      const { data, error, count } = await supabase
         .from('sales')
         .select('*', { count: 'exact' })
         .eq('company_id', currentCompany.id)
         .order('created_at', { ascending: false });
-
-      if (filters.query) {
-        query = query.ilike('sale_number', `%${filters.query}%`);
-      }
-
-      if (filters.customer_id) {
-        query = query.eq('customer_id', filters.customer_id);
-      }
-
-      if (filters.status) {
-        query = query.eq('status', filters.status);
-      }
-
-      if (filters.payment_status) {
-        query = query.eq('payment_status', filters.payment_status);
-      }
-
-      if (filters.sale_type) {
-        query = query.eq('sale_type', filters.sale_type);
-      }
-
-      if (filters.date_from) {
-        query = query.gte('sale_date', filters.date_from);
-      }
-
-      if (filters.date_to) {
-        query = query.lte('sale_date', filters.date_to);
-      }
-
-      if (filters.min_amount !== undefined) {
-        query = query.gte('total_amount', filters.min_amount);
-      }
-
-      if (filters.max_amount !== undefined) {
-        query = query.lte('total_amount', filters.max_amount);
-      }
-
-      const offset = (page - 1) * pageSize;
-      query = query.range(offset, offset + pageSize - 1);
-
-      const { data, error, count } = await query;
 
       if (error) throw error;
 
@@ -123,7 +77,7 @@ export function useSalesManager() {
   const sales = salesData?.sales || [];
   const totalSales = salesData?.count || 0;
 
-  const createSale = useCallback(async (saleData: SaleData) => {
+  const createSale = useCallback(async (saleData: SimpleSaleData) => {
     setIsLoading(true);
     
     try {
@@ -137,7 +91,7 @@ export function useSalesManager() {
         sale_type: saleData.sale_type,
         status: saleData.status,
         total_amount: saleData.total_amount,
-        discount_amount: saleData.discount_amount,
+        discount: saleData.discount,
         tax_amount: saleData.tax_amount,
         payment_method: saleData.payment_method,
         payment_status: saleData.payment_status,
@@ -179,7 +133,7 @@ export function useSalesManager() {
     }
   }, [currentCompany?.id, invalidateSalesCache, queryClient, toast]);
 
-  const updateSale = useCallback(async (saleId: string, saleData: Partial<SaleData>) => {
+  const updateSale = useCallback(async (saleId: string, saleData: Partial<SimpleSaleData>) => {
     setIsLoading(true);
     
     try {
@@ -197,7 +151,7 @@ export function useSalesManager() {
       if (error) throw error;
 
       if (salesData?.sales) {
-        const updatedList = salesData.sales.map(s => 
+        const updatedList = salesData.sales.map((s: any) => 
           s.id === saleId ? { ...s, ...data } : s
         );
         updateSalesCache({ ...salesData, sales: updatedList });
@@ -239,7 +193,7 @@ export function useSalesManager() {
       if (error) throw error;
 
       if (salesData?.sales) {
-        const updatedList = salesData.sales.map(s => 
+        const updatedList = salesData.sales.map((s: any) => 
           s.id === saleId ? { ...s, status: 'cancelled' } : s
         );
         updateSalesCache({ ...salesData, sales: updatedList });
@@ -262,7 +216,7 @@ export function useSalesManager() {
     }
   }, [currentCompany?.id, salesData, updateSalesCache, toast]);
 
-  const getSaleAnalytics = useCallback(async (period: string): Promise<SaleAnalytics> => {
+  const getSaleAnalytics = useCallback(async (period: string) => {
     try {
       if (!currentCompany?.id) {
         return { totalRevenue: 0, totalSales: 0, averageTicket: 0, period };
@@ -299,23 +253,9 @@ export function useSalesManager() {
     setPage(1);
   }, []);
 
-  const loadMore = useCallback(() => {
-    setPage(prev => prev + 1);
-  }, []);
-
   const refreshSales = useCallback(async () => {
     await invalidateSalesCache();
   }, [invalidateSalesCache]);
-
-  useEffect(() => {
-    if (!currentCompany?.id) return;
-
-    const interval = setInterval(() => {
-      refreshSales();
-    }, 120000);
-
-    return () => clearInterval(interval);
-  }, [currentCompany?.id, refreshSales]);
 
   return {
     isLoading: isLoading || isCacheLoading,
@@ -328,18 +268,14 @@ export function useSalesManager() {
     updateSale,
     cancelSale,
     searchSales,
-    loadMore,
     refreshSales,
     getSaleAnalytics,
     getSaleById: useCallback((id: string) => 
-      sales.find(s => s.id === id), [sales]
+      sales.find((s: any) => s.id === id), [sales]
     ),
-    hasMorePages: sales.length < totalSales,
-    currentPage: page,
-    totalPages: Math.ceil(totalSales / pageSize),
-    pendingSales: sales.filter(s => s.status === 'pending'),
-    completedSales: sales.filter(s => s.status === 'completed'),
-    cancelledSales: sales.filter(s => s.status === 'cancelled'),
+    pendingSales: sales.filter((s: any) => s.status === 'pending'),
+    completedSales: sales.filter((s: any) => s.status === 'completed'),
+    cancelledSales: sales.filter((s: any) => s.status === 'cancelled'),
     isEmpty: sales.length === 0,
     isFiltered: Object.keys(filters).some(key => filters[key as keyof SearchFilters])
   };

@@ -8,8 +8,9 @@ import { Button } from '@/components/ui/button';
 import { Plus, Loader2 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 
+// Use a unified Sale interface that matches both the component and database expectations
 interface Sale {
-  id?: string;
+  id: string;
   sale_number?: string;
   customer_id?: string;
   sale_type: 'traditional' | 'pos';
@@ -49,10 +50,12 @@ export default function Vendas() {
     id: sale.id,
     sale_number: sale.sale_number,
     customer_id: sale.customer_id,
-    sale_type: 'traditional' as const, // Default since it's not in the database
-    status: (sale.status as 'pending' | 'completed' | 'cancelled') || 'pending',
-    total_amount: sale.total_amount || 0,
-    discount_amount: sale.discount || 0,
+    sale_type: 'traditional' as const,
+    status: (sale.status === 'pending' || sale.status === 'completed' || sale.status === 'cancelled') 
+      ? sale.status as 'pending' | 'completed' | 'cancelled'
+      : 'pending' as const,
+    total_amount: Number(sale.total_amount || 0),
+    discount_amount: Number(sale.discount || 0),
     payment_method: sale.payment_method,
     notes: sale.notes,
     created_at: sale.created_at,
