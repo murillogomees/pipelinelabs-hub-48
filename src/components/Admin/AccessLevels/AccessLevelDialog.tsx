@@ -151,28 +151,30 @@ export function AccessLevelDialog({ open, onOpenChange, accessLevel, onSave }: A
   const isActive = watch('is_active');
   const permissions = watch('permissions');
 
-  // Reset form when dialog opens - simplified approach
+  // Simple form reset when dialog opens
   React.useEffect(() => {
-    if (open && accessLevel) {
-      reset({
-        name: accessLevel.name || '',
-        display_name: accessLevel.display_name || '',
-        description: accessLevel.description || '',
-        is_active: accessLevel.is_active ?? true,
-        permissions: accessLevel.permissions || {}
-      });
-    } else if (open) {
-      reset({
-        name: '',
-        display_name: '',
-        description: '',
-        is_active: true,
-        permissions: {}
-      });
+    if (open) {
+      if (accessLevel) {
+        reset({
+          name: accessLevel.name || '',
+          display_name: accessLevel.display_name || '',
+          description: accessLevel.description || '',
+          is_active: accessLevel.is_active ?? true,
+          permissions: accessLevel.permissions || {}
+        });
+      } else {
+        reset({
+          name: '',
+          display_name: '',
+          description: '',
+          is_active: true,
+          permissions: {}
+        });
+      }
     }
   }, [open, accessLevel?.id, reset]);
 
-  // Reset form when dialog closes
+  // Simple dialog close handler
   const handleDialogChange = useCallback((newOpen: boolean) => {
     onOpenChange(newOpen);
   }, [onOpenChange]);
