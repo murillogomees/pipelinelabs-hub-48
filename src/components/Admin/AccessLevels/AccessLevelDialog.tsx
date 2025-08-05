@@ -168,7 +168,7 @@ export function AccessLevelDialog({ open, onOpenChange, accessLevel, onSave }: A
     if (open) {
       reset(initialValues);
     }
-  }, [open, reset, accessLevel?.id]); // Use accessLevel.id instead of initialValues
+  }, [open, accessLevel?.id]); // Remove reset from dependencies to prevent infinite loop
 
   // Reset form when dialog closes
   const handleDialogChange = useCallback((newOpen: boolean) => {
