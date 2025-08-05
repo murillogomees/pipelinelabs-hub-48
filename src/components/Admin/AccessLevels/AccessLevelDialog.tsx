@@ -145,7 +145,27 @@ function AccessLevelForm({ accessLevel, onSave, onCancel }: {
     setFormData(prev => ({ ...prev, [field]: value }));
   }, []);
 
-  // Stable handlers to prevent infinite re-renders
+  // Create stable handlers using useMemo to prevent re-creation
+  const permissionHandlers = useMemo(() => {
+    const handlers: Record<string, (checked: boolean) => void> = {};
+    
+    permissionCategories.forEach(category => {
+      category.permissions.forEach(permission => {
+        handlers[permission.key] = (checked: boolean) => {
+          setFormData(prev => ({
+            ...prev,
+            permissions: {
+              ...prev.permissions,
+              [permission.key]: checked
+            }
+          }));
+        };
+      });
+    });
+    
+    return handlers;
+  }, []); // Empty deps - handlers are stable
+
   const handleDivClick = useCallback((e: React.MouseEvent) => {
     const target = e.currentTarget as HTMLElement;
     const permission = target.dataset.permission!;
@@ -156,18 +176,6 @@ function AccessLevelForm({ accessLevel, onSave, onCancel }: {
         [permission]: !prev.permissions[permission]
       }
     }));
-  }, []);
-
-  const handleSwitchChange = useCallback((permission: string) => {
-    return (checked: boolean) => {
-      setFormData(prev => ({
-        ...prev,
-        permissions: {
-          ...prev.permissions,
-          [permission]: checked
-        }
-      }));
-    };
   }, []);
 
   // Stable handler for active switch
@@ -284,7 +292,7 @@ function AccessLevelForm({ accessLevel, onSave, onCancel }: {
                           </div>
                           <Switch
                             checked={isEnabled}
-                            onCheckedChange={handleSwitchChange(permission.key)}
+                            onCheckedChange={permissionHandlers[permission.key]}
                             className="ml-3"
                           />
                         </div>
