@@ -1,12 +1,9 @@
-
-import { useState, useCallback, useEffect } from 'react';
+import React, { useState, useCallback } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useCurrentCompany } from './useCurrentCompany';
 import { useToast } from './use-toast';
-import { useCache } from './useCache';
 
-// Simple product data interface to avoid deep type instantiation
 interface SimpleProductData {
   id?: string;
   name: string;
@@ -37,47 +34,38 @@ interface SearchFilters {
 
 export function useProductsManager() {
   const [isLoading, setIsLoading] = useState(false);
-  const [isValidating, setIsValidating] = useState(false);
+  const [products, setProducts] = useState<any[]>([]);
   const [filters, setFilters] = useState<SearchFilters>({});
-  const [page, setPage] = useState(1);
-  const [pageSize] = useState(50);
   
   const { data: currentCompanyData } = useCurrentCompany();
   const currentCompany = currentCompanyData?.company;
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
-  // Simplify the cache usage to avoid deep type instantiation
-  const cacheKey = `products-${currentCompany?.id}`;
-  const { 
-    data: productsData, 
-    invalidateCache: invalidateProductsCache,
-    updateCache: updateProductsCache,
-    isLoading: isCacheLoading
-  } = useCache({
-    key: cacheKey,
-    fetcher: async () => {
-      if (!currentCompany?.id) return { products: [], count: 0 };
-
-      const { data, error, count } = await supabase
+  const fetchProducts = useCallback(async () => {
+    if (!currentCompany?.id) return;
+    
+    setIsLoading(true);
+    try {
+      const { data, error } = await supabase
         .from('products')
-        .select('*', { count: 'exact' })
+        .select('*')
         .eq('company_id', currentCompany.id)
         .order('created_at', { ascending: false });
 
       if (error) throw error;
-
-      return {
-        products: data || [],
-        count: count || 0
-      };
-    },
-    ttl: 300000,
-    enabled: !!currentCompany?.id
-  });
-
-  const products = productsData?.products || [];
-  const totalProducts = productsData?.count || 0;
+      setProducts(data || []);
+    } catch (error: any) {
+      console.error('Error fetching products:', error);
+      toast({
+        title: 'Erro',
+        description: 'Erro ao carregar produtos',
+        variant: 'destructive'
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  }, [currentCompany?.id, toast]);
 
   const createProduct = useCallback(async (productData: SimpleProductData) => {
     setIsLoading(true);
@@ -113,11 +101,8 @@ export function useProductsManager() {
 
       if (error) throw error;
 
-      await Promise.all([
-        invalidateProductsCache(),
-        queryClient.invalidateQueries({ queryKey: ['products'] }),
-        queryClient.invalidateQueries({ queryKey: ['dashboard'] })
-      ]);
+      await fetchProducts();
+      queryClient.invalidateQueries({ queryKey: ['products'] });
 
       toast({
         title: 'Sucesso',
@@ -136,7 +121,7 @@ export function useProductsManager() {
     } finally {
       setIsLoading(false);
     }
-  }, [currentCompany?.id, invalidateProductsCache, queryClient, toast]);
+  }, [currentCompany?.id, fetchProducts, queryClient, toast]);
 
   const updateProduct = useCallback(async (productId: string, productData: Partial<SimpleProductData>) => {
     setIsLoading(true);
@@ -155,12 +140,7 @@ export function useProductsManager() {
 
       if (error) throw error;
 
-      if (productsData?.products) {
-        const updatedList = productsData.products.map((p: any) => 
-          p.id === productId ? data : p
-        );
-        updateProductsCache({ ...productsData, products: updatedList });
-      }
+      await fetchProducts();
 
       toast({
         title: 'Sucesso',
@@ -179,7 +159,7 @@ export function useProductsManager() {
     } finally {
       setIsLoading(false);
     }
-  }, [currentCompany?.id, productsData, updateProductsCache, toast]);
+  }, [currentCompany?.id, fetchProducts, toast]);
 
   const deleteProduct = useCallback(async (productId: string): Promise<void> => {
     setIsLoading(true);
@@ -196,12 +176,7 @@ export function useProductsManager() {
 
       if (error) throw error;
 
-      if (productsData?.products) {
-        const updatedList = productsData.products.map((p: any) => 
-          p.id === productId ? { ...p, is_active: false } : p
-        );
-        updateProductsCache({ ...productsData, products: updatedList });
-      }
+      await fetchProducts();
 
       toast({
         title: 'Sucesso',
@@ -218,30 +193,27 @@ export function useProductsManager() {
     } finally {
       setIsLoading(false);
     }
-  }, [currentCompany?.id, productsData, updateProductsCache, toast]);
+  }, [currentCompany?.id, fetchProducts, toast]);
 
   const searchProducts = useCallback((newFilters: SearchFilters) => {
     setFilters(newFilters);
-    setPage(1);
   }, []);
 
-  const refreshProducts = useCallback(async () => {
-    await invalidateProductsCache();
-  }, [invalidateProductsCache]);
+  // Auto-fetch products when company changes
+  React.useEffect(() => {
+    fetchProducts();
+  }, [fetchProducts]);
 
   return {
-    isLoading: isLoading || isCacheLoading,
-    isValidating,
+    isLoading,
     products,
-    totalProducts,
+    totalProducts: products.length,
     filters,
-    page,
-    pageSize,
     createProduct,
     updateProduct,
     deleteProduct,
     searchProducts,
-    refreshProducts,
+    refreshProducts: fetchProducts,
     getProductById: useCallback((id: string) => 
       products.find((p: any) => p.id === id), [products]
     ),

@@ -1,12 +1,9 @@
-
-import { useState, useCallback, useEffect } from 'react';
+import React, { useState, useCallback } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useCurrentCompany } from './useCurrentCompany';
 import { useToast } from './use-toast';
-import { useCache } from './useCache';
 
-// Simple sale data interface to avoid deep type instantiation
 interface SimpleSaleData {
   id?: string;
   sale_number?: string;
@@ -36,46 +33,38 @@ interface SearchFilters {
 
 export function useSalesManager() {
   const [isLoading, setIsLoading] = useState(false);
+  const [sales, setSales] = useState<any[]>([]);
   const [filters, setFilters] = useState<SearchFilters>({});
-  const [page, setPage] = useState(1);
-  const [pageSize] = useState(50);
   
   const { data: currentCompanyData } = useCurrentCompany();
   const currentCompany = currentCompanyData?.company;
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
-  // Simplify the cache usage
-  const cacheKey = `sales-${currentCompany?.id}`;
-  const { 
-    data: salesData, 
-    invalidateCache: invalidateSalesCache,
-    updateCache: updateSalesCache,
-    isLoading: isCacheLoading
-  } = useCache({
-    key: cacheKey,
-    fetcher: async () => {
-      if (!currentCompany?.id) return { sales: [], count: 0 };
-
-      const { data, error, count } = await supabase
+  const fetchSales = useCallback(async () => {
+    if (!currentCompany?.id) return;
+    
+    setIsLoading(true);
+    try {
+      const { data, error } = await supabase
         .from('sales')
-        .select('*', { count: 'exact' })
+        .select('*')
         .eq('company_id', currentCompany.id)
         .order('created_at', { ascending: false });
 
       if (error) throw error;
-
-      return {
-        sales: data || [],
-        count: count || 0
-      };
-    },
-    ttl: 120000,
-    enabled: !!currentCompany?.id
-  });
-
-  const sales = salesData?.sales || [];
-  const totalSales = salesData?.count || 0;
+      setSales(data || []);
+    } catch (error: any) {
+      console.error('Error fetching sales:', error);
+      toast({
+        title: 'Erro',
+        description: 'Erro ao carregar vendas',
+        variant: 'destructive'
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  }, [currentCompany?.id, toast]);
 
   const createSale = useCallback(async (saleData: SimpleSaleData) => {
     setIsLoading(true);
@@ -108,11 +97,8 @@ export function useSalesManager() {
 
       if (saleError) throw saleError;
 
-      await Promise.all([
-        invalidateSalesCache(),
-        queryClient.invalidateQueries({ queryKey: ['sales'] }),
-        queryClient.invalidateQueries({ queryKey: ['dashboard'] })
-      ]);
+      await fetchSales();
+      queryClient.invalidateQueries({ queryKey: ['sales'] });
 
       toast({
         title: 'Sucesso',
@@ -131,7 +117,7 @@ export function useSalesManager() {
     } finally {
       setIsLoading(false);
     }
-  }, [currentCompany?.id, invalidateSalesCache, queryClient, toast]);
+  }, [currentCompany?.id, fetchSales, queryClient, toast]);
 
   const updateSale = useCallback(async (saleId: string, saleData: Partial<SimpleSaleData>) => {
     setIsLoading(true);
@@ -150,12 +136,7 @@ export function useSalesManager() {
 
       if (error) throw error;
 
-      if (salesData?.sales) {
-        const updatedList = salesData.sales.map((s: any) => 
-          s.id === saleId ? { ...s, ...data } : s
-        );
-        updateSalesCache({ ...salesData, sales: updatedList });
-      }
+      await fetchSales();
 
       toast({
         title: 'Sucesso',
@@ -174,7 +155,7 @@ export function useSalesManager() {
     } finally {
       setIsLoading(false);
     }
-  }, [currentCompany?.id, salesData, updateSalesCache, toast]);
+  }, [currentCompany?.id, fetchSales, toast]);
 
   const cancelSale = useCallback(async (saleId: string, reason?: string) => {
     setIsLoading(true);
@@ -192,12 +173,7 @@ export function useSalesManager() {
 
       if (error) throw error;
 
-      if (salesData?.sales) {
-        const updatedList = salesData.sales.map((s: any) => 
-          s.id === saleId ? { ...s, status: 'cancelled' } : s
-        );
-        updateSalesCache({ ...salesData, sales: updatedList });
-      }
+      await fetchSales();
 
       toast({
         title: 'Sucesso',
@@ -214,7 +190,7 @@ export function useSalesManager() {
     } finally {
       setIsLoading(false);
     }
-  }, [currentCompany?.id, salesData, updateSalesCache, toast]);
+  }, [currentCompany?.id, fetchSales, toast]);
 
   const getSaleAnalytics = useCallback(async (period: string) => {
     try {
@@ -250,25 +226,25 @@ export function useSalesManager() {
 
   const searchSales = useCallback((newFilters: SearchFilters) => {
     setFilters(newFilters);
-    setPage(1);
   }, []);
 
-  const refreshSales = useCallback(async () => {
-    await invalidateSalesCache();
-  }, [invalidateSalesCache]);
+  // Auto-fetch sales when company changes
+  React.useEffect(() => {
+    fetchSales();
+  }, [fetchSales]);
 
   return {
-    isLoading: isLoading || isCacheLoading,
+    isLoading,
     sales,
-    totalSales,
+    totalSales: sales.length,
     filters,
-    page,
-    pageSize,
+    page: 1,
+    pageSize: 50,
     createSale,
     updateSale,
     cancelSale,
     searchSales,
-    refreshSales,
+    refreshSales: fetchSales,
     getSaleAnalytics,
     getSaleById: useCallback((id: string) => 
       sales.find((s: any) => s.id === id), [sales]

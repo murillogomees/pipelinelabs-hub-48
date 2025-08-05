@@ -8,8 +8,7 @@ import { Button } from '@/components/ui/button';
 import { Plus, Loader2 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 
-// Use a unified Sale interface that matches both the component and database expectations
-interface Sale {
+interface VendaSale {
   id: string;
   sale_number?: string;
   customer_id?: string;
@@ -28,7 +27,7 @@ interface Sale {
 
 export default function Vendas() {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const [editingSale, setEditingSale] = useState<Sale | null>(null);
+  const [editingSale, setEditingSale] = useState<VendaSale | null>(null);
 
   const {
     sales: rawSales,
@@ -45,8 +44,8 @@ export default function Vendas() {
     completedSales
   } = useSalesManager();
 
-  // Transform raw sales data to match the expected Sale interface
-  const sales: Sale[] = rawSales.map(sale => ({
+  // Transform raw sales data to match the expected VendaSale interface
+  const transformedSales: VendaSale[] = rawSales.map(sale => ({
     id: sale.id,
     sale_number: sale.sale_number,
     customer_id: sale.customer_id,
@@ -83,7 +82,7 @@ export default function Vendas() {
     }
   };
 
-  const handleEditSale = (sale: Sale) => {
+  const handleEditSale = (sale: VendaSale) => {
     setEditingSale(sale);
     setIsDialogOpen(true);
   };
@@ -203,7 +202,7 @@ export default function Vendas() {
         </div>
       ) : (
         <SalesList
-          sales={sales}
+          sales={transformedSales}
           onEdit={handleEditSale}
           onCancel={handleCancelSale}
           isLoading={isLoading}

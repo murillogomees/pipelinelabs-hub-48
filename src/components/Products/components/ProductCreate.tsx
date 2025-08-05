@@ -1,30 +1,32 @@
 
-import React, { useState } from 'react';
-import { useProductsManager } from '@/hooks/useProductsManager';
-import { Button } from '@/components/ui/button';
+import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import { Switch } from '@/components/ui/switch';
-import { ArrowLeft, Save } from 'lucide-react';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { z } from 'zod';
+import { useProductsManager } from '@/hooks/useProductsManager';
+import { ArrowLeft } from 'lucide-react';
 
-interface Product {
-  name: string;
-  description?: string;
-  code: string;
-  price?: number;
-  cost_price?: number;
-  stock_quantity?: number;
-  min_stock?: number;
-  max_stock?: number;
-  unit?: string;
-  barcode?: string;
-  is_active?: boolean;
-  weight?: number;
-  dimensions?: string;
-  supplier_id?: string;
-}
+const productSchema = z.object({
+  name: z.string().min(1, 'Nome é obrigatório'),
+  description: z.string().optional(),
+  code: z.string().min(1, 'Código é obrigatório'),
+  price: z.number().optional(),
+  cost_price: z.number().optional(),
+  stock_quantity: z.number().optional(),
+  min_stock: z.number().optional(),
+  max_stock: z.number().optional(),
+  unit: z.string().optional(),
+  barcode: z.string().optional(),
+  weight: z.number().optional(),
+  dimensions: z.string().optional(),
+});
+
+type ProductFormData = z.infer<typeof productSchema>;
 
 interface ProductCreateProps {
   onSuccess: () => void;
@@ -32,47 +34,33 @@ interface ProductCreateProps {
 }
 
 export function ProductCreate({ onSuccess, onCancel }: ProductCreateProps) {
-  const [formData, setFormData] = useState<Product>({
-    name: '',
-    description: '',
-    code: '',
-    price: 0,
-    cost_price: 0,
-    stock_quantity: 0,
-    min_stock: 0,
-    max_stock: 0,
-    unit: 'UN',
-    barcode: '',
-    is_active: true,
-    weight: 0,
-    dimensions: '',
-  });
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  
-  const { createProduct } = useProductsManager();
+  const { createProduct, isLoading } = useProductsManager();
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setIsSubmitting(true);
-    
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+  } = useForm<ProductFormData>({
+    resolver: zodResolver(productSchema),
+  });
+
+  const onSubmit = async (data: ProductFormData) => {
     try {
-      await createProduct(formData);
+      await createProduct(data);
       onSuccess();
     } catch (error) {
-      // Error already handled in hook
-    } finally {
-      setIsSubmitting(false);
+      // Error handled by the hook
     }
   };
 
   return (
     <div className="space-y-6">
       <div className="flex items-center gap-4">
-        <Button variant="outline" size="sm" onClick={onCancel}>
+        <Button variant="outline" onClick={onCancel}>
           <ArrowLeft className="w-4 h-4 mr-2" />
           Voltar
         </Button>
-        <h2 className="text-xl font-semibold">Cadastrar Novo Produto</h2>
+        <h2 className="text-2xl font-bold">Novo Produto</h2>
       </div>
 
       <Card>
@@ -80,25 +68,89 @@ export function ProductCreate({ onSuccess, onCancel }: ProductCreateProps) {
           <CardTitle>Informações do Produto</CardTitle>
         </CardHeader>
         <CardContent>
-          <form onSubmit={handleSubmit} className="space-y-4">
+          <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <Label htmlFor="name">Nome *</Label>
                 <Input
                   id="name"
-                  value={formData.name}
-                  onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                  required
+                  {...register('name')}
+                  placeholder="Nome do produto"
                 />
+                {errors.name && (
+                  <p className="text-sm text-red-600 mt-1">{errors.name.message}</p>
+                )}
               </div>
-              
+
               <div>
                 <Label htmlFor="code">Código *</Label>
                 <Input
                   id="code"
-                  value={formData.code}
-                  onChange={(e) => setFormData({ ...formData, code: e.target.value })}
-                  required
+                  {...register('code')}
+                  placeholder="Código do produto"
+                />
+                {errors.code && (
+                  <p className="text-sm text-red-600 mt-1">{errors.code.message}</p>
+                )}
+              </div>
+
+              <div>
+                <Label htmlFor="price">Preço de Venda</Label>
+                <Input
+                  id="price"
+                  type="number"
+                  step="0.01"
+                  {...register('price', { valueAsNumber: true })}
+                  placeholder="0.00"
+                />
+              </div>
+
+              <div>
+                <Label htmlFor="cost_price">Preço de Custo</Label>
+                <Input
+                  id="cost_price"
+                  type="number"
+                  step="0.01"
+                  {...register('cost_price', { valueAsNumber: true })}
+                  placeholder="0.00"
+                />
+              </div>
+
+              <div>
+                <Label htmlFor="stock_quantity">Quantidade em Estoque</Label>
+                <Input
+                  id="stock_quantity"
+                  type="number"
+                  {...register('stock_quantity', { valueAsNumber: true })}
+                  placeholder="0"
+                />
+              </div>
+
+              <div>
+                <Label htmlFor="min_stock">Estoque Mínimo</Label>
+                <Input
+                  id="min_stock"
+                  type="number"
+                  {...register('min_stock', { valueAsNumber: true })}
+                  placeholder="0"
+                />
+              </div>
+
+              <div>
+                <Label htmlFor="unit">Unidade</Label>
+                <Input
+                  id="unit"
+                  {...register('unit')}
+                  placeholder="UN, KG, L, etc."
+                />
+              </div>
+
+              <div>
+                <Label htmlFor="barcode">Código de Barras</Label>
+                <Input
+                  id="barcode"
+                  {...register('barcode')}
+                  placeholder="Código de barras"
                 />
               </div>
             </div>
@@ -107,93 +159,18 @@ export function ProductCreate({ onSuccess, onCancel }: ProductCreateProps) {
               <Label htmlFor="description">Descrição</Label>
               <Textarea
                 id="description"
-                value={formData.description || ''}
-                onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                {...register('description')}
+                placeholder="Descrição detalhada do produto"
+                rows={3}
               />
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <div>
-                <Label htmlFor="price">Preço de Venda</Label>
-                <Input
-                  id="price"
-                  type="number"
-                  step="0.01"
-                  value={formData.price || ''}
-                  onChange={(e) => setFormData({ ...formData, price: parseFloat(e.target.value) || 0 })}
-                />
-              </div>
-              
-              <div>
-                <Label htmlFor="cost_price">Preço de Custo</Label>
-                <Input
-                  id="cost_price"
-                  type="number"
-                  step="0.01"
-                  value={formData.cost_price || ''}
-                  onChange={(e) => setFormData({ ...formData, cost_price: parseFloat(e.target.value) || 0 })}
-                />
-              </div>
-
-              <div>
-                <Label htmlFor="unit">Unidade</Label>
-                <Input
-                  id="unit"
-                  value={formData.unit || ''}
-                  onChange={(e) => setFormData({ ...formData, unit: e.target.value })}
-                  placeholder="UN, KG, L, etc."
-                />
-              </div>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <div>
-                <Label htmlFor="stock_quantity">Estoque Inicial</Label>
-                <Input
-                  id="stock_quantity"
-                  type="number"
-                  value={formData.stock_quantity || ''}
-                  onChange={(e) => setFormData({ ...formData, stock_quantity: parseInt(e.target.value) || 0 })}
-                />
-              </div>
-              
-              <div>
-                <Label htmlFor="min_stock">Estoque Mínimo</Label>
-                <Input
-                  id="min_stock"
-                  type="number"
-                  value={formData.min_stock || ''}
-                  onChange={(e) => setFormData({ ...formData, min_stock: parseInt(e.target.value) || 0 })}
-                />
-              </div>
-
-              <div>
-                <Label htmlFor="max_stock">Estoque Máximo</Label>
-                <Input
-                  id="max_stock"
-                  type="number"
-                  value={formData.max_stock || ''}
-                  onChange={(e) => setFormData({ ...formData, max_stock: parseInt(e.target.value) || 0 })}
-                />
-              </div>
-            </div>
-
-            <div className="flex items-center space-x-2">
-              <Switch
-                id="is_active"
-                checked={formData.is_active}
-                onCheckedChange={(checked) => setFormData({ ...formData, is_active: checked })}
-              />
-              <Label htmlFor="is_active">Produto ativo</Label>
-            </div>
-
-            <div className="flex justify-end space-x-2 pt-4">
+            <div className="flex justify-end gap-4">
               <Button type="button" variant="outline" onClick={onCancel}>
                 Cancelar
               </Button>
-              <Button type="submit" disabled={isSubmitting}>
-                {isSubmitting ? 'Salvando...' : 'Criar Produto'}
-                <Save className="w-4 h-4 ml-2" />
+              <Button type="submit" disabled={isLoading}>
+                {isLoading ? 'Salvando...' : 'Salvar Produto'}
               </Button>
             </div>
           </form>
