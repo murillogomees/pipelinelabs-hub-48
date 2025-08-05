@@ -78,9 +78,9 @@ export const useBaseForm = <T extends FieldValues>({
   }, [onSubmit, onSuccess, onError, reset, resetOnSuccess, showSuccessToast, showErrorToast, successMessage, errorMessage]);
 
   const resetForm = useCallback(() => {
-    reset(defaultValues);
+    reset();
     setSubmitError(null);
-  }, [reset, defaultValues]);
+  }, [reset]);
 
   const clearError = useCallback(() => {
     setSubmitError(null);
