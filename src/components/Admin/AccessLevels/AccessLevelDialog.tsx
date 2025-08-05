@@ -161,25 +161,28 @@ export function AccessLevelDialog({ open, onOpenChange, accessLevel, onSave }: A
   });
 
   const { watch, setValue, reset } = form;
-  const formData = watch();
+  
+  // Watch specific fields instead of all fields to prevent infinite re-renders
+  const displayName = watch('display_name');
+  const name = watch('name');
+  const description = watch('description');
+  const isActive = watch('is_active');
+  const permissions = watch('permissions');
 
-  // Reset form when accessLevel changes or dialog opens
+  // Reset form when dialog opens with new data
   React.useEffect(() => {
     if (open) {
       reset(initialValues);
     }
-  }, [open, accessLevel?.id]); // Remove reset from dependencies to prevent infinite loop
+  }, [open, reset, initialValues]);
 
   // Reset form when dialog closes
   const handleDialogChange = useCallback((newOpen: boolean) => {
     onOpenChange(newOpen);
     if (!newOpen) {
-      // Dialog is closing, reset to prevent stale data
-      setTimeout(() => {
-        reset();
-      }, 100);
+      resetForm();
     }
-  }, [onOpenChange, reset]);
+  }, [onOpenChange, resetForm]);
 
   const handleDisplayNameChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
@@ -190,16 +193,16 @@ export function AccessLevelDialog({ open, onOpenChange, accessLevel, onSave }: A
   }, [setValue, accessLevel]);
 
   const handlePermissionToggle = useCallback((permission: string) => {
-    const currentPermissions = formData.permissions || {};
+    const currentPermissions = permissions || {};
     setValue('permissions', {
       ...currentPermissions,
       [permission]: !currentPermissions[permission]
     });
-  }, [formData.permissions, setValue]);
+  }, [permissions, setValue]);
 
   const enabledPermissions = useMemo(() => {
-    return Object.values(formData.permissions || {}).filter(Boolean).length;
-  }, [formData.permissions]);
+    return Object.values(permissions || {}).filter(Boolean).length;
+  }, [permissions]);
 
   const totalPermissions = useMemo(() => {
     return permissionCategories.reduce((acc, cat) => acc + cat.permissions.length, 0);
@@ -224,7 +227,7 @@ export function AccessLevelDialog({ open, onOpenChange, accessLevel, onSave }: A
                 <Label htmlFor="display_name">Nome de Exibição</Label>
                 <Input
                   id="display_name"
-                  value={formData.display_name || ''}
+                  value={displayName || ''}
                   onChange={handleDisplayNameChange}
                   placeholder="Ex: Administrador da Empresa"
                 />
@@ -234,7 +237,7 @@ export function AccessLevelDialog({ open, onOpenChange, accessLevel, onSave }: A
                 <Label htmlFor="name">Nome Interno</Label>
                 <Input
                   id="name"
-                  value={formData.name || ''}
+                  value={name || ''}
                   disabled={accessLevel?.is_system}
                   placeholder="Ex: admin_empresa"
                   readOnly={!!accessLevel}
@@ -246,7 +249,7 @@ export function AccessLevelDialog({ open, onOpenChange, accessLevel, onSave }: A
               <Label htmlFor="description">Descrição</Label>
               <Textarea
                 id="description"
-                value={formData.description || ''}
+                value={description || ''}
                 onChange={(e) => setValue('description', e.target.value)}
                 placeholder="Descreva as responsabilidades deste nível de acesso"
                 rows={3}
@@ -255,7 +258,7 @@ export function AccessLevelDialog({ open, onOpenChange, accessLevel, onSave }: A
 
             <div className="flex items-center space-x-2">
               <Switch
-                checked={formData.is_active}
+                checked={isActive || false}
                 onCheckedChange={(checked) => setValue('is_active', checked)}
               />
               <Label>Nível de acesso ativo</Label>
@@ -277,7 +280,7 @@ export function AccessLevelDialog({ open, onOpenChange, accessLevel, onSave }: A
               </CardHeader>
               <CardContent className="space-y-6">
                 {permissionCategories.map((category) => {
-                  const categoryPermissions = category.permissions.filter(p => formData.permissions?.[p.key]);
+                  const categoryPermissions = category.permissions.filter(p => permissions?.[p.key]);
                   
                   return (
                     <div key={category.name} className="space-y-3">
@@ -294,7 +297,7 @@ export function AccessLevelDialog({ open, onOpenChange, accessLevel, onSave }: A
                       
                       <div className="grid grid-cols-1 gap-3">
                         {category.permissions.map((permission) => {
-                          const isEnabled = formData.permissions?.[permission.key] || false;
+                          const isEnabled = permissions?.[permission.key] || false;
                           
                           return (
                             <div
