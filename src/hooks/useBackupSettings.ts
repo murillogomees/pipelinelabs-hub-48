@@ -15,17 +15,21 @@ interface BackupSettings {
   storage_location: string;
   encryption_enabled: boolean;
   last_backup?: string;
+  auto_backup_enabled: boolean;
+  backup_frequency: 'daily' | 'weekly' | 'monthly';
+  backup_time: string;
+  backup_tables: string[];
+  last_backup_at?: string;
+  next_backup_at?: string;
 }
 
 export function useBackupSettings() {
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
   const queryClient = useQueryClient();
-  const permissionsData = usePermissions();
-  
-  const { isSuperAdmin } = permissionsData;
+  const { isSuperAdmin } = usePermissions();
 
-  const { data: settings, isLoading: isLoadingSettings } = useQuery({
+  const { data: settings, isLoading: isLoadingSettings, error } = useQuery({
     queryKey: ['backup-settings'],
     queryFn: async (): Promise<BackupSettings> => {
       // For now, return default settings since backup table might not exist
@@ -35,7 +39,13 @@ export function useBackupSettings() {
         retention_days: 30,
         storage_location: 'supabase',
         encryption_enabled: true,
-        last_backup: undefined
+        last_backup: undefined,
+        auto_backup_enabled: false,
+        backup_frequency: 'daily',
+        backup_time: '02:00',
+        backup_tables: ['companies', 'customers', 'products', 'sales', 'invoices', 'accounts_payable', 'accounts_receivable', 'stock_movements', 'proposals', 'contracts'],
+        last_backup_at: undefined,
+        next_backup_at: undefined
       };
     },
     enabled: isSuperAdmin,
@@ -99,10 +109,11 @@ export function useBackupSettings() {
   return {
     settings,
     isLoading: isLoading || isLoadingSettings,
+    error,
     canManageBackup: isSuperAdmin,
     updateSettings: updateSettingsMutation.mutate,
     triggerBackup: triggerBackupMutation.mutate,
     isUpdating: updateSettingsMutation.isPending,
-    isTriggering: triggerBackupMutation.isPending,
+    isTriggeringBackup: triggerBackupMutation.isPending,
   };
 }

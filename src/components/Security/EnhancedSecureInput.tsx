@@ -6,7 +6,9 @@ import { Button } from '@/components/ui/button';
 import { sanitizeUserInput } from '@/lib/validation/sanitization';
 import { AlertCircle, Eye, EyeOff, Shield, CheckCircle, XCircle } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { logger } from '@/utils/logger';
+import { createLogger } from '@/utils/logger';
+
+const logger = createLogger('EnhancedSecureInput');
 
 interface EnhancedSecureInputProps extends React.InputHTMLAttributes<HTMLInputElement> {
   label?: string;
@@ -50,7 +52,7 @@ export function EnhancedSecureInput({
   const validateInput = useCallback((value: string): { isValid: boolean; reason?: string } => {
     // Check for blocked content
     if (blockList.some(blocked => value.toLowerCase().includes(blocked.toLowerCase()))) {
-      logger.securityEvent('blocked_input_detected', undefined, undefined, {
+      logger.securityEvent('blocked_input_detected', {
         inputType: type,
         securityLevel,
         blockedContent: '[REDACTED]'
@@ -72,7 +74,7 @@ export function EnhancedSecureInput({
     if (securityLevel === 'high') {
       // No HTML tags
       if (/<[^>]*>/g.test(value)) {
-        logger.securityEvent('html_injection_attempt', undefined, undefined, {
+        logger.securityEvent('html_injection_attempt', {
           inputType: type,
           content: '[REDACTED]'
         });
@@ -82,7 +84,7 @@ export function EnhancedSecureInput({
       // No SQL injection patterns
       const sqlPatterns = /(\b(SELECT|INSERT|UPDATE|DELETE|DROP|CREATE|ALTER|EXEC|UNION|SCRIPT)\b)/gi;
       if (sqlPatterns.test(value)) {
-        logger.securityEvent('sql_injection_attempt', undefined, undefined, {
+        logger.securityEvent('sql_injection_attempt', {
           inputType: type,
           content: '[REDACTED]'
         });
@@ -92,7 +94,7 @@ export function EnhancedSecureInput({
       // No JavaScript injection patterns
       const jsPatterns = /(javascript:|data:text\/html|vbscript:|onload=|onerror=)/gi;
       if (jsPatterns.test(value)) {
-        logger.securityEvent('xss_attempt', undefined, undefined, {
+        logger.securityEvent('xss_attempt', {
           inputType: type,
           content: '[REDACTED]'
         });

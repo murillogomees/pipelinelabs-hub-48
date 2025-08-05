@@ -3,12 +3,33 @@ import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/components/Auth/AuthProvider';
 
+interface UserProfile {
+  access_level_id: string;
+  address: string;
+  avatar_url: string;
+  city: string;
+  company_id: string;
+  created_at: string;
+  display_name: string;
+  document: string;
+  document_type: string;
+  email: string;
+  id: string;
+  phone: string;
+  state: string;
+  updated_at: string;
+  user_id: string;
+  zipcode: string;
+  stripe_customer_id?: string;
+  user_companies: any;
+}
+
 export const useProfile = () => {
   const { user } = useAuth();
   
   const queryResult = useQuery({
     queryKey: ['profile', user?.id],
-    queryFn: async () => {
+    queryFn: async (): Promise<UserProfile | null> => {
       if (!user?.id) {
         throw new Error('Usuário não autenticado');
       }
