@@ -1,158 +1,140 @@
-import { useCallback } from 'react';
+
+import { useState, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { createLogger } from '@/utils/logger';
 
-const logger = createLogger('RedisCache');
+const logger = createLogger('useRedisCache');
 
-interface CacheRequest {
-  action: 'get' | 'set' | 'delete' | 'invalidate' | 'stats' | 'flush';
-  key?: string;
-  value?: any;
+interface CacheOptions {
   ttl?: number;
-  pattern?: string;
+  enabled?: boolean;
 }
 
-interface CacheResponse {
-  success: boolean;
-  data?: any;
-  error?: string;
-  timestamp: string;
+interface CacheStats {
+  hits: number;
+  misses: number;
+  size: number;
+  redisAvailable: boolean;
 }
 
 export function useRedisCache() {
-  const callCacheFunction = useCallback(async (request: CacheRequest): Promise<any> => {
+  const [stats, setStats] = useState<CacheStats>({
+    hits: 0,
+    misses: 0,
+    size: 0,
+    redisAvailable: false
+  });
+
+  const get = useCallback(async <T>(key: string): Promise<T | null> => {
     try {
       const { data, error } = await supabase.functions.invoke('cache-manager', {
-        body: request
+        body: { action: 'get', key }
       });
 
-      if (error) {
-        logger.error('Cache function error:', error);
-        throw new Error(error.message || 'Cache operation failed');
+      if (error) throw error;
+
+      if (data?.data) {
+        setStats(prev => ({ ...prev, hits: prev.hits + 1 }));
+        logger.debug(`Cache hit: ${key}`);
+        return data.data;
       }
 
-      const response = data as CacheResponse;
-      
-      if (!response.success) {
-        throw new Error(response.error || 'Cache operation failed');
-      }
-
-      return response.data;
+      setStats(prev => ({ ...prev, misses: prev.misses + 1 }));
+      logger.debug(`Cache miss: ${key}`);
+      return null;
     } catch (error) {
-      logger.error('Redis cache error:', error);
-      // Em caso de erro, retornar null para fallback
+      logger.error(`Cache get error for ${key}:`, error);
       return null;
     }
   }, []);
 
-  const get = useCallback(async <T>(key: string): Promise<T | null> => {
-    return await callCacheFunction({ action: 'get', key });
-  }, [callCacheFunction]);
-
-  const set = useCallback(async <T>(key: string, value: T, ttl?: number): Promise<boolean> => {
+  const set = useCallback(async <T>(key: string, value: T, options: CacheOptions = {}): Promise<void> => {
     try {
-      await callCacheFunction({ action: 'set', key, value, ttl });
-      return true;
-    } catch (error) {
-      return false;
-    }
-  }, [callCacheFunction]);
+      const { error } = await supabase.functions.invoke('cache-manager', {
+        body: { 
+          action: 'set', 
+          key, 
+          value, 
+          ttl: options.ttl || 300 
+        }
+      });
 
-  const remove = useCallback(async (key: string): Promise<boolean> => {
+      if (error) throw error;
+      logger.debug(`Cache set: ${key}`);
+    } catch (error) {
+      logger.error(`Cache set error for ${key}:`, error);
+    }
+  }, []);
+
+  const invalidate = useCallback(async (key: string): Promise<void> => {
     try {
-      await callCacheFunction({ action: 'delete', key });
-      return true;
-    } catch (error) {
-      return false;
-    }
-  }, [callCacheFunction]);
+      const { error } = await supabase.functions.invoke('cache-manager', {
+        body: { action: 'delete', key }
+      });
 
-  const invalidatePattern = useCallback(async (pattern: string): Promise<number> => {
+      if (error) throw error;
+      logger.debug(`Cache invalidated: ${key}`);
+    } catch (error) {
+      logger.error(`Cache invalidate error for ${key}:`, error);
+    }
+  }, []);
+
+  const invalidatePattern = useCallback(async (pattern: string): Promise<void> => {
     try {
-      const result = await callCacheFunction({ action: 'invalidate', pattern });
-      return result?.deleted || 0;
+      const { error } = await supabase.functions.invoke('cache-manager', {
+        body: { action: 'invalidate', pattern }
+      });
+
+      if (error) throw error;
+      logger.debug(`Cache pattern invalidated: ${pattern}`);
     } catch (error) {
-      return 0;
+      logger.error(`Cache pattern invalidate error:`, error);
     }
-  }, [callCacheFunction]);
+  }, []);
 
-  const getStats = useCallback(async () => {
-    return await callCacheFunction({ action: 'stats' });
-  }, [callCacheFunction]);
-
-  const flush = useCallback(async (): Promise<boolean> => {
+  const flush = useCallback(async (): Promise<void> => {
     try {
-      await callCacheFunction({ action: 'flush' });
-      return true;
+      const { error } = await supabase.functions.invoke('cache-manager', {
+        body: { action: 'flush' }
+      });
+
+      if (error) throw error;
+      logger.info('Cache flushed');
     } catch (error) {
-      return false;
+      logger.error('Cache flush error:', error);
     }
-  }, [callCacheFunction]);
+  }, []);
+
+  const getStats = useCallback(async (): Promise<CacheStats> => {
+    try {
+      const { data, error } = await supabase.functions.invoke('cache-manager', {
+        body: { action: 'stats' }
+      });
+
+      if (error) throw error;
+
+      const newStats = {
+        hits: stats.hits,
+        misses: stats.misses,
+        size: data?.data?.totalKeys || 0,
+        redisAvailable: data?.data?.redisAvailable || false
+      };
+
+      setStats(newStats);
+      return newStats;
+    } catch (error) {
+      logger.error('Cache stats error:', error);
+      return stats;
+    }
+  }, [stats]);
 
   return {
     get,
     set,
-    remove,
-    invalidatePattern,
-    getStats,
-    flush
-  };
-}
-
-// Hook para cache com React Query integrado
-export function useRedisCacheWithQuery<T>({
-  key,
-  fetcher,
-  ttl = 300,
-  enabled = true
-}: {
-  key: string;
-  fetcher: () => Promise<T>;
-  ttl?: number;
-  enabled?: boolean;
-}) {
-  const redisCache = useRedisCache();
-
-  const getCachedData = useCallback(async (): Promise<T> => {
-    if (!enabled) {
-      return await fetcher();
-    }
-
-    try {
-      // Tentar buscar do Redis primeiro
-      const cachedData = await redisCache.get<T>(key);
-      
-      if (cachedData !== null) {
-        logger.debug(`Redis cache hit: ${key}`);
-        return cachedData;
-      }
-
-      // Se não encontrou no cache, buscar dados frescos
-      logger.debug(`Redis cache miss: ${key}`);
-      const freshData = await fetcher();
-      
-      // Salvar no cache para próximas requisições
-      await redisCache.set(key, freshData, ttl);
-      
-      return freshData;
-    } catch (error) {
-      logger.warn(`Redis cache error for ${key}, falling back to direct fetch:`, error);
-      return await fetcher();
-    }
-  }, [key, fetcher, ttl, enabled, redisCache]);
-
-  const invalidate = useCallback(async () => {
-    await redisCache.remove(key);
-  }, [key, redisCache]);
-
-  const invalidatePattern = useCallback(async (pattern: string) => {
-    return await redisCache.invalidatePattern(pattern);
-  }, [redisCache]);
-
-  return {
-    getCachedData,
     invalidate,
     invalidatePattern,
-    redisCache
+    flush,
+    getStats,
+    stats
   };
 }

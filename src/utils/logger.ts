@@ -14,27 +14,36 @@ const LOG_LEVELS: LogLevel = {
 };
 
 class Logger {
+  private context: string;
   private isDevelopment = import.meta.env.DEV;
+
+  constructor(context: string) {
+    this.context = context;
+  }
 
   debug(message: string, data?: any) {
     if (this.isDevelopment) {
-      console.log(`[DEBUG] ${message}`, data || '');
+      console.log(`[DEBUG] [${this.context}] ${message}`, data || '');
     }
   }
 
   info(message: string, data?: any) {
     if (this.isDevelopment) {
-      console.info(`[INFO] ${message}`, data || '');
+      console.info(`[INFO] [${this.context}] ${message}`, data || '');
     }
   }
 
   warn(message: string, data?: any) {
-    console.warn(`[WARN] ${message}`, data || '');
+    console.warn(`[WARN] [${this.context}] ${message}`, data || '');
   }
 
   error(message: string, data?: any) {
-    console.error(`[ERROR] ${message}`, data || '');
+    console.error(`[ERROR] [${this.context}] ${message}`, data || '');
   }
 }
 
-export const logger = new Logger();
+export function createLogger(context: string): Logger {
+  return new Logger(context);
+}
+
+export const logger = new Logger('App');
