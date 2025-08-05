@@ -1,4 +1,3 @@
-
 import { useState, useCallback, useEffect } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
@@ -170,14 +169,18 @@ export function useSalesManager() {
 
       const { items, ...saleDataWithoutItems } = saleData;
 
+      // Preparar dados para inserção
+      const insertData = {
+        ...saleDataWithoutItems,
+        sale_number: saleData.sale_number!,
+        company_id: currentCompany.id,
+        sale_date: saleData.sale_date || new Date().toISOString().split('T')[0]
+      };
+
       // Criar venda
       const { data: sale, error: saleError } = await supabase
         .from('sales')
-        .insert({
-          ...saleDataWithoutItems,
-          company_id: currentCompany.id,
-          sale_date: saleData.sale_date || new Date().toISOString().split('T')[0]
-        })
+        .insert(insertData)
         .select()
         .single();
 

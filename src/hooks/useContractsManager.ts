@@ -1,4 +1,3 @@
-
 import { useState, useCallback, useEffect } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
@@ -198,13 +197,17 @@ export function useContractsManager() {
         throw new Error('Número de contrato já existe');
       }
 
+      // Preparar dados para inserção, garantindo que contract_number não seja undefined
+      const insertData = {
+        ...contractData,
+        contract_number: contractData.contract_number!, // Garantimos que não é undefined
+        company_id: currentCompany.id,
+        created_by: (await supabase.auth.getUser()).data.user?.id
+      };
+
       const { data, error } = await supabase
         .from('contracts')
-        .insert({
-          ...contractData,
-          company_id: currentCompany.id,
-          created_by: (await supabase.auth.getUser()).data.user?.id
-        })
+        .insert(insertData)
         .select()
         .single();
 
