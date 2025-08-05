@@ -1,202 +1,90 @@
 
-import React, { useEffect, useState } from 'react';
-import { supabase } from '@/integrations/supabase/client';
-import { Progress } from '@/components/ui/progress';
-import { Badge } from '@/components/ui/badge';
+import React, { useState, useEffect } from 'react';
 import { Check, X } from 'lucide-react';
-
-interface PasswordStrength {
-  score: number;
-  max_score: number;
-  strength: 'very_weak' | 'weak' | 'medium' | 'strong' | 'very_strong';
-  is_valid: boolean;
-  feedback: string[];
-}
+import { cn } from '@/lib/utils';
 
 interface PasswordStrengthValidatorProps {
   password: string;
-  onValidationChange?: (isValid: boolean, strength: PasswordStrength | null) => void;
-  className?: string;
+  onValidationChange: (isValid: boolean) => void;
 }
+
+interface ValidationRule {
+  id: string;
+  label: string;
+  test: (password: string) => boolean;
+}
+
+const validationRules: ValidationRule[] = [
+  {
+    id: 'length',
+    label: 'Pelo menos 8 caracteres',
+    test: (password) => password.length >= 8,
+  },
+  {
+    id: 'uppercase',
+    label: 'Uma letra maiúscula',
+    test: (password) => /[A-Z]/.test(password),
+  },
+  {
+    id: 'lowercase',
+    label: 'Uma letra minúscula',
+    test: (password) => /[a-z]/.test(password),
+  },
+  {
+    id: 'number',
+    label: 'Um número',
+    test: (password) => /[0-9]/.test(password),
+  },
+];
 
 export function PasswordStrengthValidator({ 
   password, 
-  onValidationChange,
-  className = '' 
+  onValidationChange 
 }: PasswordStrengthValidatorProps) {
-  const [strength, setStrength] = useState<PasswordStrength | null>(null);
-  const [isLoading, setIsLoading] = useState(false);
+  const [validationResults, setValidationResults] = useState<Record<string, boolean>>({});
 
   useEffect(() => {
-    if (!password) {
-      setStrength(null);
-      onValidationChange?.(false, null);
-      return;
-    }
+    const results = validationRules.reduce((acc, rule) => {
+      acc[rule.id] = rule.test(password);
+      return acc;
+    }, {} as Record<string, boolean>);
 
-    const validatePassword = async () => {
-      setIsLoading(true);
-      try {
-        // Use a direct validation function instead of RPC call for now
-        const passwordStrength = validatePasswordClient(password);
-        setStrength(passwordStrength);
-        onValidationChange?.(passwordStrength.is_valid, passwordStrength);
-      } catch (error) {
-        console.error('Error validating password:', error);
-        setStrength(null);
-        onValidationChange?.(false, null);
-      } finally {
-        setIsLoading(false);
-      }
-    };
+    setValidationResults(results);
 
-    const debounceTimer = setTimeout(validatePassword, 300);
-    return () => clearTimeout(debounceTimer);
+    const isValid = Object.values(results).every(Boolean) && password.length > 0;
+    onValidationChange(isValid);
   }, [password, onValidationChange]);
 
-  // Client-side password validation function
-  const validatePasswordClient = (password: string): PasswordStrength => {
-    let score = 0;
-    const feedback: string[] = [];
-
-    // Check password length
-    if (password.length >= 12) {
-      score += 2;
-    } else if (password.length >= 8) {
-      score += 1;
-    } else {
-      feedback.push('Use pelo menos 8 caracteres (12+ recomendado)');
-    }
-
-    // Check for lowercase letters
-    if (password.match(/[a-z]/)) {
-      score += 1;
-    } else {
-      feedback.push('Inclua letras minúsculas');
-    }
-
-    // Check for uppercase letters
-    if (password.match(/[A-Z]/)) {
-      score += 1;
-    } else {
-      feedback.push('Inclua letras maiúsculas');
-    }
-
-    // Check for numbers
-    if (password.match(/[0-9]/)) {
-      score += 1;
-    } else {
-      feedback.push('Inclua números');
-    }
-
-    // Check for special characters
-    if (password.match(/[^A-Za-z0-9]/)) {
-      score += 1;
-    } else {
-      feedback.push('Inclua caracteres especiais');
-    }
-
-    // Check for common patterns
-    if (password.toLowerCase().match(/(password|123456|qwerty|admin|user|login)/)) {
-      score -= 2;
-      feedback.push('Evite senhas comuns');
-    }
-
-    // Check for repeated characters
-    if (password.match(/(.)\1{2,}/)) {
-      score -= 1;
-      feedback.push('Evite caracteres repetidos');
-    }
-
-    const finalScore = Math.max(score, 0);
-    let strength: PasswordStrength['strength'];
-    
-    if (finalScore >= 5) {
-      strength = 'very_strong';
-    } else if (finalScore >= 4) {
-      strength = 'strong';
-    } else if (finalScore >= 3) {
-      strength = 'medium';
-    } else if (finalScore >= 2) {
-      strength = 'weak';
-    } else {
-      strength = 'very_weak';
-    }
-
-    return {
-      score: finalScore,
-      max_score: 6,
-      strength,
-      is_valid: finalScore >= 3,
-      feedback
-    };
-  };
-
-  if (!password || !strength) return null;
-
-  const getStrengthColor = (strengthLevel: string) => {
-    switch (strengthLevel) {
-      case 'very_strong': return 'text-green-600';
-      case 'strong': return 'text-blue-600';
-      case 'medium': return 'text-yellow-600';
-      case 'weak': return 'text-orange-600';
-      case 'very_weak': return 'text-red-600';
-      default: return 'text-gray-600';
-    }
-  };
-
-  const getStrengthLabel = (strengthLevel: string) => {
-    switch (strengthLevel) {
-      case 'very_strong': return 'Muito Forte';
-      case 'strong': return 'Forte';
-      case 'medium': return 'Média';
-      case 'weak': return 'Fraca';
-      case 'very_weak': return 'Muito Fraca';
-      default: return 'Desconhecida';
-    }
-  };
-
-  const progressPercentage = (strength.score / strength.max_score) * 100;
+  if (!password) {
+    return null;
+  }
 
   return (
-    <div className={`space-y-3 ${className}`}>
-      <div className="flex items-center justify-between">
-        <span className="text-sm font-medium">Força da Senha</span>
-        <Badge 
-          variant={strength.is_valid ? "default" : "destructive"}
-          className={getStrengthColor(strength.strength)}
-        >
-          {getStrengthLabel(strength.strength)}
-        </Badge>
+    <div className="space-y-2">
+      <p className="text-sm font-medium text-muted-foreground">
+        Sua senha deve conter:
+      </p>
+      <div className="space-y-1">
+        {validationRules.map((rule) => {
+          const isValid = validationResults[rule.id];
+          return (
+            <div
+              key={rule.id}
+              className={cn(
+                "flex items-center gap-2 text-sm",
+                isValid ? "text-green-600" : "text-muted-foreground"
+              )}
+            >
+              {isValid ? (
+                <Check className="h-4 w-4" />
+              ) : (
+                <X className="h-4 w-4" />
+              )}
+              <span>{rule.label}</span>
+            </div>
+          );
+        })}
       </div>
-
-      <Progress 
-        value={progressPercentage} 
-        className="h-2"
-      />
-
-      {strength.feedback.length > 0 && (
-        <div className="space-y-1">
-          <span className="text-xs font-medium text-muted-foreground">
-            Sugestões para melhorar:
-          </span>
-          <ul className="space-y-1">
-            {strength.feedback.map((feedback, index) => (
-              <li key={index} className="flex items-center gap-2 text-xs text-muted-foreground">
-                <X className="h-3 w-3 text-red-500" />
-                {feedback}
-              </li>
-            ))}
-          </ul>
-        </div>
-      )}
-
-      {strength.is_valid && (
-        <div className="flex items-center gap-2 text-xs text-green-600">
-          <Check className="h-3 w-3" />
-          Senha atende aos requisitos de segurança
-        </div>
-      )}
     </div>
   );
 }

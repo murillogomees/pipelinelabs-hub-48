@@ -1,12 +1,19 @@
 
 import React from 'react';
 import { Routes, Route } from 'react-router-dom';
-import UserDadosPessoais from '@/pages/UserDadosPessoais';
+import { ProtectedRoute } from '@/components/ProtectedRoute';
+
+// Placeholder components
+const UserProfile = () => <div>Perfil do Usuário</div>;
+const UserSettings = () => <div>Configurações do Usuário</div>;
 
 export function UserRoutes() {
   return (
-    <Routes>
-      <Route path="dados-pessoais" element={<UserDadosPessoais />} />
-    </Routes>
+    <ProtectedRoute>
+      <Routes>
+        <Route path="profile" element={<UserProfile />} />
+        <Route path="settings" element={<UserSettings />} />
+      </Routes>
+    </ProtectedRoute>
   );
 }

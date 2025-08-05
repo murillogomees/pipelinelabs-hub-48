@@ -1,30 +1,18 @@
 
+import React from 'react';
 import { Link } from 'react-router-dom';
-import { Button } from "@/components/ui/button";
-import { Home, ArrowLeft } from "lucide-react";
+import { Button } from '@/components/ui/button';
 
-const NotFound = () => {
+export default function NotFound() {
   return (
     <div className="min-h-screen flex items-center justify-center bg-background">
       <div className="text-center space-y-4">
-        <h1 className="text-6xl font-bold text-foreground mb-4">404</h1>
-        <h2 className="text-2xl font-semibold text-foreground mb-4">Página não encontrada</h2>
-        <p className="text-xl text-muted-foreground mb-8">A página que você está procurando não existe.</p>
-        <div className="space-x-4">
-          <Button onClick={() => window.history.back()} variant="outline">
-            <ArrowLeft className="w-4 h-4 mr-2" />
-            Voltar
-          </Button>
-          <Button asChild>
-            <Link to="/app">
-              <Home className="w-4 h-4 mr-2" />
-              Ir para Dashboard
-            </Link>
-          </Button>
-        </div>
+        <h1 className="text-4xl font-bold">404</h1>
+        <p className="text-xl text-muted-foreground">Página não encontrada</p>
+        <Button asChild>
+          <Link to="/">Voltar ao Início</Link>
+        </Button>
       </div>
     </div>
   );
-};
-
-export default NotFound;
+}
