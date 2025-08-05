@@ -104,6 +104,27 @@ type FormData = {
 export function AccessLevelDialog({ open, onOpenChange, accessLevel, onSave }: AccessLevelDialogProps) {
   const { createAccessLevel, updateAccessLevel, isCreating, isUpdating } = useAccessLevels();
   
+  // Use useMemo to compute form values - no setState, no re-renders
+  const formDefaultValues = useMemo((): FormData => {
+    if (accessLevel) {
+      return {
+        name: accessLevel.name || '',
+        display_name: accessLevel.display_name || '',
+        description: accessLevel.description || '',
+        is_active: accessLevel.is_active ?? true,
+        permissions: accessLevel.permissions || {}
+      };
+    }
+    
+    return {
+      name: '',
+      display_name: '',
+      description: '',
+      is_active: true,
+      permissions: {}
+    };
+  }, [accessLevel?.id]); // Only depend on the ID, not the whole object
+
   const onSubmit = useCallback(async (data: FormData) => {
     try {
       const submitData = {
@@ -119,7 +140,6 @@ export function AccessLevelDialog({ open, onOpenChange, accessLevel, onSave }: A
       onSave();
       onOpenChange(false);
     } catch (error) {
-      // Error handling is done in the hook
       console.error('Form submission error:', error);
     }
   }, [accessLevel, createAccessLevel, updateAccessLevel, onSave, onOpenChange]);
@@ -129,56 +149,23 @@ export function AccessLevelDialog({ open, onOpenChange, accessLevel, onSave }: A
     handleSubmit,
     isSubmitting
   } = useBaseForm<FormData>({
-    defaultValues: {
-      name: '',
-      display_name: '',
-      description: '',
-      is_active: true,
-      permissions: {}
-    },
+    defaultValues: formDefaultValues,
     onSubmit,
     resetOnSuccess: false,
     successMessage: `Nível de acesso ${accessLevel ? 'atualizado' : 'criado'} com sucesso`,
     errorMessage: `Falha ao ${accessLevel ? 'atualizar' : 'criar'} nível de acesso`
   });
 
-  const { watch, setValue, reset } = form;
+  const { watch, setValue } = form;
   
-  // Watch specific fields instead of all fields to prevent infinite re-renders
+  // Watch specific fields - no setState here
   const displayName = watch('display_name');
   const name = watch('name');
   const description = watch('description');
   const isActive = watch('is_active');
   const permissions = watch('permissions');
 
-  // Simple form reset when dialog opens
-  React.useEffect(() => {
-    if (open) {
-      if (accessLevel) {
-        reset({
-          name: accessLevel.name || '',
-          display_name: accessLevel.display_name || '',
-          description: accessLevel.description || '',
-          is_active: accessLevel.is_active ?? true,
-          permissions: accessLevel.permissions || {}
-        });
-      } else {
-        reset({
-          name: '',
-          display_name: '',
-          description: '',
-          is_active: true,
-          permissions: {}
-        });
-      }
-    }
-  }, [open, accessLevel?.id, reset]);
-
-  // Simple dialog close handler
-  const handleDialogChange = useCallback((newOpen: boolean) => {
-    onOpenChange(newOpen);
-  }, [onOpenChange]);
-
+  // Memoized handlers - no setState
   const handleDisplayNameChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
     setValue('display_name', value);
@@ -195,6 +182,7 @@ export function AccessLevelDialog({ open, onOpenChange, accessLevel, onSave }: A
     });
   }, [permissions, setValue]);
 
+  // Memoized computed values - no setState
   const enabledPermissions = useMemo(() => {
     return Object.values(permissions || {}).filter(Boolean).length;
   }, [permissions]);
@@ -202,6 +190,11 @@ export function AccessLevelDialog({ open, onOpenChange, accessLevel, onSave }: A
   const totalPermissions = useMemo(() => {
     return permissionCategories.reduce((acc, cat) => acc + cat.permissions.length, 0);
   }, []);
+
+  // Simple dialog handler - no setState
+  const handleDialogChange = useCallback((newOpen: boolean) => {
+    onOpenChange(newOpen);
+  }, [onOpenChange]);
 
   return (
     <Dialog open={open} onOpenChange={handleDialogChange}>
