@@ -15,12 +15,12 @@ export function AdminRoutes() {
   return (
     <LazyLoader>
       <Routes>
-        <Route path="/" element={<AdminDashboard />} />
-        <Route path="/empresas" element={<AdminCompanies />} />
-        <Route path="/usuarios" element={<AdminUsers />} />
-        <Route path="/configuracoes/*" element={<AdminSettings />} />
-        <Route path="/performance" element={<AdminPerformance />} />
-        <Route path="/cache" element={<AdminCache />} />
+        <Route index element={<AdminDashboard />} />
+        <Route path="empresas" element={<AdminCompanies />} />
+        <Route path="usuarios" element={<AdminUsers />} />
+        <Route path="configuracoes/*" element={<AdminSettings />} />
+        <Route path="performance" element={<AdminPerformance />} />
+        <Route path="cache" element={<AdminCache />} />
       </Routes>
     </LazyLoader>
   );

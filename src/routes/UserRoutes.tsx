@@ -1,12 +1,12 @@
 
 import React from 'react';
-import { Route } from 'react-router-dom';
+import { Routes, Route } from 'react-router-dom';
 import UserDadosPessoais from '@/pages/UserDadosPessoais';
 
 export function UserRoutes() {
   return (
-    <Route path="user">
+    <Routes>
       <Route path="dados-pessoais" element={<UserDadosPessoais />} />
-    </Route>
+    </Routes>
   );
 }

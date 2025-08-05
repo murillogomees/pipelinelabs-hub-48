@@ -43,13 +43,13 @@ function App() {
               <Route path="/termos" element={<TermosDeUso />} />
 
               {/* Protected App Routes */}
-              <AppRoutes />
+              <Route path="/app/*" element={<AppRoutes />} />
               
               {/* User Routes */}
-              <UserRoutes />
+              <Route path="/user/*" element={<UserRoutes />} />
 
               {/* Admin Routes */}
-              <AdminRoutes />
+              <Route path="/admin/*" element={<AdminRoutes />} />
 
               {/* 404 Route */}
               <Route path="*" element={<NotFound />} />

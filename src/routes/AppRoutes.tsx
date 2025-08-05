@@ -16,13 +16,13 @@ export function AppRoutes() {
   return (
     <LazyLoader>
       <Routes>
-        <Route path="/dashboard" element={<Dashboard />} />
-        <Route path="/produtos/*" element={<Products />} />
-        <Route path="/vendas/*" element={<Sales />} />
-        <Route path="/clientes/*" element={<Customers />} />
-        <Route path="/pos/*" element={<Pos />} />
-        <Route path="/relatorios/*" element={<Reports />} />
-        <Route path="/configuracoes/*" element={<Settings />} />
+        <Route path="dashboard" element={<Dashboard />} />
+        <Route path="produtos/*" element={<Products />} />
+        <Route path="vendas/*" element={<Sales />} />
+        <Route path="clientes/*" element={<Customers />} />
+        <Route path="pos/*" element={<Pos />} />
+        <Route path="relatorios/*" element={<Reports />} />
+        <Route path="configuracoes/*" element={<Settings />} />
       </Routes>
     </LazyLoader>
   );
