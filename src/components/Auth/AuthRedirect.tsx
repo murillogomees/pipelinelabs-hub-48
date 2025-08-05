@@ -1,4 +1,5 @@
-import React, { useEffect } from 'react';
+
+import React from 'react';
 import { Navigate, useLocation } from 'react-router-dom';
 import { useAuth } from './AuthProvider';
 import { LoadingSpinner } from '@/components/ui/loading-spinner';
@@ -22,11 +23,9 @@ export const AuthRedirect: React.FC<AuthRedirectProps> = ({ children }) => {
 
   // Se usuário está autenticado e tentando acessar /auth, redirecionar para dashboard
   if (user && location.pathname === '/auth') {
-    // Pegar o redirecionamento original se existir, senão ir para dashboard
-    const from = location.state?.from?.pathname || '/app/dashboard';
-    return <Navigate to={from} replace />;
+    return <Navigate to="/app/dashboard" replace />;
   }
 
-  // Se não está autenticado, mostrar a página de auth normalmente
+  // Se não está autenticado e não está em /auth, permitir acesso
   return <>{children}</>;
 };

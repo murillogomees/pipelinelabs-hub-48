@@ -2,6 +2,7 @@
 import React, { lazy } from 'react';
 import { Routes, Route } from 'react-router-dom';
 import { LazyLoader } from '@/components/common/LazyLoader';
+import { ProtectedRoute } from '@/components/ProtectedRoute';
 
 // Lazy load components
 const Dashboard = lazy(() => import('@/pages/Dashboard'));
@@ -14,16 +15,18 @@ const Pos = lazy(() => import('@/pages/Pos'));
 
 export function AppRoutes() {
   return (
-    <LazyLoader>
-      <Routes>
-        <Route path="dashboard" element={<Dashboard />} />
-        <Route path="produtos/*" element={<Products />} />
-        <Route path="vendas/*" element={<Sales />} />
-        <Route path="clientes/*" element={<Customers />} />
-        <Route path="pos/*" element={<Pos />} />
-        <Route path="relatorios/*" element={<Reports />} />
-        <Route path="configuracoes/*" element={<Settings />} />
-      </Routes>
-    </LazyLoader>
+    <ProtectedRoute>
+      <LazyLoader>
+        <Routes>
+          <Route path="dashboard" element={<Dashboard />} />
+          <Route path="produtos/*" element={<Products />} />
+          <Route path="vendas/*" element={<Sales />} />
+          <Route path="clientes/*" element={<Customers />} />
+          <Route path="pos/*" element={<Pos />} />
+          <Route path="relatorios/*" element={<Reports />} />
+          <Route path="configuracoes/*" element={<Settings />} />
+        </Routes>
+      </LazyLoader>
+    </ProtectedRoute>
   );
 }

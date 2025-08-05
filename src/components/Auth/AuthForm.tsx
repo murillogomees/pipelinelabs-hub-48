@@ -7,7 +7,6 @@ import { Label } from '@/components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { AuthFormFields } from './components/AuthFormFields';
-import { useAuthForm } from './hooks/useAuthForm';
 import { PasswordStrengthValidator } from '@/components/Security/PasswordStrengthValidator';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
@@ -58,9 +57,10 @@ export function AuthForm() {
     
     try {
       if (isSignUp) {
-        const redirectUrl = `${window.location.origin}/auth`;
+        const redirectUrl = `${window.location.origin}/app/dashboard`;
         
-        const { error } = await supabase.auth.signUp({
+        // Primeiro, criar o usuário
+        const { data: authData, error: authError } = await supabase.auth.signUp({
           email: formData.email.trim(),
           password: formData.password,
           options: {
@@ -74,12 +74,77 @@ export function AuthForm() {
           }
         });
 
-        if (error) throw error;
+        if (authError) throw authError;
+
+        // Se o usuário foi criado com sucesso, criar a empresa e o profile
+        if (authData.user) {
+          // Aguardar um pouco para garantir que o usuário foi criado
+          await new Promise(resolve => setTimeout(resolve, 1000));
+
+          // Criar a empresa
+          const { data: company, error: companyError } = await supabase
+            .from('companies')
+            .insert({
+              name: formData.companyName,
+              document: formData.document,
+              user_id: authData.user.id
+            })
+            .select()
+            .single();
+
+          if (companyError) {
+            console.error('Erro ao criar empresa:', companyError);
+          }
+
+          // Criar o profile
+          const { error: profileError } = await supabase
+            .from('profiles')
+            .insert({
+              id: authData.user.id,
+              display_name: `${formData.firstName} ${formData.lastName}`,
+              document: formData.document,
+              phone: formData.phone,
+              company_id: company?.id
+            });
+
+          if (profileError) {
+            console.error('Erro ao criar profile:', profileError);
+          }
+
+          // Se tudo deu certo com a empresa, criar a relação user_companies
+          if (company) {
+            const { error: userCompanyError } = await supabase
+              .from('user_companies')
+              .insert({
+                user_id: authData.user.id,
+                company_id: company.id,
+                role: 'contratante',
+                is_active: true
+              });
+
+            if (userCompanyError) {
+              console.error('Erro ao criar relação user_companies:', userCompanyError);
+            }
+          }
+        }
 
         toast({
           title: "Sucesso",
-          description: "Cadastro realizado com sucesso! Verifique seu email para confirmar a conta.",
+          description: "Cadastro realizado com sucesso! Você pode fazer login agora.",
         });
+
+        // Mudar para modo de login após cadastro bem-sucedido
+        setIsSignUp(false);
+        setFormData(prev => ({
+          ...prev,
+          password: '',
+          firstName: '',
+          lastName: '',
+          companyName: '',
+          document: '',
+          phone: ''
+        }));
+
       } else {
         const { data, error } = await supabase.auth.signInWithPassword({
           email: formData.email.trim(),
@@ -95,11 +160,11 @@ export function AuthForm() {
 
         // Redirecionar para o dashboard após login bem-sucedido
         if (data?.user) {
-          navigate('/');
+          navigate('/app/dashboard');
         }
       }
     } catch (error: any) {
-      logger.authEvent(isSignUp ? 'signup' : 'signin', false, undefined, { error: error.message });
+      console.error("Auth error:", error);
       
       let message = "Erro inesperado. Tente novamente.";
       
@@ -140,81 +205,81 @@ export function AuthForm() {
 
   return (
     <Card className="w-full max-w-md mx-auto">
-        <CardHeader>
-          <CardTitle>Pipeline Labs</CardTitle>
-          <CardDescription>
-            {isSignUp ? 'Crie sua conta' : 'Entre na sua conta'}
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <Tabs value={isSignUp ? 'signup' : 'signin'} className="w-full">
-            <TabsList className="grid w-full grid-cols-2">
-              <TabsTrigger 
-                value="signin" 
-                onClick={() => setIsSignUp(false)}
-              >
-                Entrar
-              </TabsTrigger>
-              <TabsTrigger 
-                value="signup" 
-                onClick={() => setIsSignUp(true)}
-              >
-                Cadastrar
-              </TabsTrigger>
-            </TabsList>
+      <CardHeader>
+        <CardTitle>Pipeline Labs</CardTitle>
+        <CardDescription>
+          {isSignUp ? 'Crie sua conta' : 'Entre na sua conta'}
+        </CardDescription>
+      </CardHeader>
+      <CardContent>
+        <Tabs value={isSignUp ? 'signup' : 'signin'} className="w-full">
+          <TabsList className="grid w-full grid-cols-2">
+            <TabsTrigger 
+              value="signin" 
+              onClick={() => setIsSignUp(false)}
+            >
+              Entrar
+            </TabsTrigger>
+            <TabsTrigger 
+              value="signup" 
+              onClick={() => setIsSignUp(true)}
+            >
+              Cadastrar
+            </TabsTrigger>
+          </TabsList>
 
-            <form onSubmit={handleFormSubmit} className="space-y-4">
-              
-              <TabsContent value="signin" className="space-y-4">
-                <div className="space-y-2">
-                  <Label htmlFor="email">Email</Label>
-                  <Input
-                    id="email"
-                    type="email"
-                    value={formData.email}
-                    onChange={(e) => handleFormDataChange({ email: e.target.value })}
-                    required
-                    autoComplete="email"
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="password">Senha</Label>
-                  <Input
-                    id="password"
-                    type="password"
-                    value={formData.password}
-                    onChange={(e) => handleFormDataChange({ password: e.target.value })}
-                    required
-                    autoComplete="current-password"
-                  />
-                </div>
-              </TabsContent>
-
-              <TabsContent value="signup" className="space-y-4">
-                <AuthFormFields
-                  isSignUp={isSignUp}
-                  formData={formData}
-                  onFormDataChange={handleFormDataChange}
-                  onDocumentChange={handleDocumentChange}
+          <form onSubmit={handleFormSubmit} className="space-y-4">
+            
+            <TabsContent value="signin" className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="email">Email</Label>
+                <Input
+                  id="email"
+                  type="email"
+                  value={formData.email}
+                  onChange={(e) => handleFormDataChange({ email: e.target.value })}
+                  required
+                  autoComplete="email"
                 />
+              </div>
 
-                <PasswordStrengthValidator
-                  password={formData.password}
-                  onValidationChange={handlePasswordValidation}
+              <div className="space-y-2">
+                <Label htmlFor="password">Senha</Label>
+                <Input
+                  id="password"
+                  type="password"
+                  value={formData.password}
+                  onChange={(e) => handleFormDataChange({ password: e.target.value })}
+                  required
+                  autoComplete="current-password"
                 />
-              </TabsContent>
+              </div>
+            </TabsContent>
 
-              <Button 
-                type="submit" 
-                className="w-full" 
-                disabled={isLoading || (isSignUp && !isPasswordValid)}
-              >
-                {isLoading ? 'Processando...' : (isSignUp ? 'Cadastrar' : 'Entrar')}
-              </Button>
-            </form>
-          </Tabs>
-        </CardContent>
-      </Card>
+            <TabsContent value="signup" className="space-y-4">
+              <AuthFormFields
+                isSignUp={isSignUp}
+                formData={formData}
+                onFormDataChange={handleFormDataChange}
+                onDocumentChange={handleDocumentChange}
+              />
+
+              <PasswordStrengthValidator
+                password={formData.password}
+                onValidationChange={handlePasswordValidation}
+              />
+            </TabsContent>
+
+            <Button 
+              type="submit" 
+              className="w-full" 
+              disabled={isLoading || (isSignUp && !isPasswordValid)}
+            >
+              {isLoading ? 'Processando...' : (isSignUp ? 'Cadastrar' : 'Entrar')}
+            </Button>
+          </form>
+        </Tabs>
+      </CardContent>
+    </Card>
   );
 }
