@@ -5,26 +5,29 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { DataTable } from '@/components/ui/data-table';
 import { Badge } from '@/components/ui/badge';
-import { useCompanies } from '@/hooks/useCompanies';
+import { useCompanies, Company } from '@/hooks/useCompanies';
+import { CompanyDialog } from './CompanyDialog';
 import { toast } from 'sonner';
-
-interface Company {
-  id: string;
-  name: string;
-  trade_name?: string;
-  document: string;
-  email?: string;
-  phone?: string;
-  address?: string;
-  city?: string;
-  zipcode?: string;
-  created_at: string;
-  updated_at: string;
-}
 
 export function CompaniesManagement() {
   const { companies, loading, deleteCompany, refetch } = useCompanies();
   const [searchTerm, setSearchTerm] = useState('');
+  const [dialogOpen, setDialogOpen] = useState(false);
+  const [selectedCompany, setSelectedCompany] = useState<Company | undefined>(undefined);
+
+  const handleOpenDialog = (company?: Company) => {
+    setSelectedCompany(company);
+    setDialogOpen(true);
+  };
+
+  const handleCloseDialog = () => {
+    setDialogOpen(false);
+    setSelectedCompany(undefined);
+  };
+
+  const handleSuccess = () => {
+    refetch();
+  };
 
   const handleDeleteCompany = async (id: string) => {
     try {
@@ -110,7 +113,7 @@ export function CompaniesManagement() {
       label: 'Editar',
       icon: Edit,
       onClick: (company: Company) => {
-        toast.info('Funcionalidade de edição em desenvolvimento');
+        handleOpenDialog(company);
       },
     },
     {
@@ -133,7 +136,7 @@ export function CompaniesManagement() {
             <Building2 className="w-5 h-5" />
             Empresas Cadastradas
           </CardTitle>
-          <Button>
+          <Button onClick={() => handleOpenDialog()}>
             <Plus className="w-4 h-4 mr-2" />
             Nova Empresa
           </Button>
@@ -158,6 +161,13 @@ export function CompaniesManagement() {
           emptyMessage="Nenhuma empresa encontrada"
         />
       </CardContent>
+
+      <CompanyDialog
+        open={dialogOpen}
+        onOpenChange={handleCloseDialog}
+        onSuccess={handleSuccess}
+        company={selectedCompany}
+      />
     </Card>
   );
 }
