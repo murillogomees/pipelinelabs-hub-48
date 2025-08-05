@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useMemo } from 'react';
+import React, { useState, useCallback, useMemo, useRef } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -145,15 +145,40 @@ function AccessLevelForm({ accessLevel, onSave, onCancel }: {
     setFormData(prev => ({ ...prev, [field]: value }));
   }, []);
 
-  const handlePermissionToggle = useCallback((permission: string, checked?: boolean) => {
+  // Single stable handler for all permission changes using functional state update
+  const handlePermissionChange = useCallback((e: React.MouseEvent | boolean, permissionKey?: string) => {
+    let permission: string;
+    let checked: boolean;
+    
+    if (typeof e === 'boolean' && permissionKey) {
+      // Called from Switch onCheckedChange
+      permission = permissionKey;
+      checked = e;
+    } else if (e && typeof e === 'object' && 'currentTarget' in e) {
+      // Called from div click
+      const target = e.currentTarget as HTMLElement;
+      permission = target.dataset.permission!;
+      // Use functional update to get current state
+      setFormData(prev => ({
+        ...prev,
+        permissions: {
+          ...prev.permissions,
+          [permission]: !prev.permissions[permission]
+        }
+      }));
+      return;
+    } else {
+      return;
+    }
+    
     setFormData(prev => ({
       ...prev,
       permissions: {
         ...prev.permissions,
-        [permission]: checked !== undefined ? checked : !prev.permissions[permission]
+        [permission]: checked
       }
     }));
-  }, []);
+  }, []); // No dependencies to avoid recreation
 
   // Stable handler for active switch
   const handleActiveChange = useCallback((checked: boolean) => {
@@ -255,7 +280,8 @@ function AccessLevelForm({ accessLevel, onSave, onCancel }: {
                             ? 'bg-primary/5 border-primary/20' 
                             : 'hover:bg-muted/30'
                         }`}
-                        onClick={() => handlePermissionToggle(permission.key)}
+                        data-permission={permission.key}
+                        onClick={handlePermissionChange}
                       >
                         <div className="flex items-start justify-between">
                           <div className="flex-1">
@@ -268,7 +294,7 @@ function AccessLevelForm({ accessLevel, onSave, onCancel }: {
                           </div>
                           <Switch
                             checked={isEnabled}
-                            onCheckedChange={(checked) => handlePermissionToggle(permission.key, checked)}
+                            onCheckedChange={(checked) => handlePermissionChange(checked, permission.key)}
                             className="ml-3"
                           />
                         </div>
