@@ -97,7 +97,11 @@ export function useDashboard() {
         customers: customersData.data || []
       };
     },
-    enabled: !!currentCompanyId
+    enabled: !!currentCompanyId,
+    staleTime: 1000 * 60 * 5, // 5 minutos em vez de tempo padrão
+    gcTime: 1000 * 60 * 15, // 15 minutos de cache
+    refetchInterval: 1000 * 60 * 5, // 5 minutos em vez de 30 segundos
+    refetchOnWindowFocus: false, // Não refetch ao focar janela
   });
 
   return {

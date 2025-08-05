@@ -61,8 +61,9 @@ export function useDashboardData() {
         lowStockItems: stockStats.data || []
       };
     },
-    staleTime: 60000, // Cache por 1 minuto
-    gcTime: 300000, // 5 minutos
+    staleTime: 1000 * 60 * 10, // Cache por 10 minutos (era 1 min)
+    gcTime: 1000 * 60 * 30, // 30 minutos (era 5 min)
+    refetchOnWindowFocus: false, // Não refetch desnecessário
   });
 }
 
@@ -91,8 +92,9 @@ export function useOptimizedProducts(filters?: { search?: string; category?: str
       
       return { data: data || [], count: count || 0 };
     },
-    staleTime: 60000,
-    gcTime: 300000,
+    staleTime: 1000 * 60 * 10, // Cache por 10 minutos (era 1 min)
+    gcTime: 1000 * 60 * 30, // 30 minutos (era 5 min)
+    refetchOnWindowFocus: false, // Não refetch desnecessário
   });
 }
 
@@ -119,8 +121,9 @@ export function useOptimizedCustomers(filters?: { search?: string; status?: bool
       
       return { data: data || [], count: count || 0 };
     },
-    staleTime: 60000,
-    gcTime: 300000,
+    staleTime: 1000 * 60 * 10, // Cache por 10 minutos 
+    gcTime: 1000 * 60 * 30, // 30 minutos
+    refetchOnWindowFocus: false, // Não refetch desnecessário
   });
 }
 

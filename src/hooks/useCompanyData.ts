@@ -1,5 +1,5 @@
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { useAuth } from '@/components/Auth/AuthProvider';
@@ -44,7 +44,7 @@ export function useCompanyData(): UseCompanyDataReturn {
   // Contratante e Super Admin podem editar
   const canEdit = isContratante || isSuperAdmin;
 
-  const fetchCompany = async () => {
+  const fetchCompany = useCallback(async () => {
     if (!user?.id) return;
 
     try {
@@ -75,7 +75,7 @@ export function useCompanyData(): UseCompanyDataReturn {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [user?.id]); // useCallback dependency
 
   const updateCompany = async (updateData: Partial<CompanyData>): Promise<boolean> => {
     if (!company?.id || !canEdit) {
@@ -119,7 +119,7 @@ export function useCompanyData(): UseCompanyDataReturn {
 
   useEffect(() => {
     fetchCompany();
-  }, [user?.id]);
+  }, [fetchCompany]); // Use memoized function
 
   return {
     company,
