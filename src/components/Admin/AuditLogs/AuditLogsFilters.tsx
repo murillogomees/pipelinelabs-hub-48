@@ -76,14 +76,14 @@ export const AuditLogsFilters = ({ filters, onFiltersChange, onExport }: AuditLo
             <div className="space-y-2">
               <Label htmlFor="resource-type">Tipo de Recurso</Label>
               <Select
-                value={filters.resource_type || ''}
-                onValueChange={(value) => handleFilterChange('resource_type', value)}
+                value={filters.resource_type || 'all'}
+                onValueChange={(value) => handleFilterChange('resource_type', value === 'all' ? undefined : value)}
               >
                 <SelectTrigger>
                   <SelectValue placeholder="Todos" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">Todos</SelectItem>
+                  <SelectItem value="all">Todos</SelectItem>
                   <SelectItem value="user">Usuário</SelectItem>
                   <SelectItem value="company">Empresa</SelectItem>
                   <SelectItem value="product">Produto</SelectItem>
@@ -99,14 +99,14 @@ export const AuditLogsFilters = ({ filters, onFiltersChange, onExport }: AuditLo
             <div className="space-y-2">
               <Label htmlFor="severity">Severidade</Label>
               <Select
-                value={filters.severity || ''}
-                onValueChange={(value) => handleFilterChange('severity', value)}
+                value={filters.severity || 'all'}
+                onValueChange={(value) => handleFilterChange('severity', value === 'all' ? undefined : value)}
               >
                 <SelectTrigger>
                   <SelectValue placeholder="Todas" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">Todas</SelectItem>
+                  <SelectItem value="all">Todas</SelectItem>
                   <SelectItem value="info">Info</SelectItem>
                   <SelectItem value="warning">Aviso</SelectItem>
                   <SelectItem value="error">Erro</SelectItem>

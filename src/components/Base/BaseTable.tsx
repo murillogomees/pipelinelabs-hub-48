@@ -205,14 +205,14 @@ export const BaseTable = <T extends Record<string, any>>({
                   <div key={filter.key} className="w-full sm:w-48">
                     {filter.type === 'select' ? (
                       <Select
-                        value={activeFilters[filter.key] || ''}
-                        onValueChange={(value) => handleFilterChange(filter.key, value)}
+                        value={activeFilters[filter.key] || 'all'}
+                        onValueChange={(value) => handleFilterChange(filter.key, value === 'all' ? '' : value)}
                       >
                         <SelectTrigger>
                           <SelectValue placeholder={filter.placeholder || filter.label} />
                         </SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="">Todos</SelectItem>
+                          <SelectItem value="all">Todos</SelectItem>
                           {filter.options?.map(option => (
                             <SelectItem key={option.value} value={option.value}>
                               {option.label}
