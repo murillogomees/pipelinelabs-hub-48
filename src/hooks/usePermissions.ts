@@ -3,8 +3,10 @@ import { useProfile } from './useProfile';
 import { useCurrentCompany } from './useCurrentCompany';
 
 export const usePermissions = () => {
-  const { profile, isLoading, error, isSuperAdmin, hasPermission, canAccessRoute } = useProfile();
+  const profileData = useProfile();
   const { data: currentCompany } = useCurrentCompany();
+
+  const { profile, isLoading, error, isSuperAdmin, hasPermission, canAccessRoute } = profileData;
 
   const isAdmin = isSuperAdmin || hasPermission('admin_panel');
   const isContratante = hasPermission('admin_panel') || hasPermission('empresas');

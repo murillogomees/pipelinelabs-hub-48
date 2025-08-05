@@ -6,7 +6,7 @@ import { useAuth } from '@/components/Auth/AuthProvider';
 export const useProfile = () => {
   const { user } = useAuth();
   
-  return useQuery({
+  const queryResult = useQuery({
     queryKey: ['profile', user?.id],
     queryFn: async () => {
       if (!user?.id) {
@@ -29,7 +29,7 @@ export const useProfile = () => {
             )
           )
         `)
-        .eq('id', user.id)
+        .eq('user_id', user.id)
         .eq('user_companies.is_active', true)
         .maybeSingle();
 
@@ -49,9 +49,9 @@ export const useProfile = () => {
   const isSuperAdmin = false;
 
   return {
-    profile: useQuery.data,
-    isLoading: useQuery.isLoading,
-    error: useQuery.error,
+    profile: queryResult.data,
+    isLoading: queryResult.isLoading,
+    error: queryResult.error,
     isSuperAdmin,
     hasPermission,
     canAccessRoute
