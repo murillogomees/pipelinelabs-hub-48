@@ -1,4 +1,3 @@
-
 import React, { useMemo, useCallback } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
@@ -104,26 +103,17 @@ type FormData = {
 export function AccessLevelDialog({ open, onOpenChange, accessLevel, onSave }: AccessLevelDialogProps) {
   const { createAccessLevel, updateAccessLevel, isCreating, isUpdating } = useAccessLevels();
   
-  // Use useMemo to compute form values with complete accessLevel data
-  const formDefaultValues = useMemo((): FormData => {
-    if (accessLevel) {
-      return {
-        name: accessLevel.name || '',
-        display_name: accessLevel.display_name || '',
-        description: accessLevel.description || '',
-        is_active: accessLevel.is_active ?? true,
-        permissions: accessLevel.permissions || {}
-      };
-    }
-    
-    return {
-      name: '',
-      display_name: '',
-      description: '',
-      is_active: true,
-      permissions: {}
-    };
-  }, [accessLevel]); // Depend on the full accessLevel object to trigger re-creation
+  // Create a stable identifier for form reset
+  const accessLevelId = accessLevel?.id || null;
+  
+  // Static default values to prevent re-renders
+  const defaultValues = useMemo((): FormData => ({
+    name: '',
+    display_name: '',
+    description: '',
+    is_active: true,
+    permissions: {}
+  }), []);
 
   const onSubmit = useCallback(async (data: FormData) => {
     try {
@@ -149,7 +139,7 @@ export function AccessLevelDialog({ open, onOpenChange, accessLevel, onSave }: A
     handleSubmit,
     isSubmitting
   } = useBaseForm<FormData>({
-    defaultValues: formDefaultValues,
+    defaultValues,
     onSubmit,
     resetOnSuccess: false,
     successMessage: `Nível de acesso ${accessLevel ? 'atualizado' : 'criado'} com sucesso`,
@@ -158,14 +148,34 @@ export function AccessLevelDialog({ open, onOpenChange, accessLevel, onSave }: A
 
   const { watch, setValue } = form;
   
-  // Watch specific fields - no setState here
+  // Watch specific fields
   const displayName = watch('display_name');
   const name = watch('name');
   const description = watch('description');
   const isActive = watch('is_active');
   const permissions = watch('permissions');
 
-  // Memoized handlers - no setState
+  // Populate form when dialog opens - using stable dependencies
+  React.useEffect(() => {
+    if (open) {
+      if (accessLevel) {
+        // Set values for editing
+        setValue('name', accessLevel.name || '');
+        setValue('display_name', accessLevel.display_name || '');
+        setValue('description', accessLevel.description || '');
+        setValue('is_active', accessLevel.is_active ?? true);
+        setValue('permissions', accessLevel.permissions || {});
+      } else {
+        // Clear values for new entry
+        setValue('name', '');
+        setValue('display_name', '');
+        setValue('description', '');
+        setValue('is_active', true);
+        setValue('permissions', {});
+      }
+    }
+  }, [open, accessLevelId, setValue]); // Use accessLevelId instead of accessLevel
+
   const handleDisplayNameChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
     setValue('display_name', value);
@@ -182,7 +192,6 @@ export function AccessLevelDialog({ open, onOpenChange, accessLevel, onSave }: A
     });
   }, [permissions, setValue]);
 
-  // Memoized computed values - no setState
   const enabledPermissions = useMemo(() => {
     return Object.values(permissions || {}).filter(Boolean).length;
   }, [permissions]);
@@ -191,13 +200,8 @@ export function AccessLevelDialog({ open, onOpenChange, accessLevel, onSave }: A
     return permissionCategories.reduce((acc, cat) => acc + cat.permissions.length, 0);
   }, []);
 
-  // Simple dialog handler - no setState
-  const handleDialogChange = useCallback((newOpen: boolean) => {
-    onOpenChange(newOpen);
-  }, [onOpenChange]);
-
   return (
-    <Dialog open={open} onOpenChange={handleDialogChange}>
+    <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[800px] max-h-[90vh] overflow-hidden flex flex-col">
         <DialogHeader>
           <DialogTitle className="text-xl font-semibold">
