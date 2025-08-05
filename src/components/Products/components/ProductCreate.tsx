@@ -46,10 +46,10 @@ export function ProductCreate({ onSuccess, onCancel }: ProductCreateProps) {
 
   const onSubmit = async (data: ProductFormData) => {
     try {
-      // TypeScript knows these fields are required due to schema validation
+      // Create product data with proper typing - schema validation guarantees name and code are present
       const productData = {
-        name: data.name,
-        code: data.code,
+        name: data.name!, // Non-null assertion safe due to schema validation
+        code: data.code!, // Non-null assertion safe due to schema validation
         description: data.description,
         price: data.price,
         cost_price: data.cost_price,
