@@ -80,11 +80,16 @@ export function useAuditoriaProjeto() {
     mutationFn: async (configData: Partial<AuditoriaConfig>) => {
       if (!currentCompany?.id) throw new Error('Empresa não selecionada');
 
+      const payload = {
+        ...configData,
+        company_id: currentCompany.id,
+      };
+
       if (config?.id) {
         // Atualizar existente
         const { data, error } = await supabase
           .from('auditoria_config')
-          .update(configData)
+          .update(payload)
           .eq('id', config.id)
           .eq('company_id', currentCompany.id)
           .select()
@@ -96,10 +101,7 @@ export function useAuditoriaProjeto() {
         // Criar nova
         const { data, error } = await supabase
           .from('auditoria_config')
-          .insert({
-            ...configData,
-            company_id: currentCompany.id
-          })
+          .insert(payload)
           .select()
           .single();
 

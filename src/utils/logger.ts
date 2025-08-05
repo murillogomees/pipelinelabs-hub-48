@@ -1,10 +1,5 @@
 
-export interface LogLevel {
-  DEBUG: 'debug';
-  INFO: 'info';
-  WARN: 'warn';
-  ERROR: 'error';
-}
+export type LogLevel = 'debug' | 'info' | 'warn' | 'error';
 
 export interface Logger {
   debug: (message: string, meta?: any) => void;
@@ -13,15 +8,8 @@ export interface Logger {
   error: (message: string, error?: any) => void;
 }
 
-const logLevel: LogLevel = {
-  DEBUG: 'debug',
-  INFO: 'info',
-  WARN: 'warn',
-  ERROR: 'error'
-};
-
 export function createLogger(namespace: string): Logger {
-  const log = (level: string, message: string, meta?: any) => {
+  const log = (level: LogLevel, message: string, meta?: any) => {
     const timestamp = new Date().toISOString();
     const logMessage = `[${timestamp}] [${level.toUpperCase()}] [${namespace}] ${message}`;
     
@@ -39,3 +27,6 @@ export function createLogger(namespace: string): Logger {
     error: (message: string, error?: any) => log('error', message, error),
   };
 }
+
+// Export default logger instance
+export const logger = createLogger('app');

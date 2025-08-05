@@ -6,7 +6,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
 import { useToast } from '@/hooks/use-toast';
-import { Loader2, Save, AlertCircle } from 'lucide-react';
+import { Loader2, Save } from 'lucide-react';
+import { useCurrentCompany } from '@/hooks/useCurrentCompany';
 
 import { ConfigurationForm } from './components/ConfigurationForm';
 import { ScopeConfiguration } from './components/ScopeConfiguration';
@@ -33,6 +34,9 @@ interface RegrasPreservacao {
 }
 
 export function AuditoriaConfigPanel() {
+  const { data: currentCompanyData } = useCurrentCompany();
+  const currentCompany = currentCompanyData?.company;
+  
   const [formData, setFormData] = useState({
     auditoria_ativa: false,
     frequencia_cron: '0 2 * * *',
@@ -65,11 +69,14 @@ export function AuditoriaConfigPanel() {
   const queryClient = useQueryClient();
 
   const { data: config, isLoading } = useQuery({
-    queryKey: ['auditoria-config'],
+    queryKey: ['auditoria-config', currentCompany?.id],
     queryFn: async () => {
+      if (!currentCompany?.id) return null;
+      
       const { data, error } = await supabase
         .from('auditoria_config')
         .select('*')
+        .eq('company_id', currentCompany.id)
         .single();
 
       if (error && error.code !== 'PGRST116') {
@@ -77,7 +84,8 @@ export function AuditoriaConfigPanel() {
       }
       
       return data;
-    }
+    },
+    enabled: !!currentCompany?.id
   });
 
   useEffect(() => {
@@ -91,8 +99,8 @@ export function AuditoriaConfigPanel() {
         limite_problemas_alerta: config.limite_problemas_alerta,
         manter_historico_dias: config.manter_historico_dias,
         auto_limpeza_segura: config.auto_limpeza_segura,
-        escopo_padrao: typeof config.escopo_padrao === 'object' ? 
-          config.escopo_padrao as EscopoPadrao : 
+        escopo_padrao: (typeof config.escopo_padrao === 'object' && config.escopo_padrao && !Array.isArray(config.escopo_padrao)) ? 
+          config.escopo_padrao as unknown as EscopoPadrao : 
           {
             arquivos: true,
             hooks: true,
@@ -103,8 +111,8 @@ export function AuditoriaConfigPanel() {
             tabelas: true,
             rotas: true,
           },
-        regras_preservacao: typeof config.regras_preservacao === 'object' ? 
-          config.regras_preservacao as RegrasPreservacao : 
+        regras_preservacao: (typeof config.regras_preservacao === 'object' && config.regras_preservacao && !Array.isArray(config.regras_preservacao)) ? 
+          config.regras_preservacao as unknown as RegrasPreservacao : 
           {
             preservar_producao: true,
             preservar_autenticacao: true,
@@ -117,17 +125,28 @@ export function AuditoriaConfigPanel() {
 
   const mutation = useMutation({
     mutationFn: async (data: typeof formData) => {
+      if (!currentCompany?.id) {
+        throw new Error('Company not found');
+      }
+
+      const payload = {
+        ...data,
+        company_id: currentCompany.id,
+        escopo_padrao: data.escopo_padrao as any,
+        regras_preservacao: data.regras_preservacao as any,
+      };
+
       if (config?.id) {
         const { error } = await supabase
           .from('auditoria_config')
-          .update(data)
+          .update(payload)
           .eq('id', config.id);
         
         if (error) throw error;
       } else {
         const { error } = await supabase
           .from('auditoria_config')
-          .insert(data);
+          .insert(payload);
         
         if (error) throw error;
       }
