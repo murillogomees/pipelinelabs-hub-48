@@ -46,7 +46,23 @@ export function ProductCreate({ onSuccess, onCancel }: ProductCreateProps) {
 
   const onSubmit = async (data: ProductFormData) => {
     try {
-      await createProduct(data);
+      // TypeScript knows these fields are required due to schema validation
+      const productData = {
+        name: data.name,
+        code: data.code,
+        description: data.description,
+        price: data.price,
+        cost_price: data.cost_price,
+        stock_quantity: data.stock_quantity,
+        min_stock: data.min_stock,
+        max_stock: data.max_stock,
+        unit: data.unit,
+        barcode: data.barcode,
+        weight: data.weight,
+        dimensions: data.dimensions,
+      };
+      
+      await createProduct(productData);
       onSuccess();
     } catch (error) {
       // Error handled by the hook
