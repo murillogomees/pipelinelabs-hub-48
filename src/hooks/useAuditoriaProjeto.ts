@@ -1,7 +1,11 @@
+
+import { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
-import { useToast } from '@/hooks/use-toast';
-import { usePermissions } from '@/hooks/usePermissions';
+import { useAuth } from '@/components/Auth/AuthProvider';
+import { useCompanyData } from '@/hooks/useCompanyData';
+import { toast } from 'sonner';
+import { logger } from '@/utils/logger';
 
 export interface AuditoriaConfig {
   id: string;
@@ -40,8 +44,9 @@ export interface AuditoriaHistorico {
   id: string;
   user_id: string;
   company_id: string;
-  tipo_auditoria: 'manual' | 'automatica' | 'agendada';
+  tipo_auditoria: string;
   escopo_auditoria: any;
+  status: string;
   arquivos_analisados: number;
   problemas_encontrados: number;
   sugestoes_limpeza: any[];
@@ -50,194 +55,273 @@ export interface AuditoriaHistorico {
   hooks_nao_utilizados: any[];
   componentes_duplicados: any[];
   tempo_execucao_ms: number;
-  status: 'executando' | 'concluida' | 'erro' | 'cancelada';
-  erro_detalhes?: string;
-  melhorias_aplicadas: any[];
-  feedback_usuario?: string;
   score_aprendizado: number;
   padroes_aprendidos: any[];
+  melhorias_aplicadas: any[];
+  erro_detalhes?: string;
+  feedback_usuario?: string;
   created_at: string;
   updated_at: string;
 }
 
 export const useAuditoriaProjeto = () => {
-  const { toast } = useToast();
+  const { user } = useAuth();
+  const { company } = useCompanyData();
   const queryClient = useQueryClient();
-  const permissions = usePermissions();
-  // Use profile.company_id as fallback since companyId might not exist
-  const currentCompanyId = permissions.profile?.company_id;
-  const canManageCompany = permissions.canManageCompany;
+  const [isExecuting, setIsExecuting] = useState(false);
 
-  // Buscar configuração de auditoria
-  const { data: config, isLoading: configLoading } = useQuery({
-    queryKey: ['auditoria-config', currentCompanyId],
-    queryFn: async () => {
-      if (!currentCompanyId) return null;
-      
-      const { data, error } = await (supabase as any)
-        .from('auditoria_config')
-        .select('*')
-        .eq('company_id', currentCompanyId)
-        .maybeSingle();
-
-      if (error) {
-        console.error('Error fetching auditoria config:', error);
+  // Query para buscar configuração
+  const { data: config, isLoading: configLoading, error: configError } = useQuery({
+    queryKey: ['auditoria-config', company?.id],
+    queryFn: async (): Promise<AuditoriaConfig | null> => {
+      if (!company?.id) {
+        logger.warn('Tentativa de buscar config de auditoria sem company_id', { user: user?.id });
         return null;
       }
 
-      return data as AuditoriaConfig | null;
+      logger.debug('Buscando configuração de auditoria', { company_id: company.id });
+
+      const { data, error } = await supabase
+        .from('auditoria_config')
+        .select('*')
+        .eq('company_id', company.id)
+        .maybeSingle();
+
+      if (error) {
+        logger.error('Erro ao buscar configuração de auditoria', { error, company_id: company.id });
+        throw error;
+      }
+
+      logger.info('Configuração de auditoria carregada', { 
+        found: !!data, 
+        company_id: company.id,
+        config_id: data?.id 
+      });
+
+      return data;
     },
-    enabled: !!currentCompanyId && canManageCompany,
+    enabled: !!company?.id && !!user,
+    staleTime: 5 * 60 * 1000, // 5 minutos
+    gcTime: 10 * 60 * 1000, // 10 minutos
   });
 
-  // Buscar histórico de auditorias
-  const { data: historico, isLoading: historicoLoading } = useQuery({
-    queryKey: ['auditoria-historico', currentCompanyId],
-    queryFn: async () => {
-      if (!currentCompanyId) return [];
-      
-      const { data, error } = await (supabase as any)
+  // Query para buscar histórico
+  const { data: historico, isLoading: historicoLoading, error: historicoError } = useQuery({
+    queryKey: ['auditoria-historico', company?.id],
+    queryFn: async (): Promise<AuditoriaHistorico[]> => {
+      if (!company?.id) {
+        logger.warn('Tentativa de buscar histórico sem company_id', { user: user?.id });
+        return [];
+      }
+
+      logger.debug('Buscando histórico de auditoria', { company_id: company.id });
+
+      const { data, error } = await supabase
         .from('auditoria_historico')
         .select('*')
-        .eq('company_id', currentCompanyId)
+        .eq('company_id', company.id)
         .order('created_at', { ascending: false })
         .limit(50);
 
       if (error) {
-        console.error('Error fetching auditoria historico:', error);
-        return [];
+        logger.error('Erro ao buscar histórico de auditoria', { error, company_id: company.id });
+        throw error;
       }
-      
-      return data as AuditoriaHistorico[];
+
+      logger.info('Histórico de auditoria carregado', { 
+        count: data?.length || 0, 
+        company_id: company.id 
+      });
+
+      return data || [];
     },
-    enabled: !!currentCompanyId && canManageCompany,
+    enabled: !!company?.id && !!user,
+    staleTime: 2 * 60 * 1000, // 2 minutos
+    gcTime: 5 * 60 * 1000, // 5 minutos
   });
 
-  // Criar ou atualizar configuração
-  const updateConfig = useMutation({
-    mutationFn: async (newConfig: Partial<AuditoriaConfig>) => {
-      if (!currentCompanyId) throw new Error('Company ID não encontrado');
-
-      const configData = {
-        company_id: currentCompanyId,
-        ...newConfig,
-        updated_at: new Date().toISOString(),
-      };
-
-      let result;
-      if (config?.id) {
-        const { data, error } = await (supabase as any)
-          .from('auditoria_config')
-          .update(configData)
-          .eq('id', config.id)
-          .eq('company_id', currentCompanyId)
-          .select()
-          .single();
-        
-        if (error) throw error;
-        result = data;
-      } else {
-        const { data, error } = await (supabase as any)
-          .from('auditoria_config')
-          .insert([configData])
-          .select()
-          .single();
-        
-        if (error) throw error;
-        result = data;
+  // Mutation para atualizar configuração
+  const updateConfigMutation = useMutation({
+    mutationFn: async (configData: Partial<AuditoriaConfig>) => {
+      if (!company?.id || !user?.id) {
+        throw new Error('Empresa ou usuário não encontrado');
       }
 
-      return result;
+      logger.debug('Iniciando atualização de configuração', { 
+        company_id: company.id, 
+        user_id: user.id,
+        has_existing_config: !!config?.id 
+      });
+
+      // Se já existe configuração, faz update
+      if (config?.id) {
+        const { data, error } = await supabase
+          .from('auditoria_config')
+          .update({
+            ...configData,
+            updated_at: new Date().toISOString(),
+          })
+          .eq('id', config.id)
+          .eq('company_id', company.id)
+          .select()
+          .single();
+
+        if (error) {
+          logger.error('Erro ao atualizar configuração existente', { 
+            error, 
+            config_id: config.id,
+            company_id: company.id 
+          });
+          throw error;
+        }
+
+        logger.info('Configuração atualizada com sucesso', { 
+          config_id: config.id,
+          company_id: company.id 
+        });
+
+        return data;
+      } else {
+        // Se não existe, cria nova
+        const newConfig = {
+          company_id: company.id,
+          auditoria_ativa: false,
+          frequencia_cron: '0 2 * * *',
+          escopo_padrao: {
+            arquivos: true,
+            hooks: true,
+            componentes: true,
+            paginas: true,
+            estilos: true,
+            edge_functions: true,
+            tabelas: true,
+            rotas: true,
+          },
+          notificacoes_ativas: true,
+          limite_problemas_alerta: 50,
+          manter_historico_dias: 90,
+          auto_limpeza_segura: false,
+          regras_preservacao: {
+            preservar_producao: true,
+            preservar_autenticacao: true,
+            preservar_paginas_ativas: true,
+            preservar_hooks_sistema: true,
+          },
+          ...configData,
+        };
+
+        const { data, error } = await supabase
+          .from('auditoria_config')
+          .insert(newConfig)
+          .select()
+          .single();
+
+        if (error) {
+          logger.error('Erro ao criar nova configuração', { 
+            error, 
+            company_id: company.id 
+          });
+          throw error;
+        }
+
+        logger.info('Nova configuração criada com sucesso', { 
+          config_id: data.id,
+          company_id: company.id 
+        });
+
+        return data;
+      }
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['auditoria-config'] });
-      toast({
-        title: 'Sucesso',
-        description: 'Configuração de auditoria atualizada com sucesso',
-      });
+      toast.success('Configuração de auditoria salva com sucesso!');
+      logger.info('Configuração salva e cache atualizado');
     },
     onError: (error: any) => {
-      toast({
-        title: 'Erro',
-        description: error.message || 'Erro ao atualizar configuração',
-        variant: 'destructive',
-      });
+      logger.error('Falha ao salvar configuração', { error });
+      toast.error('Erro ao salvar configuração: ' + error.message);
     },
   });
 
-  // Executar auditoria manual
-  const executarAuditoria = useMutation({
+  // Mutation para executar auditoria
+  const executarAuditoriaMutation = useMutation({
     mutationFn: async (escopo?: any) => {
-      if (!currentCompanyId) throw new Error('Company ID não encontrado');
+      if (!company?.id || !user?.id) {
+        throw new Error('Empresa ou usuário não encontrado');
+      }
 
-      // Executar auditoria via Edge Function
-      const { data, error } = await supabase.functions.invoke('executar-auditoria', {
-        body: {
-          company_id: currentCompanyId,
-          tipo: 'manual',
-          escopo: escopo || config?.escopo_padrao || {},
-        },
+      logger.debug('Iniciando execução de auditoria', { 
+        company_id: company.id, 
+        user_id: user.id,
+        escopo 
       });
 
-      if (error) throw error;
-      return data;
+      setIsExecuting(true);
+
+      try {
+        const { data, error } = await supabase.functions.invoke('executar-auditoria', {
+          body: {
+            company_id: company.id,
+            tipo: 'manual',
+            escopo: escopo || config?.escopo_padrao || {
+              arquivos: true,
+              hooks: true,
+              componentes: true,
+              paginas: true,
+              estilos: true,
+              edge_functions: true,
+              tabelas: true,
+              rotas: true,
+            },
+          },
+        });
+
+        if (error) {
+          logger.error('Erro na função de auditoria', { error, company_id: company.id });
+          throw error;
+        }
+
+        logger.info('Auditoria executada com sucesso', { 
+          company_id: company.id,
+          auditoria_id: data?.auditoria_id 
+        });
+
+        return data;
+      } finally {
+        setIsExecuting(false);
+      }
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['auditoria-historico'] });
-      toast({
-        title: 'Auditoria Iniciada',
-        description: 'A auditoria foi iniciada com sucesso. Acompanhe o progresso no histórico.',
-      });
+      toast.success('Auditoria executada com sucesso!');
+      logger.info('Auditoria concluída e histórico atualizado');
     },
     onError: (error: any) => {
-      toast({
-        title: 'Erro',
-        description: error.message || 'Erro ao executar auditoria',
-        variant: 'destructive',
-      });
+      logger.error('Falha na execução da auditoria', { error });
+      toast.error('Erro ao executar auditoria: ' + error.message);
+      setIsExecuting(false);
     },
   });
 
-  // Aplicar sugestões de limpeza
-  const aplicarSugestoes = useMutation({
-    mutationFn: async (variables: { auditoriaId: string; sugestoes: any[] }) => {
-      const { auditoriaId, sugestoes } = variables;
-      
-      const { data, error } = await supabase.functions.invoke('aplicar-sugestoes-auditoria', {
-        body: {
-          auditoria_id: auditoriaId,
-          sugestoes_aprovadas: sugestoes,
-        },
-      });
-
-      if (error) throw error;
-      return data;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['auditoria-historico'] });
-      toast({
-        title: 'Sugestões Aplicadas',
-        description: 'As sugestões de limpeza foram aplicadas com sucesso',
-      });
-    },
-    onError: (error: any) => {
-      toast({
-        title: 'Erro',
-        description: error.message || 'Erro ao aplicar sugestões',
-        variant: 'destructive',
-      });
-    },
-  });
+  // Log de erros se houver
+  useEffect(() => {
+    if (configError) {
+      logger.error('Erro na query de configuração', { error: configError });
+    }
+    if (historicoError) {
+      logger.error('Erro na query de histórico', { error: historicoError });
+    }
+  }, [configError, historicoError]);
 
   return {
     config,
     historico,
     isLoading: configLoading || historicoLoading,
-    updateConfig: updateConfig.mutate,
-    executarAuditoria: executarAuditoria.mutate,
-    aplicarSugestoes: aplicarSugestoes.mutate,
-    isUpdating: updateConfig.isPending,
-    isExecuting: executarAuditoria.isPending,
-    isApplying: aplicarSugestoes.isPending,
+    updateConfig: updateConfigMutation.mutate,
+    isUpdating: updateConfigMutation.isPending,
+    executarAuditoria: executarAuditoriaMutation.mutate,
+    isExecuting: isExecuting || executarAuditoriaMutation.isPending,
+    configError,
+    historicoError,
   };
 };
