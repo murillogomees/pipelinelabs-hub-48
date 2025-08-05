@@ -51,10 +51,13 @@ export function AppSidebar() {
   }, [location.pathname]);
 
   return (
-    <Sidebar variant="inset">
+    <Sidebar variant="inset" className="border-r">
       <SidebarHeader>
         <div className="flex items-center gap-2 px-4 py-2">
-          <PipelineLabsLogo size={state === 'collapsed' ? 'sm' : 'md'} showText={state !== 'collapsed'} />
+          <PipelineLabsLogo 
+            size={state === 'collapsed' ? 'sm' : 'md'} 
+            showText={state !== 'collapsed'} 
+          />
         </div>
       </SidebarHeader>
       
@@ -69,7 +72,9 @@ export function AppSidebar() {
                   const hasSubmenu = item.submenu && item.submenu.length > 0;
                   const isExpanded = openGroups.includes(item.title);
                   const isActive = location.pathname === item.path;
-                  const isActiveSection = item.submenu?.some(sub => location.pathname.startsWith(sub.path));
+                  const isActiveSection = item.submenu?.some(sub => 
+                    location.pathname.startsWith(sub.path) || location.pathname === sub.path
+                  );
 
                   return (
                     <SidebarMenuItem key={item.title}>
@@ -78,14 +83,16 @@ export function AppSidebar() {
                           <SidebarMenuButton
                             onClick={() => toggleGroup(item.title)}
                             isActive={isActiveSection}
-                            className="w-full"
+                            className="w-full justify-between"
                           >
-                            <item.icon />
-                            <span>{item.title}</span>
+                            <div className="flex items-center gap-2">
+                              <item.icon className="h-4 w-4" />
+                              <span>{item.title}</span>
+                            </div>
                             {isExpanded ? (
-                              <ChevronDown className="ml-auto h-4 w-4" />
+                              <ChevronDown className="h-4 w-4" />
                             ) : (
-                              <ChevronRight className="ml-auto h-4 w-4" />
+                              <ChevronRight className="h-4 w-4" />
                             )}
                           </SidebarMenuButton>
                           {isExpanded && (
@@ -94,7 +101,10 @@ export function AppSidebar() {
                                 <SidebarMenuSubItem key={subItem.title}>
                                   <SidebarMenuSubButton
                                     asChild
-                                    isActive={location.pathname === subItem.path || location.pathname.startsWith(subItem.path)}
+                                    isActive={
+                                      location.pathname === subItem.path || 
+                                      location.pathname.startsWith(subItem.path)
+                                    }
                                   >
                                     <NavLink to={subItem.path}>
                                       {subItem.title}
@@ -107,8 +117,8 @@ export function AppSidebar() {
                         </>
                       ) : (
                         <SidebarMenuButton asChild isActive={isActive}>
-                          <NavLink to={item.path}>
-                            <item.icon />
+                          <NavLink to={item.path} className="flex items-center gap-2">
+                            <item.icon className="h-4 w-4" />
                             <span>{item.title}</span>
                           </NavLink>
                         </SidebarMenuButton>

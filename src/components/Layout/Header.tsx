@@ -3,7 +3,7 @@ import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
-import { Settings, User, LogOut } from 'lucide-react';
+import { Settings, User, LogOut, Search } from 'lucide-react';
 import { useAuth } from '@/components/Auth/AuthProvider';
 import { NotificationDropdown } from '@/components/Notifications/NotificationDropdown';
 import { GlobalSearchTrigger } from '@/components/Search/GlobalSearchTrigger';
@@ -27,7 +27,10 @@ export function Header() {
     <div className="flex h-16 items-center w-full">
       <div className="flex items-center gap-2">
         <SidebarTrigger className="-ml-1" />
-        <GlobalSearchTrigger />
+        <div className="flex items-center gap-2">
+          <Search className="h-4 w-4 text-muted-foreground" />
+          <GlobalSearchTrigger />
+        </div>
       </div>
 
       <div className="ml-auto flex items-center space-x-4">
@@ -44,24 +47,25 @@ export function Header() {
               </Avatar>
             </Button>
           </DropdownMenuTrigger>
-          <DropdownMenuContent align="end">
+          <DropdownMenuContent align="end" className="w-56">
             <DropdownMenuLabel>Minha Conta</DropdownMenuLabel>
+            <DropdownMenuSeparator />
             <DropdownMenuItem asChild>
-              <Link to="/app/user/dados-pessoais" className="flex items-center gap-2">
-                <User className="h-4 w-4 mr-2" />
+              <Link to="/app/user/profile" className="flex items-center gap-2 cursor-pointer">
+                <User className="h-4 w-4" />
                 <span>Perfil</span>
               </Link>
             </DropdownMenuItem>
             <DropdownMenuItem asChild>
-              <Link to="/app/configuracoes" className="flex items-center gap-2">
-                <Settings className="h-4 w-4 mr-2" />
+              <Link to="/app/configuracoes" className="flex items-center gap-2 cursor-pointer">
+                <Settings className="h-4 w-4" />
                 <span>Configurações</span>
               </Link>
             </DropdownMenuItem>
             <DropdownMenuSeparator />
-            <DropdownMenuItem onClick={handleLogout} className="cursor-pointer">
-              <LogOut className="h-4 w-4 mr-2" />
-              Sair
+            <DropdownMenuItem onClick={handleLogout} className="cursor-pointer text-red-600">
+              <LogOut className="h-4 w-4" />
+              <span>Sair</span>
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
