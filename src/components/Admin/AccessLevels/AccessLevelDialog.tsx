@@ -155,6 +155,22 @@ function AccessLevelForm({ accessLevel, onSave, onCancel }: {
     }));
   }, []);
 
+  // Create stable handlers for each permission to avoid inline functions
+  const permissionHandlers = useMemo(() => {
+    const handlers: Record<string, () => void> = {};
+    permissionCategories.forEach(category => {
+      category.permissions.forEach(permission => {
+        handlers[permission.key] = () => handlePermissionToggle(permission.key);
+      });
+    });
+    return handlers;
+  }, [handlePermissionToggle]);
+
+  // Stable handler for active switch
+  const handleActiveChange = useCallback((checked: boolean) => {
+    handleFieldChange('is_active', checked);
+  }, [handleFieldChange]);
+
   const enabledPermissions = useMemo(() => {
     return Object.values(formData.permissions).filter(Boolean).length;
   }, [formData.permissions]);
@@ -202,7 +218,7 @@ function AccessLevelForm({ accessLevel, onSave, onCancel }: {
       <div className="flex items-center space-x-2">
         <Switch
           checked={formData.is_active}
-          onCheckedChange={(checked) => handleFieldChange('is_active', checked)}
+          onCheckedChange={handleActiveChange}
         />
         <Label>Nível de acesso ativo</Label>
       </div>
@@ -241,6 +257,7 @@ function AccessLevelForm({ accessLevel, onSave, onCancel }: {
                 <div className="grid grid-cols-1 gap-3">
                   {category.permissions.map((permission) => {
                     const isEnabled = formData.permissions[permission.key] || false;
+                    const permissionHandler = permissionHandlers[permission.key];
                     
                     return (
                       <div
@@ -250,7 +267,7 @@ function AccessLevelForm({ accessLevel, onSave, onCancel }: {
                             ? 'bg-primary/5 border-primary/20' 
                             : 'hover:bg-muted/30'
                         }`}
-                        onClick={() => handlePermissionToggle(permission.key)}
+                        onClick={permissionHandler}
                       >
                         <div className="flex items-start justify-between">
                           <div className="flex-1">
@@ -263,7 +280,7 @@ function AccessLevelForm({ accessLevel, onSave, onCancel }: {
                           </div>
                           <Switch
                             checked={isEnabled}
-                            onCheckedChange={() => handlePermissionToggle(permission.key)}
+                            onCheckedChange={permissionHandler}
                             className="ml-3"
                           />
                         </div>
