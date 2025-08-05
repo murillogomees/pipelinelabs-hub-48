@@ -7,6 +7,7 @@ import { useProductsManager } from '@/hooks/useProductsManager';
 import { Button } from '@/components/ui/button';
 import { Plus, Loader2, AlertCircle } from 'lucide-react';
 import { Alert, AlertDescription } from '@/components/ui/alert';
+import type { SearchFilters } from '@/types/products';
 
 export default function Produtos() {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
@@ -60,6 +61,10 @@ export default function Produtos() {
     }
   };
 
+  const handleFiltersChange = (searchFilters: SearchFilters) => {
+    searchProducts(searchFilters);
+  };
+
   return (
     <div className="container mx-auto px-4 py-8">
       <div className="flex justify-between items-center mb-6">
@@ -97,7 +102,7 @@ export default function Produtos() {
 
       <div className="mb-6">
         <ProductFilters
-          onFiltersChange={searchProducts}
+          onFiltersChange={handleFiltersChange}
           currentFilters={filters}
           isLoading={isLoading}
         />

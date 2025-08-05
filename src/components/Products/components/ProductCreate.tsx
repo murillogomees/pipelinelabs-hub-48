@@ -10,17 +10,18 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { useProductsManager } from '@/hooks/useProductsManager';
 import { ArrowLeft } from 'lucide-react';
+import type { CreateProductData } from '../types';
 
 const productSchema = z.object({
   name: z.string().min(1, 'Nome é obrigatório'),
   description: z.string().optional(),
   code: z.string().min(1, 'Código é obrigatório'),
-  price: z.number().optional(),
+  price: z.number().min(0).default(0),
   cost_price: z.number().optional(),
-  stock_quantity: z.number().optional(),
-  min_stock: z.number().optional(),
-  max_stock: z.number().optional(),
-  unit: z.string().optional(),
+  stock_quantity: z.number().int().min(0).default(0),
+  min_stock: z.number().int().min(0).optional(),
+  max_stock: z.number().int().min(0).optional(),
+  unit: z.string().default('un'),
   barcode: z.string().optional(),
   weight: z.number().optional(),
   dimensions: z.string().optional(),
@@ -42,25 +43,65 @@ export function ProductCreate({ onSuccess, onCancel }: ProductCreateProps) {
     formState: { errors },
   } = useForm<ProductFormData>({
     resolver: zodResolver(productSchema),
+    defaultValues: {
+      price: 0,
+      stock_quantity: 0,
+      unit: 'un',
+    }
   });
 
   const onSubmit = async (data: ProductFormData) => {
     try {
-      // Create product data with proper typing - schema validation guarantees name and code are present
-      const productData = {
-        name: data.name!, // Non-null assertion safe due to schema validation
-        code: data.code!, // Non-null assertion safe due to schema validation
-        description: data.description,
-        price: data.price,
-        cost_price: data.cost_price,
-        stock_quantity: data.stock_quantity,
-        min_stock: data.min_stock,
-        max_stock: data.max_stock,
+      // Create product data with all required properties
+      const productData: CreateProductData = {
+        name: data.name,
+        code: data.code,
+        description: data.description || null,
+        short_description: null,
+        product_type: 'produto',
+        brand: null,
         unit: data.unit,
-        barcode: data.barcode,
-        weight: data.weight,
-        dimensions: data.dimensions,
-        is_active: true, // Default to active when creating new products
+        condition: 'novo',
+        format: 'simples',
+        production_type: 'propria',
+        expiry_date: null,
+        free_shipping: false,
+        price: data.price,
+        cost_price: data.cost_price || null,
+        promotional_price: null,
+        weight: data.weight || null,
+        gross_weight: null,
+        volumes: 1,
+        height: null,
+        width: null,
+        depth: null,
+        unit_measure: 'cm',
+        dimensions: data.dimensions || null,
+        barcode: data.barcode || null,
+        ncm_code: null,
+        cest_code: null,
+        tax_origin: null,
+        tax_situation: null,
+        item_type: null,
+        product_group: null,
+        icms_base: null,
+        icms_retention: null,
+        pis_fixed: null,
+        cofins_fixed: null,
+        estimated_tax_percentage: null,
+        tipi_exception: null,
+        stock_quantity: data.stock_quantity,
+        min_stock: data.min_stock || null,
+        max_stock: data.max_stock || null,
+        stock_location: null,
+        stock_notes: null,
+        crossdocking_days: 0,
+        warehouse: null,
+        external_link: null,
+        video_link: null,
+        observations: null,
+        category_id: null,
+        is_active: true,
       };
       
       await createProduct(productData);
