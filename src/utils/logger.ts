@@ -16,9 +16,9 @@ export function createLogger(namespace: string): Logger {
     const logMessage = `[${timestamp}] [${level.toUpperCase()}] [${namespace}] ${message}`;
     
     if (meta) {
-      console[level as keyof Console](logMessage, meta);
+      console[level](logMessage, meta);
     } else {
-      console[level as keyof Console](logMessage);
+      console[level](logMessage);
     }
   };
 

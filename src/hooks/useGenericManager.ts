@@ -22,7 +22,7 @@ export function useGenericManager<T extends { id: string }>(tableName: string) {
 
       if (fetchError) throw fetchError;
 
-      setItems((data as T[]) || []);
+      setItems((data as unknown as T[]) || []);
       logger.info(`Fetched ${data?.length || 0} items from ${tableName}`);
     } catch (err: any) {
       logger.error(`Error fetching items from ${tableName}:`, err);
@@ -45,7 +45,7 @@ export function useGenericManager<T extends { id: string }>(tableName: string) {
 
       if (createError) throw createError;
 
-      const newItem = data as T;
+      const newItem = data as unknown as T;
       setItems(prev => [newItem, ...prev]);
       logger.info(`Created item in ${tableName}:`, newItem);
       return newItem;
@@ -72,7 +72,7 @@ export function useGenericManager<T extends { id: string }>(tableName: string) {
 
       if (updateError) throw updateError;
 
-      const updatedItem = data as T;
+      const updatedItem = data as unknown as T;
       setItems(prev => prev.map(item => item.id === id ? updatedItem : item));
       logger.info(`Updated item in ${tableName}:`, updatedItem);
       return updatedItem;

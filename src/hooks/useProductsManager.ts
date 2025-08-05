@@ -22,12 +22,26 @@ export interface Product {
   updated_at?: string;
 }
 
+interface ProductFilters {
+  searchTerm: string;
+  status?: 'all' | 'active' | 'inactive';
+  lowStock?: boolean;
+}
+
 export function useProductsManager() {
   const genericManager = useGenericManager<Product>('products');
-  const [searchTerm, setSearchTerm] = useState('');
+  const [filters, setFilters] = useState<ProductFilters>({
+    searchTerm: '',
+    status: 'all',
+    lowStock: false
+  });
 
-  const searchItems = useCallback((term: string) => {
-    setSearchTerm(term);
+  const searchItems = useCallback((searchTerm: string) => {
+    setFilters(prev => ({ ...prev, searchTerm }));
+  }, []);
+
+  const searchProducts = useCallback((newFilters: Partial<ProductFilters>) => {
+    setFilters(prev => ({ ...prev, ...newFilters }));
   }, []);
 
   const refreshItems = useCallback(() => {
@@ -39,14 +53,43 @@ export function useProductsManager() {
   }, [genericManager.items]);
 
   const filteredProducts = useMemo(() => {
-    if (!searchTerm) return genericManager.items;
+    let filtered = genericManager.items;
     
+    // Filter by search term
+    if (filters.searchTerm) {
+      filtered = filtered.filter(product => 
+        product.name.toLowerCase().includes(filters.searchTerm.toLowerCase()) ||
+        product.code.toLowerCase().includes(filters.searchTerm.toLowerCase()) ||
+        (product.description && product.description.toLowerCase().includes(filters.searchTerm.toLowerCase()))
+      );
+    }
+
+    // Filter by status
+    if (filters.status && filters.status !== 'all') {
+      filtered = filtered.filter(product => 
+        filters.status === 'active' ? product.is_active : !product.is_active
+      );
+    }
+
+    // Filter by low stock
+    if (filters.lowStock) {
+      filtered = filtered.filter(product => 
+        (product.stock_quantity || 0) <= (product.min_stock || 0)
+      );
+    }
+
+    return filtered;
+  }, [genericManager.items, filters]);
+
+  const lowStockProducts = useMemo(() => {
     return genericManager.items.filter(product => 
-      product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      product.code.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      (product.description && product.description.toLowerCase().includes(searchTerm.toLowerCase()))
+      (product.stock_quantity || 0) <= (product.min_stock || 0)
     );
-  }, [genericManager.items, searchTerm]);
+  }, [genericManager.items]);
+
+  const totalProducts = genericManager.items.length;
+  const isEmpty = filteredProducts.length === 0;
+  const isFiltered = filters.searchTerm !== '' || filters.status !== 'all' || filters.lowStock === true;
 
   return {
     products: filteredProducts,
@@ -58,9 +101,15 @@ export function useProductsManager() {
     deleteProduct: genericManager.deleteItem,
     fetchProducts: genericManager.fetchItems,
     searchItems,
+    searchProducts,
     refreshItems,
     getItemById,
-    searchTerm,
+    searchTerm: filters.searchTerm,
+    filters,
     allProducts: genericManager.items,
+    totalProducts,
+    isEmpty,
+    isFiltered,
+    lowStockProducts,
   };
 }
