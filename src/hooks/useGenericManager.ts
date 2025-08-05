@@ -16,7 +16,7 @@ export function useGenericManager<T extends { id: string }>(tableName: string) {
 
     try {
       const { data, error: fetchError } = await supabase
-        .from(tableName as any)
+        .from(tableName)
         .select('*')
         .order('created_at', { ascending: false });
 
@@ -38,16 +38,17 @@ export function useGenericManager<T extends { id: string }>(tableName: string) {
 
     try {
       const { data, error: createError } = await supabase
-        .from(tableName as any)
-        .insert(item)
+        .from(tableName)
+        .insert(item as any)
         .select()
         .single();
 
       if (createError) throw createError;
 
-      setItems(prev => [data as T, ...prev]);
-      logger.info(`Created item in ${tableName}:`, data);
-      return data as T;
+      const newItem = data as T;
+      setItems(prev => [newItem, ...prev]);
+      logger.info(`Created item in ${tableName}:`, newItem);
+      return newItem;
     } catch (err: any) {
       logger.error(`Error creating item in ${tableName}:`, err);
       setError(err.message);
@@ -63,17 +64,18 @@ export function useGenericManager<T extends { id: string }>(tableName: string) {
 
     try {
       const { data, error: updateError } = await supabase
-        .from(tableName as any)
-        .update(updates)
+        .from(tableName)
+        .update(updates as any)
         .eq('id', id)
         .select()
         .single();
 
       if (updateError) throw updateError;
 
-      setItems(prev => prev.map(item => item.id === id ? data as T : item));
-      logger.info(`Updated item in ${tableName}:`, data);
-      return data as T;
+      const updatedItem = data as T;
+      setItems(prev => prev.map(item => item.id === id ? updatedItem : item));
+      logger.info(`Updated item in ${tableName}:`, updatedItem);
+      return updatedItem;
     } catch (err: any) {
       logger.error(`Error updating item in ${tableName}:`, err);
       setError(err.message);
@@ -89,7 +91,7 @@ export function useGenericManager<T extends { id: string }>(tableName: string) {
 
     try {
       const { error: deleteError } = await supabase
-        .from(tableName as any)
+        .from(tableName)
         .delete()
         .eq('id', id);
 

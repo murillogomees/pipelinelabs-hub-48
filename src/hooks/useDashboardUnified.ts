@@ -1,19 +1,7 @@
 
 import { useState, useEffect } from 'react';
 import { useProductsManager } from './useProductsManager';
-import { useGenericManager } from './useGenericManager';
-
-interface Sale {
-  id: string;
-  sale_number: string;
-  customer_name?: string;
-  total_amount: number;
-  status: string;
-  sale_date: string;
-  company_id?: string;
-  created_at?: string;
-  updated_at?: string;
-}
+import { useSalesManager } from './useSalesManager';
 
 interface DashboardStats {
   totalProducts: number;
@@ -35,7 +23,7 @@ export function useDashboardUnified() {
   });
 
   const productsManager = useProductsManager();
-  const salesManager = useGenericManager<Sale>('sales');
+  const salesManager = useSalesManager();
 
   useEffect(() => {
     const loadData = async () => {
@@ -45,7 +33,7 @@ export function useDashboardUnified() {
         // Fetch data
         await Promise.all([
           productsManager.fetchProducts(),
-          salesManager.fetchItems(),
+          salesManager.fetchSales(),
         ]);
         
       } catch (error: any) {
@@ -63,12 +51,12 @@ export function useDashboardUnified() {
       product => (product.stock_quantity || 0) <= (product.min_stock || 0)
     ).length;
     
-    const totalSales = salesManager.items.length;
-    const totalRevenue = salesManager.items.reduce(
+    const totalSales = salesManager.allSales.length;
+    const totalRevenue = salesManager.allSales.reduce(
       (sum, sale) => sum + (sale.total_amount || 0), 0
     );
 
-    const isLoading = productsManager.isLoading || salesManager.loading;
+    const isLoading = productsManager.isLoading || salesManager.isLoading;
 
     setStats({
       totalProducts,
@@ -82,19 +70,19 @@ export function useDashboardUnified() {
     productsManager.allProducts,
     productsManager.isLoading,
     productsManager.error,
-    salesManager.items,
-    salesManager.loading,
+    salesManager.allSales,
+    salesManager.isLoading,
     salesManager.error,
   ]);
 
   return {
     stats,
     products: productsManager.allProducts,
-    sales: salesManager.items,
+    sales: salesManager.allSales,
     refreshData: async () => {
       await Promise.all([
         productsManager.refreshItems(),
-        salesManager.fetchItems(),
+        salesManager.fetchSales(),
       ]);
     },
   };

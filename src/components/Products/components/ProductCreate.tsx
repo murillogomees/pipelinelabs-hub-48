@@ -60,6 +60,7 @@ export function ProductCreate({ onSuccess, onCancel }: ProductCreateProps) {
         barcode: data.barcode,
         weight: data.weight,
         dimensions: data.dimensions,
+        is_active: true, // Default to active when creating new products
       };
       
       await createProduct(productData);

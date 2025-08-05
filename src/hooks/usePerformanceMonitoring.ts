@@ -12,7 +12,7 @@ interface PerformanceMetrics {
   queryStats: {
     totalQueries: number;
     cachedQueries: number;
-    staleCa0ueries: number;
+    staleQueries: number;
     errorQueries: number;
   };
   webVitals: {
@@ -28,7 +28,7 @@ export function usePerformanceMonitoring() {
   const [metrics, setMetrics] = useState<PerformanceMetrics>({
     memoryUsage: { used: 0, total: 0, percentage: 0 },
     renderTime: 0,
-    queryStats: { totalQueries: 0, cachedQueries: 0, staleCa0ueries: 0, errorQueries: 0 },
+    queryStats: { totalQueries: 0, cachedQueries: 0, staleQueries: 0, errorQueries: 0 },
     webVitals: {},
     performanceScore: 0,
   });
@@ -54,7 +54,7 @@ export function usePerformanceMonitoring() {
     return {
       totalQueries: queries.length,
       cachedQueries: queries.filter(q => q.state.data !== undefined).length,
-      staleCa0ueries: queries.filter(q => q.isStale()).length,
+      staleQueries: queries.filter(q => q.state.dataUpdatedAt < Date.now() - 300000).length, // 5 minutes stale
       errorQueries: queries.filter(q => q.state.error !== null).length,
     };
   }, [queryClient]);
@@ -81,8 +81,9 @@ export function usePerformanceMonitoring() {
             if (entry.entryType === 'largest-contentful-paint') {
               vitals.lcp = entry.startTime;
             }
-            if (entry.entryType === 'first-input') {
-              vitals.fid = entry.processingStart - entry.startTime;
+            // Handle first-input with proper type checking
+            if (entry.entryType === 'first-input' && 'processingStart' in entry) {
+              vitals.fid = (entry as any).processingStart - entry.startTime;
             }
           }
         }).observe({ entryTypes: ['paint', 'largest-contentful-paint', 'first-input'] });

@@ -50,7 +50,7 @@ export function EnhancedSecureInput({
   const validateInput = useCallback((value: string): { isValid: boolean; reason?: string } => {
     // Check for blocked content
     if (blockList.some(blocked => value.toLowerCase().includes(blocked.toLowerCase()))) {
-      logger.securityEvent('blocked_input_detected', undefined, { 
+      logger.securityEvent('blocked_input_detected', undefined, undefined, {
         inputType: type,
         securityLevel,
         blockedContent: '[REDACTED]'
@@ -72,7 +72,7 @@ export function EnhancedSecureInput({
     if (securityLevel === 'high') {
       // No HTML tags
       if (/<[^>]*>/g.test(value)) {
-        logger.securityEvent('html_injection_attempt', undefined, {
+        logger.securityEvent('html_injection_attempt', undefined, undefined, {
           inputType: type,
           content: '[REDACTED]'
         });
@@ -82,7 +82,7 @@ export function EnhancedSecureInput({
       // No SQL injection patterns
       const sqlPatterns = /(\b(SELECT|INSERT|UPDATE|DELETE|DROP|CREATE|ALTER|EXEC|UNION|SCRIPT)\b)/gi;
       if (sqlPatterns.test(value)) {
-        logger.securityEvent('sql_injection_attempt', undefined, {
+        logger.securityEvent('sql_injection_attempt', undefined, undefined, {
           inputType: type,
           content: '[REDACTED]'
         });
@@ -92,7 +92,7 @@ export function EnhancedSecureInput({
       // No JavaScript injection patterns
       const jsPatterns = /(javascript:|data:text\/html|vbscript:|onload=|onerror=)/gi;
       if (jsPatterns.test(value)) {
-        logger.securityEvent('xss_attempt', undefined, {
+        logger.securityEvent('xss_attempt', undefined, undefined, {
           inputType: type,
           content: '[REDACTED]'
         });
