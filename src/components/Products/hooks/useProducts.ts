@@ -9,15 +9,25 @@ export function useProducts() {
   return useQuery({
     queryKey: ['products'],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from('products')
-        .select('*')
-        .eq('is_active', true)
-        .order('name');
-      
-      if (error) throw error;
-      return data as Product[];
+      try {
+        const { data, error } = await supabase
+          .from('products')
+          .select('*')
+          .eq('is_active', true)
+          .order('name');
+        
+        if (error) {
+          console.error('Error fetching products:', error);
+          throw error;
+        }
+        return data as Product[];
+      } catch (error) {
+        console.error('Products query failed:', error);
+        throw error;
+      }
     },
+    retry: 1,
+    staleTime: 5 * 60 * 1000, // 5 minutes
   });
 }
 
@@ -44,9 +54,36 @@ export function useCreateProduct() {
 
   return useMutation({
     mutationFn: async (productData: Omit<TablesInsert<'products'>, 'company_id'>) => {
+      // Tentar obter company_id do usuário ou usar empresa padrão
+      let companyId = null;
+      
+      try {
+        const { data: userCompany } = await supabase
+          .from('user_companies')
+          .select('company_id')
+          .eq('user_id', (await supabase.auth.getUser()).data.user?.id)
+          .eq('is_active', true)
+          .maybeSingle();
+        
+        companyId = userCompany?.company_id;
+      } catch (error) {
+        console.warn('Error getting user company:', error);
+      }
+
+      // Se não encontrou, usar primeira empresa disponível
+      if (!companyId) {
+        const { data: defaultCompany } = await supabase
+          .from('companies')
+          .select('id')
+          .limit(1)
+          .maybeSingle();
+        
+        companyId = defaultCompany?.id;
+      }
+
       const { data, error } = await supabase
         .from('products')
-        .insert(productData as TablesInsert<'products'>)
+        .insert({ ...productData, company_id: companyId } as TablesInsert<'products'>)
         .select()
         .single();
       

@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import React, { useState, useEffect } from 'react';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ProductBasicForm } from './forms/ProductBasicForm';
@@ -10,6 +10,8 @@ import { ProductCategoryForm } from './forms/ProductCategoryForm';
 import { useCreateProduct, useUpdateProduct } from './hooks/useProducts';
 import { Product } from './types';
 import { ProductFormData } from './schema';
+import { AlertTriangle } from 'lucide-react';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 
 interface ProductDialogProps {
   open: boolean;
@@ -19,6 +21,7 @@ interface ProductDialogProps {
 
 export function ProductDialog({ open, onOpenChange, product }: ProductDialogProps) {
   const [activeTab, setActiveTab] = useState('dados');
+  const [error, setError] = useState<string | null>(null);
   const [formData, setFormData] = useState<Partial<ProductFormData>>({
     code: '',
     name: '',
@@ -35,6 +38,43 @@ export function ProductDialog({ open, onOpenChange, product }: ProductDialogProp
   const createMutation = useCreateProduct();
   const updateMutation = useUpdateProduct();
 
+  // Reset error when dialog opens/closes
+  useEffect(() => {
+    if (!open) {
+      setError(null);
+    }
+  }, [open]);
+
+  // Reset form when product changes
+  useEffect(() => {
+    if (product) {
+      setFormData({
+        code: product.code || '',
+        name: product.name || '',
+        description: product.description || '',
+        price: product.price || 0,
+        cost_price: product.cost_price || 0,
+        weight: product.weight || 0,
+        stock_quantity: product.stock_quantity || 0,
+        min_stock: product.min_stock || 0,
+        max_stock: product.max_stock || 0,
+        ...product,
+      });
+    } else {
+      setFormData({
+        code: '',
+        name: '',
+        description: '',
+        price: 0,
+        cost_price: 0,
+        weight: 0,
+        stock_quantity: 0,
+        min_stock: 0,
+        max_stock: 0,
+      });
+    }
+  }, [product]);
+
   const handleFormChange = (field: string, value: any) => {
     setFormData(prev => ({
       ...prev,
@@ -43,18 +83,29 @@ export function ProductDialog({ open, onOpenChange, product }: ProductDialogProp
   };
 
   const handleSave = async () => {
+    setError(null);
+    
     try {
+      // Validação básica
+      if (!formData.code || !formData.name) {
+        setError('Código e nome são obrigatórios');
+        return;
+      }
+
+      if (!formData.price || formData.price <= 0) {
+        setError('Preço deve ser maior que zero');
+        return;
+      }
+
       if (product) {
-        const result = await updateMutation.mutateAsync({
+        // Atualizar produto existente
+        await updateMutation.mutateAsync({
           id: product.id,
           ...formData
         });
       } else {
-        if (!formData.code || !formData.name || formData.price === undefined) {
-          alert('Código, nome e preço são obrigatórios');
-          return;
-        }
-        const result = await createMutation.mutateAsync({
+        // Criar novo produto
+        await createMutation.mutateAsync({
           code: formData.code,
           name: formData.name,
           description: formData.description || null,
@@ -104,10 +155,12 @@ export function ProductDialog({ open, onOpenChange, product }: ProductDialogProp
           category_id: formData.category_id || null,
         });
       }
+      
       onOpenChange(false);
       setFormData({});
-    } catch (error) {
+    } catch (error: any) {
       console.error('Erro ao salvar produto:', error);
+      setError(error.message || 'Erro ao salvar produto. Tente novamente.');
     }
   };
 
@@ -120,7 +173,17 @@ export function ProductDialog({ open, onOpenChange, product }: ProductDialogProp
           <DialogTitle>
             {product ? 'Editar Produto' : 'Novo Produto'}
           </DialogTitle>
+          <DialogDescription>
+            {product ? 'Altere as informações do produto' : 'Preencha os dados do novo produto'}
+          </DialogDescription>
         </DialogHeader>
+
+        {error && (
+          <Alert variant="destructive">
+            <AlertTriangle className="h-4 w-4" />
+            <AlertDescription>{error}</AlertDescription>
+          </Alert>
+        )}
 
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
           <TabsList className="grid w-full grid-cols-5">
