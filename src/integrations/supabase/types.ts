@@ -2626,7 +2626,7 @@ export type Database = {
           address: string | null
           avatar_url: string | null
           city: string | null
-          companie_id: string | null
+          company_id: string | null
           created_at: string
           display_name: string
           document: string | null
@@ -2647,7 +2647,7 @@ export type Database = {
           address?: string | null
           avatar_url?: string | null
           city?: string | null
-          companie_id?: string | null
+          company_id?: string | null
           created_at?: string
           display_name: string
           document?: string | null
@@ -2668,7 +2668,7 @@ export type Database = {
           address?: string | null
           avatar_url?: string | null
           city?: string | null
-          companie_id?: string | null
+          company_id?: string | null
           created_at?: string
           display_name?: string
           document?: string | null
@@ -2685,6 +2685,13 @@ export type Database = {
           zipcode?: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: "fk_profiles_access_level"
+            columns: ["access_level_id"]
+            isOneToOne: false
+            referencedRelation: "access_levels"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "profiles_access_level_id_fkey"
             columns: ["access_level_id"]
