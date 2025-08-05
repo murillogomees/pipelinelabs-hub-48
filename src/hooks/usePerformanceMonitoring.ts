@@ -1,161 +1,151 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
-import { createLogger } from '@/utils/logger';
-
-const logger = createLogger('usePerformanceMonitoring');
 
 interface PerformanceMetrics {
-  lcp: number | null;
-  fid: number | null;
-  cls: number | null;
-  fcp: number | null;
-  ttfb: number | null;
-  timing: {
-    domContentLoaded: number;
-    loadComplete: number;
-    firstContentfulPaint: number;
+  memoryUsage: {
+    used: number;
+    total: number;
+    percentage: number;
   };
-  memory?: {
-    usedJSHeapSize: number;
-    totalJSHeapSize: number;
-    jsHeapSizeLimit: number;
-  };
-  queryCache: {
-    activeQueries: number;
-    staleQueries: number;
+  renderTime: number;
+  queryStats: {
     totalQueries: number;
+    cachedQueries: number;
+    staleCa0ueries: number;
+    errorQueries: number;
   };
+  webVitals: {
+    fcp?: number;
+    lcp?: number;
+    fid?: number;
+    cls?: number;
+  };
+  performanceScore: number;
 }
 
 export function usePerformanceMonitoring() {
-  const [metrics, setMetrics] = useState<PerformanceMetrics | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
+  const [metrics, setMetrics] = useState<PerformanceMetrics>({
+    memoryUsage: { used: 0, total: 0, percentage: 0 },
+    renderTime: 0,
+    queryStats: { totalQueries: 0, cachedQueries: 0, staleCa0ueries: 0, errorQueries: 0 },
+    webVitals: {},
+    performanceScore: 0,
+  });
+  
   const queryClient = useQueryClient();
 
-  const collectMetrics = useCallback(() => {
-    try {
-      // Core Web Vitals
-      const performanceEntries = performance.getEntriesByType('navigation');
-      const timing = performanceEntries[0] as PerformanceNavigationTiming;
-      
-      // Memory info (if available)
-      const memoryInfo = (performance as any).memory;
-      
-      // React Query cache info
-      const cache = queryClient.getQueryCache();
-      const queries = cache.getAll();
-      
-      const newMetrics: PerformanceMetrics = {
-        lcp: null, // Will be updated by observer
-        fid: null, // Will be updated by observer
-        cls: null, // Will be updated by observer
-        fcp: performance.getEntriesByName('first-contentful-paint')[0]?.startTime || null,
-        ttfb: timing?.responseStart || null,
-        timing: {
-          domContentLoaded: timing ? timing.domContentLoadedEventEnd - timing.domContentLoadedEventStart : 0,
-          loadComplete: timing ? timing.loadEventEnd - timing.loadEventStart : 0,
-          firstContentfulPaint: performance.getEntriesByName('first-contentful-paint')[0]?.startTime || 0,
-        },
-        memory: memoryInfo ? {
-          usedJSHeapSize: memoryInfo.usedJSHeapSize,
-          totalJSHeapSize: memoryInfo.totalJSHeapSize,
-          jsHeapSizeLimit: memoryInfo.jsHeapSizeLimit,
-        } : undefined,
-        queryCache: {
-          activeQueries: queries.filter(q => q.state.fetchStatus === 'fetching').length,
-          staleQueries: queries.filter(q => q.state.isStale).length,
-          totalQueries: queries.length,
-        }
+  const calculateMemoryUsage = useCallback(() => {
+    if ('memory' in performance) {
+      const memory = (performance as any).memory;
+      return {
+        used: Math.round(memory.usedJSHeapSize / 1024 / 1024),
+        total: Math.round(memory.totalJSHeapSize / 1024 / 1024),
+        percentage: Math.round((memory.usedJSHeapSize / memory.totalJSHeapSize) * 100),
       };
-      
-      setMetrics(newMetrics);
-      setIsLoading(false);
-      
-      logger.debug('Performance metrics collected', newMetrics);
-    } catch (error) {
-      logger.error('Error collecting performance metrics:', error);
-      setIsLoading(false);
     }
+    return { used: 0, total: 0, percentage: 0 };
+  }, []);
+
+  const calculateQueryStats = useCallback(() => {
+    const cache = queryClient.getQueryCache();
+    const queries = cache.getAll();
+    
+    return {
+      totalQueries: queries.length,
+      cachedQueries: queries.filter(q => q.state.data !== undefined).length,
+      staleCa0ueries: queries.filter(q => q.isStale()).length,
+      errorQueries: queries.filter(q => q.state.error !== null).length,
+    };
   }, [queryClient]);
 
-  useEffect(() => {
-    // Initial collection
-    collectMetrics();
+  const measureRenderTime = useCallback(() => {
+    const startTime = performance.now();
+    return () => {
+      const endTime = performance.now();
+      return endTime - startTime;
+    };
+  }, []);
+
+  const collectWebVitals = useCallback(() => {
+    const vitals: any = {};
     
-    // Set up performance observers
-    try {
-      const observer = new PerformanceObserver((list) => {
-        for (const entry of list.getEntries()) {
-          setMetrics(prev => {
-            if (!prev) return prev;
-            
-            const updated = { ...prev };
-            
-            switch (entry.entryType) {
-              case 'largest-contentful-paint':
-                updated.lcp = entry.startTime;
-                break;
-              case 'first-input':
-                const fidEntry = entry as PerformanceEventTiming;
-                updated.fid = fidEntry.processingStart - fidEntry.startTime;
-                break;
-              case 'layout-shift':
-                const clsEntry = entry as any;
-                if (!clsEntry.hadRecentInput) {
-                  updated.cls = (prev.cls || 0) + clsEntry.value;
-                }
-                break;
+    // Use PerformanceObserver if available
+    if ('PerformanceObserver' in window) {
+      try {
+        new PerformanceObserver((list) => {
+          for (const entry of list.getEntries()) {
+            if (entry.entryType === 'paint' && entry.name === 'first-contentful-paint') {
+              vitals.fcp = entry.startTime;
             }
-            
-            return updated;
-          });
-        }
-      });
-      
-      observer.observe({ 
-        entryTypes: ['largest-contentful-paint', 'first-input', 'layout-shift'] 
-      });
-      
-      return () => observer.disconnect();
-    } catch (error) {
-      logger.warn('Performance Observer not supported:', error);
+            if (entry.entryType === 'largest-contentful-paint') {
+              vitals.lcp = entry.startTime;
+            }
+            if (entry.entryType === 'first-input') {
+              vitals.fid = entry.processingStart - entry.startTime;
+            }
+          }
+        }).observe({ entryTypes: ['paint', 'largest-contentful-paint', 'first-input'] });
+      } catch (e) {
+        // PerformanceObserver not supported
+      }
     }
-  }, [collectMetrics]);
-
-  // Periodic updates
-  useEffect(() => {
-    const interval = setInterval(collectMetrics, 30000); // Every 30 seconds
-    return () => clearInterval(interval);
-  }, [collectMetrics]);
-
-  const getPerformanceScore = useCallback(() => {
-    if (!metrics || !metrics.lcp || !metrics.fid || metrics.cls === null) return null;
     
+    return vitals;
+  }, []);
+
+  const calculatePerformanceScore = useCallback((metrics: PerformanceMetrics) => {
     let score = 100;
     
-    // LCP scoring (weight: 25%)
-    if (metrics.lcp > 4000) score -= 25;
-    else if (metrics.lcp > 2500) score -= 15;
-    else if (metrics.lcp > 1500) score -= 5;
+    // Memory usage impact (0-30 points)
+    if (metrics.memoryUsage.percentage > 80) score -= 30;
+    else if (metrics.memoryUsage.percentage > 60) score -= 20;
+    else if (metrics.memoryUsage.percentage > 40) score -= 10;
     
-    // FID scoring (weight: 25%) 
-    if (metrics.fid > 300) score -= 25;
-    else if (metrics.fid > 100) score -= 15;
-    else if (metrics.fid > 50) score -= 5;
+    // Query performance impact (0-20 points)
+    const queryErrorRate = metrics.queryStats.totalQueries > 0 
+      ? (metrics.queryStats.errorQueries / metrics.queryStats.totalQueries) * 100 
+      : 0;
+    score -= Math.min(queryErrorRate, 20);
     
-    // CLS scoring (weight: 25%)
-    if (metrics.cls > 0.25) score -= 25;
-    else if (metrics.cls > 0.1) score -= 15;
-    else if (metrics.cls > 0.05) score -= 5;
+    // Render time impact (0-25 points)
+    if (metrics.renderTime > 16) score -= 25; // 60 FPS threshold
+    else if (metrics.renderTime > 8) score -= 15;
+    else if (metrics.renderTime > 4) score -= 5;
     
-    return Math.max(0, score);
-  }, [metrics]);
+    // Web Vitals impact (0-25 points)
+    if (metrics.webVitals.lcp && metrics.webVitals.lcp > 2500) score -= 15;
+    if (metrics.webVitals.fid && metrics.webVitals.fid > 100) score -= 10;
+    
+    return Math.max(0, Math.min(100, score));
+  }, []);
+
+  const updateMetrics = useCallback(() => {
+    const endRender = measureRenderTime();
+    
+    setTimeout(() => {
+      const newMetrics: PerformanceMetrics = {
+        memoryUsage: calculateMemoryUsage(),
+        renderTime: endRender(),
+        queryStats: calculateQueryStats(),
+        webVitals: collectWebVitals(),
+        performanceScore: 0, // Will be calculated below
+      };
+      
+      newMetrics.performanceScore = calculatePerformanceScore(newMetrics);
+      setMetrics(newMetrics);
+    }, 0);
+  }, [calculateMemoryUsage, calculateQueryStats, collectWebVitals, measureRenderTime, calculatePerformanceScore]);
+
+  useEffect(() => {
+    updateMetrics();
+    const interval = setInterval(updateMetrics, 5000); // Update every 5 seconds
+    
+    return () => clearInterval(interval);
+  }, [updateMetrics]);
 
   return {
     metrics,
-    isLoading,
-    score: getPerformanceScore(),
-    refresh: collectMetrics
+    refreshMetrics: updateMetrics,
   };
 }

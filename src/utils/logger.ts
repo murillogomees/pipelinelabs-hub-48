@@ -6,6 +6,8 @@ export interface Logger {
   info: (message: string, meta?: any) => void;
   warn: (message: string, meta?: any) => void;
   error: (message: string, error?: any) => void;
+  authEvent: (event: string, success: boolean, userId?: string, meta?: any) => void;
+  securityEvent: (event: string, userId?: string, ipAddress?: string, meta?: any) => void;
 }
 
 export function createLogger(namespace: string): Logger {
@@ -25,6 +27,12 @@ export function createLogger(namespace: string): Logger {
     info: (message: string, meta?: any) => log('info', message, meta),
     warn: (message: string, meta?: any) => log('warn', message, meta),
     error: (message: string, error?: any) => log('error', message, error),
+    authEvent: (event: string, success: boolean, userId?: string, meta?: any) => {
+      log('info', `Auth Event: ${event} - ${success ? 'SUCCESS' : 'FAILURE'}`, { userId, ...meta });
+    },
+    securityEvent: (event: string, userId?: string, ipAddress?: string, meta?: any) => {
+      log('warn', `Security Event: ${event}`, { userId, ipAddress, ...meta });
+    },
   };
 }
 
