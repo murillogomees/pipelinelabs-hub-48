@@ -1,3 +1,4 @@
+
 import { useState, useCallback, useEffect } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
@@ -7,7 +8,7 @@ import { useCache } from './useCache';
 
 interface InvoiceData {
   id?: string;
-  invoice_number?: string;
+  invoice_number: string;
   invoice_type: 'NFE' | 'NFCE' | 'SERVICE';
   customer_id?: string;
   sale_id?: string;
@@ -15,25 +16,12 @@ interface InvoiceData {
   total_amount: number;
   tax_amount?: number;
   status: 'draft' | 'issued' | 'sent' | 'cancelled';
-  series?: string;
-  access_key?: string;
-  xml_content?: string;
-  pdf_url?: string;
 }
 
 interface InvoiceValidation {
   isValid: boolean;
   isDuplicate: boolean;
   existingInvoice?: any;
-}
-
-interface InvoiceAnalytics {
-  totalInvoices: number;
-  totalAmount: number;
-  averageAmount: number;
-  byStatus: Record<string, number>;
-  byType: Record<string, number>;
-  recentInvoices: any[];
 }
 
 interface SearchFilters {
@@ -59,7 +47,7 @@ export function useInvoicesManager() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
-  // Cache para lista de notas fiscais com filtros
+  // Cache simplificado para evitar tipos infinitos
   const cacheKey = `invoices-${currentCompany?.id}-${JSON.stringify(filters)}-${page}`;
   const { 
     data: invoicesData, 
@@ -73,16 +61,12 @@ export function useInvoicesManager() {
 
       let query = supabase
         .from('invoices')
-        .select(`
-          *,
-          customer:customers(name, document),
-          sale:sales(sale_number)
-        `, { count: 'exact' })
+        .select('*', { count: 'exact' })
         .eq('company_id', currentCompany.id)
         .order('created_at', { ascending: false });
 
       if (filters.query) {
-        query = query.or(`invoice_number.ilike.%${filters.query}%`);
+        query = query.ilike('invoice_number', `%${filters.query}%`);
       }
 
       if (filters.customer_id) {
@@ -125,7 +109,7 @@ export function useInvoicesManager() {
         count: count || 0
       };
     },
-    ttl: 300000, // 5 minutos
+    ttl: 300000,
     enabled: !!currentCompany?.id
   });
 
@@ -136,14 +120,12 @@ export function useInvoicesManager() {
     setIsValidating(true);
     
     try {
-      // Validar número único por série e tipo
       if (invoiceData.invoice_number && invoiceData.invoice_type) {
         const { data: existing } = await supabase
           .from('invoices')
           .select('id, invoice_number')
           .eq('invoice_number', invoiceData.invoice_number)
           .eq('invoice_type', invoiceData.invoice_type)
-          .eq('series', invoiceData.series || '001')
           .eq('company_id', currentCompany?.id)
           .neq('id', invoiceId || '');
 
@@ -178,45 +160,33 @@ export function useInvoicesManager() {
         throw new Error('Empresa não selecionada');
       }
 
-      // Gerar número da nota fiscal se não fornecido
-      if (!invoiceData.invoice_number) {
-        const { data: invoiceNumber } = await supabase.rpc('generate_nfe_number', {
-          company_uuid: currentCompany.id,
-          serie_nfe: invoiceData.series || '001'
-        });
-        invoiceData.invoice_number = invoiceNumber;
-      }
-
       // Validações
       const validation = await validateInvoice(invoiceData);
       if (!validation.isValid) {
         throw new Error('Número de nota fiscal já existe');
       }
 
-      // Gerar chave de acesso se for NFe
-      if (invoiceData.invoice_type === 'NFE' && !invoiceData.access_key) {
-        const { data: accessKey } = await supabase.rpc('generate_nfe_access_key', {
-          company_cnpj: currentCompany.document || '',
-          serie_nfe: invoiceData.series || '001',
-          numero_nfe: invoiceData.invoice_number,
-          emission_date: invoiceData.issue_date
-        });
-        invoiceData.access_key = accessKey;
-      }
+      // Preparar dados baseados no schema real
+      const insertData = {
+        invoice_number: invoiceData.invoice_number,
+        invoice_type: invoiceData.invoice_type,
+        customer_id: invoiceData.customer_id,
+        sale_id: invoiceData.sale_id,
+        issue_date: invoiceData.issue_date,
+        total_amount: invoiceData.total_amount,
+        tax_amount: invoiceData.tax_amount || 0,
+        status: invoiceData.status,
+        company_id: currentCompany.id
+      };
 
       const { data, error } = await supabase
         .from('invoices')
-        .insert({
-          ...invoiceData,
-          company_id: currentCompany.id,
-          series: invoiceData.series || '001'
-        })
+        .insert(insertData)
         .select()
         .single();
 
       if (error) throw error;
 
-      // Invalidar caches relacionados
       await Promise.all([
         invalidateInvoicesCache(),
         queryClient.invalidateQueries({ queryKey: ['invoices'] }),
@@ -246,7 +216,6 @@ export function useInvoicesManager() {
     setIsLoading(true);
     
     try {
-      // Validações se estiver alterando número
       if (invoiceData.invoice_number) {
         const validation = await validateInvoice(invoiceData, invoiceId);
         if (!validation.isValid) {
@@ -267,7 +236,6 @@ export function useInvoicesManager() {
 
       if (error) throw error;
 
-      // Atualizar cache local
       if (invoicesData?.invoices) {
         const updatedList = invoicesData.invoices.map(i => 
           i.id === invoiceId ? { ...i, ...data } : i
@@ -309,7 +277,6 @@ export function useInvoicesManager() {
 
       if (error) throw error;
 
-      // Atualizar cache local
       if (invoicesData?.invoices) {
         const updatedList = invoicesData.invoices.map(i => 
           i.id === invoiceId ? { ...i, status: 'cancelled' } : i
@@ -334,50 +301,9 @@ export function useInvoicesManager() {
     }
   }, [currentCompany?.id, invoicesData, updateInvoicesCache, toast]);
 
-  const getInvoiceAnalytics = useCallback(async (): Promise<InvoiceAnalytics | null> => {
-    try {
-      if (!currentCompany?.id) return null;
-
-      const { data: invoicesData } = await supabase
-        .from('invoices')
-        .select('status, invoice_type, total_amount, created_at')
-        .eq('company_id', currentCompany.id)
-        .order('created_at', { ascending: false })
-        .limit(100);
-
-      if (!invoicesData) return null;
-
-      const totalInvoices = invoicesData.length;
-      const totalAmount = invoicesData.reduce((sum, inv) => sum + Number(inv.total_amount), 0);
-      const averageAmount = totalInvoices > 0 ? totalAmount / totalInvoices : 0;
-
-      const byStatus = invoicesData.reduce((acc, inv) => {
-        acc[inv.status] = (acc[inv.status] || 0) + 1;
-        return acc;
-      }, {} as Record<string, number>);
-
-      const byType = invoicesData.reduce((acc, inv) => {
-        acc[inv.invoice_type] = (acc[inv.invoice_type] || 0) + 1;
-        return acc;
-      }, {} as Record<string, number>);
-
-      return {
-        totalInvoices,
-        totalAmount,
-        averageAmount,
-        byStatus,
-        byType,
-        recentInvoices: invoicesData.slice(0, 10)
-      };
-    } catch (error) {
-      console.error('Error fetching invoice analytics:', error);
-      return null;
-    }
-  }, [currentCompany?.id]);
-
   const searchInvoices = useCallback((newFilters: SearchFilters) => {
     setFilters(newFilters);
-    setPage(1); // Reset para primeira página
+    setPage(1);
   }, []);
 
   const loadMore = useCallback(() => {
@@ -388,7 +314,6 @@ export function useInvoicesManager() {
     await invalidateInvoicesCache();
   }, [invalidateInvoicesCache]);
 
-  // Auto-refresh a cada 5 minutos
   useEffect(() => {
     if (!currentCompany?.id) return;
 
@@ -400,7 +325,6 @@ export function useInvoicesManager() {
   }, [currentCompany?.id, refreshInvoices]);
 
   return {
-    // Estados
     isLoading: isLoading || isCacheLoading,
     isValidating,
     invoices,
@@ -408,37 +332,22 @@ export function useInvoicesManager() {
     filters,
     page,
     pageSize,
-
-    // Funções principais
     createInvoice,
     updateInvoice,
     cancelInvoice,
     searchInvoices,
     loadMore,
-
-    // Validações
     validateInvoice,
-
-    // Analytics
-    getInvoiceAnalytics,
     refreshInvoices,
-
-    // Utilitários
     getInvoiceById: useCallback((id: string) => 
       invoices.find(i => i.id === id), [invoices]
     ),
-
-    // Estatísticas
     hasMorePages: invoices.length < totalInvoices,
     currentPage: page,
     totalPages: Math.ceil(totalInvoices / pageSize),
-
-    // Filtros auxiliares
     draftInvoices: invoices.filter(i => i.status === 'draft'),
     issuedInvoices: invoices.filter(i => i.status === 'issued'),
     cancelledInvoices: invoices.filter(i => i.status === 'cancelled'),
-
-    // Status
     isEmpty: invoices.length === 0,
     isFiltered: Object.keys(filters).some(key => filters[key as keyof SearchFilters])
   };

@@ -1,3 +1,4 @@
+
 import { useState, useCallback, useEffect } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
@@ -18,29 +19,6 @@ interface SaleData {
   payment_status?: 'pending' | 'paid' | 'partial' | 'cancelled';
   notes?: string;
   sale_date?: string;
-  items?: SaleItemData[];
-}
-
-interface SaleItemData {
-  id?: string;
-  product_id: string;
-  quantity: number;
-  unit_price: number;
-  total_price: number;
-  discount_amount?: number;
-  product?: {
-    name: string;
-    code: string;
-  };
-}
-
-interface SaleAnalytics {
-  totalSales: number;
-  totalRevenue: number;
-  averageTicket: number;
-  topProducts: any[];
-  topCustomers: any[];
-  salesByPeriod: any[];
 }
 
 interface SearchFilters {
@@ -66,7 +44,6 @@ export function useSalesManager() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
-  // Cache para lista de vendas com filtros
   const cacheKey = `sales-${currentCompany?.id}-${JSON.stringify(filters)}-${page}`;
   const { 
     data: salesData, 
@@ -80,23 +57,12 @@ export function useSalesManager() {
 
       let query = supabase
         .from('sales')
-        .select(`
-          *,
-          customer:customers(name),
-          sale_items(
-            id,
-            product_id,
-            quantity,
-            unit_price,
-            total_price,
-            product:products(name, code)
-          )
-        `, { count: 'exact' })
+        .select('*', { count: 'exact' })
         .eq('company_id', currentCompany.id)
         .order('created_at', { ascending: false });
 
       if (filters.query) {
-        query = query.or(`sale_number.ilike.%${filters.query}%`);
+        query = query.ilike('sale_number', `%${filters.query}%`);
       }
 
       if (filters.customer_id) {
@@ -143,7 +109,7 @@ export function useSalesManager() {
         count: count || 0
       };
     },
-    ttl: 120000, // 2 minutos (vendas são mais dinâmicas)
+    ttl: 120000,
     enabled: !!currentCompany?.id
   });
 
@@ -158,26 +124,22 @@ export function useSalesManager() {
         throw new Error('Empresa não selecionada');
       }
 
-      // Gerar número da venda se não fornecido
-      if (!saleData.sale_number) {
-        const { data: saleNumber } = await supabase.rpc('generate_sale_number', {
-          company_uuid: currentCompany.id,
-          sale_type_param: saleData.sale_type
-        });
-        saleData.sale_number = saleNumber;
-      }
-
-      const { items, ...saleDataWithoutItems } = saleData;
-
-      // Preparar dados para inserção
+      // Preparar dados baseados no schema real
       const insertData = {
-        ...saleDataWithoutItems,
-        sale_number: saleData.sale_number!,
-        company_id: currentCompany.id,
-        sale_date: saleData.sale_date || new Date().toISOString().split('T')[0]
+        sale_number: saleData.sale_number,
+        customer_id: saleData.customer_id,
+        sale_type: saleData.sale_type,
+        status: saleData.status,
+        total_amount: saleData.total_amount,
+        discount_amount: saleData.discount_amount,
+        tax_amount: saleData.tax_amount,
+        payment_method: saleData.payment_method,
+        payment_status: saleData.payment_status,
+        notes: saleData.notes,
+        sale_date: saleData.sale_date || new Date().toISOString().split('T')[0],
+        company_id: currentCompany.id
       };
 
-      // Criar venda
       const { data: sale, error: saleError } = await supabase
         .from('sales')
         .insert(insertData)
@@ -186,38 +148,10 @@ export function useSalesManager() {
 
       if (saleError) throw saleError;
 
-      // Criar itens da venda se fornecidos
-      if (items && items.length > 0) {
-        const saleItems = items.map(item => ({
-          ...item,
-          sale_id: sale.id,
-          company_id: currentCompany.id
-        }));
-
-        const { error: itemsError } = await supabase
-          .from('sale_items')
-          .insert(saleItems);
-
-        if (itemsError) throw itemsError;
-
-        // Atualizar estoque dos produtos
-        for (const item of items) {
-          await supabase.rpc('register_stock_movement', {
-            p_product_id: item.product_id,
-            p_movement_type: 'saida',
-            p_quantity: item.quantity,
-            p_reference_type: 'sale',
-            p_reference_id: sale.id
-          });
-        }
-      }
-
-      // Invalidar caches relacionados
       await Promise.all([
         invalidateSalesCache(),
         queryClient.invalidateQueries({ queryKey: ['sales'] }),
-        queryClient.invalidateQueries({ queryKey: ['dashboard'] }),
-        queryClient.invalidateQueries({ queryKey: ['products'] }) // Por causa do estoque
+        queryClient.invalidateQueries({ queryKey: ['dashboard'] })
       ]);
 
       toast({
@@ -225,7 +159,7 @@ export function useSalesManager() {
         description: 'Venda criada com sucesso'
       });
 
-      return { ...sale, sale_items: items };
+      return sale;
     } catch (error: any) {
       console.error('Error creating sale:', error);
       toast({
@@ -243,12 +177,10 @@ export function useSalesManager() {
     setIsLoading(true);
     
     try {
-      const { items, ...saleDataWithoutItems } = saleData;
-
       const { data, error } = await supabase
         .from('sales')
         .update({
-          ...saleDataWithoutItems,
+          ...saleData,
           updated_at: new Date().toISOString()
         })
         .eq('id', saleId)
@@ -258,7 +190,6 @@ export function useSalesManager() {
 
       if (error) throw error;
 
-      // Atualizar cache local
       if (salesData?.sales) {
         const updatedList = salesData.sales.map(s => 
           s.id === saleId ? { ...s, ...data } : s
@@ -289,13 +220,6 @@ export function useSalesManager() {
     setIsLoading(true);
     
     try {
-      // Buscar itens da venda para reverter estoque
-      const { data: saleItems } = await supabase
-        .from('sale_items')
-        .select('product_id, quantity')
-        .eq('sale_id', saleId);
-
-      // Cancelar venda
       const { error } = await supabase
         .from('sales')
         .update({ 
@@ -308,21 +232,6 @@ export function useSalesManager() {
 
       if (error) throw error;
 
-      // Reverter estoque
-      if (saleItems) {
-        for (const item of saleItems) {
-          await supabase.rpc('register_stock_movement', {
-            p_product_id: item.product_id,
-            p_movement_type: 'entrada',
-            p_quantity: item.quantity,
-            p_reference_type: 'sale_cancellation',
-            p_reference_id: saleId,
-            p_reason: 'Reversão por cancelamento de venda'
-          });
-        }
-      }
-
-      // Atualizar cache local
       if (salesData?.sales) {
         const updatedList = salesData.sales.map(s => 
           s.id === saleId ? { ...s, status: 'cancelled' } : s
@@ -347,75 +256,9 @@ export function useSalesManager() {
     }
   }, [currentCompany?.id, salesData, updateSalesCache, toast]);
 
-  const getSaleAnalytics = useCallback(async (period: 'day' | 'week' | 'month' | 'year' = 'month'): Promise<SaleAnalytics | null> => {
-    try {
-      if (!currentCompany?.id) return null;
-
-      const periodMap = {
-        day: '1 day',
-        week: '7 days',
-        month: '30 days',
-        year: '1 year'
-      };
-
-      const [salesData, topProductsData, topCustomersData] = await Promise.all([
-        supabase
-          .from('sales')
-          .select('total_amount, created_at')
-          .eq('company_id', currentCompany.id)
-          .eq('status', 'completed')
-          .gte('created_at', new Date(Date.now() - 
-            (period === 'day' ? 86400000 :
-             period === 'week' ? 604800000 :
-             period === 'month' ? 2592000000 : 31536000000)
-          ).toISOString()),
-        
-        supabase
-          .from('sale_items')
-          .select(`
-            product_id,
-            quantity,
-            total_price,
-            product:products(name)
-          `)
-          .eq('company_id', currentCompany.id)
-          .order('quantity', { ascending: false })
-          .limit(10),
-        
-        supabase
-          .from('sales')
-          .select(`
-            customer_id,
-            total_amount,
-            customer:customers(name)
-          `)
-          .eq('company_id', currentCompany.id)
-          .eq('status', 'completed')
-          .order('total_amount', { ascending: false })
-          .limit(10)
-      ]);
-
-      const totalSales = salesData.data?.length || 0;
-      const totalRevenue = salesData.data?.reduce((sum, sale) => sum + Number(sale.total_amount), 0) || 0;
-      const averageTicket = totalSales > 0 ? totalRevenue / totalSales : 0;
-
-      return {
-        totalSales,
-        totalRevenue,
-        averageTicket,
-        topProducts: topProductsData.data || [],
-        topCustomers: topCustomersData.data || [],
-        salesByPeriod: salesData.data || []
-      };
-    } catch (error) {
-      console.error('Error fetching sale analytics:', error);
-      return null;
-    }
-  }, [currentCompany?.id]);
-
   const searchSales = useCallback((newFilters: SearchFilters) => {
     setFilters(newFilters);
-    setPage(1); // Reset para primeira página
+    setPage(1);
   }, []);
 
   const loadMore = useCallback(() => {
@@ -426,7 +269,6 @@ export function useSalesManager() {
     await invalidateSalesCache();
   }, [invalidateSalesCache]);
 
-  // Auto-refresh a cada 2 minutos
   useEffect(() => {
     if (!currentCompany?.id) return;
 
@@ -438,41 +280,27 @@ export function useSalesManager() {
   }, [currentCompany?.id, refreshSales]);
 
   return {
-    // Estados
     isLoading: isLoading || isCacheLoading,
     sales,
     totalSales,
     filters,
     page,
     pageSize,
-
-    // Funções principais
     createSale,
     updateSale,
     cancelSale,
     searchSales,
     loadMore,
-
-    // Analytics
-    getSaleAnalytics,
     refreshSales,
-
-    // Utilitários
     getSaleById: useCallback((id: string) => 
       sales.find(s => s.id === id), [sales]
     ),
-
-    // Estatísticas
     hasMorePages: sales.length < totalSales,
     currentPage: page,
     totalPages: Math.ceil(totalSales / pageSize),
-
-    // Filtros auxiliares
     pendingSales: sales.filter(s => s.status === 'pending'),
     completedSales: sales.filter(s => s.status === 'completed'),
     cancelledSales: sales.filter(s => s.status === 'cancelled'),
-
-    // Status
     isEmpty: sales.length === 0,
     isFiltered: Object.keys(filters).some(key => filters[key as keyof SearchFilters])
   };

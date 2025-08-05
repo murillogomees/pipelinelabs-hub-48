@@ -10,8 +10,7 @@ interface ProductData {
   id?: string;
   name: string;
   description?: string;
-  code?: string;
-  category?: string;
+  code: string;
   price?: number;
   cost_price?: number;
   stock_quantity?: number;
@@ -23,7 +22,6 @@ interface ProductData {
   weight?: number;
   dimensions?: string;
   supplier_id?: string;
-  tax_rate?: number;
 }
 
 interface ProductValidation {
@@ -34,19 +32,8 @@ interface ProductValidation {
   barcodeExists?: boolean;
 }
 
-interface ProductAnalytics {
-  totalProducts: number;
-  totalValue: number;
-  lowStockCount: number;
-  outOfStockCount: number;
-  averagePrice: number;
-  topSellingProducts: any[];
-  categoryDistribution: Record<string, number>;
-}
-
 interface SearchFilters {
   query?: string;
-  category?: string;
   is_active?: boolean;
   low_stock?: boolean;
   out_of_stock?: boolean;
@@ -67,7 +54,6 @@ export function useProductsManager() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
-  // Cache para lista de produtos com filtros
   const cacheKey = `products-${currentCompany?.id}-${JSON.stringify(filters)}-${page}`;
   const { 
     data: productsData, 
@@ -81,19 +67,12 @@ export function useProductsManager() {
 
       let query = supabase
         .from('products')
-        .select(`
-          *,
-          supplier:suppliers(name)
-        `, { count: 'exact' })
+        .select('*', { count: 'exact' })
         .eq('company_id', currentCompany.id)
         .order('created_at', { ascending: false });
 
       if (filters.query) {
         query = query.or(`name.ilike.%${filters.query}%,code.ilike.%${filters.query}%,barcode.ilike.%${filters.query}%`);
-      }
-
-      if (filters.category) {
-        query = query.eq('category', filters.category);
       }
 
       if (filters.is_active !== undefined) {
@@ -102,11 +81,6 @@ export function useProductsManager() {
 
       if (filters.supplier_id) {
         query = query.eq('supplier_id', filters.supplier_id);
-      }
-
-      if (filters.low_stock) {
-        // Use SQL function instead of .raw() which doesn't exist
-        query = query.filter('stock_quantity', 'lte', 'min_stock');
       }
 
       if (filters.out_of_stock) {
@@ -133,7 +107,7 @@ export function useProductsManager() {
         count: count || 0
       };
     },
-    ttl: 300000, // 5 minutos
+    ttl: 300000,
     enabled: !!currentCompany?.id
   });
 
@@ -147,7 +121,6 @@ export function useProductsManager() {
       let codeExists = false;
       let barcodeExists = false;
       
-      // Validar código único se fornecido
       if (productData.code) {
         const { data: existingCode } = await supabase
           .from('products')
@@ -159,7 +132,6 @@ export function useProductsManager() {
         codeExists = existingCode && existingCode.length > 0;
       }
 
-      // Validar código de barras único se fornecido
       if (productData.barcode) {
         const { data: existingBarcode } = await supabase
           .from('products')
@@ -200,7 +172,6 @@ export function useProductsManager() {
         throw new Error('Empresa não selecionada');
       }
 
-      // Validações
       const validation = await validateProduct(productData);
       if (!validation.isValid) {
         let errorMsg = 'Dados duplicados: ';
@@ -209,19 +180,33 @@ export function useProductsManager() {
         throw new Error(errorMsg);
       }
 
+      // Preparar dados baseados no schema real da tabela products
+      const insertData = {
+        name: productData.name,
+        description: productData.description,
+        code: productData.code,
+        price: productData.price,
+        cost_price: productData.cost_price,
+        stock_quantity: productData.stock_quantity || 0,
+        min_stock: productData.min_stock,
+        max_stock: productData.max_stock,
+        unit: productData.unit,
+        barcode: productData.barcode,
+        is_active: productData.is_active ?? true,
+        weight: productData.weight,
+        dimensions: productData.dimensions,
+        supplier_id: productData.supplier_id,
+        company_id: currentCompany.id
+      };
+
       const { data, error } = await supabase
         .from('products')
-        .insert({
-          ...productData,
-          company_id: currentCompany.id,
-          is_active: productData.is_active ?? true
-        })
+        .insert(insertData)
         .select()
         .single();
 
       if (error) throw error;
 
-      // Invalidar caches relacionados
       await Promise.all([
         invalidateProductsCache(),
         queryClient.invalidateQueries({ queryKey: ['products'] }),
@@ -251,7 +236,6 @@ export function useProductsManager() {
     setIsLoading(true);
     
     try {
-      // Validações se estiver alterando código ou código de barras
       if (productData.code || productData.barcode) {
         const validation = await validateProduct(productData, productId);
         if (!validation.isValid) {
@@ -275,7 +259,6 @@ export function useProductsManager() {
 
       if (error) throw error;
 
-      // Atualizar cache local
       if (productsData?.products) {
         const updatedList = productsData.products.map(p => 
           p.id === productId ? data : p
@@ -306,7 +289,6 @@ export function useProductsManager() {
     setIsLoading(true);
     
     try {
-      // Soft delete - marcar como inativo
       const { error } = await supabase
         .from('products')
         .update({ 
@@ -318,7 +300,6 @@ export function useProductsManager() {
 
       if (error) throw error;
 
-      // Atualizar cache local
       if (productsData?.products) {
         const updatedList = productsData.products.map(p => 
           p.id === productId ? { ...p, is_active: false } : p
@@ -343,69 +324,9 @@ export function useProductsManager() {
     }
   }, [currentCompany?.id, productsData, updateProductsCache, toast]);
 
-  const getProductAnalytics = useCallback(async (): Promise<ProductAnalytics | null> => {
-    try {
-      if (!currentCompany?.id) return null;
-
-      // Buscar dados dos produtos
-      const { data: productsData } = await supabase
-        .from('products')
-        .select('price, stock_quantity, min_stock, category, is_active')
-        .eq('company_id', currentCompany.id)
-        .eq('is_active', true);
-
-      if (!productsData) return null;
-
-      const totalProducts = productsData.length;
-      const totalValue = productsData.reduce((sum, product) => 
-        sum + (Number(product.price || 0) * Number(product.stock_quantity || 0)), 0);
-      const averagePrice = totalProducts > 0 ? 
-        productsData.reduce((sum, product) => sum + Number(product.price || 0), 0) / totalProducts : 0;
-
-      const lowStockCount = productsData.filter(product => 
-        Number(product.stock_quantity || 0) <= Number(product.min_stock || 0)).length;
-      const outOfStockCount = productsData.filter(product => 
-        Number(product.stock_quantity || 0) === 0).length;
-
-      // Buscar produtos mais vendidos (simulando com dados disponíveis)
-      const { data: salesData } = await supabase
-        .from('sale_items')
-        .select(`
-          product_id,
-          quantity,
-          total_price,
-          product:products(name)
-        `)
-        .eq('company_id', currentCompany.id)
-        .limit(10);
-
-      const topSellingProducts = salesData || [];
-
-      // Distribuição por categoria
-      const categoryDistribution = productsData.reduce((acc, product) => {
-        const category = product.category || 'Sem categoria';
-        acc[category] = (acc[category] || 0) + 1;
-        return acc;
-      }, {} as Record<string, number>);
-
-      return {
-        totalProducts,
-        totalValue,
-        averagePrice,
-        lowStockCount,
-        outOfStockCount,
-        topSellingProducts,
-        categoryDistribution
-      };
-    } catch (error) {
-      console.error('Error fetching product analytics:', error);
-      return null;
-    }
-  }, [currentCompany?.id]);
-
   const searchProducts = useCallback((newFilters: SearchFilters) => {
     setFilters(newFilters);
-    setPage(1); // Reset para primeira página
+    setPage(1);
   }, []);
 
   const loadMore = useCallback(() => {
@@ -416,7 +337,6 @@ export function useProductsManager() {
     await invalidateProductsCache();
   }, [invalidateProductsCache]);
 
-  // Auto-refresh a cada 10 minutos
   useEffect(() => {
     if (!currentCompany?.id) return;
 
@@ -428,7 +348,6 @@ export function useProductsManager() {
   }, [currentCompany?.id, refreshProducts]);
 
   return {
-    // Estados
     isLoading: isLoading || isCacheLoading,
     isValidating,
     products,
@@ -436,40 +355,25 @@ export function useProductsManager() {
     filters,
     page,
     pageSize,
-
-    // Funções principais
     createProduct,
     updateProduct,
     deleteProduct,
     searchProducts,
     loadMore,
-
-    // Validações
     validateProduct,
-
-    // Analytics
-    getProductAnalytics,
     refreshProducts,
-
-    // Utilitários
     getProductById: useCallback((id: string) => 
       products.find(p => p.id === id), [products]
     ),
-
-    // Estatísticas
     hasMorePages: products.length < totalProducts,
     currentPage: page,
     totalPages: Math.ceil(totalProducts / pageSize),
-
-    // Filtros auxiliares
     activeProducts: products.filter(p => p.is_active !== false),
     inactiveProducts: products.filter(p => p.is_active === false),
     lowStockProducts: products.filter(p => 
       Number(p.stock_quantity || 0) <= Number(p.min_stock || 0)),
     outOfStockProducts: products.filter(p => 
       Number(p.stock_quantity || 0) === 0),
-
-    // Status
     isEmpty: products.length === 0,
     isFiltered: Object.keys(filters).some(key => filters[key as keyof SearchFilters])
   };

@@ -5,7 +5,7 @@ import { SaleDialog } from '@/components/Sales/SaleDialog';
 import { SaleFilters } from '@/components/Sales/SaleFilters';
 import { useSalesManager } from '@/hooks/useSalesManager';
 import { Button } from '@/components/ui/button';
-import { Plus, Loader2, TrendingUp } from 'lucide-react';
+import { Plus, Loader2 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 
 export default function Vendas() {
