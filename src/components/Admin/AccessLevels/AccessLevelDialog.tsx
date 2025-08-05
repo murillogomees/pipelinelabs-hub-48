@@ -104,27 +104,6 @@ type FormData = {
 export function AccessLevelDialog({ open, onOpenChange, accessLevel, onSave }: AccessLevelDialogProps) {
   const { createAccessLevel, updateAccessLevel, isCreating, isUpdating } = useAccessLevels();
   
-  // Prepare initial values based on accessLevel
-  const getInitialValues = useCallback((): FormData => {
-    if (accessLevel) {
-      return {
-        name: accessLevel.name || '',
-        display_name: accessLevel.display_name || '',
-        description: accessLevel.description || '',
-        is_active: accessLevel.is_active ?? true,
-        permissions: accessLevel.permissions || {}
-      };
-    }
-    
-    return {
-      name: '',
-      display_name: '',
-      description: '',
-      is_active: true,
-      permissions: {}
-    };
-  }, [accessLevel]);
-
   const onSubmit = useCallback(async (data: FormData) => {
     try {
       const submitData = {
@@ -148,10 +127,15 @@ export function AccessLevelDialog({ open, onOpenChange, accessLevel, onSave }: A
   const {
     form,
     handleSubmit,
-    isSubmitting,
-    resetForm
+    isSubmitting
   } = useBaseForm<FormData>({
-    defaultValues: getInitialValues(),
+    defaultValues: {
+      name: '',
+      display_name: '',
+      description: '',
+      is_active: true,
+      permissions: {}
+    },
     onSubmit,
     resetOnSuccess: false,
     successMessage: `Nível de acesso ${accessLevel ? 'atualizado' : 'criado'} com sucesso`,
@@ -167,21 +151,31 @@ export function AccessLevelDialog({ open, onOpenChange, accessLevel, onSave }: A
   const isActive = watch('is_active');
   const permissions = watch('permissions');
 
-  // Reset form when dialog opens or accessLevel changes
+  // Reset form when dialog opens - simplified approach
   React.useEffect(() => {
-    if (open) {
-      const values = getInitialValues();
-      reset(values);
+    if (open && accessLevel) {
+      reset({
+        name: accessLevel.name || '',
+        display_name: accessLevel.display_name || '',
+        description: accessLevel.description || '',
+        is_active: accessLevel.is_active ?? true,
+        permissions: accessLevel.permissions || {}
+      });
+    } else if (open) {
+      reset({
+        name: '',
+        display_name: '',
+        description: '',
+        is_active: true,
+        permissions: {}
+      });
     }
-  }, [open, accessLevel?.id]); // Remove getInitialValues and reset from dependencies
+  }, [open, accessLevel?.id, reset]);
 
   // Reset form when dialog closes
   const handleDialogChange = useCallback((newOpen: boolean) => {
     onOpenChange(newOpen);
-    if (!newOpen) {
-      resetForm();
-    }
-  }, [onOpenChange, resetForm]);
+  }, [onOpenChange]);
 
   const handleDisplayNameChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
