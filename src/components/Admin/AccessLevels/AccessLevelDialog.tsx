@@ -145,40 +145,30 @@ function AccessLevelForm({ accessLevel, onSave, onCancel }: {
     setFormData(prev => ({ ...prev, [field]: value }));
   }, []);
 
-  // Single stable handler for all permission changes using functional state update
-  const handlePermissionChange = useCallback((e: React.MouseEvent | boolean, permissionKey?: string) => {
-    let permission: string;
-    let checked: boolean;
-    
-    if (typeof e === 'boolean' && permissionKey) {
-      // Called from Switch onCheckedChange
-      permission = permissionKey;
-      checked = e;
-    } else if (e && typeof e === 'object' && 'currentTarget' in e) {
-      // Called from div click
-      const target = e.currentTarget as HTMLElement;
-      permission = target.dataset.permission!;
-      // Use functional update to get current state
-      setFormData(prev => ({
-        ...prev,
-        permissions: {
-          ...prev.permissions,
-          [permission]: !prev.permissions[permission]
-        }
-      }));
-      return;
-    } else {
-      return;
-    }
-    
+  // Stable handlers to prevent infinite re-renders
+  const handleDivClick = useCallback((e: React.MouseEvent) => {
+    const target = e.currentTarget as HTMLElement;
+    const permission = target.dataset.permission!;
     setFormData(prev => ({
       ...prev,
       permissions: {
         ...prev.permissions,
-        [permission]: checked
+        [permission]: !prev.permissions[permission]
       }
     }));
-  }, []); // No dependencies to avoid recreation
+  }, []);
+
+  const handleSwitchChange = useCallback((permission: string) => {
+    return (checked: boolean) => {
+      setFormData(prev => ({
+        ...prev,
+        permissions: {
+          ...prev.permissions,
+          [permission]: checked
+        }
+      }));
+    };
+  }, []);
 
   // Stable handler for active switch
   const handleActiveChange = useCallback((checked: boolean) => {
@@ -281,7 +271,7 @@ function AccessLevelForm({ accessLevel, onSave, onCancel }: {
                             : 'hover:bg-muted/30'
                         }`}
                         data-permission={permission.key}
-                        onClick={handlePermissionChange}
+                        onClick={handleDivClick}
                       >
                         <div className="flex items-start justify-between">
                           <div className="flex-1">
@@ -294,7 +284,7 @@ function AccessLevelForm({ accessLevel, onSave, onCancel }: {
                           </div>
                           <Switch
                             checked={isEnabled}
-                            onCheckedChange={(checked) => handlePermissionChange(checked, permission.key)}
+                            onCheckedChange={handleSwitchChange(permission.key)}
                             className="ml-3"
                           />
                         </div>
