@@ -243,7 +243,7 @@ export function SaleDialog({ isOpen, onClose, sale }: SaleDialogProps) {
 
               {/* Tab Informações */}
               <TabsContent value="info" className="space-y-4 mt-0">
-                <FormSection title="Dados do Pedido" showDivider={false}>
+                <FormSection title="Dados do Pedido">
                   <div className="space-y-4">
                     <div>
                       <Label htmlFor="customer">Cliente (opcional)</Label>
@@ -293,7 +293,7 @@ export function SaleDialog({ isOpen, onClose, sale }: SaleDialogProps) {
 
               {/* Tab Itens */}
               <TabsContent value="items" className="space-y-4 mt-0">
-                <FormSection title="Buscar Produtos" showDivider={false}>
+                <FormSection title="Buscar Produtos">
                   <div className="relative">
                     <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-5 h-5" />
                     <Input
@@ -326,7 +326,7 @@ export function SaleDialog({ isOpen, onClose, sale }: SaleDialogProps) {
                   )}
                 </FormSection>
 
-                <FormSection title={`Itens Adicionados (${items.length})`} showDivider={false}>
+                <FormSection title={`Itens Adicionados (${items.length})`}>
                   {items.length === 0 ? (
                     <div className="text-center py-8 bg-muted/30 rounded-lg">
                       <ShoppingCart className="w-12 h-12 mx-auto text-muted-foreground/50 mb-3" />
@@ -405,7 +405,7 @@ export function SaleDialog({ isOpen, onClose, sale }: SaleDialogProps) {
 
               {/* Tab Resumo */}
               <TabsContent value="summary" className="space-y-4 mt-0">
-                <FormSection title="Resumo do Pedido" showDivider={false}>
+                <FormSection title="Resumo do Pedido">
                   <div className="bg-muted/30 rounded-lg p-4 space-y-3">
                     <div className="flex justify-between items-center">
                       <span className="text-muted-foreground">Itens ({items.length})</span>

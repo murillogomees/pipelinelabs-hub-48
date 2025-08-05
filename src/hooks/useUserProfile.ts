@@ -14,6 +14,15 @@ export interface UserProfile {
   is_active: boolean;
   created_at: string;
   updated_at: string;
+  document?: string;
+  document_type?: 'cpf' | 'cnpj';
+  address?: string;
+  zipcode?: string;
+  city?: string;
+  state?: string;
+  person_type?: 'individual' | 'company';
+  access_level_id?: string;
+  companie_id?: string;
 }
 
 export interface UpdateProfileData {
@@ -21,6 +30,13 @@ export interface UpdateProfileData {
   email?: string;
   phone?: string;
   avatar_url?: string;
+  document?: string;
+  document_type?: 'cpf' | 'cnpj';
+  address?: string;
+  zipcode?: string;
+  city?: string;
+  state?: string;
+  person_type?: 'individual' | 'company';
 }
 
 export function useUserProfile() {
