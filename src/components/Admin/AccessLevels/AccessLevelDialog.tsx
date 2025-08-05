@@ -103,17 +103,26 @@ type FormData = {
 export function AccessLevelDialog({ open, onOpenChange, accessLevel, onSave }: AccessLevelDialogProps) {
   const { createAccessLevel, updateAccessLevel, isCreating, isUpdating } = useAccessLevels();
   
-  // Create a stable identifier for form reset
-  const accessLevelId = accessLevel?.id || null;
-  
-  // Static default values to prevent re-renders
-  const defaultValues = useMemo((): FormData => ({
-    name: '',
-    display_name: '',
-    description: '',
-    is_active: true,
-    permissions: {}
-  }), []);
+  // Create dynamic default values based on accessLevel - this will force form remount
+  const getDefaultValues = useCallback((): FormData => {
+    if (accessLevel) {
+      return {
+        name: accessLevel.name || '',
+        display_name: accessLevel.display_name || '',
+        description: accessLevel.description || '',
+        is_active: accessLevel.is_active ?? true,
+        permissions: accessLevel.permissions || {}
+      };
+    }
+    
+    return {
+      name: '',
+      display_name: '',
+      description: '',
+      is_active: true,
+      permissions: {}
+    };
+  }, [accessLevel?.id]); // Only depend on ID for stability
 
   const onSubmit = useCallback(async (data: FormData) => {
     try {
@@ -134,12 +143,15 @@ export function AccessLevelDialog({ open, onOpenChange, accessLevel, onSave }: A
     }
   }, [accessLevel, createAccessLevel, updateAccessLevel, onSave, onOpenChange]);
 
+  // Use a key to force form remount when accessLevel changes
+  const formKey = `access-level-form-${accessLevel?.id || 'new'}`;
+
   const {
     form,
     handleSubmit,
     isSubmitting
   } = useBaseForm<FormData>({
-    defaultValues,
+    defaultValues: getDefaultValues(),
     onSubmit,
     resetOnSuccess: false,
     successMessage: `Nível de acesso ${accessLevel ? 'atualizado' : 'criado'} com sucesso`,
@@ -155,26 +167,7 @@ export function AccessLevelDialog({ open, onOpenChange, accessLevel, onSave }: A
   const isActive = watch('is_active');
   const permissions = watch('permissions');
 
-  // Populate form when dialog opens - using stable dependencies
-  React.useEffect(() => {
-    if (open) {
-      if (accessLevel) {
-        // Set values for editing
-        setValue('name', accessLevel.name || '');
-        setValue('display_name', accessLevel.display_name || '');
-        setValue('description', accessLevel.description || '');
-        setValue('is_active', accessLevel.is_active ?? true);
-        setValue('permissions', accessLevel.permissions || {});
-      } else {
-        // Clear values for new entry
-        setValue('name', '');
-        setValue('display_name', '');
-        setValue('description', '');
-        setValue('is_active', true);
-        setValue('permissions', {});
-      }
-    }
-  }, [open, accessLevelId, setValue]); // Use accessLevelId instead of accessLevel
+  // Remove the problematic useEffect completely - form values are set via defaultValues
 
   const handleDisplayNameChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
