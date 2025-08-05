@@ -1,49 +1,41 @@
 
-interface LogLevel {
+export interface LogLevel {
   DEBUG: 'debug';
   INFO: 'info';
   WARN: 'warn';
   ERROR: 'error';
 }
 
-const LOG_LEVELS: LogLevel = {
+export interface Logger {
+  debug: (message: string, meta?: any) => void;
+  info: (message: string, meta?: any) => void;
+  warn: (message: string, meta?: any) => void;
+  error: (message: string, error?: any) => void;
+}
+
+const logLevel: LogLevel = {
   DEBUG: 'debug',
   INFO: 'info',
   WARN: 'warn',
   ERROR: 'error'
 };
 
-class Logger {
-  private context: string;
-  private isDevelopment = import.meta.env.DEV;
-
-  constructor(context: string) {
-    this.context = context;
-  }
-
-  debug(message: string, data?: any) {
-    if (this.isDevelopment) {
-      console.log(`[DEBUG] [${this.context}] ${message}`, data || '');
+export function createLogger(namespace: string): Logger {
+  const log = (level: string, message: string, meta?: any) => {
+    const timestamp = new Date().toISOString();
+    const logMessage = `[${timestamp}] [${level.toUpperCase()}] [${namespace}] ${message}`;
+    
+    if (meta) {
+      console[level as keyof Console](logMessage, meta);
+    } else {
+      console[level as keyof Console](logMessage);
     }
-  }
+  };
 
-  info(message: string, data?: any) {
-    if (this.isDevelopment) {
-      console.info(`[INFO] [${this.context}] ${message}`, data || '');
-    }
-  }
-
-  warn(message: string, data?: any) {
-    console.warn(`[WARN] [${this.context}] ${message}`, data || '');
-  }
-
-  error(message: string, data?: any) {
-    console.error(`[ERROR] [${this.context}] ${message}`, data || '');
-  }
+  return {
+    debug: (message: string, meta?: any) => log('debug', message, meta),
+    info: (message: string, meta?: any) => log('info', message, meta),
+    warn: (message: string, meta?: any) => log('warn', message, meta),
+    error: (message: string, error?: any) => log('error', message, error),
+  };
 }
-
-export function createLogger(context: string): Logger {
-  return new Logger(context);
-}
-
-export const logger = new Logger('App');

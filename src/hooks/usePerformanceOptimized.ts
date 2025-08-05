@@ -1,3 +1,4 @@
+
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useCallback, useMemo } from 'react';
 
@@ -14,7 +15,7 @@ export function usePerformanceOptimized() {
     refetchOnWindowFocus: false,
     refetchOnReconnect: true,
     retry: 2,
-    retryDelay: attemptIndex => Math.min(1000 * 2 ** attemptIndex, 30000),
+    retryDelay: (attemptIndex: number) => Math.min(1000 * 2 ** attemptIndex, 30000),
   }), []);
 
   // Invalidação inteligente de cache
@@ -60,30 +61,31 @@ export function usePerformanceOptimized() {
  * Hook para monitoramento de performance em tempo real
  */
 export function usePerformanceMonitor() {
+  const queryClient = useQueryClient();
+  
   return useQuery({
     queryKey: ['performance-monitor'],
     queryFn: async () => {
       // Métricas de performance do React Query
-      const queryCache = JSON.parse(JSON.stringify(
-        Array.from(useQueryClient().getQueryCache().getAll())
-          .slice(0, 10) // Primeiras 10 queries
-          .map(query => ({
-            queryKey: query.queryKey,
-            state: query.state.status,
-            dataUpdatedAt: query.state.dataUpdatedAt,
-            errorUpdatedAt: query.state.errorUpdatedAt,
-          }))
-      ));
+      const queryCache = queryClient.getQueryCache();
+      const queries = queryCache.getAll();
+      
+      const queryMetrics = queries.slice(0, 10).map(query => ({
+        queryKey: query.queryKey,
+        state: query.state.status,
+        dataUpdatedAt: query.state.dataUpdatedAt,
+        errorUpdatedAt: query.state.errorUpdatedAt,
+      }));
 
       // Métricas de navegador
       const performanceEntries = performance.getEntriesByType('navigation');
       const timing = performanceEntries[0] as PerformanceNavigationTiming;
 
       return {
-        queryCache,
+        queryCache: queryMetrics,
         timing: {
-          domContentLoaded: timing.domContentLoadedEventEnd - timing.domContentLoadedEventStart,
-          loadComplete: timing.loadEventEnd - timing.loadEventStart,
+          domContentLoaded: timing ? timing.domContentLoadedEventEnd - timing.domContentLoadedEventStart : 0,
+          loadComplete: timing ? timing.loadEventEnd - timing.loadEventStart : 0,
           firstContentfulPaint: performance.getEntriesByName('first-contentful-paint')[0]?.startTime || 0,
         },
         memory: (performance as any).memory ? {

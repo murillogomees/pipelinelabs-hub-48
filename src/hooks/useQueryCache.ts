@@ -1,3 +1,4 @@
+
 import { useQueryClient } from '@tanstack/react-query';
 import { useCallback } from 'react';
 
@@ -133,7 +134,7 @@ export function useQueryPerformance() {
       .filter(query => {
         const state = query.state;
         return state.fetchStatus === 'fetching' || 
-               (state.dataUpdatedAt > 0 && state.dataUpdatedAt - state.fetchFailureCount > 1000);
+               (state.dataUpdatedAt > 0 && state.fetchFailureCount > 1);
       })
       .map(query => ({
         queryKey: query.queryKey,

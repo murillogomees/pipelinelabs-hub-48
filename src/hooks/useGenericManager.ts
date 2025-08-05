@@ -1,206 +1,118 @@
 
-import React, { useState, useCallback } from 'react';
-import { useQueryClient } from '@tanstack/react-query';
+import { useState, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import { useCurrentCompany } from './useCurrentCompany';
-import { useToast } from './use-toast';
+import { createLogger } from '@/utils/logger';
 
-interface GenericManagerConfig<T, CreateData, UpdateData, Filters> {
-  tableName: string;
-  queryKey: string;
-  generateNumber?: (companyId: string) => Promise<string>;
-  validateCreate?: (data: CreateData) => boolean;
-  transformCreate?: (data: CreateData, companyId: string) => any;
-  transformUpdate?: (data: UpdateData) => any;
-  orderBy?: { column: string; ascending: boolean };
-}
+const logger = createLogger('useGenericManager');
 
-export function useGenericManager<T extends { id: string; company_id?: string }, CreateData, UpdateData, Filters>(
-  config: GenericManagerConfig<T, CreateData, UpdateData, Filters>
-) {
-  const [isLoading, setIsLoading] = useState(false);
+export function useGenericManager<T extends { id: string }>(tableName: string) {
   const [items, setItems] = useState<T[]>([]);
-  const [filters, setFilters] = useState<Filters>({} as Filters);
-  
-  const { data: currentCompanyData } = useCurrentCompany();
-  const currentCompany = currentCompanyData?.company;
-  const { toast } = useToast();
-  const queryClient = useQueryClient();
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const fetchItems = useCallback(async () => {
-    if (!currentCompany?.id) return;
-    
-    setIsLoading(true);
+    setLoading(true);
+    setError(null);
+
     try {
-      let query = supabase
-        .from(config.tableName)
+      const { data, error: fetchError } = await supabase
+        .from(tableName)
         .select('*')
-        .eq('company_id', currentCompany.id);
+        .order('created_at', { ascending: false });
 
-      if (config.orderBy) {
-        query = query.order(config.orderBy.column, { ascending: config.orderBy.ascending });
-      }
+      if (fetchError) throw fetchError;
 
-      const { data, error } = await query;
-
-      if (error) throw error;
-      setItems(data || []);
-    } catch (error: any) {
-      console.error(`Error fetching ${config.tableName}:`, error);
-      toast({
-        title: 'Erro',
-        description: `Erro ao carregar ${config.tableName}`,
-        variant: 'destructive'
-      });
+      setItems(data as T[] || []);
+      logger.info(`Fetched ${data?.length || 0} items from ${tableName}`);
+    } catch (err: any) {
+      logger.error(`Error fetching items from ${tableName}:`, err);
+      setError(err.message);
     } finally {
-      setIsLoading(false);
+      setLoading(false);
     }
-  }, [currentCompany?.id, toast, config.tableName, config.orderBy]);
+  }, [tableName]);
 
-  const createItem = useCallback(async (itemData: CreateData) => {
-    setIsLoading(true);
-    
+  const createItem = useCallback(async (item: Omit<T, 'id' | 'created_at' | 'updated_at'>) => {
+    setLoading(true);
+    setError(null);
+
     try {
-      if (!currentCompany?.id) {
-        throw new Error('Empresa não selecionada');
-      }
-
-      if (config.validateCreate && !config.validateCreate(itemData)) {
-        throw new Error('Dados inválidos');
-      }
-
-      const insertData = config.transformCreate 
-        ? config.transformCreate(itemData, currentCompany.id)
-        : { ...itemData, company_id: currentCompany.id };
-
-      const { data, error } = await supabase
-        .from(config.tableName)
-        .insert(insertData)
+      const { data, error: createError } = await supabase
+        .from(tableName)
+        .insert(item)
         .select()
         .single();
 
-      if (error) throw error;
+      if (createError) throw createError;
 
-      await fetchItems();
-      queryClient.invalidateQueries({ queryKey: [config.queryKey] });
-
-      toast({
-        title: 'Sucesso',
-        description: `${config.tableName} criado com sucesso`
-      });
-
-      return data;
-    } catch (error: any) {
-      console.error(`Error creating ${config.tableName}:`, error);
-      toast({
-        title: 'Erro',
-        description: error.message || `Erro ao criar ${config.tableName}`,
-        variant: 'destructive'
-      });
-      throw error;
+      setItems(prev => [data as T, ...prev]);
+      logger.info(`Created item in ${tableName}:`, data);
+      return data as T;
+    } catch (err: any) {
+      logger.error(`Error creating item in ${tableName}:`, err);
+      setError(err.message);
+      throw err;
     } finally {
-      setIsLoading(false);
+      setLoading(false);
     }
-  }, [currentCompany?.id, fetchItems, queryClient, toast, config]);
+  }, [tableName]);
 
-  const updateItem = useCallback(async (itemId: string, itemData: Partial<UpdateData>) => {
-    setIsLoading(true);
-    
+  const updateItem = useCallback(async (id: string, updates: Partial<T>) => {
+    setLoading(true);
+    setError(null);
+
     try {
-      const updateData = config.transformUpdate 
-        ? config.transformUpdate(itemData as UpdateData)
-        : { ...itemData, updated_at: new Date().toISOString() };
-
-      const { data, error } = await supabase
-        .from(config.tableName)
-        .update(updateData)
-        .eq('id', itemId)
-        .eq('company_id', currentCompany?.id)
+      const { data, error: updateError } = await supabase
+        .from(tableName)
+        .update(updates)
+        .eq('id', id)
         .select()
         .single();
 
-      if (error) throw error;
+      if (updateError) throw updateError;
 
-      await fetchItems();
-
-      toast({
-        title: 'Sucesso',
-        description: `${config.tableName} atualizado com sucesso`
-      });
-
-      return data;
-    } catch (error: any) {
-      console.error(`Error updating ${config.tableName}:`, error);
-      toast({
-        title: 'Erro',
-        description: error.message || `Erro ao atualizar ${config.tableName}`,
-        variant: 'destructive'
-      });
-      throw error;
+      setItems(prev => prev.map(item => item.id === id ? data as T : item));
+      logger.info(`Updated item in ${tableName}:`, data);
+      return data as T;
+    } catch (err: any) {
+      logger.error(`Error updating item in ${tableName}:`, err);
+      setError(err.message);
+      throw err;
     } finally {
-      setIsLoading(false);
+      setLoading(false);
     }
-  }, [currentCompany?.id, fetchItems, toast, config]);
+  }, [tableName]);
 
-  const deleteItem = useCallback(async (itemId: string): Promise<void> => {
-    setIsLoading(true);
-    
+  const deleteItem = useCallback(async (id: string) => {
+    setLoading(true);
+    setError(null);
+
     try {
-      const { error } = await supabase
-        .from(config.tableName)
-        .update({ 
-          is_active: false,
-          updated_at: new Date().toISOString()
-        })
-        .eq('id', itemId)
-        .eq('company_id', currentCompany?.id);
+      const { error: deleteError } = await supabase
+        .from(tableName)
+        .delete()
+        .eq('id', id);
 
-      if (error) throw error;
+      if (deleteError) throw deleteError;
 
-      await fetchItems();
-
-      toast({
-        title: 'Sucesso',
-        description: `${config.tableName} desativado com sucesso`
-      });
-    } catch (error: any) {
-      console.error(`Error deleting ${config.tableName}:`, error);
-      toast({
-        title: 'Erro',
-        description: error.message || `Erro ao desativar ${config.tableName}`,
-        variant: 'destructive'
-      });
-      throw error;
+      setItems(prev => prev.filter(item => item.id !== id));
+      logger.info(`Deleted item from ${tableName}:`, id);
+    } catch (err: any) {
+      logger.error(`Error deleting item from ${tableName}:`, err);
+      setError(err.message);
+      throw err;
     } finally {
-      setIsLoading(false);
+      setLoading(false);
     }
-  }, [currentCompany?.id, fetchItems, toast, config]);
-
-  const searchItems = useCallback((newFilters: Filters) => {
-    setFilters(newFilters);
-  }, []);
-
-  // Auto-fetch items when company changes
-  React.useEffect(() => {
-    fetchItems();
-  }, [fetchItems]);
+  }, [tableName]);
 
   return {
-    isLoading,
     items,
-    totalItems: items.length,
-    filters,
+    loading,
+    error,
+    fetchItems,
     createItem,
     updateItem,
-    deleteItem,
-    searchItems,
-    refreshItems: fetchItems,
-    getItemById: useCallback((id: string) => 
-      items.find((item: T) => item.id === id), [items]
-    ),
-    activeItems: items.filter((item: any) => item.is_active !== false),
-    inactiveItems: items.filter((item: any) => item.is_active === false),
-    isEmpty: items.length === 0,
-    isFiltered: Object.keys(filters).some(key => filters[key as keyof Filters])
+    deleteItem
   };
 }

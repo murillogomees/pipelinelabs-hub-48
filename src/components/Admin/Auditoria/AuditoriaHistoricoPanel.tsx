@@ -1,87 +1,66 @@
 
-import React, { useState } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
+import React from 'react';
+import { useQuery } from '@tanstack/react-query';
+import { supabase } from '@/integrations/supabase/client';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Input } from '@/components/ui/input';
-import { useAuditoriaProjeto } from '@/hooks/useAuditoriaProjeto';
-import { AuditoriaDetailsDialog } from './AuditoriaDetailsDialog';
-import { format } from 'date-fns';
+import { Button } from '@/components/ui/button';
+import { formatDistanceToNow } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
-import { 
-  History, 
-  Clock, 
-  CheckCircle, 
-  XCircle, 
-  AlertTriangle, 
-  Eye,
-  Search,
-  Filter
-} from 'lucide-react';
+import { Eye, Download, Trash2, AlertTriangle, CheckCircle, Clock } from 'lucide-react';
+import { createLogger } from '@/utils/logger';
+
+const logger = createLogger('AuditoriaHistoricoPanel');
 
 export function AuditoriaHistoricoPanel() {
-  const { historico, isLoading } = useAuditoriaProjeto();
-  const [searchTerm, setSearchTerm] = useState('');
-  const [selectedAuditoria, setSelectedAuditoria] = useState<any>(null);
-  const [showDetails, setShowDetails] = useState(false);
+  const { data: historico = [], isLoading } = useQuery({
+    queryKey: ['auditoria-historico'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('auditoria_historico')
+        .select('*')
+        .order('created_at', { ascending: false });
 
-  const filteredHistorico = historico?.filter(auditoria => 
-    auditoria.tipo_auditoria.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    auditoria.status.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+      if (error) {
+        logger.error('Error fetching audit history:', error);
+        throw error;
+      }
 
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'executando':
-        return 'bg-blue-500';
-      case 'concluida':
-        return 'bg-green-500';
-      case 'erro':
-        return 'bg-red-500';
-      case 'cancelada':
-        return 'bg-gray-500';
-      default:
-        return 'bg-gray-500';
+      return data || [];
     }
-  };
+  });
 
   const getStatusIcon = (status: string) => {
     switch (status) {
-      case 'executando':
-        return <Clock className="h-4 w-4" />;
       case 'concluida':
-        return <CheckCircle className="h-4 w-4" />;
+        return <CheckCircle className="h-4 w-4 text-green-600" />;
       case 'erro':
-        return <XCircle className="h-4 w-4" />;
-      case 'cancelada':
-        return <XCircle className="h-4 w-4" />;
+        return <AlertTriangle className="h-4 w-4 text-red-600" />;
+      case 'executando':
+        return <Clock className="h-4 w-4 text-blue-600" />;
       default:
-        return <Clock className="h-4 w-4" />;
+        return <Clock className="h-4 w-4 text-gray-600" />;
     }
   };
 
-  const getTypeColor = (type: string) => {
-    switch (type) {
-      case 'manual':
-        return 'bg-blue-100 text-blue-800';
-      case 'automatica':
-        return 'bg-green-100 text-green-800';
-      case 'agendada':
-        return 'bg-purple-100 text-purple-800';
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case 'concluida':
+        return 'default';
+      case 'erro':
+        return 'destructive';
+      case 'executando':
+        return 'secondary';
       default:
-        return 'bg-gray-100 text-gray-800';
+        return 'secondary';
     }
-  };
-
-  const handleViewDetails = (auditoria: any) => {
-    setSelectedAuditoria(auditoria);
-    setShowDetails(true);
   };
 
   if (isLoading) {
     return (
       <div className="flex items-center justify-center p-8">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+        <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600" />
+        <span className="ml-2">Carregando histórico...</span>
       </div>
     );
   }
@@ -90,125 +69,107 @@ export function AuditoriaHistoricoPanel() {
     <div className="space-y-6">
       <Card>
         <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <History className="h-5 w-5" />
-            Histórico de Auditorias
-          </CardTitle>
+          <CardTitle>Histórico de Auditorias</CardTitle>
+          <CardDescription>
+            Visualize as auditorias executadas anteriormente
+          </CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="flex items-center gap-4 mb-6">
-            <div className="relative flex-1">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
-              <Input
-                placeholder="Buscar por tipo ou status..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-10"
-              />
-            </div>
-            <Button variant="outline" size="sm">
-              <Filter className="h-4 w-4 mr-2" />
-              Filtros
-            </Button>
-          </div>
-
-          {!filteredHistorico || filteredHistorico.length === 0 ? (
-            <div className="text-center py-12">
-              <History className="h-12 w-12 mx-auto mb-4 text-muted-foreground" />
-              <h3 className="text-lg font-semibold mb-2">Nenhuma auditoria encontrada</h3>
-              <p className="text-muted-foreground">
-                {searchTerm ? 'Tente ajustar os filtros de busca' : 'Execute sua primeira auditoria para ver o histórico'}
+          {historico.length === 0 ? (
+            <div className="text-center py-8">
+              <AlertTriangle className="mx-auto h-12 w-12 text-muted-foreground" />
+              <h3 className="mt-4 text-lg font-semibold">Nenhuma auditoria encontrada</h3>
+              <p className="mt-2 text-muted-foreground">
+                Execute sua primeira auditoria para ver os resultados aqui.
               </p>
             </div>
           ) : (
             <div className="space-y-4">
-              {filteredHistorico.map((auditoria) => (
-                <Card key={auditoria.id} className="border-l-4 border-l-blue-500">
-                  <CardContent className="p-4">
-                    <div className="flex items-center justify-between mb-3">
-                      <div className="flex items-center gap-3">
-                        <div className={`w-2 h-2 rounded-full ${getStatusColor(auditoria.status)}`} />
-                        <div>
-                          <div className="flex items-center gap-2">
-                            <Badge className={getTypeColor(auditoria.tipo_auditoria)}>
-                              {auditoria.tipo_auditoria}
-                            </Badge>
-                            <span className="font-medium capitalize">{auditoria.status}</span>
-                          </div>
-                          <p className="text-sm text-muted-foreground">
-                            {format(new Date(auditoria.created_at), 'dd/MM/yyyy HH:mm', { locale: ptBR })}
-                          </p>
-                        </div>
-                      </div>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => handleViewDetails(auditoria)}
-                      >
-                        <Eye className="h-4 w-4 mr-2" />
-                        Detalhes
+              {historico.map((audit: any) => (
+                <div key={audit.id} className="border rounded-lg p-4 space-y-3">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      {getStatusIcon(audit.status)}
+                      <Badge variant={getStatusColor(audit.status) as any}>
+                        {audit.status}
+                      </Badge>
+                      <span className="text-sm text-muted-foreground">
+                        {formatDistanceToNow(new Date(audit.created_at), { 
+                          addSuffix: true, 
+                          locale: ptBR 
+                        })}
+                      </span>
+                    </div>
+                    
+                    <div className="flex gap-2">
+                      <Button variant="outline" size="sm">
+                        <Eye className="h-3 w-3 mr-1" />
+                        Ver
+                      </Button>
+                      <Button variant="outline" size="sm">
+                        <Download className="h-3 w-3 mr-1" />
+                        Baixar
+                      </Button>
+                      <Button variant="outline" size="sm">
+                        <Trash2 className="h-3 w-3 mr-1" />
+                        Excluir
                       </Button>
                     </div>
-
-                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-3">
-                      <div className="text-center">
-                        <p className="text-lg font-bold text-blue-600">{auditoria.arquivos_analisados}</p>
-                        <p className="text-xs text-muted-foreground">Arquivos</p>
-                      </div>
-                      <div className="text-center">
-                        <p className="text-lg font-bold text-orange-600">{auditoria.problemas_encontrados}</p>
-                        <p className="text-xs text-muted-foreground">Problemas</p>
-                      </div>
-                      <div className="text-center">
-                        <p className="text-lg font-bold text-green-600">{auditoria.melhorias_aplicadas.length}</p>
-                        <p className="text-xs text-muted-foreground">Melhorias</p>
-                      </div>
-                      <div className="text-center">
-                        <p className="text-lg font-bold text-purple-600">{auditoria.tempo_execucao_ms}ms</p>
-                        <p className="text-xs text-muted-foreground">Tempo</p>
+                  </div>
+                  
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+                    <div>
+                      <span className="font-medium">Arquivos:</span>
+                      <div className="text-muted-foreground">
+                        {audit.arquivos_analisados || 0}
                       </div>
                     </div>
-
-                    {auditoria.erro_detalhes && (
-                      <div className="p-3 bg-red-50 rounded-lg border border-red-200">
-                        <div className="flex items-center gap-2">
-                          <AlertTriangle className="h-4 w-4 text-red-600" />
-                          <span className="font-medium text-red-900">Erro na Execução</span>
-                        </div>
-                        <p className="text-sm text-red-700 mt-1">{auditoria.erro_detalhes}</p>
+                    
+                    <div>
+                      <span className="font-medium">Problemas:</span>
+                      <div className="text-muted-foreground">
+                        {audit.problemas_encontrados || 0}
                       </div>
-                    )}
-
-                    {auditoria.sugestoes_limpeza.length > 0 && (
-                      <div className="mt-3">
-                        <p className="text-sm font-medium mb-2">Sugestões de Limpeza:</p>
-                        <div className="flex flex-wrap gap-2">
-                          {auditoria.sugestoes_limpeza.slice(0, 3).map((sugestao: any, index: number) => (
-                            <Badge key={index} variant="outline" className="text-xs">
-                              {sugestao.tipo || 'Sugestão'}
-                            </Badge>
-                          ))}
-                          {auditoria.sugestoes_limpeza.length > 3 && (
-                            <Badge variant="outline" className="text-xs">
-                              +{auditoria.sugestoes_limpeza.length - 3} mais
-                            </Badge>
-                          )}
-                        </div>
+                    </div>
+                    
+                    <div>
+                      <span className="font-medium">Não utilizados:</span>
+                      <div className="text-muted-foreground">
+                        {Array.isArray(audit.arquivos_nao_utilizados) ? audit.arquivos_nao_utilizados.length : 0}
                       </div>
-                    )}
-                  </CardContent>
-                </Card>
+                    </div>
+                    
+                    <div>
+                      <span className="font-medium">Tempo:</span>
+                      <div className="text-muted-foreground">
+                        {audit.tempo_execucao_ms ? `${(audit.tempo_execucao_ms / 1000).toFixed(1)}s` : 'N/A'}
+                      </div>
+                    </div>
+                  </div>
+                  
+                  {audit.sugestoes_limpeza && Array.isArray(audit.sugestoes_limpeza) && audit.sugestoes_limpeza.length > 0 && (
+                    <div>
+                      <span className="text-sm font-medium">Sugestões:</span>
+                      <ul className="text-sm text-muted-foreground mt-1">
+                        {audit.sugestoes_limpeza.slice(0, 3).map((sugestao: any, index: number) => (
+                          <li key={index} className="list-disc list-inside">
+                            {typeof sugestao === 'string' ? sugestao : JSON.stringify(sugestao)}
+                          </li>
+                        ))}
+                        {audit.sugestoes_limpeza.length > 3 && (
+                          <li className="text-muted-foreground">
+                            +{audit.sugestoes_limpeza.length - 3} mais...
+                          </li>
+                        )}
+                      </ul>
+                    </div>
+                  )}
+                </div>
               ))}
             </div>
           )}
         </CardContent>
       </Card>
-
-      <AuditoriaDetailsDialog
-        auditoria={selectedAuditoria}
-        open={showDetails}
-        onClose={() => setShowDetails(false)}
-      />
     </div>
   );
 }
