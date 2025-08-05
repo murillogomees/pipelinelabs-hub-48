@@ -5,12 +5,28 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { DataTable } from '@/components/ui/data-table';
 import { Badge } from '@/components/ui/badge';
-import { useCompanies, Company } from '@/hooks/useCompanies';
+import { useCompanyManager } from '@/hooks/useCompanyManager';
 import { CompanyDialog } from './CompanyDialog';
 import { toast } from 'sonner';
 
+interface Company {
+  id: string;
+  name: string;
+  document: string;
+  email?: string;
+  phone?: string;
+  address?: string;
+  city?: string;
+  state?: string;
+  zipcode?: string;
+  legal_name?: string;
+  trade_name?: string;
+  created_at: string;
+  updated_at: string;
+}
+
 export function CompaniesManagement() {
-  const { companies, loading, deleteCompany, refetch } = useCompanies();
+  const { companies, isLoading, deleteCompany, refreshCompanies } = useCompanyManager();
   const [searchTerm, setSearchTerm] = useState('');
   const [dialogOpen, setDialogOpen] = useState(false);
   const [selectedCompany, setSelectedCompany] = useState<Company | undefined>(undefined);
@@ -26,15 +42,16 @@ export function CompaniesManagement() {
   };
 
   const handleSuccess = () => {
-    refetch();
+    refreshCompanies();
   };
 
   const handleDeleteCompany = async (id: string) => {
     try {
       await deleteCompany(id);
-      refetch();
+      toast.success('Empresa excluída com sucesso');
     } catch (error) {
       console.error('Error deleting company:', error);
+      toast.error('Erro ao excluir empresa');
     }
   };
 
@@ -46,9 +63,9 @@ export function CompaniesManagement() {
 
   const columns = [
     {
-      key: 'name' as keyof Company,
+      key: 'name',
       header: 'Empresa',
-      render: (value: any, company: Company) => (
+      render: (value: any, company: any) => (
         <div className="flex items-center gap-3">
           <div className="w-10 h-10 bg-primary/10 rounded-lg flex items-center justify-center">
             <Building2 className="w-5 h-5 text-primary" />
@@ -63,16 +80,16 @@ export function CompaniesManagement() {
       ),
     },
     {
-      key: 'document' as keyof Company,
+      key: 'document',
       header: 'CNPJ/CPF',
-      render: (value: any, company: Company) => (
+      render: (value: any, company: any) => (
         <Badge variant="outline">{company.document}</Badge>
       ),
     },
     {
-      key: 'email' as keyof Company,
+      key: 'email',
       header: 'Contato',
-      render: (value: any, company: Company) => (
+      render: (value: any, company: any) => (
         <div>
           {company.email && (
             <div className="text-sm">{company.email}</div>
@@ -84,9 +101,9 @@ export function CompaniesManagement() {
       ),
     },
     {
-      key: 'city' as keyof Company,
+      key: 'city',
       header: 'Localização',
-      render: (value: any, company: Company) => (
+      render: (value: any, company: any) => (
         <div>
           {company.city && (
             <div className="text-sm">{company.city}</div>
@@ -98,9 +115,9 @@ export function CompaniesManagement() {
       ),
     },
     {
-      key: 'created_at' as keyof Company,
+      key: 'created_at',
       header: 'Criado em',
-      render: (value: any, company: Company) => (
+      render: (value: any, company: any) => (
         <div className="text-sm text-muted-foreground">
           {new Date(company.created_at).toLocaleDateString('pt-BR')}
         </div>
@@ -134,7 +151,7 @@ export function CompaniesManagement() {
         <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
           <CardTitle className="flex items-center gap-2">
             <Building2 className="w-5 h-5" />
-            Empresas Cadastradas
+            Empresas Cadastradas ({companies.length})
           </CardTitle>
           <Button onClick={() => handleOpenDialog()}>
             <Plus className="w-4 h-4 mr-2" />
@@ -157,7 +174,7 @@ export function CompaniesManagement() {
           data={filteredCompanies}
           columns={columns}
           actions={actions}
-          loading={loading}
+          loading={isLoading}
           emptyMessage="Nenhuma empresa encontrada"
         />
       </CardContent>

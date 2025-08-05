@@ -4,14 +4,13 @@ import { Plus, Edit } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { BaseTable } from '@/components/Base/BaseTable';
 import { CustomerDialog } from '@/components/Customers/CustomerDialog';
-import { useCustomers } from '@/hooks/useCustomers';
-import type { Customer } from '@/hooks/useCustomers';
+import { useCustomerManager } from '@/hooks/useCustomerManager';
 
 export default function Clientes() {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(null);
+  const [selectedCustomer, setSelectedCustomer] = useState<any>(null);
   
-  const { customers, loading, createCustomer, updateCustomer } = useCustomers();
+  const { customers, isLoading, createCustomer, updateCustomer } = useCustomerManager();
 
   const columns = [
     { key: 'name', label: 'Nome' },
@@ -24,7 +23,7 @@ export default function Clientes() {
     {
       icon: Edit,
       label: 'Editar',
-      onClick: (customer: Customer) => {
+      onClick: (customer: any) => {
         setSelectedCustomer(customer);
         setIsDialogOpen(true);
       }
@@ -39,6 +38,15 @@ export default function Clientes() {
   const handleCloseDialog = () => {
     setIsDialogOpen(false);
     setSelectedCustomer(null);
+  };
+
+  const handleSave = async (customerData: any) => {
+    if (selectedCustomer) {
+      await updateCustomer(selectedCustomer.id, customerData);
+    } else {
+      await createCustomer(customerData);
+    }
+    handleCloseDialog();
   };
 
   return (
@@ -61,15 +69,15 @@ export default function Clientes() {
         data={customers || []}
         columns={columns}
         actions={actions}
-        loading={loading}
+        loading={isLoading}
       />
 
       <CustomerDialog
         open={isDialogOpen}
         onOpenChange={handleCloseDialog}
         customer={selectedCustomer}
-        onSave={createCustomer}
-        onUpdate={updateCustomer}
+        onSave={handleSave}
+        onUpdate={handleSave}
       />
     </div>
   );

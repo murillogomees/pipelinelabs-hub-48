@@ -6,16 +6,19 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { BaseTable } from '@/components/Base/BaseTable';
 import { ProductionOrderDialog } from '@/components/Production/ProductionOrderDialog';
 import { ServiceOrderDialog } from '@/components/Production/ServiceOrderDialog';
-import { useProductionOrders } from '@/hooks/useProductionOrders';
-import { useServiceOrders } from '@/hooks/useServiceOrders';
+import { useProductionManager } from '@/hooks/useProductionManager';
 
 export default function Producao() {
   const [isProductionDialogOpen, setIsProductionDialogOpen] = useState(false);
   const [isServiceDialogOpen, setIsServiceDialogOpen] = useState(false);
   const [selectedOrder, setSelectedOrder] = useState(null);
 
-  const { orders: productionOrders, loading: productionLoading } = useProductionOrders();
-  const { orders: serviceOrders, loading: serviceLoading } = useServiceOrders();
+  const { metrics, isLoading: productionLoading } = useProductionManager();
+  
+  // Dados simulados para demonstração
+  const productionOrders: any[] = [];
+  const serviceOrders: any[] = [];
+  const serviceLoading = false;
 
   const productionColumns = [
     { key: 'code', label: 'Código' },

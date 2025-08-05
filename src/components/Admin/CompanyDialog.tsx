@@ -8,7 +8,26 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { Loader2 } from 'lucide-react';
-import { Company } from '@/hooks/useCompanies';
+import { useCompanyManager } from '@/hooks/useCompanyManager';
+
+interface Company {
+  id: string;
+  name: string;
+  document: string;
+  email?: string;
+  phone?: string;
+  address?: string;
+  city?: string;
+  state?: string;
+  zipcode?: string;
+  legal_name?: string;
+  trade_name?: string;
+  tax_regime?: string;
+  state_registration?: string;
+  municipal_registration?: string;
+  legal_representative?: string;
+  fiscal_email?: string;
+}
 
 interface CompanyDialogProps {
   open: boolean;
@@ -19,6 +38,7 @@ interface CompanyDialogProps {
 
 export function CompanyDialog({ open, onOpenChange, onSuccess, company }: CompanyDialogProps) {
   const { toast } = useToast();
+  const { createCompany, updateCompany, isLoading: companyLoading } = useCompanyManager();
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
     name: company?.name || '',
@@ -86,30 +106,13 @@ export function CompanyDialog({ open, onOpenChange, onSuccess, company }: Compan
         document: formData.document.replace(/[^0-9]/g, ''), // Remove formatação
       };
 
-      let result;
       if (company) {
         // Editar empresa existente
-        result = await supabase
-          .from('companies')
-          .update(dataToSubmit)
-          .eq('id', company.id);
+        await updateCompany(company.id, dataToSubmit);
       } else {
         // Criar nova empresa
-        result = await supabase
-          .from('companies')
-          .insert([dataToSubmit]);
+        await createCompany(dataToSubmit);
       }
-
-      if (result.error) {
-        throw result.error;
-      }
-
-      toast({
-        title: company ? "Empresa atualizada" : "Empresa criada",
-        description: company 
-          ? "A empresa foi atualizada com sucesso."
-          : "A nova empresa foi criada com sucesso.",
-      });
 
       onSuccess();
       onOpenChange(false);
@@ -135,11 +138,6 @@ export function CompanyDialog({ open, onOpenChange, onSuccess, company }: Compan
       }
     } catch (error: any) {
       console.error('Error saving company:', error);
-      toast({
-        variant: "destructive",
-        title: "Erro ao salvar empresa",
-        description: error.message || "Ocorreu um erro ao salvar a empresa.",
-      });
     } finally {
       setLoading(false);
     }
