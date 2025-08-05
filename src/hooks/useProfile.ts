@@ -26,8 +26,8 @@ export interface Profile {
     id: string;
     name: string;
     description: string;
-    permissions: string[];
-  };
+    permissions: Record<string, boolean>;
+  } | null;
   is_super_admin: boolean;
   companies?: Array<{
     id: string;
@@ -38,30 +38,78 @@ export interface Profile {
 export function useProfile() {
   const { toast } = useToast();
 
-  const { data: profile, isLoading, error } = useQuery({
+  const { data: profile, isLoading, error, refetch } = useQuery({
     queryKey: ['profile'],
     queryFn: async () => {
       const { data: { user } } = await supabase.auth.getUser();
-      if (!user) throw new Error('No user found');
+      if (!user) throw new Error('No authenticated user found');
 
-      const { data: profile, error } = await supabase
+      // First get profile
+      const { data: profile, error: profileError } = await supabase
         .from('profiles')
         .select(`
-          *,
-          access_levels (
-            id,
-            name,
-            description,
-            permissions
-          )
+          id,
+          user_id,
+          email,
+          display_name,
+          document,
+          document_type,
+          phone,
+          address,
+          city,
+          state,
+          zipcode,
+          avatar_url,
+          is_active,
+          access_level_id,
+          company_id,
+          created_at,
+          updated_at
         `)
         .eq('user_id', user.id)
-        .single();
+        .eq('is_active', true)
+        .maybeSingle();
 
-      if (error) throw error;
-      return profile;
+      if (profileError) {
+        console.error('Profile query error:', profileError);
+        throw new Error(`Failed to load profile: ${profileError.message}`);
+      }
+
+      if (!profile) {
+        throw new Error('No active profile found for user');
+      }
+
+      // Then get access level separately
+      let accessLevel = null;
+      if (profile.access_level_id) {
+        const { data: accessLevelData, error: accessLevelError } = await supabase
+          .from('access_levels')
+          .select('id, name, description, permissions')
+          .eq('id', profile.access_level_id)
+          .eq('is_active', true)
+          .maybeSingle();
+
+        if (accessLevelError) {
+          console.error('Access level query error:', accessLevelError);
+        } else if (accessLevelData) {
+          accessLevel = accessLevelData;
+        }
+      }
+
+      return {
+        ...profile,
+        access_levels: accessLevel
+      };
     },
     enabled: true,
+    staleTime: 1000 * 60 * 5, // 5 minutes
+    retry: (failureCount, error) => {
+      // Don't retry if it's an auth error
+      if (error?.message?.includes('No authenticated user')) {
+        return false;
+      }
+      return failureCount < 3;
+    },
   });
 
   const isSuperAdmin = profile?.access_levels?.name === 'super_admin';
@@ -75,15 +123,20 @@ export function useProfile() {
   const hasPermission = (permission: string): boolean => {
     if (isSuperAdmin) return true;
     
-    const permissions = profile?.access_levels?.permissions || [];
-    // Handle permissions array properly
+    if (!profile?.access_levels?.permissions) {
+      return false;
+    }
+
+    const permissions = profile.access_levels.permissions;
+    
+    // Handle JSONB object permissions (new format)
+    if (typeof permissions === 'object' && !Array.isArray(permissions)) {
+      return Boolean(permissions[permission]);
+    }
+    
+    // Fallback for array format (legacy)
     if (Array.isArray(permissions)) {
-      return permissions.some(p => {
-        if (typeof p === 'string') {
-          return p === permission;
-        }
-        return false;
-      });
+      return permissions.includes(permission);
     }
     
     return false;
@@ -136,14 +189,14 @@ export function useProfile() {
     stripe_customer_id: undefined, // Will be set by subscription logic
     created_at: profile.created_at,
     updated_at: profile.updated_at,
-    access_levels: {
-      id: profile.access_levels?.id || '',
-      name: profile.access_levels?.name || '',
-      description: profile.access_levels?.description || '',
-      permissions: Array.isArray(profile.access_levels?.permissions) 
-        ? profile.access_levels.permissions.map(p => String(p))
-        : []
-    },
+    access_levels: profile.access_levels ? {
+      id: profile.access_levels.id,
+      name: profile.access_levels.name,
+      description: profile.access_levels.description,
+      permissions: typeof profile.access_levels.permissions === 'object' && !Array.isArray(profile.access_levels.permissions)
+        ? profile.access_levels.permissions
+        : {}
+    } : null,
     is_super_admin: isSuperAdmin,
     companies: [], // Will be populated by useCurrentCompany
   } : null;

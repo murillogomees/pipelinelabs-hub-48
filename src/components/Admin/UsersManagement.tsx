@@ -34,7 +34,8 @@ export function UsersManagement() {
   const { data: users = [], refetch, isLoading } = useQuery({
     queryKey: ['users-management'],
     queryFn: async (): Promise<User[]> => {
-      const { data, error } = await supabase
+      // Get profiles
+      const { data: profiles, error } = await supabase
         .from('profiles')
         .select(`
           id,
@@ -43,16 +44,40 @@ export function UsersManagement() {
           display_name,
           is_active,
           created_at,
-          access_levels (
-            id,
-            name,
-            display_name
-          )
+          access_level_id
         `)
         .order('created_at', { ascending: false });
 
       if (error) throw error;
-      return data || [];
+      
+      if (!profiles || profiles.length === 0) {
+        return [];
+      }
+
+      // Get unique access level IDs
+      const accessLevelIds = [...new Set(profiles
+        .map(p => p.access_level_id)
+        .filter(Boolean)
+      )];
+
+      // Get access levels
+      const { data: accessLevels } = await supabase
+        .from('access_levels')
+        .select('id, name, display_name')
+        .in('id', accessLevelIds);
+
+      // Map access levels by ID for easy lookup
+      const accessLevelMap = new Map(
+        (accessLevels || []).map(al => [al.id, al])
+      );
+
+      // Combine data
+      return profiles.map(profile => ({
+        ...profile,
+        access_levels: profile.access_level_id 
+          ? accessLevelMap.get(profile.access_level_id) || null
+          : null
+      }));
     },
     staleTime: 5 * 60 * 1000,
   });
