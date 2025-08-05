@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
@@ -64,6 +63,47 @@ export interface AuditoriaHistorico {
   updated_at: string;
 }
 
+// Helper function to transform database data to our interface types
+const transformAuditoriaConfig = (data: any): AuditoriaConfig => {
+  return {
+    ...data,
+    escopo_padrao: typeof data.escopo_padrao === 'string' 
+      ? JSON.parse(data.escopo_padrao) 
+      : data.escopo_padrao,
+    regras_preservacao: typeof data.regras_preservacao === 'string'
+      ? JSON.parse(data.regras_preservacao)
+      : data.regras_preservacao,
+  };
+};
+
+// Helper function to transform database data to our interface types
+const transformAuditoriaHistorico = (data: any): AuditoriaHistorico => {
+  return {
+    ...data,
+    sugestoes_limpeza: typeof data.sugestoes_limpeza === 'string' 
+      ? JSON.parse(data.sugestoes_limpeza) 
+      : Array.isArray(data.sugestoes_limpeza) ? data.sugestoes_limpeza : [],
+    arquivos_duplicados: typeof data.arquivos_duplicados === 'string'
+      ? JSON.parse(data.arquivos_duplicados)
+      : Array.isArray(data.arquivos_duplicados) ? data.arquivos_duplicados : [],
+    arquivos_nao_utilizados: typeof data.arquivos_nao_utilizados === 'string'
+      ? JSON.parse(data.arquivos_nao_utilizados)
+      : Array.isArray(data.arquivos_nao_utilizados) ? data.arquivos_nao_utilizados : [],
+    hooks_nao_utilizados: typeof data.hooks_nao_utilizados === 'string'
+      ? JSON.parse(data.hooks_nao_utilizados)
+      : Array.isArray(data.hooks_nao_utilizados) ? data.hooks_nao_utilizados : [],
+    componentes_duplicados: typeof data.componentes_duplicados === 'string'
+      ? JSON.parse(data.componentes_duplicados)
+      : Array.isArray(data.componentes_duplicados) ? data.componentes_duplicados : [],
+    padroes_aprendidos: typeof data.padroes_aprendidos === 'string'
+      ? JSON.parse(data.padroes_aprendidos)
+      : Array.isArray(data.padroes_aprendidos) ? data.padroes_aprendidos : [],
+    melhorias_aplicadas: typeof data.melhorias_aplicadas === 'string'
+      ? JSON.parse(data.melhorias_aplicadas)
+      : Array.isArray(data.melhorias_aplicadas) ? data.melhorias_aplicadas : [],
+  };
+};
+
 export const useAuditoriaProjeto = () => {
   const { user } = useAuth();
   const { company } = useCompanyData();
@@ -92,13 +132,19 @@ export const useAuditoriaProjeto = () => {
         throw error;
       }
 
+      if (!data) {
+        logger.info('Nenhuma configuração encontrada', { company_id: company.id });
+        return null;
+      }
+
+      const transformedData = transformAuditoriaConfig(data);
       logger.info('Configuração de auditoria carregada', { 
-        found: !!data, 
+        found: !!transformedData, 
         company_id: company.id,
-        config_id: data?.id 
+        config_id: transformedData?.id 
       });
 
-      return data;
+      return transformedData;
     },
     enabled: !!company?.id && !!user,
     staleTime: 5 * 60 * 1000, // 5 minutos
@@ -128,12 +174,13 @@ export const useAuditoriaProjeto = () => {
         throw error;
       }
 
+      const transformedData = (data || []).map(transformAuditoriaHistorico);
       logger.info('Histórico de auditoria carregado', { 
-        count: data?.length || 0, 
+        count: transformedData.length, 
         company_id: company.id 
       });
 
-      return data || [];
+      return transformedData;
     },
     enabled: !!company?.id && !!user,
     staleTime: 2 * 60 * 1000, // 2 minutos
@@ -180,7 +227,7 @@ export const useAuditoriaProjeto = () => {
           company_id: company.id 
         });
 
-        return data;
+        return transformAuditoriaConfig(data);
       } else {
         // Se não existe, cria nova
         const newConfig = {
@@ -229,7 +276,7 @@ export const useAuditoriaProjeto = () => {
           company_id: company.id 
         });
 
-        return data;
+        return transformAuditoriaConfig(data);
       }
     },
     onSuccess: () => {
