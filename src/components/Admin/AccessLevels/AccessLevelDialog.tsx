@@ -145,26 +145,16 @@ function AccessLevelForm({ accessLevel, onSave, onCancel }: {
     setFormData(prev => ({ ...prev, [field]: value }));
   }, []);
 
-  // Create stable handlers using useMemo to prevent re-creation
-  const permissionHandlers = useMemo(() => {
-    const handlers: Record<string, (checked: boolean) => void> = {};
-    
-    permissionCategories.forEach(category => {
-      category.permissions.forEach(permission => {
-        handlers[permission.key] = (checked: boolean) => {
-          setFormData(prev => ({
-            ...prev,
-            permissions: {
-              ...prev.permissions,
-              [permission.key]: checked
-            }
-          }));
-        };
-      });
-    });
-    
-    return handlers;
-  }, []); // Empty deps - handlers are stable
+  // Single stable handler for permission changes
+  const handlePermissionToggle = useCallback((permissionKey: string, checked: boolean) => {
+    setFormData(prev => ({
+      ...prev,
+      permissions: {
+        ...prev.permissions,
+        [permissionKey]: checked
+      }
+    }));
+  }, []);
 
   const handleDivClick = useCallback((e: React.MouseEvent) => {
     const target = e.currentTarget as HTMLElement;
@@ -292,7 +282,7 @@ function AccessLevelForm({ accessLevel, onSave, onCancel }: {
                           </div>
                           <Switch
                             checked={isEnabled}
-                            onCheckedChange={permissionHandlers[permission.key]}
+                            onCheckedChange={handlePermissionToggle.bind(null, permission.key)}
                             className="ml-3"
                           />
                         </div>
