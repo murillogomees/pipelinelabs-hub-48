@@ -3,11 +3,12 @@ import { useCurrentCompany } from './useCurrentCompany';
 
 export const useUserCompany = () => {
   const { data: currentCompany, isLoading, error } = useCurrentCompany();
-
+  
   return {
-    company: currentCompany?.company || null,
-    companyId: currentCompany?.company_id || null,
+    companyId: currentCompany?.company_id,
+    company: currentCompany?.company,
+    role: currentCompany?.role,
     isLoading,
-    error,
+    error
   };
 };

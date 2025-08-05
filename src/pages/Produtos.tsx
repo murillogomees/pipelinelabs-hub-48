@@ -61,8 +61,8 @@ export default function Produtos() {
     }
   };
 
-  const handleFiltersChange = (searchFilters: SearchFilters) => {
-    searchProducts(searchFilters);
+  const handleFiltersChange = (filters: SearchFilters) => {
+    searchProducts(filters);
   };
 
   return (

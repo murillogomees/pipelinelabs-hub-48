@@ -9,6 +9,7 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { useProductsManager } from '@/hooks/useProductsManager';
+import { useUserCompany } from '@/hooks/useUserCompany';
 import { ArrowLeft } from 'lucide-react';
 import type { CreateProductData } from '../types';
 
@@ -36,6 +37,7 @@ interface ProductCreateProps {
 
 export function ProductCreate({ onSuccess, onCancel }: ProductCreateProps) {
   const { createProduct, isLoading } = useProductsManager();
+  const { companyId, isLoading: companyLoading } = useUserCompany();
 
   const {
     register,
@@ -51,8 +53,13 @@ export function ProductCreate({ onSuccess, onCancel }: ProductCreateProps) {
   });
 
   const onSubmit = async (data: ProductFormData) => {
+    if (!companyId) {
+      console.error('Company ID not available');
+      return;
+    }
+
     try {
-      // Create product data with all required properties
+      // Create product data with all required properties including company_id
       const productData: CreateProductData = {
         name: data.name,
         code: data.code,
@@ -102,6 +109,7 @@ export function ProductCreate({ onSuccess, onCancel }: ProductCreateProps) {
         observations: null,
         category_id: null,
         is_active: true,
+        company_id: companyId,
       };
       
       await createProduct(productData);
@@ -110,6 +118,14 @@ export function ProductCreate({ onSuccess, onCancel }: ProductCreateProps) {
       // Error handled by the hook
     }
   };
+
+  if (companyLoading) {
+    return (
+      <div className="flex items-center justify-center py-8">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -227,7 +243,7 @@ export function ProductCreate({ onSuccess, onCancel }: ProductCreateProps) {
               <Button type="button" variant="outline" onClick={onCancel}>
                 Cancelar
               </Button>
-              <Button type="submit" disabled={isLoading}>
+              <Button type="submit" disabled={isLoading || !companyId}>
                 {isLoading ? 'Salvando...' : 'Salvar Produto'}
               </Button>
             </div>
