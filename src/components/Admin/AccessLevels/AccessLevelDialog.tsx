@@ -1,4 +1,5 @@
-import React, { useMemo, useCallback } from 'react';
+import React, { useMemo, useCallback, useEffect } from 'react';
+import { useForm } from 'react-hook-form';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -7,8 +8,8 @@ import { Textarea } from '@/components/ui/textarea';
 import { Switch } from '@/components/ui/switch';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { useBaseForm } from '@/hooks/useBaseForm';
 import { useAccessLevels } from '@/hooks/useAccessLevels';
+import { toast } from '@/hooks/use-toast';
 import { Settings, Activity } from 'lucide-react';
 import type { AccessLevel } from './types';
 
@@ -103,26 +104,50 @@ type FormData = {
 export function AccessLevelDialog({ open, onOpenChange, accessLevel, onSave }: AccessLevelDialogProps) {
   const { createAccessLevel, updateAccessLevel, isCreating, isUpdating } = useAccessLevels();
   
-  // Create dynamic default values based on accessLevel - this will force form remount
-  const getDefaultValues = useCallback((): FormData => {
-    if (accessLevel) {
-      return {
-        name: accessLevel.name || '',
-        display_name: accessLevel.display_name || '',
-        description: accessLevel.description || '',
-        is_active: accessLevel.is_active ?? true,
-        permissions: accessLevel.permissions || {}
-      };
-    }
-    
-    return {
+  // Use react-hook-form directly with a key to force remount
+  const formKey = `access-level-${accessLevel?.id || 'new'}-${open}`;
+  
+  const form = useForm<FormData>({
+    defaultValues: {
       name: '',
       display_name: '',
       description: '',
       is_active: true,
       permissions: {}
-    };
-  }, [accessLevel?.id]); // Only depend on ID for stability
+    }
+  });
+
+  const { handleSubmit, watch, setValue, reset, formState: { isSubmitting } } = form;
+  
+  // Watch specific fields
+  const displayName = watch('display_name');
+  const name = watch('name');
+  const description = watch('description');
+  const isActive = watch('is_active');
+  const permissions = watch('permissions');
+
+  // Reset form with proper data when dialog opens
+  useEffect(() => {
+    if (open) {
+      if (accessLevel) {
+        reset({
+          name: accessLevel.name || '',
+          display_name: accessLevel.display_name || '',
+          description: accessLevel.description || '',
+          is_active: accessLevel.is_active ?? true,
+          permissions: accessLevel.permissions || {}
+        });
+      } else {
+        reset({
+          name: '',
+          display_name: '',
+          description: '',
+          is_active: true,
+          permissions: {}
+        });
+      }
+    }
+  }, [open, accessLevel?.id, reset]);
 
   const onSubmit = useCallback(async (data: FormData) => {
     try {
@@ -132,42 +157,29 @@ export function AccessLevelDialog({ open, onOpenChange, accessLevel, onSave }: A
       };
       
       if (accessLevel) {
-        updateAccessLevel({ id: accessLevel.id, data: submitData });
+        await updateAccessLevel({ id: accessLevel.id, data: submitData });
+        toast({
+          title: 'Sucesso',
+          description: 'Nível de acesso atualizado com sucesso',
+        });
       } else {
-        createAccessLevel(submitData);
+        await createAccessLevel(submitData);
+        toast({
+          title: 'Sucesso',
+          description: 'Nível de acesso criado com sucesso',
+        });
       }
+      
       onSave();
       onOpenChange(false);
-    } catch (error) {
-      console.error('Form submission error:', error);
+    } catch (error: any) {
+      toast({
+        title: 'Erro',
+        description: error?.message || 'Falha ao salvar nível de acesso',
+        variant: 'destructive'
+      });
     }
   }, [accessLevel, createAccessLevel, updateAccessLevel, onSave, onOpenChange]);
-
-  // Use a key to force form remount when accessLevel changes
-  const formKey = `access-level-form-${accessLevel?.id || 'new'}`;
-
-  const {
-    form,
-    handleSubmit,
-    isSubmitting
-  } = useBaseForm<FormData>({
-    defaultValues: getDefaultValues(),
-    onSubmit,
-    resetOnSuccess: false,
-    successMessage: `Nível de acesso ${accessLevel ? 'atualizado' : 'criado'} com sucesso`,
-    errorMessage: `Falha ao ${accessLevel ? 'atualizar' : 'criar'} nível de acesso`
-  });
-
-  const { watch, setValue } = form;
-  
-  // Watch specific fields
-  const displayName = watch('display_name');
-  const name = watch('name');
-  const description = watch('description');
-  const isActive = watch('is_active');
-  const permissions = watch('permissions');
-
-  // Remove the problematic useEffect completely - form values are set via defaultValues
 
   const handleDisplayNameChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
@@ -194,7 +206,7 @@ export function AccessLevelDialog({ open, onOpenChange, accessLevel, onSave }: A
   }, []);
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+    <Dialog key={formKey} open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[800px] max-h-[90vh] overflow-hidden flex flex-col">
         <DialogHeader>
           <DialogTitle className="text-xl font-semibold">
@@ -206,7 +218,7 @@ export function AccessLevelDialog({ open, onOpenChange, accessLevel, onSave }: A
         </DialogHeader>
         
         <div className="flex-1 overflow-y-auto">
-          <form onSubmit={handleSubmit} className="space-y-6 p-1">
+          <form onSubmit={handleSubmit(onSubmit)} className="space-y-6 p-1">
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label htmlFor="display_name">Nome de Exibição</Label>
