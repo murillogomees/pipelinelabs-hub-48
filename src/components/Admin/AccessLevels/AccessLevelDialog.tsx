@@ -91,7 +91,53 @@ const permissionCategories = [
   }
 ];
 
-// Separate component that will be remounted with different keys
+// Simple permission item component to isolate Switch rendering
+const PermissionItem = React.memo(({ 
+  permission, 
+  isEnabled, 
+  onToggle 
+}: { 
+  permission: { key: string; label: string; description: string }; 
+  isEnabled: boolean; 
+  onToggle: (key: string, value: boolean) => void;
+}) => {
+  const handleSwitchChange = useCallback((checked: boolean) => {
+    onToggle(permission.key, checked);
+  }, [permission.key, onToggle]);
+
+  const handleDivClick = useCallback(() => {
+    onToggle(permission.key, !isEnabled);
+  }, [permission.key, isEnabled, onToggle]);
+
+  return (
+    <div
+      className={`group p-3 rounded-lg border transition-colors cursor-pointer ${
+        isEnabled 
+          ? 'bg-primary/5 border-primary/20' 
+          : 'hover:bg-muted/30'
+      }`}
+      onClick={handleDivClick}
+    >
+      <div className="flex items-start justify-between">
+        <div className="flex-1">
+          <Label className="text-sm font-medium cursor-pointer">
+            {permission.label}
+          </Label>
+          <p className="text-xs text-muted-foreground mt-1">
+            {permission.description}
+          </p>
+        </div>
+        <Switch
+          checked={isEnabled}
+          onCheckedChange={handleSwitchChange}
+          className="ml-3"
+          onClick={(e) => e.stopPropagation()}
+        />
+      </div>
+    </div>
+  );
+});
+
 function AccessLevelForm({ accessLevel, onSave, onCancel }: {
   accessLevel?: AccessLevel;
   onSave: (data: any) => Promise<void>;
@@ -145,25 +191,13 @@ function AccessLevelForm({ accessLevel, onSave, onCancel }: {
     setFormData(prev => ({ ...prev, [field]: value }));
   }, []);
 
-  // Single stable handler for permission changes
+  // Stable permission toggle handler
   const handlePermissionToggle = useCallback((permissionKey: string, checked: boolean) => {
     setFormData(prev => ({
       ...prev,
       permissions: {
         ...prev.permissions,
         [permissionKey]: checked
-      }
-    }));
-  }, []);
-
-  const handleDivClick = useCallback((e: React.MouseEvent) => {
-    const target = e.currentTarget as HTMLElement;
-    const permission = target.dataset.permission!;
-    setFormData(prev => ({
-      ...prev,
-      permissions: {
-        ...prev.permissions,
-        [permission]: !prev.permissions[permission]
       }
     }));
   }, []);
@@ -257,38 +291,14 @@ function AccessLevelForm({ accessLevel, onSave, onCancel }: {
                 </div>
                 
                 <div className="grid grid-cols-1 gap-3">
-                  {category.permissions.map((permission) => {
-                    const isEnabled = formData.permissions[permission.key] || false;
-                    
-                    return (
-                      <div
-                        key={permission.key}
-                        className={`group p-3 rounded-lg border transition-colors cursor-pointer ${
-                          isEnabled 
-                            ? 'bg-primary/5 border-primary/20' 
-                            : 'hover:bg-muted/30'
-                        }`}
-                        data-permission={permission.key}
-                        onClick={handleDivClick}
-                      >
-                        <div className="flex items-start justify-between">
-                          <div className="flex-1">
-                            <Label className="text-sm font-medium cursor-pointer">
-                              {permission.label}
-                            </Label>
-                            <p className="text-xs text-muted-foreground mt-1">
-                              {permission.description}
-                            </p>
-                          </div>
-                          <Switch
-                            checked={isEnabled}
-                            onCheckedChange={handlePermissionToggle.bind(null, permission.key)}
-                            className="ml-3"
-                          />
-                        </div>
-                      </div>
-                    );
-                  })}
+                  {category.permissions.map((permission) => (
+                    <PermissionItem
+                      key={permission.key}
+                      permission={permission}
+                      isEnabled={formData.permissions[permission.key] || false}
+                      onToggle={handlePermissionToggle}
+                    />
+                  ))}
                 </div>
               </div>
             );
