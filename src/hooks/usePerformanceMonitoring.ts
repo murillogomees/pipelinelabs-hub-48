@@ -22,6 +22,12 @@ interface PerformanceMetrics {
     cls?: number;
   };
   performanceScore: number;
+  timing?: {
+    loadComplete?: number;
+  };
+  memory?: {
+    usedJSHeapSize?: number;
+  };
 }
 
 export function usePerformanceMonitoring() {
@@ -31,7 +37,10 @@ export function usePerformanceMonitoring() {
     queryStats: { totalQueries: 0, cachedQueries: 0, staleQueries: 0, errorQueries: 0 },
     webVitals: {},
     performanceScore: 0,
+    timing: { loadComplete: 0 },
+    memory: { usedJSHeapSize: 0 },
   });
+  const [isLoading, setIsLoading] = useState(true);
   
   const queryClient = useQueryClient();
 
@@ -125,16 +134,20 @@ export function usePerformanceMonitoring() {
     const endRender = measureRenderTime();
     
     setTimeout(() => {
+      const memoryUsage = calculateMemoryUsage();
       const newMetrics: PerformanceMetrics = {
-        memoryUsage: calculateMemoryUsage(),
+        memoryUsage,
         renderTime: endRender(),
         queryStats: calculateQueryStats(),
         webVitals: collectWebVitals(),
         performanceScore: 0, // Will be calculated below
+        timing: { loadComplete: endRender() },
+        memory: { usedJSHeapSize: memoryUsage.used * 1024 * 1024 },
       };
       
       newMetrics.performanceScore = calculatePerformanceScore(newMetrics);
       setMetrics(newMetrics);
+      setIsLoading(false);
     }, 0);
   }, [calculateMemoryUsage, calculateQueryStats, collectWebVitals, measureRenderTime, calculatePerformanceScore]);
 
@@ -147,6 +160,7 @@ export function usePerformanceMonitoring() {
 
   return {
     metrics,
+    isLoading,
     refreshMetrics: updateMetrics,
   };
 }

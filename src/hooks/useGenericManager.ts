@@ -16,7 +16,7 @@ export function useGenericManager<T extends { id: string }>(tableName: string) {
 
     try {
       const { data, error: fetchError } = await supabase
-        .from(tableName)
+        .from(tableName as any)
         .select('*')
         .order('created_at', { ascending: false });
 
@@ -38,7 +38,7 @@ export function useGenericManager<T extends { id: string }>(tableName: string) {
 
     try {
       const { data, error: createError } = await supabase
-        .from(tableName)
+        .from(tableName as any)
         .insert(item as any)
         .select()
         .single();
@@ -64,7 +64,7 @@ export function useGenericManager<T extends { id: string }>(tableName: string) {
 
     try {
       const { data, error: updateError } = await supabase
-        .from(tableName)
+        .from(tableName as any)
         .update(updates as any)
         .eq('id', id)
         .select()
@@ -91,7 +91,7 @@ export function useGenericManager<T extends { id: string }>(tableName: string) {
 
     try {
       const { error: deleteError } = await supabase
-        .from(tableName)
+        .from(tableName as any)
         .delete()
         .eq('id', id);
 
@@ -111,7 +111,7 @@ export function useGenericManager<T extends { id: string }>(tableName: string) {
   return {
     items,
     loading,
-    isLoading: loading, // Alias for compatibility
+    isLoading: loading,
     error,
     fetchItems,
     createItem,
