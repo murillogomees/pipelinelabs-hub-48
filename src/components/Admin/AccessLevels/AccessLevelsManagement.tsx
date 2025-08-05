@@ -92,7 +92,7 @@ export function AccessLevelsManagement() {
     {
       label: 'Excluir',
       icon: Trash2,
-      onClick: deleteAccessLevel,
+      onClick: (row: AccessLevelWithCount) => deleteAccessLevel(row),
       variant: 'outline' as const,
       className: 'text-destructive hover:text-destructive'
     }
