@@ -4768,6 +4768,14 @@ export type Database = {
         Args: { doc: string; doc_type: string }
         Returns: boolean
       }
+      validate_function_security: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          function_name: string
+          has_search_path: boolean
+          security_level: string
+        }[]
+      }
       validate_password: {
         Args: { password_text: string }
         Returns: boolean
