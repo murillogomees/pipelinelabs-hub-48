@@ -1,8 +1,8 @@
-import React, { useState, useCallback } from 'react';
-import { useQueryClient } from '@tanstack/react-query';
+
+import { useGenericManager } from './useGenericManager';
 import { supabase } from '@/integrations/supabase/client';
 import { useCurrentCompany } from './useCurrentCompany';
-import { useToast } from './use-toast';
+import { useCallback } from 'react';
 
 interface SimpleSaleData {
   id?: string;
@@ -32,134 +32,30 @@ interface SearchFilters {
 }
 
 export function useSalesManager() {
-  const [isLoading, setIsLoading] = useState(false);
-  const [sales, setSales] = useState<any[]>([]);
-  const [filters, setFilters] = useState<SearchFilters>({});
-  
   const { data: currentCompanyData } = useCurrentCompany();
   const currentCompany = currentCompanyData?.company;
-  const { toast } = useToast();
-  const queryClient = useQueryClient();
 
-  const fetchSales = useCallback(async () => {
-    if (!currentCompany?.id) return;
-    
-    setIsLoading(true);
-    try {
-      const { data, error } = await supabase
-        .from('sales')
-        .select('*')
-        .eq('company_id', currentCompany.id)
-        .order('created_at', { ascending: false });
-
-      if (error) throw error;
-      setSales(data || []);
-    } catch (error: any) {
-      console.error('Error fetching sales:', error);
-      toast({
-        title: 'Erro',
-        description: 'Erro ao carregar vendas',
-        variant: 'destructive'
-      });
-    } finally {
-      setIsLoading(false);
-    }
-  }, [currentCompany?.id, toast]);
-
-  const createSale = useCallback(async (saleData: SimpleSaleData) => {
-    setIsLoading(true);
-    
-    try {
-      if (!currentCompany?.id) {
-        throw new Error('Empresa não selecionada');
-      }
-
-      const insertData = {
-        sale_number: saleData.sale_number,
-        customer_id: saleData.customer_id,
-        sale_type: saleData.sale_type,
-        status: saleData.status,
-        total_amount: saleData.total_amount,
-        discount: saleData.discount,
-        tax_amount: saleData.tax_amount,
-        payment_method: saleData.payment_method,
-        payment_status: saleData.payment_status,
-        notes: saleData.notes,
-        sale_date: saleData.sale_date || new Date().toISOString().split('T')[0],
-        company_id: currentCompany.id
-      };
-
-      const { data: sale, error: saleError } = await supabase
-        .from('sales')
-        .insert(insertData)
-        .select()
-        .single();
-
-      if (saleError) throw saleError;
-
-      await fetchSales();
-      queryClient.invalidateQueries({ queryKey: ['sales'] });
-
-      toast({
-        title: 'Sucesso',
-        description: 'Venda criada com sucesso'
-      });
-
-      return sale;
-    } catch (error: any) {
-      console.error('Error creating sale:', error);
-      toast({
-        title: 'Erro',
-        description: error.message || 'Erro ao criar venda',
-        variant: 'destructive'
-      });
-      throw error;
-    } finally {
-      setIsLoading(false);
-    }
-  }, [currentCompany?.id, fetchSales, queryClient, toast]);
-
-  const updateSale = useCallback(async (saleId: string, saleData: Partial<SimpleSaleData>) => {
-    setIsLoading(true);
-    
-    try {
-      const { data, error } = await supabase
-        .from('sales')
-        .update({
-          ...saleData,
-          updated_at: new Date().toISOString()
-        })
-        .eq('id', saleId)
-        .eq('company_id', currentCompany?.id)
-        .select()
-        .single();
-
-      if (error) throw error;
-
-      await fetchSales();
-
-      toast({
-        title: 'Sucesso',
-        description: 'Venda atualizada com sucesso'
-      });
-
-      return data;
-    } catch (error: any) {
-      console.error('Error updating sale:', error);
-      toast({
-        title: 'Erro',
-        description: error.message || 'Erro ao atualizar venda',
-        variant: 'destructive'
-      });
-      throw error;
-    } finally {
-      setIsLoading(false);
-    }
-  }, [currentCompany?.id, fetchSales, toast]);
+  const baseManager = useGenericManager<any, SimpleSaleData, Partial<SimpleSaleData>, SearchFilters>({
+    tableName: 'sales',
+    queryKey: 'sales',
+    orderBy: { column: 'created_at', ascending: false },
+    transformCreate: (data: SimpleSaleData, companyId: string) => ({
+      sale_number: data.sale_number,
+      customer_id: data.customer_id,
+      sale_type: data.sale_type,
+      status: data.status,
+      total_amount: data.total_amount,
+      discount: data.discount,
+      tax_amount: data.tax_amount,
+      payment_method: data.payment_method,
+      payment_status: data.payment_status,
+      notes: data.notes,
+      sale_date: data.sale_date || new Date().toISOString().split('T')[0],
+      company_id: companyId
+    })
+  });
 
   const cancelSale = useCallback(async (saleId: string, reason?: string) => {
-    setIsLoading(true);
-    
     try {
       const { error } = await supabase
         .from('sales')
@@ -173,24 +69,12 @@ export function useSalesManager() {
 
       if (error) throw error;
 
-      await fetchSales();
-
-      toast({
-        title: 'Sucesso',
-        description: 'Venda cancelada com sucesso'
-      });
+      await baseManager.refreshItems();
     } catch (error: any) {
       console.error('Error cancelling sale:', error);
-      toast({
-        title: 'Erro',
-        description: error.message || 'Erro ao cancelar venda',
-        variant: 'destructive'
-      });
       throw error;
-    } finally {
-      setIsLoading(false);
     }
-  }, [currentCompany?.id, fetchSales, toast]);
+  }, [currentCompany?.id, baseManager.refreshItems]);
 
   const getSaleAnalytics = useCallback(async (period: string) => {
     try {
@@ -212,47 +96,28 @@ export function useSalesManager() {
       const totalSales = salesData.length;
       const averageTicket = totalSales > 0 ? totalRevenue / totalSales : 0;
 
-      return {
-        totalRevenue,
-        totalSales,
-        averageTicket,
-        period
-      };
+      return { totalRevenue, totalSales, averageTicket, period };
     } catch (error) {
       console.error('Error fetching sale analytics:', error);
       return { totalRevenue: 0, totalSales: 0, averageTicket: 0, period };
     }
   }, [currentCompany?.id]);
 
-  const searchSales = useCallback((newFilters: SearchFilters) => {
-    setFilters(newFilters);
-  }, []);
-
-  // Auto-fetch sales when company changes
-  React.useEffect(() => {
-    fetchSales();
-  }, [fetchSales]);
-
   return {
-    isLoading,
-    sales,
-    totalSales: sales.length,
-    filters,
-    page: 1,
-    pageSize: 50,
-    createSale,
-    updateSale,
+    ...baseManager,
+    sales: baseManager.items,
+    createSale: baseManager.createItem,
+    updateSale: baseManager.updateItem,
     cancelSale,
-    searchSales,
-    refreshSales: fetchSales,
+    searchSales: baseManager.searchItems,
+    refreshSales: baseManager.refreshItems,
     getSaleAnalytics,
-    getSaleById: useCallback((id: string) => 
-      sales.find((s: any) => s.id === id), [sales]
-    ),
-    pendingSales: sales.filter((s: any) => s.status === 'pending'),
-    completedSales: sales.filter((s: any) => s.status === 'completed'),
-    cancelledSales: sales.filter((s: any) => s.status === 'cancelled'),
-    isEmpty: sales.length === 0,
-    isFiltered: Object.keys(filters).some(key => filters[key as keyof SearchFilters])
+    getSaleById: baseManager.getItemById,
+    pendingSales: baseManager.items.filter((s: any) => s.status === 'pending'),
+    completedSales: baseManager.items.filter((s: any) => s.status === 'completed'),
+    cancelledSales: baseManager.items.filter((s: any) => s.status === 'cancelled'),
+    totalSales: baseManager.totalItems,
+    page: 1,
+    pageSize: 50
   };
 }
