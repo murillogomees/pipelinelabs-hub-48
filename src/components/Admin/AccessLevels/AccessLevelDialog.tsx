@@ -104,7 +104,7 @@ type FormData = {
 export function AccessLevelDialog({ open, onOpenChange, accessLevel, onSave }: AccessLevelDialogProps) {
   const { createAccessLevel, updateAccessLevel, isCreating, isUpdating } = useAccessLevels();
   
-  // Use useMemo to compute form values - no setState, no re-renders
+  // Use useMemo to compute form values with complete accessLevel data
   const formDefaultValues = useMemo((): FormData => {
     if (accessLevel) {
       return {
@@ -123,7 +123,7 @@ export function AccessLevelDialog({ open, onOpenChange, accessLevel, onSave }: A
       is_active: true,
       permissions: {}
     };
-  }, [accessLevel?.id]); // Only depend on the ID, not the whole object
+  }, [accessLevel]); // Depend on the full accessLevel object to trigger re-creation
 
   const onSubmit = useCallback(async (data: FormData) => {
     try {
