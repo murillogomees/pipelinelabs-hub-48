@@ -3,9 +3,9 @@ import { useMemo, useState } from 'react';
 import { useGenericManager } from './useGenericManager';
 import type { Database } from '@/integrations/supabase/types';
 import type { ProductFilters, SearchFilters } from '@/types/products';
+import type { CreateProductData } from '@/components/Products/types';
 
 type Product = Database['public']['Tables']['products']['Row'];
-type ProductInsert = Database['public']['Tables']['products']['Insert'];
 type ProductUpdate = Database['public']['Tables']['products']['Update'];
 
 export const useProductsManager = () => {
@@ -39,6 +39,12 @@ export const useProductsManager = () => {
     await baseManager.fetchItems();
   };
 
+  // Override createItem to accept CreateProductData type
+  const createProduct = async (productData: CreateProductData) => {
+    // Convert CreateProductData to the format expected by baseManager
+    return baseManager.createItem(productData as any);
+  };
+
   return {
     // Base manager properties
     products: baseManager.items,
@@ -47,7 +53,7 @@ export const useProductsManager = () => {
     error: baseManager.error,
     
     // Base manager methods
-    createProduct: baseManager.createItem,
+    createProduct,
     updateProduct: baseManager.updateItem,
     deleteProduct: baseManager.deleteItem,
     fetchProducts: baseManager.fetchItems,

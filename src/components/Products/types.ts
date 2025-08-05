@@ -2,7 +2,7 @@
 import { Tables, TablesInsert, TablesUpdate } from '@/integrations/supabase/types';
 
 export type Product = Tables<'products'>;
-export type CreateProductData = TablesInsert<'products'>;
+export type CreateProductData = Omit<TablesInsert<'products'>, 'id' | 'created_at' | 'updated_at'>;
 export type UpdateProductData = { id: string } & TablesUpdate<'products'>;
 
 export const PRODUCT_TYPES = {
