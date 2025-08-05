@@ -1,5 +1,5 @@
 import React, { useState, useCallback, useMemo } from 'react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -353,9 +353,9 @@ export function AccessLevelDialog({ open, onOpenChange, accessLevel, onSave }: A
           <DialogTitle className="text-xl font-semibold">
             {accessLevel ? 'Editar Nível de Acesso' : 'Novo Nível de Acesso'}
           </DialogTitle>
-          <p className="text-sm text-muted-foreground">
+          <DialogDescription>
             Configure os níveis de permissão e funcionalidades que este acesso pode gerenciar
-          </p>
+          </DialogDescription>
         </DialogHeader>
         
         <div className="flex-1 overflow-y-auto">
