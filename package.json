@@ -89,6 +89,7 @@
     "sonner": "^2.0.6",
     "tailwind-merge": "^2.5.2",
     "tailwindcss-animate": "^1.0.7",
+    "terser": "^5.43.1",
     "ts-prune": "^0.10.3",
     "validator": "^13.15.15",
     "vaul": "^0.9.3",
