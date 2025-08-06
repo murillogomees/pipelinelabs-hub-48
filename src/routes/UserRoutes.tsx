@@ -1,11 +1,11 @@
 
-import React, { lazy } from 'react';
+import React from 'react';
 import { Routes, Route } from 'react-router-dom';
 import { ProtectedRoute } from '@/components/ProtectedRoute';
 
-// Criar páginas básicas de usuário
-const UserProfile = lazy(() => import('@/pages/UserProfile'));
-const UserSettings = lazy(() => import('@/pages/UserSettings'));
+// Placeholder components
+const UserProfile = () => <div>Perfil do Usuário</div>;
+const UserSettings = () => <div>Configurações do Usuário</div>;
 
 export function UserRoutes() {
   return (
