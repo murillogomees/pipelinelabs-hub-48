@@ -4370,6 +4370,10 @@ export type Database = {
         Args: { company_uuid: string }
         Returns: boolean
       }
+      can_manage_users: {
+        Args: { target_company_id?: string }
+        Returns: boolean
+      }
       check_document_uniqueness: {
         Args: { doc: string }
         Returns: boolean
@@ -4641,6 +4645,10 @@ export type Database = {
       }
       get_user_company_id: {
         Args: Record<PropertyKey, never>
+        Returns: string
+      }
+      get_user_company_id_from_profile: {
+        Args: { user_uuid: string }
         Returns: string
       }
       get_user_permissions: {
