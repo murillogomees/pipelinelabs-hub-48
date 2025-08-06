@@ -1,6 +1,7 @@
 
 import React from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
+import Auth from '@/pages/Auth';
 
 // Placeholder landing page component
 function LandingPage() {
@@ -22,7 +23,7 @@ export function LandingRoutes() {
   return (
     <Routes>
       <Route path="/landing" element={<LandingPage />} />
-      <Route path="/auth" element={<Navigate to="/auth" replace />} />
+      <Route path="/auth" element={<Auth />} />
       <Route path="*" element={<Navigate to="/landing" replace />} />
     </Routes>
   );
