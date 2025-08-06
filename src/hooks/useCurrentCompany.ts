@@ -27,20 +27,29 @@ export const useCurrentCompany = () => {
         `)
         .eq('user_id', user.id)
         .eq('is_active', true)
-        .maybeSingle();
+        .limit(1);
 
-      if (!userCompanyError && userCompany) {
+      if (userCompanyError) {
+        console.error('Error fetching user company:', userCompanyError);
+        return null;
+      }
+
+      // Se há múltiplas empresas, pegar a primeira
+      const firstCompany = userCompany && userCompany.length > 0 ? userCompany[0] : null;
+
+      if (firstCompany) {
         return {
-          company_id: userCompany.company_id,
-          company: userCompany.companies,
-          role: userCompany.role
+          company_id: firstCompany.company_id,
+          company: firstCompany.companies,
+          role: firstCompany.role
         };
       }
 
-      // Se não encontrou, retornar null em vez de buscar fallback
+      // Se não encontrou, retornar null
       return null;
     },
     enabled: !!user?.id,
-    retry: false
+    retry: false,
+    staleTime: 2 * 60 * 1000 // 2 minutos de cache
   });
 };

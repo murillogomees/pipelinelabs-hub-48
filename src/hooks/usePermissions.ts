@@ -11,6 +11,8 @@ export const usePermissions = () => {
     queryFn: async () => {
       if (!user?.id) return null;
       
+      console.log('🔄 Fetching permissions for user:', user.id);
+      
       // Buscar permissões do usuário fazendo queries manuais
       const { data: profileData, error: profileError } = await supabase
         .from('profiles')
@@ -44,7 +46,7 @@ export const usePermissions = () => {
         .eq('is_active', true)
         .maybeSingle();
 
-      return {
+      const result = {
         isSuperAdmin: accessLevel.name === 'super_admin',
         isAdmin: ['contratante', 'super_admin'].includes(accessLevel.name),
         canAccessAdmin: ['super_admin', 'contratante'].includes(accessLevel.name),
@@ -57,6 +59,9 @@ export const usePermissions = () => {
         userRole: userCompany?.role || 'operador',
         accessLevelName: accessLevel.name
       };
+      
+      console.log('✅ Permissions loaded:', result);
+      return result;
     },
     enabled: !!user?.id,
     staleTime: 1 * 60 * 1000, // 1 minuto cache (reduzido para aplicar mudanças mais rapidamente)
