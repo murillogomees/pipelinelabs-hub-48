@@ -1,34 +1,41 @@
 
-// Simplified font management with only Google Fonts
+// Enhanced font management with Google Fonts only
 export const fontAssets = {
   inter: {
-    url: 'https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap',
+    url: 'https://fonts.googleapis.com/css2?family=Inter:ital,wght@0,100..900;1,100..900&display=swap',
     family: 'Inter',
-    fallback: 'sans-serif'
+    fallback: 'system-ui, -apple-system, sans-serif'
   }
 };
 
-// Simple font loading function - using only Google Fonts to avoid 404 errors
+// Optimized font loading function - prevents 404 errors
 export const loadFonts = () => {
   // Check if font is already loaded
-  const existingLink = document.querySelector(`link[href="${fontAssets.inter.url}"]`);
+  const existingLink = document.querySelector(`link[href*="fonts.googleapis.com"][href*="Inter"]`);
   if (existingLink) return;
 
-  // Create preconnect links for better performance
-  const preconnect1 = document.createElement('link');
-  preconnect1.rel = 'preconnect';
-  preconnect1.href = 'https://fonts.googleapis.com';
-  document.head.appendChild(preconnect1);
+  // Create preconnect links for better performance (only if not exists)
+  if (!document.querySelector('link[href="https://fonts.googleapis.com"]')) {
+    const preconnect1 = document.createElement('link');
+    preconnect1.rel = 'preconnect';
+    preconnect1.href = 'https://fonts.googleapis.com';
+    document.head.appendChild(preconnect1);
+  }
 
-  const preconnect2 = document.createElement('link');
-  preconnect2.rel = 'preconnect';
-  preconnect2.href = 'https://fonts.gstatic.com';
-  preconnect2.crossOrigin = 'anonymous';
-  document.head.appendChild(preconnect2);
+  if (!document.querySelector('link[href="https://fonts.gstatic.com"]')) {
+    const preconnect2 = document.createElement('link');
+    preconnect2.rel = 'preconnect';
+    preconnect2.href = 'https://fonts.gstatic.com';
+    preconnect2.crossOrigin = 'anonymous';
+    document.head.appendChild(preconnect2);
+  }
 
   // Load the font directly from Google Fonts
   const fontLink = document.createElement('link') as HTMLLinkElement;
   fontLink.rel = 'stylesheet';
   fontLink.href = fontAssets.inter.url;
+  fontLink.onload = () => {
+    document.documentElement.style.setProperty('--font-loaded', '1');
+  };
   document.head.appendChild(fontLink);
 };

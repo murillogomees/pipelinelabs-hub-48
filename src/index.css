@@ -1,4 +1,7 @@
-/* Import design system files first */
+/* Import Google Fonts first */
+@import url('https://fonts.googleapis.com/css2?family=Inter:ital,wght@0,100..900;1,100..900&display=swap');
+
+/* Import design system files */
 @import './styles/design-system.css';
 @import './styles/animations.css';
 
