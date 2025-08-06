@@ -22,7 +22,7 @@ export function LandingRoutes() {
   return (
     <Routes>
       <Route path="/landing" element={<LandingPage />} />
-      <Route path="/auth" element={<Navigate to="/app/dashboard" replace />} />
+      <Route path="/auth" element={<Navigate to="/auth" replace />} />
       <Route path="*" element={<Navigate to="/landing" replace />} />
     </Routes>
   );
