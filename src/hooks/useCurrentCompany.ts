@@ -37,22 +37,8 @@ export const useCurrentCompany = () => {
         };
       }
 
-      // Se não encontrou, buscar primeira empresa disponível como fallback
-      const { data: firstCompany, error } = await supabase
-        .from('companies')
-        .select('id, name, document')
-        .limit(1)
-        .maybeSingle();
-
-      if (!error && firstCompany) {
-        return {
-          company_id: firstCompany.id,
-          company: firstCompany,
-          role: 'operador' // role padrão para fallback
-        };
-      }
-
-      throw new Error('Nenhuma empresa encontrada');
+      // Se não encontrou, retornar null em vez de buscar fallback
+      return null;
     },
     enabled: !!user?.id,
     retry: false
