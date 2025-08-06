@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useAuth } from '@/components/Auth/AuthProvider';
+import { useAuth } from '@/contexts/AuthContext';
 import { toast } from '@/hooks/use-toast';
 
 interface TermsOfService {

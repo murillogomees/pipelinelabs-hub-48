@@ -1,6 +1,6 @@
 import React from 'react';
 import { useTermsOfServiceSimple } from '@/hooks/useTermsOfServiceSimple';
-import { useAuth } from '@/components/Auth/AuthProvider';
+import { useAuth } from '@/contexts/AuthContext';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
 import { AlertTriangle, FileText } from 'lucide-react';

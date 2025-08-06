@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useAuth } from '@/components/Auth/AuthProvider';
+import { useAuth } from '@/contexts/AuthContext';
 import { useUserProfile } from '@/hooks/useUserProfile';
 import { useLGPDRequestsSimple } from '@/hooks/useLGPDRequestsSimple';
 import { usePrivacyConsentSimple } from '@/hooks/usePrivacyConsentSimple';

@@ -1,7 +1,7 @@
 import { useQuery, useQueryClient, useMutation } from '@tanstack/react-query';
 import { useCallback, useMemo, useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import { useAuth } from '@/components/Auth/AuthProvider';
+import { useAuth } from '@/contexts/AuthContext';
 import { usePermissions } from '@/hooks/usePermissions';
 
 // Interface unificada para cache global

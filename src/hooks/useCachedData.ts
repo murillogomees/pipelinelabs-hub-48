@@ -1,7 +1,7 @@
 import { useCompanyCache } from './useCache';
 import { CACHE_TTL } from '@/lib/cache/redis';
 import { supabase } from '@/integrations/supabase/client';
-import { useAuth } from '@/components/Auth/AuthProvider';
+import { useAuth } from '@/contexts/AuthContext';
 
 // Hook para cache do dashboard
 export function useCachedDashboard() {

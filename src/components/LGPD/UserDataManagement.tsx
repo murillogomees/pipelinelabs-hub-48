@@ -14,7 +14,7 @@ import {
 } from 'lucide-react';
 import { useLGPDRequestsSimple } from '@/hooks/useLGPDRequestsSimple';
 import { usePrivacyConsentSimple } from '@/hooks/usePrivacyConsentSimple';
-import { useAuth } from '@/components/Auth/AuthProvider';
+import { useAuth } from '@/contexts/AuthContext';
 import { formatDate } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 

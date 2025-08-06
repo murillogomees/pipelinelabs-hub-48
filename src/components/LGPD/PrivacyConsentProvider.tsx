@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { useAuth } from '@/components/Auth/AuthProvider';
+import { useAuth } from '@/contexts/AuthContext';
 import { PrivacyConsentBanner } from './PrivacyConsentBanner';
 
 interface PrivacyConsentContextType {
