@@ -27,10 +27,12 @@ export const loadFonts = () => {
   document.head.appendChild(preconnect2);
 
   // Load the font
-  const fontLink = document.createElement('link');
+  const fontLink = document.createElement('link') as HTMLLinkElement;
   fontLink.rel = 'stylesheet';
   fontLink.href = fontAssets.inter.url;
   fontLink.media = 'print';
-  fontLink.onload = function() { this.media = 'all'; };
+  fontLink.onload = function() { 
+    (this as HTMLLinkElement).media = 'all'; 
+  };
   document.head.appendChild(fontLink);
 };
