@@ -36,13 +36,13 @@ export const usePermissions = () => {
         return null;
       }
 
-      // Buscar company association
+      // Buscar company association - usar maybeSingle para evitar erro quando há múltiplas empresas
       const { data: userCompany } = await supabase
         .from('user_companies')
         .select('*')
         .eq('user_id', user.id)
         .eq('is_active', true)
-        .single();
+        .maybeSingle();
 
       return {
         isSuperAdmin: accessLevel.name === 'super_admin',
@@ -54,12 +54,14 @@ export const usePermissions = () => {
         canModifyAnyData: accessLevel.name === 'super_admin',
         canManagePlans: ['super_admin', 'contratante'].includes(accessLevel.name),
         permissions: accessLevel.permissions || {},
-        userRole: userCompany?.role || 'operador'
+        userRole: userCompany?.role || 'operador',
+        accessLevelName: accessLevel.name
       };
     },
     enabled: !!user?.id,
-    staleTime: 5 * 60 * 1000, // 5 minutes cache
-    retry: false
+    staleTime: 1 * 60 * 1000, // 1 minuto cache (reduzido para aplicar mudanças mais rapidamente)
+    retry: false,
+    refetchOnWindowFocus: true
   });
 
   const hasPermission = (permission: string) => {

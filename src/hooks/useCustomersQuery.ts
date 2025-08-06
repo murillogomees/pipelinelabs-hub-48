@@ -2,6 +2,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { useCurrentCompany } from './useCurrentCompany';
+import { usePermissions } from './usePermissions';
 
 export interface Customer {
   id: string;
@@ -42,14 +43,16 @@ interface FetchCustomersOptions {
 
 export function useCustomersQuery(options: FetchCustomersOptions = {}) {
   const { data: currentCompany } = useCurrentCompany();
+  const { isSuperAdmin } = usePermissions();
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
   // Query para buscar clientes
   const customersQuery = useQuery({
-    queryKey: ['customers', currentCompany?.company_id, options],
+    queryKey: ['customers', currentCompany?.company_id, isSuperAdmin, options],
     queryFn: async () => {
-      if (!currentCompany?.company_id) {
+      // Se não é super admin e não tem empresa, retornar vazio
+      if (!isSuperAdmin && !currentCompany?.company_id) {
         return [];
       }
 
@@ -57,8 +60,12 @@ export function useCustomersQuery(options: FetchCustomersOptions = {}) {
       
       let query = supabase
         .from('customers')
-        .select('*', { count: 'exact' })
-        .eq('company_id', currentCompany.company_id);
+        .select('*', { count: 'exact' });
+
+      // Super admin vê todos os clientes, outros usuários veem apenas da sua empresa
+      if (!isSuperAdmin && currentCompany?.company_id) {
+        query = query.eq('company_id', currentCompany.company_id);
+      }
 
       // Filtros
       if (search) {
@@ -89,15 +96,20 @@ export function useCustomersQuery(options: FetchCustomersOptions = {}) {
         total: count || 0
       };
     },
-    enabled: !!currentCompany?.company_id,
+    enabled: isSuperAdmin || !!currentCompany?.company_id,
     staleTime: 5 * 60 * 1000, // 5 minutos
     retry: 2
   });
 
   // Mutation para criar cliente
   const createCustomerMutation = useMutation({
-    mutationFn: async (newCustomer: NewCustomer) => {
-      if (!currentCompany?.company_id) {
+    mutationFn: async (newCustomer: NewCustomer & { company_id?: string }) => {
+      // Para super admin, pode especificar a empresa. Para outros, usa a empresa atual
+      const targetCompanyId = isSuperAdmin && newCustomer.company_id ? 
+        newCustomer.company_id : 
+        currentCompany?.company_id;
+        
+      if (!targetCompanyId) {
         throw new Error('Empresa não identificada');
       }
 
@@ -115,12 +127,12 @@ export function useCustomersQuery(options: FetchCustomersOptions = {}) {
           throw new Error('CNPJ deve ter 14 dígitos');
         }
 
-        // Verificar duplicidade
+        // Verificar duplicidade na empresa específica
         const { data: existing } = await supabase
           .from('customers')
           .select('id')
           .eq('document', newCustomer.document)
-          .eq('company_id', currentCompany.company_id);
+          .eq('company_id', targetCompanyId);
         
         if (existing && existing.length > 0) {
           throw new Error('Já existe um cliente com este CPF/CNPJ');
@@ -133,12 +145,16 @@ export function useCustomersQuery(options: FetchCustomersOptions = {}) {
 
       const customerData = {
         ...newCustomer,
-        company_id: currentCompany.company_id
+        company_id: targetCompanyId
       };
+      
+      // Remove company_id do objeto se foi passado como parâmetro extra
+      const { company_id: _, ...cleanCustomerData } = customerData as any;
+      const finalCustomerData = { ...cleanCustomerData, company_id: targetCompanyId };
 
       const { data, error } = await supabase
         .from('customers')
-        .insert(customerData)
+        .insert(finalCustomerData)
         .select()
         .single();
 
@@ -164,7 +180,8 @@ export function useCustomersQuery(options: FetchCustomersOptions = {}) {
   // Mutation para atualizar cliente
   const updateCustomerMutation = useMutation({
     mutationFn: async ({ id, updates }: { id: string; updates: Partial<NewCustomer> }) => {
-      if (!currentCompany?.company_id) {
+      // Super admin pode editar qualquer cliente, outros apenas da sua empresa
+      if (!isSuperAdmin && !currentCompany?.company_id) {
         throw new Error('Empresa não identificada');
       }
 
@@ -183,12 +200,18 @@ export function useCustomersQuery(options: FetchCustomersOptions = {}) {
         }
 
         // Verificar duplicidade excluindo o próprio registro
-        const { data: existing } = await supabase
+        let duplicateQuery = supabase
           .from('customers')
           .select('id')
           .eq('document', updates.document)
-          .eq('company_id', currentCompany.company_id)
           .neq('id', id);
+          
+        // Para não super admin, também filtrar por empresa
+        if (!isSuperAdmin && currentCompany?.company_id) {
+          duplicateQuery = duplicateQuery.eq('company_id', currentCompany.company_id);
+        }
+        
+        const { data: existing } = await duplicateQuery;
         
         if (existing && existing.length > 0) {
           throw new Error('Já existe outro cliente com este CPF/CNPJ');
@@ -199,13 +222,17 @@ export function useCustomersQuery(options: FetchCustomersOptions = {}) {
         throw new Error('E-mail inválido');
       }
 
-      const { data, error } = await supabase
+      let updateQuery = supabase
         .from('customers')
         .update(updates)
-        .eq('id', id)
-        .eq('company_id', currentCompany.company_id)
-        .select()
-        .single();
+        .eq('id', id);
+
+      // Para não super admin, filtrar por empresa
+      if (!isSuperAdmin && currentCompany?.company_id) {
+        updateQuery = updateQuery.eq('company_id', currentCompany.company_id);
+      }
+
+      const { data, error } = await updateQuery.select().single();
 
       if (error) throw error;
       return data;
@@ -229,17 +256,21 @@ export function useCustomersQuery(options: FetchCustomersOptions = {}) {
   // Mutation para alterar status
   const toggleStatusMutation = useMutation({
     mutationFn: async ({ id, isActive }: { id: string; isActive: boolean }) => {
-      if (!currentCompany?.company_id) {
+      if (!isSuperAdmin && !currentCompany?.company_id) {
         throw new Error('Empresa não identificada');
       }
 
-      const { data, error } = await supabase
+      let statusQuery = supabase
         .from('customers')
         .update({ is_active: isActive })
-        .eq('id', id)
-        .eq('company_id', currentCompany.company_id)
-        .select()
-        .single();
+        .eq('id', id);
+
+      // Para não super admin, filtrar por empresa
+      if (!isSuperAdmin && currentCompany?.company_id) {
+        statusQuery = statusQuery.eq('company_id', currentCompany.company_id);
+      }
+
+      const { data, error } = await statusQuery.select().single();
 
       if (error) throw error;
       return data;
@@ -263,15 +294,21 @@ export function useCustomersQuery(options: FetchCustomersOptions = {}) {
   // Mutation para excluir cliente
   const deleteCustomerMutation = useMutation({
     mutationFn: async (id: string) => {
-      if (!currentCompany?.company_id) {
+      if (!isSuperAdmin && !currentCompany?.company_id) {
         throw new Error('Empresa não identificada');
       }
 
-      const { error } = await supabase
+      let deleteQuery = supabase
         .from('customers')
         .delete()
-        .eq('id', id)
-        .eq('company_id', currentCompany.company_id);
+        .eq('id', id);
+
+      // Para não super admin, filtrar por empresa
+      if (!isSuperAdmin && currentCompany?.company_id) {
+        deleteQuery = deleteQuery.eq('company_id', currentCompany.company_id);
+      }
+
+      const { error } = await deleteQuery;
 
       if (error) throw error;
     },
