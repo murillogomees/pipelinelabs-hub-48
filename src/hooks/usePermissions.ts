@@ -67,8 +67,6 @@ export const usePermissions = () => {
     return permissions.permissions[permission] === true;
   };
 
-  // Debug log para verificar as permissões
-  console.log('usePermissions - Current permissions:', permissions);
 
   return {
     isSuperAdmin: permissions?.isSuperAdmin || false,
