@@ -4,22 +4,16 @@ import { LoadingSpinner } from '@/components/ui/loading-spinner';
 
 interface LazyLoaderProps {
   children: React.ReactNode;
-  fallback?: React.ReactNode;
 }
 
-export const LazyLoader: React.FC<LazyLoaderProps> = ({ 
-  children, 
-  fallback 
-}) => {
-  const defaultFallback = (
-    <div className="min-h-screen flex items-center justify-center">
-      <LoadingSpinner size="lg" />
-    </div>
-  );
-
+export function LazyLoader({ children }: LazyLoaderProps) {
   return (
-    <Suspense fallback={fallback || defaultFallback}>
+    <Suspense fallback={
+      <div className="flex items-center justify-center min-h-[200px]">
+        <LoadingSpinner size="lg" />
+      </div>
+    }>
       {children}
     </Suspense>
   );
-};
+}

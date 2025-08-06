@@ -1,16 +1,29 @@
 
 import React from 'react';
-import { MobileContainer, MobileCard } from '@/components/ui/mobile-optimized';
+import { PageHeader } from '@/components/PageHeader';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 
-export function UserSettings() {
+export default function UserSettings() {
   return (
-    <MobileContainer>
-      <div className="space-y-4">
-        <h1 className="text-2xl font-bold">Configurações do Usuário</h1>
-        <MobileCard>
-          <p className="text-muted-foreground">Aqui você pode ajustar suas configurações pessoais.</p>
-        </MobileCard>
-      </div>
-    </MobileContainer>
+    <div className="space-y-6">
+      <PageHeader 
+        title="Configurações do Usuário" 
+        description="Personalize suas preferências do sistema"
+      />
+      
+      <Card>
+        <CardHeader>
+          <CardTitle>Configurações de Conta</CardTitle>
+          <CardDescription>
+            Ajuste suas configurações pessoais aqui.
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <p className="text-muted-foreground">
+            Funcionalidade em desenvolvimento...
+          </p>
+        </CardContent>
+      </Card>
+    </div>
   );
 }
