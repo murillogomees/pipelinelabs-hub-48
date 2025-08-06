@@ -103,9 +103,9 @@ export const useProductsManager = () => {
     }
   }, []);
 
-  const searchProducts = useCallback(async (searchFilters: SearchFilters | string) => {
-    const query = typeof searchFilters === 'string' ? searchFilters : searchFilters.search || '';
-    setFilters(typeof searchFilters === 'object' ? searchFilters : { search: query });
+  const searchProducts = useCallback(async (searchFilters: SearchFilters) => {
+    const query = searchFilters.search || searchFilters.query || '';
+    setFilters(searchFilters);
     
     // Mock search - filter products based on query
     return allProducts.filter(p => 
