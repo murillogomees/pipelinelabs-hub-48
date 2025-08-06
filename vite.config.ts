@@ -11,7 +11,7 @@ export default defineConfig(({ mode }) => ({
   },
   plugins: [
     react(),
-    mode === 'development' &&
+    mode === 'production' &&
     componentTagger(),
   ].filter(Boolean),
   resolve: {
@@ -36,6 +36,6 @@ export default defineConfig(({ mode }) => ({
     emptyOutDir: true,
     // Optimize output
     minify: 'terser',
-    sourcemap: mode === 'development'
+    sourcemap: mode === 'production'
   }
 }));
