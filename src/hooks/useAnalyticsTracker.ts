@@ -3,39 +3,24 @@ import { useCallback } from 'react';
 
 // Hook customizado para facilitar o rastreamento em formulários e ações
 export const useAnalyticsTracker = () => {
-  const { trackUserAction } = useAnalyticsContext();
+  // Analytics desabilitado - usar função vazia
+  const trackUserAction = () => {};
 
   const trackFormSubmit = useCallback((formName: string, success: boolean = true) => {
-    trackUserAction(`form:${formName}:${success ? 'submitted' : 'error'}`, {
-      form_name: formName,
-      success,
-      timestamp: new Date().toISOString()
-    });
-  }, [trackUserAction]);
+    // Função desabilitada
+  }, []);
 
   const trackButtonClick = useCallback((buttonName: string, location?: string) => {
-    trackUserAction('button:clicked', {
-      button_name: buttonName,
-      location: location || 'unknown',
-      timestamp: new Date().toISOString()
-    });
-  }, [trackUserAction]);
+    // Função desabilitada
+  }, []);
 
   const trackFeatureUsage = useCallback((featureName: string, action: string) => {
-    trackUserAction(`feature:${featureName}:${action}`, {
-      feature: featureName,
-      action,
-      timestamp: new Date().toISOString()
-    });
-  }, [trackUserAction]);
+    // Função desabilitada
+  }, []);
 
   const trackError = useCallback((errorType: string, errorMessage?: string) => {
-    trackUserAction('error:occurred', {
-      error_type: errorType,
-      error_message: errorMessage,
-      timestamp: new Date().toISOString()
-    });
-  }, [trackUserAction]);
+    // Função desabilitada
+  }, []);
 
   return {
     trackFormSubmit,
