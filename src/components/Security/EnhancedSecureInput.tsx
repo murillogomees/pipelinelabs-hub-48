@@ -1,283 +1,161 @@
-import React, { useState, useCallback } from 'react';
+
+import React, { useState, useRef, useEffect } from 'react';
 import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
-import { sanitizeUserInput } from '@/lib/validation/sanitization';
-import { AlertCircle, Eye, EyeOff, Shield, CheckCircle, XCircle } from 'lucide-react';
+import { Eye, EyeOff, Shield, AlertTriangle } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { createLogger } from '@/utils/logger';
 
 const logger = createLogger('EnhancedSecureInput');
 
-interface EnhancedSecureInputProps extends React.InputHTMLAttributes<HTMLInputElement> {
-  label?: string;
-  error?: string;
-  sanitize?: boolean;
+interface EnhancedSecureInputProps {
+  value: string;
+  onChange: (value: string) => void;
+  placeholder?: string;
+  className?: string;
   maxLength?: number;
-  showPasswordToggle?: boolean;
-  strengthMeter?: boolean;
-  helperText?: string;
-  securityLevel?: 'low' | 'medium' | 'high';
-  allowedChars?: RegExp;
-  blockList?: string[];
-  realTimeValidation?: boolean;
+  minLength?: number;
+  required?: boolean;
+  autoComplete?: string;
+  id?: string;
+  disabled?: boolean;
 }
 
-export function EnhancedSecureInput({
-  label,
-  error,
-  sanitize = true,
-  maxLength = 255,
-  showPasswordToggle = false,
-  strengthMeter = false,
-  helperText,
-  securityLevel = 'medium',
-  allowedChars,
-  blockList = [],
-  realTimeValidation = true,
-  className,
+export const EnhancedSecureInput: React.FC<EnhancedSecureInputProps> = ({
+  value,
   onChange,
-  type = 'text',
-  ...props
-}: EnhancedSecureInputProps) {
+  placeholder = 'Digite sua senha',
+  className,
+  maxLength,
+  minLength,
+  required,
+  autoComplete = 'current-password',
+  id,
+  disabled
+}) => {
   const [showPassword, setShowPassword] = useState(false);
-  const [passwordStrength, setPasswordStrength] = useState(0);
-  const [sanitizedValue, setSanitizedValue] = useState('');
-  const [validationStatus, setValidationStatus] = useState<'valid' | 'invalid' | 'pending'>('pending');
+  const [inputFocused, setInputFocused] = useState(false);
+  const [attempts, setAttempts] = useState(0);
+  const [blocked, setBlocked] = useState(false);
+  const inputRef = useRef<HTMLInputElement>(null);
 
-  const isPassword = type === 'password';
+  // Security monitoring
+  useEffect(() => {
+    if (attempts > 5) {
+      setBlocked(true);
+      logger.securityEvent('Multiple failed input attempts detected');
+      setTimeout(() => {
+        setBlocked(false);
+        setAttempts(0);
+      }, 60000); // 1 minute block
+    }
+  }, [attempts]);
 
-  // Enhanced security validation
-  const validateInput = useCallback((value: string): { isValid: boolean; reason?: string } => {
-    // Check for blocked content
-    if (blockList.some(blocked => value.toLowerCase().includes(blocked.toLowerCase()))) {
-      logger.securityEvent('blocked_input_detected', {
-        inputType: type,
-        securityLevel,
-        blockedContent: '[REDACTED]'
-      });
-      return { isValid: false, reason: 'Conteúdo não permitido detectado' };
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const newValue = e.target.value;
+    
+    // Log suspicious activity
+    if (newValue.length > 100) {
+      logger.securityEvent('Unusually long input detected');
+      return;
     }
 
-    // Check allowed characters
-    if (allowedChars && !allowedChars.test(value)) {
-      return { isValid: false, reason: 'Caracteres não permitidos' };
+    // Check for potential injection attempts
+    const suspiciousPatterns = [/<script/i, /javascript:/i, /on\w+=/i];
+    if (suspiciousPatterns.some(pattern => pattern.test(newValue))) {
+      logger.securityEvent('Potential script injection attempt');
+      return;
     }
 
-    // Length validation
-    if (value.length > maxLength) {
-      return { isValid: false, reason: `Máximo ${maxLength} caracteres` };
-    }
-
-    // Security level checks
-    if (securityLevel === 'high') {
-      // No HTML tags
-      if (/<[^>]*>/g.test(value)) {
-        logger.securityEvent('html_injection_attempt', {
-          inputType: type,
-          content: '[REDACTED]'
-        });
-        return { isValid: false, reason: 'Tags HTML não são permitidas' };
-      }
-
-      // No SQL injection patterns
-      const sqlPatterns = /(\b(SELECT|INSERT|UPDATE|DELETE|DROP|CREATE|ALTER|EXEC|UNION|SCRIPT)\b)/gi;
-      if (sqlPatterns.test(value)) {
-        logger.securityEvent('sql_injection_attempt', {
-          inputType: type,
-          content: '[REDACTED]'
-        });
-        return { isValid: false, reason: 'Padrões SQL não são permitidos' };
-      }
-
-      // No JavaScript injection patterns
-      const jsPatterns = /(javascript:|data:text\/html|vbscript:|onload=|onerror=)/gi;
-      if (jsPatterns.test(value)) {
-        logger.securityEvent('xss_attempt', {
-          inputType: type,
-          content: '[REDACTED]'
-        });
-        return { isValid: false, reason: 'Código JavaScript não é permitido' };
-      }
-    }
-
-    return { isValid: true };
-  }, [blockList, allowedChars, maxLength, securityLevel, type]);
-
-  const calculatePasswordStrength = useCallback((password: string): number => {
-    if (!password) return 0;
-    
-    let score = 0;
-    
-    // Length
-    if (password.length >= 8) score += 20;
-    if (password.length >= 12) score += 10;
-    if (password.length >= 16) score += 10;
-    
-    // Character types
-    if (/[a-z]/.test(password)) score += 15;
-    if (/[A-Z]/.test(password)) score += 15;
-    if (/[0-9]/.test(password)) score += 15;
-    if (/[^A-Za-z0-9]/.test(password)) score += 15;
-    
-    return Math.min(score, 100);
-  }, []);
-
-  const getStrengthColor = (strength: number): string => {
-    if (strength < 30) return 'bg-destructive';
-    if (strength < 60) return 'bg-warning';
-    if (strength < 80) return 'bg-primary';
-    return 'bg-success';
+    onChange(newValue);
   };
 
-  const getStrengthText = (strength: number): string => {
-    if (strength < 30) return 'Muito Fraca';
-    if (strength < 60) return 'Fraca';
-    if (strength < 80) return 'Boa';
-    return 'Forte';
+  const handleFocus = () => {
+    setInputFocused(true);
+    logger.securityEvent('Secure input focused');
   };
 
-  const handleChange = useCallback(
-    (event: React.ChangeEvent<HTMLInputElement>) => {
-      let value = event.target.value;
-      
-      // Real-time validation
-      if (realTimeValidation) {
-        const validation = validateInput(value);
-        setValidationStatus(validation.isValid ? 'valid' : 'invalid');
-      }
-
-      // Sanitize input if enabled
-      if (sanitize && !isPassword) {
-        value = sanitizeUserInput(value);
-      }
-
-      // Calculate password strength if enabled
-      if (strengthMeter && isPassword) {
-        const strength = calculatePasswordStrength(value);
-        setPasswordStrength(strength);
-      }
-
-      setSanitizedValue(value);
-      
-      // Update the input value
-      const updatedEvent = {
-        ...event,
-        target: {
-          ...event.target,
-          value
-        }
-      };
-      
-      onChange?.(updatedEvent);
-    },
-    [sanitize, isPassword, strengthMeter, calculatePasswordStrength, validateInput, realTimeValidation, onChange]
-  );
-
-  const getSecurityIcon = () => {
-    if (!realTimeValidation) return null;
-    
-    switch (validationStatus) {
-      case 'valid':
-        return <CheckCircle className="h-4 w-4 text-success" />;
-      case 'invalid':
-        return <XCircle className="h-4 w-4 text-destructive" />;
-      default:
-        return <Shield className="h-4 w-4 text-muted-foreground" />;
+  const handleBlur = () => {
+    setInputFocused(false);
+    if (value.length < (minLength || 0)) {
+      setAttempts(prev => prev + 1);
     }
   };
 
-  return (
-    <div className="space-y-2">
-      {label && (
-        <Label htmlFor={props.id} className="text-sm font-medium">
-          {label}
-          {props.required && <span className="text-destructive ml-1">*</span>}
-          {securityLevel === 'high' && (
-            <Shield className="inline h-3 w-3 ml-1 text-primary" />
-          )}
-        </Label>
-      )}
-      
+  const togglePasswordVisibility = () => {
+    setShowPassword(!showPassword);
+    logger.info('Password visibility toggled');
+  };
+
+  if (blocked) {
+    return (
       <div className="relative">
         <Input
-          {...props}
-          type={isPassword && showPassword ? 'text' : type}
-          onChange={handleChange}
-          maxLength={maxLength}
+          disabled
+          placeholder="Entrada bloqueada temporariamente"
           className={cn(
-            error && 'border-destructive focus:border-destructive',
-            realTimeValidation && validationStatus === 'valid' && 'border-success',
-            realTimeValidation && validationStatus === 'invalid' && 'border-destructive',
-            'pr-10',
+            'pr-20 border-destructive',
             className
           )}
         />
-        
-        <div className="absolute inset-y-0 right-0 flex items-center pr-3 space-x-1">
-          {getSecurityIcon()}
-          {isPassword && showPasswordToggle && (
-            <Button
-              type="button"
-              variant="ghost"
-              size="sm"
-              className="h-auto p-0"
-              onClick={() => setShowPassword(!showPassword)}
-            >
-              {showPassword ? (
-                <EyeOff className="h-4 w-4" />
-              ) : (
-                <Eye className="h-4 w-4" />
-              )}
-            </Button>
-          )}
+        <div className="absolute inset-y-0 right-0 flex items-center pr-3">
+          <AlertTriangle className="h-4 w-4 text-destructive" />
         </div>
       </div>
+    );
+  }
+
+  return (
+    <div className="relative">
+      <Input
+        ref={inputRef}
+        id={id}
+        type={showPassword ? 'text' : 'password'}
+        value={value}
+        onChange={handleInputChange}
+        onFocus={handleFocus}
+        onBlur={handleBlur}
+        placeholder={placeholder}
+        maxLength={maxLength}
+        minLength={minLength}
+        required={required}
+        autoComplete={autoComplete}
+        disabled={disabled}
+        className={cn(
+          'pr-20',
+          inputFocused && 'ring-2 ring-blue-500/20',
+          attempts > 3 && 'border-yellow-500',
+          className
+        )}
+      />
       
-      {strengthMeter && isPassword && sanitizedValue && (
-        <div className="space-y-2">
-          <div className="flex justify-between text-xs">
-            <span>Força da senha:</span>
-            <span className={cn(
-              passwordStrength < 30 && 'text-destructive',
-              passwordStrength >= 30 && passwordStrength < 60 && 'text-warning',
-              passwordStrength >= 60 && passwordStrength < 80 && 'text-primary',
-              passwordStrength >= 80 && 'text-success'
-            )}>
-              {getStrengthText(passwordStrength)}
-            </span>
-          </div>
-          <div className="w-full bg-muted rounded-full h-2">
-            <div
-              className={cn(
-                'h-2 rounded-full transition-all duration-300',
-                getStrengthColor(passwordStrength)
-              )}
-              style={{ width: `${passwordStrength}%` }}
-            />
-          </div>
-        </div>
-      )}
+      <div className="absolute inset-y-0 right-0 flex items-center space-x-1 pr-3">
+        <Shield className={cn(
+          'h-4 w-4',
+          inputFocused ? 'text-green-500' : 'text-gray-400'
+        )} />
+        
+        <Button
+          type="button"
+          variant="ghost"
+          size="sm"
+          className="h-4 w-4 p-0"
+          onClick={togglePasswordVisibility}
+          disabled={disabled}
+        >
+          {showPassword ? (
+            <EyeOff className="h-4 w-4" />
+          ) : (
+            <Eye className="h-4 w-4" />
+          )}
+        </Button>
+      </div>
       
-      {error && (
-        <Alert variant="destructive" className="mt-2">
-          <AlertCircle className="h-4 w-4" />
-          <AlertDescription className="text-sm">{error}</AlertDescription>
-        </Alert>
-      )}
-      
-      {helperText && !error && (
-        <p className="text-xs text-muted-foreground">{helperText}</p>
-      )}
-      
-      {maxLength && (
-        <p className="text-xs text-muted-foreground text-right">
-          {sanitizedValue.length}/{maxLength}
+      {attempts > 2 && (
+        <p className="text-xs text-yellow-600 mt-1">
+          Atenção: {6 - attempts} tentativas restantes
         </p>
       )}
     </div>
   );
-}
-
-export default EnhancedSecureInput;
+};
