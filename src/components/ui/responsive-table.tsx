@@ -25,12 +25,9 @@ export const ResponsiveTable = React.forwardRef<
 >(({ data, columns, loading = false, className, emptyMessage = "Nenhum dado encontrado" }, ref) => {
   if (loading) {
     return (
-      <div className="flex items-center justify-center p-8">
-        <LoadingSpinner 
-          size="lg" 
-          text="Carregando dados..."
-          className="text-muted-foreground"
-        />
+      <div className="flex flex-col items-center justify-center p-8 space-y-2">
+        <LoadingSpinner size="lg" className="text-muted-foreground" />
+        <p className="text-sm text-muted-foreground">Carregando dados...</p>
       </div>
     )
   }

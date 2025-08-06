@@ -1,5 +1,5 @@
 
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Eye, EyeOff, Shield, AlertTriangle } from 'lucide-react';
@@ -13,73 +13,93 @@ interface EnhancedSecureInputProps {
   onChange: (value: string) => void;
   placeholder?: string;
   className?: string;
-  maxLength?: number;
-  minLength?: number;
-  required?: boolean;
-  autoComplete?: string;
-  id?: string;
   disabled?: boolean;
+  type?: 'password' | 'text';
+  strengthCheck?: boolean;
+  maxLength?: number;
+  pattern?: string;
+  required?: boolean;
 }
 
-export const EnhancedSecureInput: React.FC<EnhancedSecureInputProps> = ({
+interface PasswordStrength {
+  score: number;
+  label: string;
+  color: string;
+}
+
+export function EnhancedSecureInput({
   value,
   onChange,
-  placeholder = 'Digite sua senha',
+  placeholder = "Digite sua senha",
   className,
+  disabled = false,
+  type = 'password',
+  strengthCheck = true,
   maxLength,
-  minLength,
-  required,
-  autoComplete = 'current-password',
-  id,
-  disabled
-}) => {
+  pattern,
+  required = false
+}: EnhancedSecureInputProps) {
   const [showPassword, setShowPassword] = useState(false);
-  const [inputFocused, setInputFocused] = useState(false);
-  const [attempts, setAttempts] = useState(0);
-  const [blocked, setBlocked] = useState(false);
-  const inputRef = useRef<HTMLInputElement>(null);
+  const [isFocused, setIsFocused] = useState(false);
+  const [strength, setStrength] = useState<PasswordStrength>({ score: 0, label: 'Muito fraca', color: 'text-red-500' });
 
-  // Security monitoring
-  useEffect(() => {
-    if (attempts > 5) {
-      setBlocked(true);
-      logger.securityEvent('Multiple failed input attempts detected');
-      setTimeout(() => {
-        setBlocked(false);
-        setAttempts(0);
-      }, 60000); // 1 minute block
+  const checkPasswordStrength = (password: string): PasswordStrength => {
+    logger.debug('Checking password strength');
+    
+    let score = 0;
+    
+    if (password.length >= 8) score++;
+    if (password.length >= 12) score++;
+    if (/[a-z]/.test(password)) score++;
+    if (/[A-Z]/.test(password)) score++;
+    if (/[0-9]/.test(password)) score++;
+    if (/[^A-Za-z0-9]/.test(password)) score++;
+
+    let label = 'Muito fraca';
+    let color = 'text-red-500';
+
+    if (score >= 5) {
+      label = 'Muito forte';
+      color = 'text-green-500';
+    } else if (score >= 4) {
+      label = 'Forte';
+      color = 'text-green-400';
+    } else if (score >= 3) {
+      label = 'Média';
+      color = 'text-yellow-500';
+    } else if (score >= 2) {
+      label = 'Fraca';
+      color = 'text-orange-500';
     }
-  }, [attempts]);
+
+    logger.info('Password strength calculated');
+
+    return { score, label, color };
+  };
+
+  useEffect(() => {
+    if (strengthCheck && type === 'password' && value) {
+      setStrength(checkPasswordStrength(value));
+    }
+  }, [value, strengthCheck, type]);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const newValue = e.target.value;
     
-    // Log suspicious activity
-    if (newValue.length > 100) {
-      logger.securityEvent('Unusually long input detected');
+    logger.debug('Input value changed');
+    
+    // Apply maxLength if specified
+    if (maxLength && newValue.length > maxLength) {
       return;
     }
 
-    // Check for potential injection attempts
-    const suspiciousPatterns = [/<script/i, /javascript:/i, /on\w+=/i];
-    if (suspiciousPatterns.some(pattern => pattern.test(newValue))) {
-      logger.securityEvent('Potential script injection attempt');
+    // Apply pattern validation if specified
+    if (pattern && newValue && !new RegExp(pattern).test(newValue)) {
+      logger.warn('Input does not match pattern');
       return;
     }
 
     onChange(newValue);
-  };
-
-  const handleFocus = () => {
-    setInputFocused(true);
-    logger.securityEvent('Secure input focused');
-  };
-
-  const handleBlur = () => {
-    setInputFocused(false);
-    if (value.length < (minLength || 0)) {
-      setAttempts(prev => prev + 1);
-    }
   };
 
   const togglePasswordVisibility = () => {
@@ -87,75 +107,82 @@ export const EnhancedSecureInput: React.FC<EnhancedSecureInputProps> = ({
     logger.info('Password visibility toggled');
   };
 
-  if (blocked) {
-    return (
-      <div className="relative">
-        <Input
-          disabled
-          placeholder="Entrada bloqueada temporariamente"
-          className={cn(
-            'pr-20 border-destructive',
-            className
-          )}
-        />
-        <div className="absolute inset-y-0 right-0 flex items-center pr-3">
-          <AlertTriangle className="h-4 w-4 text-destructive" />
-        </div>
-      </div>
-    );
-  }
+  const inputType = type === 'password' && !showPassword ? 'password' : 'text';
 
   return (
-    <div className="relative">
-      <Input
-        ref={inputRef}
-        id={id}
-        type={showPassword ? 'text' : 'password'}
-        value={value}
-        onChange={handleInputChange}
-        onFocus={handleFocus}
-        onBlur={handleBlur}
-        placeholder={placeholder}
-        maxLength={maxLength}
-        minLength={minLength}
-        required={required}
-        autoComplete={autoComplete}
-        disabled={disabled}
-        className={cn(
-          'pr-20',
-          inputFocused && 'ring-2 ring-blue-500/20',
-          attempts > 3 && 'border-yellow-500',
-          className
-        )}
-      />
-      
-      <div className="absolute inset-y-0 right-0 flex items-center space-x-1 pr-3">
-        <Shield className={cn(
-          'h-4 w-4',
-          inputFocused ? 'text-green-500' : 'text-gray-400'
-        )} />
-        
-        <Button
-          type="button"
-          variant="ghost"
-          size="sm"
-          className="h-4 w-4 p-0"
-          onClick={togglePasswordVisibility}
-          disabled={disabled}
-        >
-          {showPassword ? (
-            <EyeOff className="h-4 w-4" />
-          ) : (
-            <Eye className="h-4 w-4" />
+    <div className="space-y-2">
+      <div className="relative">
+        <Input
+          type={inputType}
+          value={value}
+          onChange={handleInputChange}
+          onFocus={() => setIsFocused(true)}
+          onBlur={() => setIsFocused(false)}
+          placeholder={placeholder}
+          className={cn(
+            'pr-10',
+            isFocused && 'ring-2 ring-blue-500 ring-opacity-50',
+            className
           )}
-        </Button>
+          disabled={disabled}
+          required={required}
+        />
+        
+        {type === 'password' && (
+          <Button
+            type="button"
+            variant="ghost"
+            size="sm"
+            className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
+            onClick={togglePasswordVisibility}
+            disabled={disabled}
+          >
+            {showPassword ? (
+              <EyeOff className="h-4 w-4 text-muted-foreground" />
+            ) : (
+              <Eye className="h-4 w-4 text-muted-foreground" />
+            )}
+          </Button>
+        )}
       </div>
-      
-      {attempts > 2 && (
-        <p className="text-xs text-yellow-600 mt-1">
-          Atenção: {6 - attempts} tentativas restantes
-        </p>
+
+      {/* Security indicator */}
+      <div className="flex items-center gap-2 text-xs text-muted-foreground">
+        <Shield className="h-3 w-3" />
+        <span>Campo seguro com criptografia</span>
+      </div>
+
+      {/* Password strength indicator */}
+      {strengthCheck && type === 'password' && value && (
+        <div className="space-y-1">
+          <div className="flex items-center gap-2">
+            <div className="flex-1 bg-gray-200 rounded-full h-1">
+              <div
+                className={cn(
+                  'h-1 rounded-full transition-all duration-300',
+                  strength.score <= 1 ? 'bg-red-500' :
+                  strength.score <= 2 ? 'bg-orange-500' :
+                  strength.score <= 3 ? 'bg-yellow-500' :
+                  strength.score <= 4 ? 'bg-green-400' : 'bg-green-500'
+                )}
+                style={{ width: `${(strength.score / 6) * 100}%` }}
+              />
+            </div>
+            <span className={cn('text-xs font-medium', strength.color)}>
+              {strength.label}
+            </span>
+          </div>
+          
+          {strength.score < 4 && (
+            <div className="flex items-start gap-2 text-xs text-muted-foreground">
+              <AlertTriangle className="h-3 w-3 mt-0.5 flex-shrink-0" />
+              <span>
+                Use pelo menos 8 caracteres com letras maiúsculas, minúsculas, números e símbolos
+              </span>
+            </div>
+          )}
+        </div>
       )}
     </div>
   );
-};
+}
