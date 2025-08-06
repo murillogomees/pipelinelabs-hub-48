@@ -1,38 +1,31 @@
 
 import React, { createContext, useContext } from 'react';
+import { usePermissions } from '@/hooks/usePermissions';
 
 interface PermissionContextType {
-  hasPermission: (permission: string) => boolean;
-  canAccessRoute: (route: string) => boolean;
+  isSuperAdmin: boolean;
+  isAdmin: boolean;
+  canAccessAdmin: boolean;
+  currentCompanyId: string | null;
+  isLoading: boolean;
 }
 
 const PermissionContext = createContext<PermissionContextType | undefined>(undefined);
 
-interface PermissionProviderProps {
-  children: React.ReactNode;
-}
-
-export const PermissionProvider: React.FC<PermissionProviderProps> = ({ children }) => {
-  // Implementação básica - pode ser expandida conforme necessário
-  const hasPermission = (permission: string) => true;
-  const canAccessRoute = (route: string) => true;
-
-  const value = {
-    hasPermission,
-    canAccessRoute,
-  };
+export const PermissionProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const permissions = usePermissions();
 
   return (
-    <PermissionContext.Provider value={value}>
+    <PermissionContext.Provider value={permissions}>
       {children}
     </PermissionContext.Provider>
   );
 };
 
-export const usePermissions = () => {
+export const usePermissionContext = () => {
   const context = useContext(PermissionContext);
   if (context === undefined) {
-    throw new Error('usePermissions must be used within a PermissionProvider');
+    throw new Error('usePermissionContext must be used within a PermissionProvider');
   }
   return context;
 };

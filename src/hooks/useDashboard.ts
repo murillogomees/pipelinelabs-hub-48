@@ -1,7 +1,7 @@
 
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
-import { usePermissions } from '@/hooks/usePermissions';
+import { useAuth } from '@/components/Auth/AuthProvider';
 
 export interface Widget {
   id: string;
@@ -11,117 +11,65 @@ export interface Widget {
   y: number;
   w: number;
   h: number;
-  data?: any;
+  data: any[];
 }
 
-export interface WidgetType {
-  id: string;
-  title: string;
-  icon: string;
-  category: string;
-  defaultSize: { w: number; h: number };
-}
-
-export const WIDGET_TYPES: Record<string, WidgetType> = {
-  sales_overview: {
-    id: 'sales_overview',
-    title: 'Visão Geral de Vendas',
-    icon: 'DollarSign',
-    category: 'sales',
+export const WIDGET_TYPES: Record<string, any> = {
+  sales_monthly: {
+    title: 'Vendas do Mês',
     defaultSize: { w: 4, h: 2 }
   },
-  products_stock: {
-    id: 'products_stock',
-    title: 'Estoque de Produtos',
-    icon: 'Package',
-    category: 'inventory',
-    defaultSize: { w: 4, h: 2 }
-  },
-  customers_overview: {
-    id: 'customers_overview',
-    title: 'Visão Geral de Clientes',
-    icon: 'ShoppingCart',
-    category: 'sales',
-    defaultSize: { w: 4, h: 2 }
-  },
-  financial_summary: {
-    id: 'financial_summary',
-    title: 'Resumo Financeiro',
-    icon: 'CreditCard',
-    category: 'financial',
-    defaultSize: { w: 4, h: 2 }
-  },
-  invoice_status: {
-    id: 'invoice_status',
-    title: 'Status das Notas Fiscais',
-    icon: 'Receipt',
-    category: 'fiscal',
+  low_stock: {
+    title: 'Estoque Baixo',
     defaultSize: { w: 4, h: 2 }
   },
   quick_actions: {
-    id: 'quick_actions',
     title: 'Ações Rápidas',
-    icon: 'Zap',
-    category: 'actions',
+    defaultSize: { w: 4, h: 2 }
+  },
+  pending_orders: {
+    title: 'Pedidos Pendentes',
     defaultSize: { w: 4, h: 2 }
   }
 };
 
-export function useDashboard() {
-  const { currentCompanyId } = usePermissions();
+export const useDashboard = () => {
+  const { user } = useAuth();
 
   const { data: dashboardData, isLoading } = useQuery({
-    queryKey: ['dashboard', currentCompanyId],
+    queryKey: ['dashboard-data', user?.id],
     queryFn: async () => {
-      if (!currentCompanyId) return null;
+      if (!user?.id) return null;
 
-      // Fetch dashboard data for the current company
-      const [salesData, productsData, customersData] = await Promise.all([
-        supabase
-          .from('sales')
-          .select('*')
-          .eq('company_id', currentCompanyId),
-        supabase
-          .from('products')
-          .select('*')
-          .eq('company_id', currentCompanyId),
-        supabase
-          .from('customers')
-          .select('*')
-          .eq('company_id', currentCompanyId)
-      ]);
-
+      // Mock dashboard data
       return {
-        sales: salesData.data || [],
-        products: productsData.data || [],
-        customers: customersData.data || []
+        sales: [],
+        products: [],
+        customers: [],
+        orders: []
       };
     },
-    enabled: !!currentCompanyId,
-    staleTime: 1000 * 60 * 5, // 5 minutos em vez de tempo padrão
-    gcTime: 1000 * 60 * 15, // 15 minutos de cache
-    refetchInterval: 1000 * 60 * 5, // 5 minutos em vez de 30 segundos
-    refetchOnWindowFocus: false, // Não refetch ao focar janela
+    enabled: !!user?.id,
+    staleTime: 5 * 60 * 1000
   });
 
   return {
     dashboardData,
-    isLoading,
-    data: dashboardData // Adding data property for compatibility
+    isLoading
   };
-}
+};
 
-// Mock function for useUpdateDashboard
-export function useUpdateDashboard() {
-  return {
-    updateWidget: (widgetId: string, data: any) => {
-      console.log('Updating widget:', widgetId, data);
-    },
-    addWidget: (widgetType: string) => {
-      console.log('Adding widget:', widgetType);
-    },
-    removeWidget: (widgetId: string) => {
-      console.log('Removing widget:', widgetId);
-    }
+export const useUpdateDashboard = () => {
+  const addWidget = (widgetType: string) => {
+    console.log('Adding widget:', widgetType);
   };
-}
+
+  const removeWidget = (widgetId: string) => {
+    console.log('Removing widget:', widgetId);
+  };
+
+  return {
+    addWidget,
+    removeWidget
+  };
+};

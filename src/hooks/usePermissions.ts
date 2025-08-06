@@ -1,75 +1,31 @@
 
-import { useProfile } from './useProfile';
-import { useCurrentCompany } from './useCurrentCompany';
+import { useQuery } from '@tanstack/react-query';
+import { useAuth } from '@/components/Auth/AuthProvider';
 
 export const usePermissions = () => {
-  const profileData = useProfile();
-  const { data: currentCompany } = useCurrentCompany();
+  const { user } = useAuth();
 
-  const { profile, isLoading, error, isSuperAdmin, hasPermission, canAccessRoute } = profileData;
-
-  const isAdmin = isSuperAdmin || hasPermission('admin_panel');
-  const isContratante = hasPermission('admin_panel') || hasPermission('empresas');
-  const isOperador = !isSuperAdmin && !isAdmin && !!profile?.company_id;
-
-  const canManageUsers = isSuperAdmin || hasPermission('usuarios');
-  const canManageCompanies = isSuperAdmin || hasPermission('empresas');
-  const canManageSystem = isSuperAdmin || hasPermission('sistema');
-  const canManageSecurity = isSuperAdmin || hasPermission('seguranca');
-  const canManagePlans = isSuperAdmin || hasPermission('planos');
-  const canDeleteAnyRecord = isSuperAdmin || isContratante;
-  const canModifyAnyData = isSuperAdmin || isContratante;
-  const canManageCompany = isSuperAdmin || isContratante;
-  const canManageCompanyData = isSuperAdmin || isContratante;
-  const canAccessAdminPanel = isSuperAdmin || hasPermission('admin_panel');
-
-  const currentCompanyId = currentCompany?.company_id || profile?.company_id;
-  const userType = isSuperAdmin ? 'super_admin' : (isContratante ? 'contratante' : 'operador');
-
-  const canAccess = {
-    dashboard: hasPermission('dashboard'),
-    vendas: hasPermission('vendas'),
-    produtos: hasPermission('produtos'),
-    clientes: hasPermission('clientes'),
-    fornecedores: hasPermission('fornecedores'),
-    estoque: hasPermission('estoque'),
-    financeiro: hasPermission('financeiro'),
-    relatorios: hasPermission('relatorios'),
-    configuracoes: hasPermission('configuracoes'),
-    admin: hasPermission('admin_panel'),
-    usuarios: hasPermission('usuarios'),
-    empresas: hasPermission('empresas'),
-    sistema: hasPermission('sistema'),
-    seguranca: hasPermission('seguranca'),
-    notas_fiscais: hasPermission('notas_fiscais'),
-    contratos: hasPermission('contratos'),
-    producao: hasPermission('producao'),
-    compras: hasPermission('compras'),
-    integracoes: hasPermission('integracoes'),
-  };
+  const { data: permissions, isLoading } = useQuery({
+    queryKey: ['permissions', user?.id],
+    queryFn: async () => {
+      if (!user?.id) return null;
+      
+      // Mock permissions
+      return {
+        isSuperAdmin: false,
+        isAdmin: true,
+        canAccessAdmin: true,
+        currentCompanyId: '71f946e6-dfbe-4684-a833-6050abb29926'
+      };
+    },
+    enabled: !!user?.id
+  });
 
   return {
-    profile,
-    isLoading,
-    error,
-    isSuperAdmin,
-    isAdmin,
-    isContratante,
-    isOperador,
-    canManageUsers,
-    canManageCompanies,
-    canManageSystem,
-    canManageSecurity,
-    canManagePlans,
-    canDeleteAnyRecord,
-    canModifyAnyData,
-    canManageCompany,
-    canManageCompanyData,
-    canAccessAdminPanel,
-    currentCompanyId,
-    userType,
-    hasPermission,
-    canAccessRoute,
-    canAccess,
+    isSuperAdmin: permissions?.isSuperAdmin || false,
+    isAdmin: permissions?.isAdmin || false,
+    canAccessAdmin: permissions?.canAccessAdmin || false,
+    currentCompanyId: permissions?.currentCompanyId || null,
+    isLoading
   };
 };

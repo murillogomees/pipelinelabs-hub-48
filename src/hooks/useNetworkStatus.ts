@@ -1,66 +1,45 @@
 
 import { useState, useEffect } from 'react';
 
-export interface NetworkStatus {
+interface NetworkStatus {
   isOnline: boolean;
-  downlink?: number;
   effectiveType?: string;
   rtt?: number;
 }
 
-export function useNetworkStatus(): NetworkStatus {
+export const useNetworkStatus = (): NetworkStatus => {
   const [networkStatus, setNetworkStatus] = useState<NetworkStatus>({
-    isOnline: navigator.onLine
+    isOnline: navigator.onLine,
+    effectiveType: 'unknown',
+    rtt: 0
   });
 
   useEffect(() => {
-    const updateNetworkStatus = () => {
-      const connection = (navigator as any).connection || 
-                        (navigator as any).mozConnection || 
-                        (navigator as any).webkitConnection;
-
-      setNetworkStatus({
-        isOnline: navigator.onLine,
-        downlink: connection?.downlink,
-        effectiveType: connection?.effectiveType,
-        rtt: connection?.rtt
-      });
+    const updateOnlineStatus = () => {
+      setNetworkStatus(prev => ({
+        ...prev,
+        isOnline: navigator.onLine
+      }));
     };
 
-    const handleOnline = () => {
-      console.log('Network: Back online');
-      updateNetworkStatus();
-    };
+    window.addEventListener('online', updateOnlineStatus);
+    window.addEventListener('offline', updateOnlineStatus);
 
-    const handleOffline = () => {
-      console.log('Network: Gone offline');
-      updateNetworkStatus();
-    };
-
-    // Initial status
-    updateNetworkStatus();
-
-    // Listen for network changes
-    window.addEventListener('online', handleOnline);
-    window.addEventListener('offline', handleOffline);
-
-    // Listen for connection changes (if supported)
-    const connection = (navigator as any).connection || 
-                      (navigator as any).mozConnection || 
-                      (navigator as any).webkitConnection;
-    
-    if (connection) {
-      connection.addEventListener('change', updateNetworkStatus);
+    // Mock network info for environments that don't support it
+    if ('connection' in navigator) {
+      const connection = (navigator as any).connection;
+      setNetworkStatus(prev => ({
+        ...prev,
+        effectiveType: connection.effectiveType || 'unknown',
+        rtt: connection.rtt || 0
+      }));
     }
 
     return () => {
-      window.removeEventListener('online', handleOnline);
-      window.removeEventListener('offline', handleOffline);
-      if (connection) {
-        connection.removeEventListener('change', updateNetworkStatus);
-      }
+      window.removeEventListener('online', updateOnlineStatus);
+      window.removeEventListener('offline', updateOnlineStatus);
     };
   }, []);
 
   return networkStatus;
-}
+};
