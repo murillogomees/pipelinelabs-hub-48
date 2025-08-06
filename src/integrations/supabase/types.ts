@@ -4462,6 +4462,10 @@ export type Database = {
         Args: Record<PropertyKey, never>
         Returns: boolean
       }
+      check_signup_rate_limit: {
+        Args: { p_email: string; p_ip_address?: unknown }
+        Returns: boolean
+      }
       check_ssl_certificate_expiry: {
         Args: Record<PropertyKey, never>
         Returns: {
@@ -4678,6 +4682,19 @@ export type Database = {
           status: string
           details: Json
           created_at: string
+        }[]
+      }
+      get_company_data_optimized: {
+        Args: {
+          p_table_name: string
+          p_columns?: string
+          p_where_clause?: string
+          p_limit?: number
+          p_offset?: number
+        }
+        Returns: {
+          data: Json
+          total_count: number
         }[]
       }
       get_current_user_type: {

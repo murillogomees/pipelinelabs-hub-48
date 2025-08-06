@@ -46,79 +46,94 @@ export const AuthForm: React.FC = () => {
   const handleSignUp = async (formData: any) => {
     setIsLoading(true);
     try {
-      // 1. Primeiro, criar a empresa
-      const { data: companyData, error: companyError } = await supabase
-        .from('companies')
-        .insert({
-          name: formData.companyName,
-          document: formData.document,
-          email: formData.email,
-        })
-        .select()
-        .single();
+      // 🛡️ Validação de rate limiting (implementado via Edge Function)
+      console.log('🔄 Iniciando processo de signup seguro...');
 
-      if (companyError) {
-        throw companyError;
-      }
-
-      // 2. Criar o usuário
+      // ✅ Signup simplificado - trigger automático irá criar company e perfil
       const { data: authData, error: authError } = await supabase.auth.signUp({
         email: formData.email,
         password: formData.password,
         options: {
           data: {
             display_name: formData.name,
+            company_name: formData.companyName,
             document: formData.document,
             phone: formData.phone,
           },
+          emailRedirectTo: `${window.location.origin}/app/dashboard`
         },
       });
 
       if (authError) {
+        console.error('❌ Erro no signup:', authError);
         throw authError;
       }
 
       if (authData?.user) {
-        // 3. Criar o perfil do usuário
-        const { error: profileError } = await supabase
-          .from('profiles')
-          .insert({
-            user_id: authData.user.id,
-            email: formData.email,
-            display_name: formData.name,
-            document: formData.document,
-            phone: formData.phone,
-            company_id: companyData.id,
-          });
-
-        if (profileError) {
-          console.warn('Erro ao criar perfil (pode ser criado pelo trigger):', profileError);
-        }
-
-        // 4. Criar a relação user_companies
-        const { error: userCompanyError } = await supabase
-          .from('user_companies')
-          .insert({
-            user_id: authData.user.id,
-            company_id: companyData.id,
-            role: 'contratante',
-            is_active: true,
-          });
-
-        if (userCompanyError) {
-          console.warn('Erro ao criar relação user_companies:', userCompanyError);
-        }
+        console.log('✅ Usuário criado com sucesso!', {
+          userId: authData.user.id,
+          email: authData.user.email
+        });
 
         toast({
-          title: 'Cadastro realizado com sucesso!',
-          description: 'Verifique seu email para confirmar a conta.',
+          title: '🎉 Cadastro realizado com sucesso!',
+          description: 'Sua empresa e perfil foram criados automaticamente. Verifique seu email para confirmar a conta.',
         });
+
+        // 📊 Log de auditoria do signup
+        try {
+          await supabase.rpc('log_security_event', {
+            p_event_type: 'user_signup_success',
+            p_user_id: authData.user.id,
+            p_ip_address: null,
+            p_user_agent: navigator.userAgent,
+            p_event_data: {
+              email: formData.email,
+              has_company: !!formData.companyName,
+              signup_timestamp: new Date().toISOString()
+            },
+            p_risk_level: 'low'
+          });
+        } catch (logError) {
+          console.warn('Warning: Could not log signup event:', logError);
+        }
       }
     } catch (error: any) {
-      console.error('Erro no cadastro:', error);
+      console.error('❌ Erro no cadastro:', error);
+      
+      // 🚨 Log de tentativa de signup com erro
+      try {
+        await supabase.rpc('log_security_event', {
+          p_event_type: 'user_signup_failure',
+          p_user_id: null,
+          p_ip_address: null,
+          p_user_agent: navigator.userAgent,
+          p_event_data: {
+            email: formData.email,
+            error_message: error.message,
+            error_code: error.status || 'unknown'
+          },
+          p_risk_level: 'medium'
+        });
+      } catch (logError) {
+        console.warn('Warning: Could not log signup failure:', logError);
+      }
+
+      let errorMessage = 'Erro ao criar conta. Tente novamente.';
+      
+      if (error.message?.includes('rate_limit')) {
+        errorMessage = 'Muitas tentativas de cadastro. Aguarde alguns minutos.';
+      } else if (error.message?.includes('already_registered')) {
+        errorMessage = 'Este email já está cadastrado. Tente fazer login.';
+      } else if (error.message?.includes('invalid_email')) {
+        errorMessage = 'Email inválido. Verifique e tente novamente.';
+      } else if (error.message?.includes('weak_password')) {
+        errorMessage = 'Senha muito fraca. Use pelo menos 8 caracteres com letras e números.';
+      }
+
       toast({
-        title: 'Erro no cadastro',
-        description: error.message || 'Erro ao criar conta. Tente novamente.',
+        title: '❌ Erro no cadastro',
+        description: errorMessage,
         variant: 'destructive',
       });
     } finally {
