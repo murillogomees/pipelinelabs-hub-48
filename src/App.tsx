@@ -8,6 +8,7 @@ import { ThemeProvider } from '@/components/theme-provider'
 import { ErrorBoundary } from '@/components/ErrorBoundary/ErrorBoundary'
 import { ResourcePreloader, useCriticalResourcePreloader } from '@/components/common/ResourcePreloader'
 import { ExternalResourceManager } from '@/components/ui/external-resource-manager'
+import { MandatoryCookieProvider } from '@/components/LGPD/MandatoryCookieProvider'
 import { LandingRoutes } from '@/routes/LandingRoutes'
 import { UserRoutes } from '@/routes/UserRoutes'
 import { AuthProvider } from '@/contexts/AuthContext'
@@ -37,26 +38,28 @@ function AppContent() {
 
   return (
     <ErrorBoundary>
-      <ExternalResourceManager enableFonts={true} enableAnalytics={false}>
-        <ResourcePreloader resources={criticalResources} />
-        <ThemeProvider defaultTheme="light" storageKey="pipeline-ui-theme">
-          <QueryClientProvider client={queryClient}>
-            <AuthProvider>
-              <Router>
-                <Routes>
-                  <Route path="/auth/callback" element={<AuthCallback />} />
-                  <Route path="/app/*" element={<UserRoutes />} />
-                  <Route path="/*" element={<LandingRoutes />} />
-                  <Route path="/" element={<Navigate to="/landing" replace />} />
-                </Routes>
-              </Router>
-            </AuthProvider>
-            {process.env.NODE_ENV === 'development' && (
-              <ReactQueryDevtools initialIsOpen={false} />
-            )}
-          </QueryClientProvider>
-        </ThemeProvider>
-      </ExternalResourceManager>
+      <MandatoryCookieProvider>
+        <ExternalResourceManager enableFonts={true} enableAnalytics={false}>
+          <ResourcePreloader resources={criticalResources} />
+          <ThemeProvider defaultTheme="light" storageKey="pipeline-ui-theme">
+            <QueryClientProvider client={queryClient}>
+              <AuthProvider>
+                <Router>
+                  <Routes>
+                    <Route path="/auth/callback" element={<AuthCallback />} />
+                    <Route path="/app/*" element={<UserRoutes />} />
+                    <Route path="/*" element={<LandingRoutes />} />
+                    <Route path="/" element={<Navigate to="/landing" replace />} />
+                  </Routes>
+                </Router>
+              </AuthProvider>
+              {process.env.NODE_ENV === 'development' && (
+                <ReactQueryDevtools initialIsOpen={false} />
+              )}
+            </QueryClientProvider>
+          </ThemeProvider>
+        </ExternalResourceManager>
+      </MandatoryCookieProvider>
       <Toaster />
     </ErrorBoundary>
   );
