@@ -8,10 +8,8 @@ import { Textarea } from '@/components/ui/textarea';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { useProductsManager } from '@/hooks/useProductsManager';
-import { useUserCompany } from '@/hooks/useUserCompany';
+import { useProductsManager, type Product } from '@/hooks/useProductsManager';
 import { ArrowLeft } from 'lucide-react';
-import type { CreateProductData } from '../types';
 
 const productSchema = z.object({
   name: z.string().min(1, 'Nome é obrigatório'),
@@ -22,10 +20,7 @@ const productSchema = z.object({
   stock_quantity: z.number().int().min(0).default(0),
   min_stock: z.number().int().min(0).optional(),
   max_stock: z.number().int().min(0).optional(),
-  unit: z.string().default('un'),
   barcode: z.string().optional(),
-  weight: z.number().optional(),
-  dimensions: z.string().optional(),
 });
 
 type ProductFormData = z.infer<typeof productSchema>;
@@ -37,7 +32,6 @@ interface ProductCreateProps {
 
 export function ProductCreate({ onSuccess, onCancel }: ProductCreateProps) {
   const { createProduct, isLoading } = useProductsManager();
-  const { companyId, isLoading: companyLoading } = useUserCompany();
 
   const {
     register,
@@ -48,68 +42,22 @@ export function ProductCreate({ onSuccess, onCancel }: ProductCreateProps) {
     defaultValues: {
       price: 0,
       stock_quantity: 0,
-      unit: 'un',
     }
   });
 
   const onSubmit = async (data: ProductFormData) => {
-    if (!companyId) {
-      console.error('Company ID not available');
-      return;
-    }
-
     try {
-      // Create product data with all required fields and proper defaults
-      const productData: CreateProductData = {
+      const productData: Partial<Product> = {
         name: data.name,
         code: data.code,
         description: data.description || '',
-        short_description: '',
-        product_type: 'produto',
-        brand: '',
-        unit: data.unit,
-        condition: 'novo',
-        format: 'simples',
-        production_type: 'propria',
-        expiry_date: '',
-        free_shipping: false,
         price: data.price,
         cost_price: data.cost_price || 0,
-        promotional_price: 0,
-        weight: data.weight || 0,
-        gross_weight: 0,
-        volumes: 1,
-        height: 0,
-        width: 0,
-        depth: 0,
-        unit_measure: 'cm',
-        dimensions: data.dimensions || '',
-        barcode: data.barcode || '',
-        ncm_code: '',
-        cest_code: '',
-        tax_origin: '',
-        tax_situation: '',
-        item_type: '',
-        product_group: '',
-        icms_base: 0,
-        icms_retention: 0,
-        pis_fixed: 0,
-        cofins_fixed: 0,
-        estimated_tax_percentage: 0,
-        tipi_exception: '',
         stock_quantity: data.stock_quantity,
         min_stock: data.min_stock || 0,
         max_stock: data.max_stock || 0,
-        stock_location: '',
-        stock_notes: '',
-        crossdocking_days: 0,
-        warehouse: '',
-        external_link: '',
-        video_link: '',
-        observations: '',
-        category_id: '',
+        barcode: data.barcode || '',
         is_active: true,
-        company_id: companyId,
       };
       
       await createProduct(productData);
@@ -118,14 +66,6 @@ export function ProductCreate({ onSuccess, onCancel }: ProductCreateProps) {
       // Error handled by the hook
     }
   };
-
-  if (companyLoading) {
-    return (
-      <div className="flex items-center justify-center py-8">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
-      </div>
-    );
-  }
 
   return (
     <div className="space-y-6">
@@ -211,15 +151,6 @@ export function ProductCreate({ onSuccess, onCancel }: ProductCreateProps) {
               </div>
 
               <div>
-                <Label htmlFor="unit">Unidade</Label>
-                <Input
-                  id="unit"
-                  {...register('unit')}
-                  placeholder="UN, KG, L, etc."
-                />
-              </div>
-
-              <div>
                 <Label htmlFor="barcode">Código de Barras</Label>
                 <Input
                   id="barcode"
@@ -243,7 +174,7 @@ export function ProductCreate({ onSuccess, onCancel }: ProductCreateProps) {
               <Button type="button" variant="outline" onClick={onCancel}>
                 Cancelar
               </Button>
-              <Button type="submit" disabled={isLoading || !companyId}>
+              <Button type="submit" disabled={isLoading}>
                 {isLoading ? 'Salvando...' : 'Salvar Produto'}
               </Button>
             </div>

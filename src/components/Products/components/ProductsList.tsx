@@ -5,26 +5,7 @@ import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Edit, Trash2, AlertTriangle, Plus } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
-import { useProductsManager } from '@/hooks/useProductsManager';
-
-interface Product {
-  id: string;
-  name: string;
-  code: string;
-  price?: number;
-  stock_quantity?: number;
-  min_stock?: number;
-  is_active: boolean;
-  barcode?: string;
-  brand?: string;
-  category_id?: string;
-  cest_code?: string;
-  cofins_fixed?: number;
-  company_id?: string;
-  condition?: string;
-  cost_price?: number;
-  created_at?: string;
-}
+import { useProductsManager, type Product } from '@/hooks/useProductsManager';
 
 interface ProductsListProps {
   onProductSelect: (product: Product) => void;

@@ -1,5 +1,6 @@
 
 import { useState, useCallback } from 'react';
+import type { SearchFilters } from '@/types/products';
 
 export interface Product {
   id: string;
@@ -7,27 +8,43 @@ export interface Product {
   code: string;
   price: number;
   stock_quantity: number;
+  min_stock?: number;
+  max_stock?: number;
   category?: string;
   description?: string;
+  is_active: boolean;
+  cost_price?: number;
+  barcode?: string;
+  brand?: string;
+  category_id?: string;
+  cest_code?: string;
+  cofins_fixed?: number;
+  company_id?: string;
+  condition?: string;
+  created_at?: string;
+  updated_at?: string;
 }
 
 export const useProductsManager = () => {
   const [allProducts, setAllProducts] = useState<Product[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
-  const [filters, setFilters] = useState({});
+  const [filters, setFilters] = useState<SearchFilters>({});
 
   const fetchProducts = useCallback(async () => {
     setIsLoading(true);
     try {
-      // Mock data
+      // Mock data with all required properties
       const mockProducts: Product[] = [
         {
           id: '1',
           name: 'Produto Exemplo',
           code: 'PROD001',
           price: 99.99,
-          stock_quantity: 10
+          stock_quantity: 10,
+          min_stock: 5,
+          is_active: true,
+          description: 'Produto de exemplo'
         }
       ];
       setAllProducts(mockProducts);
@@ -48,6 +65,8 @@ export const useProductsManager = () => {
         code: productData.code || '',
         price: productData.price || 0,
         stock_quantity: productData.stock_quantity || 0,
+        min_stock: productData.min_stock || 0,
+        is_active: true,
         ...productData
       };
       setAllProducts(prev => [...prev, newProduct]);
@@ -84,8 +103,11 @@ export const useProductsManager = () => {
     }
   }, []);
 
-  const searchProducts = useCallback(async (query: string) => {
-    // Mock search
+  const searchProducts = useCallback(async (searchFilters: SearchFilters | string) => {
+    const query = typeof searchFilters === 'string' ? searchFilters : searchFilters.search || '';
+    setFilters(typeof searchFilters === 'object' ? searchFilters : { search: query });
+    
+    // Mock search - filter products based on query
     return allProducts.filter(p => 
       p.name.toLowerCase().includes(query.toLowerCase()) ||
       p.code.toLowerCase().includes(query.toLowerCase())
@@ -96,10 +118,19 @@ export const useProductsManager = () => {
     await fetchProducts();
   }, [fetchProducts]);
 
+  // Computed properties
+  const products = allProducts;
+  const totalProducts = allProducts.length;
+  const isEmpty = allProducts.length === 0;
+  const isFiltered = Object.keys(filters).some(key => filters[key as keyof SearchFilters]);
+  const lowStockProducts = allProducts.filter(p => 
+    (p.stock_quantity || 0) <= (p.min_stock || 0)
+  );
+
   return {
     allProducts,
-    products: allProducts, // Alias for compatibility
-    totalProducts: allProducts.length,
+    products,
+    totalProducts,
     isLoading,
     error,
     filters,
@@ -108,6 +139,9 @@ export const useProductsManager = () => {
     createProduct,
     updateProduct,
     deleteProduct,
-    refreshItems
+    refreshItems,
+    isEmpty,
+    isFiltered,
+    lowStockProducts
   };
 };
