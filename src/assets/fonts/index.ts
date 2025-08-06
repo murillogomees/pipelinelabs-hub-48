@@ -1,29 +1,48 @@
 
-// Centralized font management
+// Centralized font management with valid Google Fonts URLs
 export const fontAssets = {
   inter: {
-    woff2: '/assets/fonts/inter-font.woff2',
-    woff: '/assets/fonts/inter-font.woff',
-    ttf: '/assets/fonts/inter-font.ttf'
+    url: 'https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap',
+    family: 'Inter',
+    fallback: 'sans-serif'
   },
   roboto: {
-    woff2: '/assets/fonts/roboto-font.woff2',
-    woff: '/assets/fonts/roboto-font.woff'
+    url: 'https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap',
+    family: 'Roboto',
+    fallback: 'sans-serif'
   }
 };
 
 // Font loading utilities
 export const preloadFont = (fontUrl: string) => {
+  // Check if font is already preloaded
+  const existingLink = document.querySelector(`link[href="${fontUrl}"]`);
+  if (existingLink) return;
+
   const link = document.createElement('link');
-  link.rel = 'preload';
-  link.as = 'font';
-  link.type = 'font/woff2';
-  link.href = fontUrl;
-  link.crossOrigin = 'anonymous';
+  link.rel = 'preconnect';
+  link.href = 'https://fonts.googleapis.com';
   document.head.appendChild(link);
+
+  const link2 = document.createElement('link');
+  link2.rel = 'preconnect';
+  link2.href = 'https://fonts.gstatic.com';
+  link2.crossOrigin = 'anonymous';
+  document.head.appendChild(link2);
+
+  const fontLink = document.createElement('link');
+  fontLink.rel = 'stylesheet';
+  fontLink.href = fontUrl;
+  fontLink.onload = () => {
+    console.info(`✅ Font loaded: ${fontUrl}`);
+  };
+  fontLink.onerror = () => {
+    console.warn(`❌ Failed to load font: ${fontUrl}`);
+  };
+  document.head.appendChild(fontLink);
 };
 
 export const loadFonts = () => {
   // Only preload fonts that are actually used
-  preloadFont(fontAssets.inter.woff2);
+  preloadFont(fontAssets.inter.url);
 };

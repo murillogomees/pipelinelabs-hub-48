@@ -6,10 +6,8 @@ import { ReactQueryDevtools } from '@tanstack/react-query-devtools'
 import { Toaster } from '@/components/ui/toaster'
 import { ThemeProvider } from '@/components/theme-provider'
 import { ErrorBoundary } from '@/components/ErrorBoundary/ErrorBoundary'
-import { SecurityHeaders } from '@/components/Security/SecurityHeaders'
 import { ResourcePreloader, useCriticalResourcePreloader } from '@/components/common/ResourcePreloader'
-import { NetworkStatusIndicator } from '@/components/Network/NetworkStatusIndicator'
-import { useConsoleOptimizer, useResourceMonitoring } from '@/hooks/useConsoleOptimizer'
+import { ExternalResourceManager } from '@/components/ui/external-resource-manager'
 import { LandingRoutes } from '@/routes/LandingRoutes'
 import { UserRoutes } from '@/routes/UserRoutes'
 import { AuthProvider } from '@/contexts/AuthContext'
@@ -36,33 +34,29 @@ const queryClient = new QueryClient({
 
 function AppContent() {
   const { criticalResources } = useCriticalResourcePreloader();
-  
-  // Otimizar console e monitorar recursos
-  useConsoleOptimizer();
-  useResourceMonitoring();
 
   return (
     <ErrorBoundary>
-      <SecurityHeaders />
-      <ResourcePreloader resources={criticalResources} />
-      <NetworkStatusIndicator />
-      <ThemeProvider defaultTheme="light" storageKey="pipeline-ui-theme">
-        <QueryClientProvider client={queryClient}>
-          <AuthProvider>
-            <Router>
-              <Routes>
-                <Route path="/auth/callback" element={<AuthCallback />} />
-                <Route path="/app/*" element={<UserRoutes />} />
-                <Route path="/*" element={<LandingRoutes />} />
-                <Route path="/" element={<Navigate to="/landing" replace />} />
-              </Routes>
-            </Router>
-          </AuthProvider>
-          {process.env.NODE_ENV === 'development' && (
-            <ReactQueryDevtools initialIsOpen={false} />
-          )}
-        </QueryClientProvider>
-      </ThemeProvider>
+      <ExternalResourceManager enableFonts={true} enableAnalytics={false}>
+        <ResourcePreloader resources={criticalResources} />
+        <ThemeProvider defaultTheme="light" storageKey="pipeline-ui-theme">
+          <QueryClientProvider client={queryClient}>
+            <AuthProvider>
+              <Router>
+                <Routes>
+                  <Route path="/auth/callback" element={<AuthCallback />} />
+                  <Route path="/app/*" element={<UserRoutes />} />
+                  <Route path="/*" element={<LandingRoutes />} />
+                  <Route path="/" element={<Navigate to="/landing" replace />} />
+                </Routes>
+              </Router>
+            </AuthProvider>
+            {process.env.NODE_ENV === 'development' && (
+              <ReactQueryDevtools initialIsOpen={false} />
+            )}
+          </QueryClientProvider>
+        </ThemeProvider>
+      </ExternalResourceManager>
       <Toaster />
     </ErrorBoundary>
   );

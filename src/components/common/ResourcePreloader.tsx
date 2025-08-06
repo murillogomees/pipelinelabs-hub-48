@@ -15,7 +15,7 @@ interface ResourcePreloaderProps {
 
 export function ResourcePreloader({ resources, enabled = true }: ResourcePreloaderProps) {
   useEffect(() => {
-    if (!enabled) return;
+    if (!enabled || !resources.length) return;
 
     const preloadedLinks: HTMLLinkElement[] = [];
 
@@ -47,10 +47,12 @@ export function ResourcePreloader({ resources, enabled = true }: ResourcePreload
       // Limpar timeout se o recurso for carregado
       link.onload = () => {
         clearTimeout(timeout);
+        console.info(`✅ Resource preloaded: ${resource.href}`);
       };
 
       link.onerror = () => {
         clearTimeout(timeout);
+        console.warn(`❌ Failed to preload resource: ${resource.href}`);
         if (link.parentNode) {
           link.parentNode.removeChild(link);
         }
@@ -75,14 +77,8 @@ export function ResourcePreloader({ resources, enabled = true }: ResourcePreload
 
 // Hook para gerenciar preloading de recursos críticos
 export function useCriticalResourcePreloader() {
-  const criticalResources: PreloadResource[] = [
-    {
-      href: '/assets/inter-font.woff2',
-      as: 'font',
-      type: 'font/woff2',
-      crossOrigin: 'anonymous'
-    }
-  ];
+  // Retornar array vazio para evitar tentativas de carregar recursos inexistentes
+  const criticalResources: PreloadResource[] = [];
 
   return { criticalResources };
 }
