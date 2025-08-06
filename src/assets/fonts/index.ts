@@ -8,7 +8,7 @@ export const fontAssets = {
   }
 };
 
-// Simple font loading function
+// Simple font loading function - using only Google Fonts to avoid 404 errors
 export const loadFonts = () => {
   // Check if font is already loaded
   const existingLink = document.querySelector(`link[href="${fontAssets.inter.url}"]`);
@@ -26,13 +26,9 @@ export const loadFonts = () => {
   preconnect2.crossOrigin = 'anonymous';
   document.head.appendChild(preconnect2);
 
-  // Load the font
+  // Load the font directly from Google Fonts
   const fontLink = document.createElement('link') as HTMLLinkElement;
   fontLink.rel = 'stylesheet';
   fontLink.href = fontAssets.inter.url;
-  fontLink.media = 'print';
-  fontLink.onload = function() { 
-    (this as HTMLLinkElement).media = 'all'; 
-  };
   document.head.appendChild(fontLink);
 };

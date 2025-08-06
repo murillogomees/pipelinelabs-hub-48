@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { Navigate } from 'react-router-dom';
-import { useAuth } from '@/components/Auth/AuthProvider';
+import { useAuth } from '@/contexts/AuthContext';
 import { usePermissions } from '@/hooks/usePermissions';
 import { LoadingSpinner } from '@/components/ui/loading-spinner';
 
@@ -16,10 +16,10 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
   requireAdmin = false,
   requireSuperAdmin = false
 }) => {
-  const { user, isLoading } = useAuth();
+  const { user, loading } = useAuth();
   const { isSuperAdmin, isAdmin, isLoading: permissionsLoading } = usePermissions();
 
-  if (isLoading || permissionsLoading) {
+  if (loading || permissionsLoading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <LoadingSpinner size="lg" />

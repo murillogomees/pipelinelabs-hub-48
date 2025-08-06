@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { useAuth } from './AuthProvider';
+import { useAuth } from '@/contexts/AuthContext';
 import Auth from '@/pages/Auth';
 
 interface PrivateRouteProps {
@@ -8,9 +8,9 @@ interface PrivateRouteProps {
 }
 
 export function PrivateRoute({ children }: PrivateRouteProps) {
-  const { user, isLoading } = useAuth();
+  const { user, loading } = useAuth();
 
-  if (isLoading) {
+  if (loading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
