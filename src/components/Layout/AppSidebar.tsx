@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { Sidebar, SidebarContent, SidebarFooter, SidebarGroup, SidebarGroupContent, SidebarHeader, SidebarMenu, SidebarMenuButton, SidebarMenuItem } from '@/components/ui/sidebar';
-import { LayoutDashboard, Package, ShoppingCart, Users, BarChart3, Settings, POS } from 'lucide-react';
+import { LayoutDashboard, Package, ShoppingCart, Users, BarChart3, Settings, Calculator } from 'lucide-react';
 import { Link, useLocation } from 'react-router-dom';
 
 const menuItems = [
@@ -9,7 +9,7 @@ const menuItems = [
   { title: 'Produtos', url: '/app/produtos', icon: Package },
   { title: 'Vendas', url: '/app/vendas', icon: ShoppingCart },
   { title: 'Clientes', url: '/app/clientes', icon: Users },
-  { title: 'POS', url: '/app/pos', icon: POS },
+  { title: 'POS', url: '/app/pos', icon: Calculator },
   { title: 'Relatórios', url: '/app/relatorios', icon: BarChart3 },
   { title: 'Analytics', url: '/app/analytics', icon: BarChart3 },
   { title: 'Configurações', url: '/app/configuracoes', icon: Settings },
