@@ -38,12 +38,13 @@ export const usePermissions = () => {
         return null;
       }
 
-      // Buscar company association - usar maybeSingle para evitar erro quando há múltiplas empresas
+      // Buscar company association - simplificar para não causar recursão
       const { data: userCompany } = await supabase
         .from('user_companies')
-        .select('*')
+        .select('company_id, role')
         .eq('user_id', user.id)
         .eq('is_active', true)
+        .limit(1)
         .maybeSingle();
 
       const result = {
