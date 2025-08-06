@@ -2,10 +2,8 @@
 import React from 'react';
 import { Routes, Route } from 'react-router-dom';
 import { ProtectedRoute } from '@/components/ProtectedRoute';
-
-// Placeholder components
-const UserProfile = () => <div>Perfil do Usuário</div>;
-const UserSettings = () => <div>Configurações do Usuário</div>;
+import { UserProfile } from '@/components/User/UserProfile';
+import { UserSettings } from '@/components/User/UserSettings';
 
 export function UserRoutes() {
   return (

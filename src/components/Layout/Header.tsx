@@ -3,16 +3,23 @@ import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
-import { Settings, User, LogOut, Search } from 'lucide-react';
+import { Settings, User, LogOut, Search, Menu } from 'lucide-react';
 import { useAuth } from '@/components/Auth/AuthProvider';
 import { NotificationDropdown } from '@/components/Notifications/NotificationDropdown';
 import { GlobalSearchTrigger } from '@/components/Search/GlobalSearchTrigger';
-import { SidebarTrigger } from '@/components/ui/sidebar';
 import { Link, useNavigate } from 'react-router-dom';
+import { useIsMobile } from '@/hooks/use-mobile';
+import { cn } from '@/lib/utils';
 
-export function Header() {
+interface HeaderProps {
+  onMenuClick?: () => void;
+  sidebarOpen?: boolean;
+}
+
+export function Header({ onMenuClick, sidebarOpen }: HeaderProps) {
   const { user, signOut } = useAuth();
   const navigate = useNavigate();
+  const isMobile = useIsMobile();
 
   const handleLogout = async () => {
     await signOut();
@@ -25,12 +32,22 @@ export function Header() {
 
   return (
     <div className="flex h-16 items-center w-full">
-      <div className="flex items-center gap-2">
-        <SidebarTrigger className="-ml-1" />
-        <div className="flex items-center gap-2">
-          <Search className="h-4 w-4 text-muted-foreground" />
-          <GlobalSearchTrigger />
-        </div>
+      {/* Mobile menu button */}
+      {isMobile && (
+        <Button 
+          variant="ghost" 
+          size="sm" 
+          onClick={onMenuClick}
+          className="lg:hidden"
+        >
+          <Menu className="h-5 w-5" />
+        </Button>
+      )}
+
+      {/* Search */}
+      <div className="flex items-center gap-2 ml-4 lg:ml-0">
+        <Search className="h-4 w-4 text-muted-foreground" />
+        <GlobalSearchTrigger />
       </div>
 
       <div className="ml-auto flex items-center space-x-4">
