@@ -25,7 +25,7 @@ export function SecurityHeaders({ nonce, additionalCSP }: SecurityHeadersProps) 
 
   const csp = additionalCSP ? `${defaultCSP}; ${additionalCSP}` : defaultCSP;
 
-  // Permissions Policy otimizada - removendo recursos deprecados/não suportados
+  // Permissions Policy otimizada - apenas recursos reconhecidos pelos navegadores modernos
   const permissionsPolicy = [
     "camera=()",
     "microphone=()",
@@ -35,7 +35,11 @@ export function SecurityHeaders({ nonce, additionalCSP }: SecurityHeadersProps) 
     "bluetooth=()",
     "magnetometer=()",
     "gyroscope=()",
-    "accelerometer=()"
+    "accelerometer=()",
+    "autoplay=()",
+    "encrypted-media=()",
+    "fullscreen=()",
+    "picture-in-picture=()"
   ].join(", ");
 
   return (

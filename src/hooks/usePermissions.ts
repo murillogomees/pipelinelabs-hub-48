@@ -65,9 +65,10 @@ export const usePermissions = () => {
       return result;
     },
     enabled: !!user?.id,
-    staleTime: 1 * 60 * 1000, // 1 minuto cache (reduzido para aplicar mudanças mais rapidamente)
+    staleTime: 5 * 60 * 1000, // 5 minutos cache para reduzir re-fetching
     retry: false,
-    refetchOnWindowFocus: true
+    refetchOnWindowFocus: false, // Evitar re-fetch desnecessário
+    refetchOnMount: false // Evitar re-fetch no mount se dados já existem
   });
 
   const hasPermission = (permission: string) => {
