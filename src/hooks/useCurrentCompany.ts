@@ -28,8 +28,7 @@ export const useCurrentCompany = () => {
           `)
           .eq('user_id', user.id)
           .eq('is_active', true)
-          .limit(1)
-          .single();
+          .maybeSingle();
 
         if (userCompanyError) {
           console.error('Error fetching user company:', userCompanyError);

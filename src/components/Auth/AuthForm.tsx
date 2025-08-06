@@ -49,14 +49,14 @@ export const AuthForm: React.FC = () => {
       // 🛡️ Validação de rate limiting (implementado via Edge Function)
       console.log('🔄 Iniciando processo de signup seguro...');
 
-      // ✅ Signup simplificado - trigger automático irá criar company e perfil
+      // ✅ Signup melhorado - dados mais completos para o trigger automático
       const { data: authData, error: authError } = await supabase.auth.signUp({
         email: formData.email,
         password: formData.password,
         options: {
           data: {
             display_name: formData.name,
-            company_name: formData.companyName,
+            company_name: formData.companyName || `${formData.name} - Empresa`,
             document: formData.document,
             phone: formData.phone,
           },
@@ -77,8 +77,13 @@ export const AuthForm: React.FC = () => {
 
         toast({
           title: '🎉 Cadastro realizado com sucesso!',
-          description: 'Sua empresa e perfil foram criados automaticamente. Verifique seu email para confirmar a conta.',
+          description: 'Sua empresa e perfil foram criados automaticamente. Redirecionando para o dashboard...',
         });
+
+        // Aguardar um pouco para dar tempo para o trigger executar
+        setTimeout(() => {
+          navigate('/app/dashboard');
+        }, 1000);
 
         // 📊 Log de auditoria do signup
         try {

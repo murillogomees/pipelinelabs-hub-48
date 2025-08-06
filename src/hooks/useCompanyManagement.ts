@@ -58,7 +58,7 @@ export const useCompanyManagement = () => {
         `)
         .eq('user_id', user.id)
         .eq('is_active', true)
-        .single();
+        .maybeSingle();
 
       if (userCompanyError) {
         console.error('Erro ao buscar empresa do usuário:', userCompanyError);

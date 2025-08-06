@@ -3,6 +3,7 @@ import React, { lazy } from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
 import { LazyLoader } from '@/components/common/LazyLoader';
 import { ProtectedRoute } from '@/components/ProtectedRoute';
+import { SetupWaiting } from '@/components/Auth/SetupWaiting';
 import { SidebarProvider } from '@/components/ui/sidebar';
 import { Sidebar } from '@/components/Layout/Sidebar';
 import { MainLayout } from '@/components/Layout/MainLayout';
@@ -32,11 +33,12 @@ const AdminCodeAnalysis = lazy(() => import('@/pages/AdminCodeAnalysis'));
 export function UserRoutes() {
   return (
     <ProtectedRoute>
-      <SidebarProvider>
-        <div className="min-h-screen flex w-full">
-          <Sidebar collapsed={false} onNavigate={() => {}} />
-          <main className="flex-1">
-            <MainLayout>
+      <SetupWaiting>
+        <SidebarProvider>
+          <div className="min-h-screen flex w-full">
+            <Sidebar collapsed={false} onNavigate={() => {}} />
+            <main className="flex-1">
+              <MainLayout>
               <LazyLoader>
                 <Routes>
                   <Route path="dashboard" element={<Dashboard />} />
@@ -66,6 +68,7 @@ export function UserRoutes() {
           </main>
         </div>
       </SidebarProvider>
+      </SetupWaiting>
     </ProtectedRoute>
   );
 }

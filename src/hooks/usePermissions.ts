@@ -19,7 +19,7 @@ export const usePermissions = () => {
         .select('*')
         .eq('user_id', user.id)
         .eq('is_active', true)
-        .single();
+        .maybeSingle();
 
       if (profileError || !profileData) {
         console.error('Error fetching profile:', profileError);
@@ -31,7 +31,7 @@ export const usePermissions = () => {
         .from('access_levels')
         .select('*')
         .eq('id', profileData.access_level_id)
-        .single();
+        .maybeSingle();
 
       if (accessError || !accessLevel) {
         console.error('Error fetching access level:', accessError);
@@ -44,7 +44,6 @@ export const usePermissions = () => {
         .select('company_id, role')
         .eq('user_id', user.id)
         .eq('is_active', true)
-        .limit(1)
         .maybeSingle();
 
       const result = {

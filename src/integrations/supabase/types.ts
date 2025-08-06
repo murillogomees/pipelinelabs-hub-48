@@ -4833,6 +4833,10 @@ export type Database = {
         Args: { p_email: string }
         Returns: string
       }
+      test_user_creation_setup: {
+        Args: Record<PropertyKey, never>
+        Returns: string
+      }
       trigger_manual_backup: {
         Args: Record<PropertyKey, never>
         Returns: Json
