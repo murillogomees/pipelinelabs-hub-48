@@ -4,7 +4,7 @@ import { Routes, Route, Navigate } from 'react-router-dom';
 import { LazyLoader } from '@/components/common/LazyLoader';
 import { ProtectedRoute } from '@/components/ProtectedRoute';
 import { SidebarProvider } from '@/components/ui/sidebar';
-import { AppSidebar } from '@/components/Layout/AppSidebar';
+import { Sidebar } from '@/components/Layout/Sidebar';
 import { MainLayout } from '@/components/Layout/MainLayout';
 
 // Lazy load components
@@ -18,13 +18,22 @@ const Pos = lazy(() => import('@/pages/Pos'));
 const Analytics = lazy(() => import('@/pages/Analytics'));
 const UserProfile = lazy(() => import('@/components/User/UserProfile'));
 const UserSettings = lazy(() => import('@/components/User/UserSettings'));
+const Admin = lazy(() => import('@/pages/Admin'));
+const AdminAuditLogs = lazy(() => import('@/pages/AdminAuditLogs'));
+const AdminUsers = lazy(() => import('@/pages/AdminUsers'));
+const AdminEmpresas = lazy(() => import('@/pages/AdminEmpresas'));
+const AdminAccessLevels = lazy(() => import('@/pages/AdminAccessLevels'));
+const AdminIntegracoes = lazy(() => import('@/pages/AdminIntegracoes'));
+const AdminNotificacoes = lazy(() => import('@/pages/AdminNotificacoes'));
+const AdminBackup = lazy(() => import('@/pages/AdminBackup'));
+const AdminMonitoramento = lazy(() => import('@/pages/AdminMonitoramento'));
 
 export function UserRoutes() {
   return (
     <ProtectedRoute>
       <SidebarProvider>
         <div className="min-h-screen flex w-full">
-          <AppSidebar />
+          <Sidebar collapsed={false} onNavigate={() => {}} />
           <main className="flex-1">
             <MainLayout>
               <LazyLoader>
@@ -39,6 +48,15 @@ export function UserRoutes() {
                   <Route path="configuracoes/*" element={<Settings />} />
                   <Route path="user/profile" element={<UserProfile />} />
                   <Route path="user/settings" element={<UserSettings />} />
+                  <Route path="admin" element={<Admin />} />
+                  <Route path="admin/audit-logs" element={<AdminAuditLogs />} />
+                  <Route path="admin/usuarios" element={<AdminUsers />} />
+                  <Route path="admin/empresas" element={<AdminEmpresas />} />
+                  <Route path="admin/access-levels" element={<AdminAccessLevels />} />
+                  <Route path="admin/integracoes" element={<AdminIntegracoes />} />
+                  <Route path="admin/notificacoes" element={<AdminNotificacoes />} />
+                  <Route path="admin/backup" element={<AdminBackup />} />
+                  <Route path="admin/monitoramento" element={<AdminMonitoramento />} />
                   <Route path="*" element={<Navigate to="/app/dashboard" replace />} />
                 </Routes>
               </LazyLoader>

@@ -1,6 +1,7 @@
 
 import { useQuery } from '@tanstack/react-query';
 import { useAuth } from '@/contexts/AuthContext';
+import { supabase } from '@/integrations/supabase/client';
 
 export const usePermissions = () => {
   const { user } = useAuth();
@@ -10,25 +11,64 @@ export const usePermissions = () => {
     queryFn: async () => {
       if (!user?.id) return null;
       
-      // Mock permissions
+      // Buscar permissões do usuário fazendo queries manuais
+      const { data: profileData, error: profileError } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('user_id', user.id)
+        .eq('is_active', true)
+        .single();
+
+      if (profileError || !profileData) {
+        console.error('Error fetching profile:', profileError);
+        return null;
+      }
+
+      // Buscar access level
+      const { data: accessLevel, error: accessError } = await supabase
+        .from('access_levels')
+        .select('*')
+        .eq('id', profileData.access_level_id)
+        .single();
+
+      if (accessError || !accessLevel) {
+        console.error('Error fetching access level:', accessError);
+        return null;
+      }
+
+      // Buscar company association
+      const { data: userCompany } = await supabase
+        .from('user_companies')
+        .select('*')
+        .eq('user_id', user.id)
+        .eq('is_active', true)
+        .single();
+
       return {
-        isSuperAdmin: false,
-        isAdmin: true,
-        canAccessAdmin: true,
-        currentCompanyId: '71f946e6-dfbe-4684-a833-6050abb29926',
-        isContratante: true,
-        canDeleteAnyRecord: true,
-        canModifyAnyData: true,
-        canManagePlans: true
+        isSuperAdmin: accessLevel.name === 'super_admin',
+        isAdmin: ['contratante', 'super_admin'].includes(accessLevel.name),
+        canAccessAdmin: ['super_admin', 'contratante'].includes(accessLevel.name),
+        currentCompanyId: userCompany?.company_id || null,
+        isContratante: accessLevel.name === 'contratante',
+        canDeleteAnyRecord: accessLevel.name === 'super_admin',
+        canModifyAnyData: accessLevel.name === 'super_admin',
+        canManagePlans: ['super_admin', 'contratante'].includes(accessLevel.name),
+        permissions: accessLevel.permissions || {},
+        userRole: userCompany?.role || 'operador'
       };
     },
-    enabled: !!user?.id
+    enabled: !!user?.id,
+    staleTime: 5 * 60 * 1000, // 5 minutes cache
+    retry: false
   });
 
   const hasPermission = (permission: string) => {
-    // Mock permission check - always return true for now
-    return true;
+    if (!permissions?.permissions) return false;
+    return permissions.permissions[permission] === true;
   };
+
+  // Debug log para verificar as permissões
+  console.log('usePermissions - Current permissions:', permissions);
 
   return {
     isSuperAdmin: permissions?.isSuperAdmin || false,
