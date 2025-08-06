@@ -1,135 +1,61 @@
 
-import React, { useState } from 'react';
-import { NavLink, useLocation } from 'react-router-dom';
-import {
-  Sidebar,
-  SidebarContent,
-  SidebarGroup,
-  SidebarGroupContent,
-  SidebarGroupLabel,
-  SidebarMenu,
-  SidebarMenuButton,
-  SidebarMenuItem,
-  SidebarMenuSub,
-  SidebarMenuSubButton,
-  SidebarMenuSubItem,
-  SidebarHeader,
-  useSidebar,
-} from '@/components/ui/sidebar';
-import { ChevronRight, ChevronDown } from 'lucide-react';
-import { PipelineLabsLogo } from './PipelineLabsLogo';
-import { menuItems } from './Sidebar/constants';
-import { usePermissions } from '@/hooks/usePermissions';
-import { cn } from '@/lib/utils';
+import React from 'react';
+import { Sidebar, SidebarContent, SidebarFooter, SidebarGroup, SidebarGroupContent, SidebarHeader, SidebarMenu, SidebarMenuButton, SidebarMenuItem } from '@/components/ui/sidebar';
+import { LayoutDashboard, Package, ShoppingCart, Users, BarChart3, Settings, POS } from 'lucide-react';
+import { Link, useLocation } from 'react-router-dom';
+
+const menuItems = [
+  { title: 'Dashboard', url: '/app/dashboard', icon: LayoutDashboard },
+  { title: 'Produtos', url: '/app/produtos', icon: Package },
+  { title: 'Vendas', url: '/app/vendas', icon: ShoppingCart },
+  { title: 'Clientes', url: '/app/clientes', icon: Users },
+  { title: 'POS', url: '/app/pos', icon: POS },
+  { title: 'Relatórios', url: '/app/relatorios', icon: BarChart3 },
+  { title: 'Analytics', url: '/app/analytics', icon: BarChart3 },
+  { title: 'Configurações', url: '/app/configuracoes', icon: Settings },
+];
 
 export function AppSidebar() {
-  const { state } = useSidebar();
   const location = useLocation();
-  const { isAdmin, isSuperAdmin } = usePermissions();
-  const [openGroups, setOpenGroups] = useState<string[]>([]);
-
-  const toggleGroup = (groupTitle: string) => {
-    setOpenGroups(prev => 
-      prev.includes(groupTitle) 
-        ? prev.filter(g => g !== groupTitle)
-        : [...prev, groupTitle]
-    );
-  };
-
-  // Auto-expand group containing active route
-  React.useEffect(() => {
-    const activeItem = menuItems.find(item => 
-      item.submenu?.some(sub => location.pathname.startsWith(sub.path)) ||
-      location.pathname === item.path
-    );
-    
-    if (activeItem && activeItem.submenu?.length > 0) {
-      setOpenGroups(prev => 
-        prev.includes(activeItem.title) ? prev : [...prev, activeItem.title]
-      );
-    }
-  }, [location.pathname]);
 
   return (
-    <Sidebar variant="inset" className="border-r">
+    <Sidebar>
       <SidebarHeader>
         <div className="flex items-center gap-2 px-4 py-2">
-          <PipelineLabsLogo 
-            size={state === 'collapsed' ? 'sm' : 'md'} 
-            showText={state !== 'collapsed'} 
-          />
+          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary">
+            <span className="text-sm font-bold text-primary-foreground">P</span>
+          </div>
+          <span className="text-lg font-semibold">Pipeline</span>
         </div>
       </SidebarHeader>
       
       <SidebarContent>
         <SidebarGroup>
-          <SidebarGroupLabel>Menu Principal</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
-              {menuItems
-                .filter(item => !item.adminOnly || isAdmin || isSuperAdmin)
-                .map((item) => {
-                  const hasSubmenu = item.submenu && item.submenu.length > 0;
-                  const isExpanded = openGroups.includes(item.title);
-                  const isActive = location.pathname === item.path;
-                  const isActiveSection = item.submenu?.some(sub => 
-                    location.pathname.startsWith(sub.path) || location.pathname === sub.path
-                  );
-
-                  return (
-                    <SidebarMenuItem key={item.title}>
-                      {hasSubmenu ? (
-                        <>
-                          <SidebarMenuButton
-                            onClick={() => toggleGroup(item.title)}
-                            isActive={isActiveSection}
-                            className="w-full justify-between"
-                          >
-                            <div className="flex items-center gap-2">
-                              <item.icon className="h-4 w-4" />
-                              <span>{item.title}</span>
-                            </div>
-                            {isExpanded ? (
-                              <ChevronDown className="h-4 w-4" />
-                            ) : (
-                              <ChevronRight className="h-4 w-4" />
-                            )}
-                          </SidebarMenuButton>
-                          {isExpanded && (
-                            <SidebarMenuSub>
-                              {item.submenu.map((subItem) => (
-                                <SidebarMenuSubItem key={subItem.title}>
-                                  <SidebarMenuSubButton
-                                    asChild
-                                    isActive={
-                                      location.pathname === subItem.path || 
-                                      location.pathname.startsWith(subItem.path)
-                                    }
-                                  >
-                                    <NavLink to={subItem.path}>
-                                      {subItem.title}
-                                    </NavLink>
-                                  </SidebarMenuSubButton>
-                                </SidebarMenuSubItem>
-                              ))}
-                            </SidebarMenuSub>
-                          )}
-                        </>
-                      ) : (
-                        <SidebarMenuButton asChild isActive={isActive}>
-                          <NavLink to={item.path} className="flex items-center gap-2">
-                            <item.icon className="h-4 w-4" />
-                            <span>{item.title}</span>
-                          </NavLink>
-                        </SidebarMenuButton>
-                      )}
-                    </SidebarMenuItem>
-                  );
-                })}
+              {menuItems.map((item) => (
+                <SidebarMenuItem key={item.title}>
+                  <SidebarMenuButton
+                    asChild
+                    isActive={location.pathname.startsWith(item.url)}
+                  >
+                    <Link to={item.url} className="flex items-center gap-2">
+                      <item.icon className="h-4 w-4" />
+                      <span>{item.title}</span>
+                    </Link>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+              ))}
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
       </SidebarContent>
+      
+      <SidebarFooter>
+        <div className="px-4 py-2 text-xs text-muted-foreground">
+          Pipeline v1.0.0
+        </div>
+      </SidebarFooter>
     </Sidebar>
   );
 }

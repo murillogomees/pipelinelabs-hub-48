@@ -3,13 +3,18 @@ import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
-import { Settings, User, LogOut, Search } from 'lucide-react';
+import { Settings, User, LogOut, Search, Menu } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { NotificationDropdown } from '@/components/Notifications/NotificationDropdown';
 import { GlobalSearchTrigger } from '@/components/Search/GlobalSearchTrigger';
 import { Link, useNavigate } from 'react-router-dom';
 
-export function Header() {
+interface HeaderProps {
+  onMenuClick?: () => void;
+  sidebarOpen?: boolean;
+}
+
+export function Header({ onMenuClick, sidebarOpen }: HeaderProps = {}) {
   const { user, signOut } = useAuth();
   const navigate = useNavigate();
 
@@ -24,6 +29,19 @@ export function Header() {
 
   return (
     <div className="flex h-16 items-center w-full">
+      {/* Mobile menu button */}
+      {onMenuClick && (
+        <Button
+          variant="ghost"
+          size="icon"
+          className="h-8 w-8 md:hidden mr-2"
+          onClick={onMenuClick}
+        >
+          <Menu className="h-4 w-4" />
+          <span className="sr-only">Toggle menu</span>
+        </Button>
+      )}
+
       {/* Search */}
       <div className="flex items-center gap-2 flex-1">
         <Search className="h-4 w-4 text-muted-foreground" />
