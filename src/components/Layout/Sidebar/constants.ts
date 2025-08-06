@@ -280,6 +280,13 @@ export const menuItems = [
         href: '/app/admin/monitoramento',
         order: 9,
       },
+      {
+        id: 'admin-code-analysis',
+        title: 'Análise de Código',
+        path: '/app/admin/code-analysis',
+        href: '/app/admin/code-analysis',
+        order: 10,
+      },
     ],
   },
 ];
