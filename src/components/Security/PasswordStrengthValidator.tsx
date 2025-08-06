@@ -35,6 +35,11 @@ const validationRules: ValidationRule[] = [
     label: 'Um número',
     test: (password) => /[0-9]/.test(password),
   },
+  {
+    id: 'special',
+    label: 'Um caractere especial',
+    test: (password) => /[!@#$%^&*(),.?":{}|<>]/.test(password),
+  },
 ];
 
 export function PasswordStrengthValidator({ 

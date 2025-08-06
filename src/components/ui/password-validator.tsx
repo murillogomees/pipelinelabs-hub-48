@@ -30,8 +30,8 @@ const validationRules: ValidationRule[] = [
     message: 'Pelo menos um número',
   },
   {
-    test: (password) => /(?=.*[@$!%*?&])/.test(password),
-    message: 'Pelo menos um caractere especial (@$!%*?&)',
+    test: (password) => /(?=.*[!@#$%^&*(),.?":{}|<>])/.test(password),
+    message: 'Pelo menos um caractere especial (!@#$%^&*(),.?":{}|<>)',
   },
 ];
 
