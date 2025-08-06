@@ -20,7 +20,13 @@ export function ResourcePreloader({ resources, enabled = true }: ResourcePreload
     const preloadedLinks: HTMLLinkElement[] = [];
 
     resources.forEach(resource => {
-      // Verificar se o recurso já foi preloaded
+      // Skip invalid or local resources that might not exist
+      if (!resource.href.startsWith('http')) {
+        console.warn(`Skipping invalid resource: ${resource.href}`);
+        return;
+      }
+
+      // Check if already preloaded
       const existingLink = document.querySelector(`link[href="${resource.href}"][rel="preload"]`);
       if (existingLink) return;
 
@@ -37,22 +43,8 @@ export function ResourcePreloader({ resources, enabled = true }: ResourcePreload
         link.crossOrigin = resource.crossOrigin;
       }
 
-      // Adicionar timeout para remover preload não utilizados
-      const timeout = setTimeout(() => {
-        if (link.parentNode) {
-          link.parentNode.removeChild(link);
-        }
-      }, 10000); // Remove após 10 segundos se não usado
-
-      // Limpar timeout se o recurso for carregado
-      link.onload = () => {
-        clearTimeout(timeout);
-        console.info(`✅ Resource preloaded: ${resource.href}`);
-      };
-
       link.onerror = () => {
-        clearTimeout(timeout);
-        console.warn(`❌ Failed to preload resource: ${resource.href}`);
+        console.warn(`Failed to preload resource: ${resource.href}`);
         if (link.parentNode) {
           link.parentNode.removeChild(link);
         }
@@ -62,7 +54,7 @@ export function ResourcePreloader({ resources, enabled = true }: ResourcePreload
       preloadedLinks.push(link);
     });
 
-    // Cleanup ao desmontar componente
+    // Cleanup on unmount
     return () => {
       preloadedLinks.forEach(link => {
         if (link.parentNode) {
@@ -75,10 +67,9 @@ export function ResourcePreloader({ resources, enabled = true }: ResourcePreload
   return null;
 }
 
-// Hook para gerenciar preloading de recursos críticos
+// Simplified hook that returns empty array to avoid loading non-existent resources
 export function useCriticalResourcePreloader() {
-  // Retornar array vazio para evitar tentativas de carregar recursos inexistentes
+  // Return empty array to prevent unnecessary resource loading
   const criticalResources: PreloadResource[] = [];
-
   return { criticalResources };
 }

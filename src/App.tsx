@@ -6,7 +6,6 @@ import { ReactQueryDevtools } from '@tanstack/react-query-devtools'
 import { Toaster } from '@/components/ui/toaster'
 import { ThemeProvider } from '@/components/theme-provider'
 import { ErrorBoundary } from '@/components/ErrorBoundary/ErrorBoundary'
-import { ResourcePreloader, useCriticalResourcePreloader } from '@/components/common/ResourcePreloader'
 import { ExternalResourceManager } from '@/components/ui/external-resource-manager'
 import { MandatoryCookieProvider } from '@/components/LGPD/MandatoryCookieProvider'
 import { LandingRoutes } from '@/routes/LandingRoutes'
@@ -22,25 +21,23 @@ const queryClient = new QueryClient({
       gcTime: 1000 * 60 * 30, // 30 minutes
       retry: (failureCount, error) => {
         if (error && typeof error === 'object' && 'status' in error) {
-          // Não retentar para erros 4xx
+          // Don't retry 4xx errors
           if ((error as any).status >= 400 && (error as any).status < 500) {
             return false;
           }
         }
-        return failureCount < 3;
+        return failureCount < 2; // Reduced retries for faster loading
       },
+      retryDelay: attemptIndex => Math.min(1000 * 2 ** attemptIndex, 5000), // Faster retry delays
     },
   },
 });
 
 function AppContent() {
-  const { criticalResources } = useCriticalResourcePreloader();
-
   return (
     <ErrorBoundary>
       <MandatoryCookieProvider>
         <ExternalResourceManager enableFonts={true} enableAnalytics={false}>
-          <ResourcePreloader resources={criticalResources} />
           <ThemeProvider defaultTheme="light" storageKey="pipeline-ui-theme">
             <QueryClientProvider client={queryClient}>
               <AuthProvider>

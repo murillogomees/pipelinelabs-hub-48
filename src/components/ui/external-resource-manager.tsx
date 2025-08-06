@@ -1,7 +1,6 @@
 
 import React, { useEffect } from 'react';
 import { loadFonts } from '@/assets/fonts';
-import { useConsoleOptimizer, useResourceMonitoring } from '@/hooks/useConsoleOptimizer';
 
 interface ExternalResourceManagerProps {
   enableAnalytics?: boolean;
@@ -14,25 +13,16 @@ export function ExternalResourceManager({
   enableFonts = true,
   children 
 }: ExternalResourceManagerProps) {
-  useConsoleOptimizer();
-  useResourceMonitoring();
-
   useEffect(() => {
-    // Load fonts if enabled
+    // Only load fonts if enabled and not already loaded
     if (enableFonts) {
       loadFonts();
     }
 
-    // Load analytics scripts if enabled and not in development
+    // Skip analytics in development to avoid unnecessary requests
     if (enableAnalytics && process.env.NODE_ENV === 'production') {
-      // Analytics loading can be implemented here if needed
-      console.info('Analytics disabled in development mode');
+      console.info('Analytics would be loaded here in production');
     }
-
-    // Cleanup function
-    return () => {
-      // Cleanup any resources if needed
-    };
   }, [enableAnalytics, enableFonts]);
 
   return <>{children}</>;

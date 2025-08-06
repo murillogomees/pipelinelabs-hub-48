@@ -3,33 +3,42 @@ import { useEffect } from 'react';
 
 export function useConsoleOptimizer() {
   useEffect(() => {
-    // Only run in development
-    if (process.env.NODE_ENV === 'development') {
-      // Simple console optimization - just ensure console methods exist
-      const originalLog = console.log;
-      const originalWarn = console.warn;
-      const originalError = console.error;
-
-      // Ensure console methods are bound correctly
-      console.log = originalLog.bind(console);
-      console.warn = originalWarn.bind(console);
-      console.error = originalError.bind(console);
-
-      return () => {
-        // Cleanup if needed
-        console.log = originalLog;
-        console.warn = originalWarn;
-        console.error = originalError;
-      };
+    // Only optimize console in production
+    if (process.env.NODE_ENV === 'production') {
+      // Disable console methods in production
+      console.log = () => {};
+      console.warn = () => {};
+      console.info = () => {};
     }
   }, []);
 }
 
 export function useResourceMonitoring() {
   useEffect(() => {
+    // Only monitor resources in development
     if (process.env.NODE_ENV === 'development') {
       // Simple resource monitoring
-      console.info('🔧 Resource monitoring active');
+      const observer = new PerformanceObserver((list) => {
+        for (const entry of list.getEntries()) {
+          if (entry.entryType === 'resource' && entry.duration > 1000) {
+            console.warn(`Slow resource: ${entry.name} took ${entry.duration}ms`);
+          }
+        }
+      });
+      
+      try {
+        observer.observe({ entryTypes: ['resource'] });
+      } catch (e) {
+        // Observer not supported
+      }
+      
+      return () => {
+        try {
+          observer.disconnect();
+        } catch (e) {
+          // Already disconnected
+        }
+      };
     }
   }, []);
 }
