@@ -1,3 +1,4 @@
+
 import { Helmet } from 'react-helmet';
 
 interface SecurityHeadersProps {
@@ -24,13 +25,24 @@ export function SecurityHeaders({ nonce, additionalCSP }: SecurityHeadersProps) 
 
   const csp = additionalCSP ? `${defaultCSP}; ${additionalCSP}` : defaultCSP;
 
-  // Note: Security headers should be set via HTTP headers in production
-  // Meta tags are used here for development but will show warnings
+  // Permissions Policy otimizada - removendo recursos deprecados/não suportados
+  const permissionsPolicy = [
+    "camera=()",
+    "microphone=()",
+    "geolocation=()",
+    "payment=()",
+    "usb=()",
+    "bluetooth=()",
+    "magnetometer=()",
+    "gyroscope=()",
+    "accelerometer=()"
+  ].join(", ");
+
   return (
     <Helmet>
       <meta httpEquiv="X-Content-Type-Options" content="nosniff" />
       <meta httpEquiv="Referrer-Policy" content="strict-origin-when-cross-origin" />
-      <meta httpEquiv="Permissions-Policy" content="camera=(), microphone=(), geolocation=()" />
+      <meta httpEquiv="Permissions-Policy" content={permissionsPolicy} />
       <meta httpEquiv="Cross-Origin-Embedder-Policy" content="credentialless" />
       <meta httpEquiv="Cross-Origin-Opener-Policy" content="same-origin-allow-popups" />
       {nonce && <meta name="csp-nonce" content={nonce} />}
