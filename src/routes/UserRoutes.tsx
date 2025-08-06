@@ -29,6 +29,7 @@ const AdminNotificacoes = lazy(() => import('@/pages/AdminNotificacoes'));
 const AdminBackup = lazy(() => import('@/pages/AdminBackup'));
 const AdminMonitoramento = lazy(() => import('@/pages/AdminMonitoramento'));
 const AdminCodeAnalysis = lazy(() => import('@/pages/AdminCodeAnalysis'));
+const SystemAudit = lazy(() => import('@/pages/SystemAudit'));
 
 export function UserRoutes() {
   return (
@@ -61,6 +62,7 @@ export function UserRoutes() {
                   <Route path="admin/backup" element={<AdminBackup />} />
                   <Route path="admin/monitoramento" element={<AdminMonitoramento />} />
                   <Route path="admin/code-analysis" element={<AdminCodeAnalysis />} />
+                  <Route path="admin/system-audit" element={<SystemAudit />} />
                   <Route path="*" element={<Navigate to="/app/dashboard" replace />} />
                 </Routes>
               </LazyLoader>

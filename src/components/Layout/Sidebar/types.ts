@@ -6,6 +6,7 @@ export interface MenuItem {
   href: string;
   icon: React.ComponentType<any>;
   adminOnly?: boolean;
+  superAdminOnly?: boolean;
   order: number;
   submenu: SubMenuItem[];
 }
@@ -16,6 +17,7 @@ export interface SubMenuItem {
   path: string;
   href: string;
   order: number;
+  superAdminOnly?: boolean;
 }
 
 export interface SidebarProps {

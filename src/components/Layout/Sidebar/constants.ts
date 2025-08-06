@@ -29,8 +29,9 @@ import {
   Search,
   Sparkles
 } from 'lucide-react';
+import { MenuItem } from './types';
 
-export const menuItems = [
+export const menuItems: MenuItem[] = [
   {
     id: 'dashboard',
     title: 'Dashboard',
@@ -286,6 +287,14 @@ export const menuItems = [
         path: '/app/admin/code-analysis',
         href: '/app/admin/code-analysis',
         order: 10,
+      },
+      {
+        id: 'admin-system-audit',
+        title: 'Auditoria do Sistema',
+        path: '/app/admin/system-audit',
+        href: '/app/admin/system-audit',
+        order: 11,
+        superAdminOnly: true,
       },
     ],
   },

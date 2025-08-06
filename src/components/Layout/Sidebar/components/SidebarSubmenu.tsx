@@ -2,6 +2,7 @@
 import { NavLink, useLocation } from 'react-router-dom';
 import { cn } from '@/lib/utils';
 import { SubMenuItem } from '../types';
+import { usePermissions } from '@/hooks/usePermissions';
 
 interface SidebarSubmenuProps {
   submenu: SubMenuItem[];
@@ -12,6 +13,7 @@ interface SidebarSubmenuProps {
 
 export function SidebarSubmenu({ submenu, isExpanded, collapsed, onNavigate }: SidebarSubmenuProps) {
   const location = useLocation();
+  const { isSuperAdmin } = usePermissions();
 
   if (!isExpanded || collapsed || !submenu.length) {
     return null;
@@ -19,7 +21,9 @@ export function SidebarSubmenu({ submenu, isExpanded, collapsed, onNavigate }: S
 
   return (
     <div className="mt-1 ml-6 space-y-1">
-      {submenu.map((item) => {
+      {submenu
+        .filter(item => !item.superAdminOnly || isSuperAdmin)
+        .map((item) => {
         const isActive = location.pathname === item.path || location.pathname.startsWith(item.path);
         
         return (

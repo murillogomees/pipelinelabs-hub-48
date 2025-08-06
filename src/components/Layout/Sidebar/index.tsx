@@ -20,7 +20,11 @@ export function Sidebar({ collapsed, onNavigate }: SidebarProps) {
 
       <nav className="flex-1 py-4 overflow-y-auto overflow-x-hidden">
         {menuItems
-          .filter(item => !item.adminOnly || isAdmin || isSuperAdmin)
+          .filter(item => {
+            if (item.adminOnly && !isAdmin && !isSuperAdmin) return false;
+            if (item.superAdminOnly && !isSuperAdmin) return false;
+            return true;
+          })
           .map((item) => {
             const isExpanded = expandedItems.includes(item.title);
 
