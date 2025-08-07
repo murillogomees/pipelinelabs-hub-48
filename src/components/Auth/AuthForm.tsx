@@ -15,16 +15,20 @@ export const AuthForm: React.FC = () => {
   const handleSignIn = async (formData: any) => {
     setIsLoading(true);
     try {
+      console.log('🔄 Tentando login...');
+      
       const { data, error } = await supabase.auth.signInWithPassword({
         email: formData.email,
         password: formData.password,
       });
 
       if (error) {
+        console.error('❌ Erro no login:', error);
         throw error;
       }
 
       if (data?.user) {
+        console.log('✅ Login realizado com sucesso!');
         toast({
           title: 'Login realizado com sucesso!',
           description: 'Redirecionando para o dashboard...',
@@ -32,10 +36,19 @@ export const AuthForm: React.FC = () => {
         navigate('/app/dashboard');
       }
     } catch (error: any) {
-      console.error('Erro no login:', error);
+      console.error('❌ Erro no login:', error);
+      
+      let errorMessage = 'Erro ao fazer login. Verifique suas credenciais.';
+      
+      if (error.message?.includes('Invalid login credentials')) {
+        errorMessage = 'Email ou senha incorretos. Verifique e tente novamente.';
+      } else if (error.message?.includes('Email not confirmed')) {
+        errorMessage = 'Email não confirmado. Verifique sua caixa de entrada.';
+      }
+      
       toast({
         title: 'Erro no login',
-        description: error.message || 'Erro ao fazer login. Verifique suas credenciais.',
+        description: errorMessage,
         variant: 'destructive',
       });
     } finally {
@@ -46,61 +59,74 @@ export const AuthForm: React.FC = () => {
   const handleSignUp = async (formData: any) => {
     setIsLoading(true);
     try {
-      console.log('🔄 Iniciando processo de signup...');
+      console.log('🔄 Iniciando cadastro...');
 
-      // Abordagem simplificada - deixar o trigger handle_new_user fazer o trabalho
+      // Fazer signup básico sem dados extras que podem causar problemas
       const { data: authData, error: authError } = await supabase.auth.signUp({
         email: formData.email,
         password: formData.password,
         options: {
-          data: {
-            display_name: formData.name,
-            company_name: formData.companyName || `${formData.name} - Empresa`,
-            document: formData.document,
-            phone: formData.phone,
-          },
-          // Removendo o redirect específico que pode estar causando problemas
-          emailRedirectTo: `${window.location.origin}/app`
+          emailRedirectTo: `${window.location.origin}/app/dashboard`
         },
       });
 
       if (authError) {
-        console.error('❌ Erro no signup:', authError);
+        console.error('❌ Erro no signup auth:', authError);
         throw authError;
       }
 
       if (authData?.user) {
-        console.log('✅ Usuário criado com sucesso!', {
-          userId: authData.user.id,
-          email: authData.user.email
-        });
+        console.log('✅ Usuário criado no auth:', authData.user.id);
+        
+        // Aguardar um pouco antes de tentar criar o perfil
+        await new Promise(resolve => setTimeout(resolve, 1000));
+        
+        // Criar perfil manualmente
+        try {
+          const { error: profileError } = await supabase
+            .from('profiles')
+            .insert({
+              user_id: authData.user.id,
+              email: formData.email,
+              display_name: formData.name,
+              phone: formData.phone,
+              document: formData.document,
+              document_type: formData.document?.length === 11 ? 'cpf' : 'cnpj',
+              person_type: 'individual',
+              is_active: true
+            });
+
+          if (profileError) {
+            console.error('❌ Erro ao criar perfil:', profileError);
+          } else {
+            console.log('✅ Perfil criado com sucesso');
+          }
+        } catch (profileErr) {
+          console.error('❌ Erro ao criar perfil:', profileErr);
+          // Não bloquear o cadastro se o perfil falhar
+        }
 
         toast({
-          title: '🎉 Cadastro realizado com sucesso!',
-          description: 'Verifique seu email para confirmar a conta e fazer login.',
+          title: '🎉 Cadastro realizado!',
+          description: 'Verifique seu email para confirmar a conta.',
         });
-
-        // Em vez de redirecionar automaticamente, mostrar mensagem para verificar email
+        
         return;
       }
+
     } catch (error: any) {
-      console.error('❌ Erro no cadastro:', error);
+      console.error('❌ Erro completo no cadastro:', error);
       
       let errorMessage = 'Erro ao criar conta. Tente novamente.';
       
-      // Tratamento mais específico dos erros
-      if (error.message?.includes('rate_limit')) {
-        errorMessage = 'Muitas tentativas de cadastro. Aguarde alguns minutos.';
-      } else if (error.message?.includes('User already registered') || error.message?.includes('already_registered')) {
+      if (error.message?.includes('User already registered') || error.message?.includes('already_registered')) {
         errorMessage = 'Este email já está cadastrado. Tente fazer login.';
-      } else if (error.message?.includes('invalid_email')) {
+      } else if (error.message?.includes('invalid_email') || error.message?.includes('Invalid email')) {
         errorMessage = 'Email inválido. Verifique e tente novamente.';
-      } else if (error.message?.includes('weak_password')) {
+      } else if (error.message?.includes('weak_password') || error.message?.includes('Password should be at least')) {
         errorMessage = 'Senha muito fraca. Use pelo menos 6 caracteres.';
-      } else if (error.message?.includes('Database error') || error.message?.includes('schema') || error.message?.includes('constraint')) {
-        errorMessage = 'Erro interno do sistema. Nossa equipe foi notificada. Tente novamente em alguns minutos.';
-      } else if (error.message?.includes('signup_disabled')) {
-        errorMessage = 'Cadastros temporariamente desabilitados. Contate o suporte.';
+      } else if (error.message?.includes('rate_limit')) {
+        errorMessage = 'Muitas tentativas. Aguarde alguns minutos e tente novamente.';
       }
 
       toast({

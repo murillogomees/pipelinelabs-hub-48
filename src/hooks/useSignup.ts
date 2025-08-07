@@ -27,17 +27,12 @@ export function useSignup() {
         email: data.email,
         password: data.password,
         options: {
-          data: {
-            display_name: data.name,
-            company_name: data.companyName || `${data.name} - Empresa`,
-            document: data.document,
-            phone: data.phone,
-          },
+          emailRedirectTo: `${window.location.origin}/app/dashboard`
         },
       });
 
       if (authError) {
-        console.error('Erro no signup:', authError);
+        console.error('❌ Erro no signup:', authError);
         throw authError;
       }
 
@@ -46,6 +41,36 @@ export function useSignup() {
         
         // Aguardar um pouco para dar tempo aos triggers executarem
         await new Promise(resolve => setTimeout(resolve, 1000));
+        
+        // Tentar criar perfil manualmente se não existir
+        try {
+          const { data: existingProfile } = await supabase
+            .from('profiles')
+            .select('id')
+            .eq('user_id', authData.user.id)
+            .single();
+
+          if (!existingProfile) {
+            const { error: profileError } = await supabase
+              .from('profiles')
+              .insert({
+                user_id: authData.user.id,
+                email: data.email,
+                display_name: data.name,
+                phone: data.phone,
+                document: data.document,
+                document_type: data.document?.length === 11 ? 'cpf' : 'cnpj',
+                person_type: 'individual',
+                is_active: true
+              });
+
+            if (profileError) {
+              console.error('❌ Erro ao criar perfil:', profileError);
+            }
+          }
+        } catch (profileErr) {
+          console.error('❌ Erro ao verificar/criar perfil:', profileErr);
+        }
         
         toast({
           title: 'Cadastro realizado!',
@@ -67,8 +92,6 @@ export function useSignup() {
         errorMessage = 'Email inválido. Verifique e tente novamente.';
       } else if (error.message?.includes('weak_password') || error.message?.includes('Password should be at least')) {
         errorMessage = 'Senha muito fraca. Use pelo menos 6 caracteres.';
-      } else if (error.message?.includes('Database error') || error.message?.includes('saving new user')) {
-        errorMessage = 'Erro interno do servidor. Nossa equipe foi notificada.';
       }
 
       toast({
