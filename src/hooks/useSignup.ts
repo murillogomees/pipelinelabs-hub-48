@@ -22,12 +22,17 @@ export function useSignup() {
     try {
       console.log('🔄 Iniciando signup com dados:', { email: data.email, name: data.name });
 
-      // Fazer signup básico primeiro
+      // Fazer signup básico
       const { data: authData, error: authError } = await supabase.auth.signUp({
         email: data.email,
         password: data.password,
         options: {
-          emailRedirectTo: `${window.location.origin}/app/dashboard`
+          emailRedirectTo: `${window.location.origin}/app/dashboard`,
+          data: {
+            display_name: data.name,
+            document: data.document,
+            phone: data.phone,
+          }
         },
       });
 
@@ -38,39 +43,6 @@ export function useSignup() {
 
       if (authData?.user) {
         console.log('✅ Usuário criado com sucesso:', authData.user.id);
-        
-        // Aguardar um pouco para dar tempo aos triggers executarem
-        await new Promise(resolve => setTimeout(resolve, 1000));
-        
-        // Tentar criar perfil manualmente se não existir
-        try {
-          const { data: existingProfile } = await supabase
-            .from('profiles')
-            .select('id')
-            .eq('user_id', authData.user.id)
-            .single();
-
-          if (!existingProfile) {
-            const { error: profileError } = await supabase
-              .from('profiles')
-              .insert({
-                user_id: authData.user.id,
-                email: data.email,
-                display_name: data.name,
-                phone: data.phone,
-                document: data.document,
-                document_type: data.document?.length === 11 ? 'cpf' : 'cnpj',
-                person_type: 'individual',
-                is_active: true
-              });
-
-            if (profileError) {
-              console.error('❌ Erro ao criar perfil:', profileError);
-            }
-          }
-        } catch (profileErr) {
-          console.error('❌ Erro ao verificar/criar perfil:', profileErr);
-        }
         
         toast({
           title: 'Cadastro realizado!',

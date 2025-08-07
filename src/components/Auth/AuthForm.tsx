@@ -61,12 +61,17 @@ export const AuthForm: React.FC = () => {
     try {
       console.log('🔄 Iniciando cadastro...');
 
-      // Fazer signup básico sem dados extras que podem causar problemas
+      // Primeiro, fazer o signup básico
       const { data: authData, error: authError } = await supabase.auth.signUp({
         email: formData.email,
         password: formData.password,
         options: {
-          emailRedirectTo: `${window.location.origin}/app/dashboard`
+          emailRedirectTo: `${window.location.origin}/app/dashboard`,
+          data: {
+            display_name: formData.name,
+            document: formData.document,
+            phone: formData.phone,
+          }
         },
       });
 
@@ -78,34 +83,6 @@ export const AuthForm: React.FC = () => {
       if (authData?.user) {
         console.log('✅ Usuário criado no auth:', authData.user.id);
         
-        // Aguardar um pouco antes de tentar criar o perfil
-        await new Promise(resolve => setTimeout(resolve, 1000));
-        
-        // Criar perfil manualmente
-        try {
-          const { error: profileError } = await supabase
-            .from('profiles')
-            .insert({
-              user_id: authData.user.id,
-              email: formData.email,
-              display_name: formData.name,
-              phone: formData.phone,
-              document: formData.document,
-              document_type: formData.document?.length === 11 ? 'cpf' : 'cnpj',
-              person_type: 'individual',
-              is_active: true
-            });
-
-          if (profileError) {
-            console.error('❌ Erro ao criar perfil:', profileError);
-          } else {
-            console.log('✅ Perfil criado com sucesso');
-          }
-        } catch (profileErr) {
-          console.error('❌ Erro ao criar perfil:', profileErr);
-          // Não bloquear o cadastro se o perfil falhar
-        }
-
         toast({
           title: '🎉 Cadastro realizado!',
           description: 'Verifique seu email para confirmar a conta.',
