@@ -1,3 +1,4 @@
+
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { usePermissions } from '@/hooks/usePermissions';
@@ -163,6 +164,13 @@ export const useUsersQuery = () => {
       if (authError) throw authError;
       if (!authUser.user) throw new Error('Falha ao criar usuário');
 
+      // Garantir que temos um company_id (usar currentCompanyId se não fornecido)
+      const companyId = userData.company_id || currentCompanyId;
+      
+      if (!companyId) {
+        throw new Error('Company ID é obrigatório para criar usuário');
+      }
+
       // 2. Criar perfil
       const { error: profileError } = await supabase
         .from('profiles')
@@ -173,18 +181,19 @@ export const useUsersQuery = () => {
           document: userData.document,
           phone: userData.phone,
           access_level_id: userData.access_level_id,
+          company_id: companyId, // Agora incluindo company_id
           is_active: true
         });
 
       if (profileError) throw profileError;
 
       // 3. Criar associação com empresa
-      if (userData.company_id) {
+      if (companyId) {
         const { error: companyError } = await supabase
           .from('user_companies')
           .insert({
             user_id: authUser.user.id,
-            company_id: userData.company_id,
+            company_id: companyId,
             role: userData.role,
             is_active: true
           });

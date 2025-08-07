@@ -46,10 +46,28 @@ export const AuthForm: React.FC = () => {
   const handleSignUp = async (formData: any) => {
     setIsLoading(true);
     try {
-      // 🛡️ Validação de rate limiting (implementado via Edge Function)
       console.log('🔄 Iniciando processo de signup seguro...');
 
-      // ✅ Signup melhorado - dados mais completos para o trigger automático
+      // Primeiro, buscar ou criar o nível de acesso 'contratante'
+      let accessLevelId = null;
+      const { data: accessLevels, error: accessError } = await supabase
+        .from('access_levels')
+        .select('id')
+        .eq('name', 'contratante')
+        .limit(1);
+
+      if (accessError) {
+        console.error('Erro ao buscar access level:', accessError);
+        throw new Error('Erro interno: Configuração de acesso não encontrada');
+      }
+
+      accessLevelId = accessLevels?.[0]?.id;
+
+      if (!accessLevelId) {
+        throw new Error('Erro interno: Nível de acesso não configurado no sistema');
+      }
+
+      // Signup com dados mais completos
       const { data: authData, error: authError } = await supabase.auth.signUp({
         email: formData.email,
         password: formData.password,
@@ -59,6 +77,7 @@ export const AuthForm: React.FC = () => {
             company_name: formData.companyName || `${formData.name} - Empresa`,
             document: formData.document,
             phone: formData.phone,
+            access_level_id: accessLevelId
           },
           emailRedirectTo: `${window.location.origin}/app/dashboard`
         },
@@ -85,7 +104,7 @@ export const AuthForm: React.FC = () => {
           navigate('/app/dashboard');
         }, 1000);
 
-        // 📊 Log de auditoria do signup
+        // Log de auditoria do signup
         try {
           await supabase.rpc('log_security_event', {
             p_event_type: 'user_signup_success',
@@ -106,7 +125,7 @@ export const AuthForm: React.FC = () => {
     } catch (error: any) {
       console.error('❌ Erro no cadastro:', error);
       
-      // 🚨 Log de tentativa de signup com erro
+      // Log de tentativa de signup com erro
       try {
         await supabase.rpc('log_security_event', {
           p_event_type: 'user_signup_failure',
@@ -134,6 +153,10 @@ export const AuthForm: React.FC = () => {
         errorMessage = 'Email inválido. Verifique e tente novamente.';
       } else if (error.message?.includes('weak_password')) {
         errorMessage = 'Senha muito fraca. Use pelo menos 8 caracteres com letras e números.';
+      } else if (error.message?.includes('Database error saving new user')) {
+        errorMessage = 'Erro interno do sistema. Tente novamente em alguns minutos.';
+      } else if (error.message?.includes('violates not-null constraint')) {
+        errorMessage = 'Erro de configuração do sistema. Contate o suporte.';
       }
 
       toast({
