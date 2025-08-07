@@ -69,10 +69,7 @@ export const AuthForm: React.FC = () => {
         throw error;
       }
 
-      if (data?.display_name) {
-        console.log('✅ Usuário criado com sucesso!', {         
-          email: data.email
-        });
+    
 
         toast({
           title: '🎉 Cadastro realizado com sucesso!',
