@@ -15,20 +15,16 @@ export const AuthForm: React.FC = () => {
   const handleSignIn = async (formData: any) => {
     setIsLoading(true);
     try {
-      console.log('🔄 Tentando login...');
-      
       const { data, error } = await supabase.auth.signInWithPassword({
         email: formData.email,
         password: formData.password,
       });
 
       if (error) {
-        console.error('❌ Erro no login:', error);
         throw error;
       }
 
       if (data?.user) {
-        console.log('✅ Login realizado com sucesso!');
         toast({
           title: 'Login realizado com sucesso!',
           description: 'Redirecionando para o dashboard...',
@@ -36,19 +32,10 @@ export const AuthForm: React.FC = () => {
         navigate('/app/dashboard');
       }
     } catch (error: any) {
-      console.error('❌ Erro no login:', error);
-      
-      let errorMessage = 'Erro ao fazer login. Verifique suas credenciais.';
-      
-      if (error.message?.includes('Invalid login credentials')) {
-        errorMessage = 'Email ou senha incorretos. Verifique e tente novamente.';
-      } else if (error.message?.includes('Email not confirmed')) {
-        errorMessage = 'Email não confirmado. Verifique sua caixa de entrada.';
-      }
-      
+      console.error('Erro no login:', error);
       toast({
         title: 'Erro no login',
-        description: errorMessage,
+        description: error.message || 'Erro ao fazer login. Verifique suas credenciais.',
         variant: 'destructive',
       });
     } finally {
@@ -59,51 +46,84 @@ export const AuthForm: React.FC = () => {
   const handleSignUp = async (formData: any) => {
     setIsLoading(true);
     try {
-      console.log('🔄 Iniciando cadastro...');
+      // 🛡️ Validação de rate limiting (implementado via Edge Function)
+      console.log('🔄 Iniciando processo de signup seguro...');
 
-      // Primeiro, fazer o signup básico
-      const { data: authData, error: authError } = await supabase.auth.signUp({
+      // ✅ Signup melhorado - dados mais completos para o trigger automático
+      const { data, error } = await supabase.auth.signUp({
         email: formData.email,
         password: formData.password,
         options: {
-          emailRedirectTo: `${window.location.origin}/app/dashboard`,
           data: {
             display_name: formData.name,
+            company_name: formData.companyName || `${formData.name} - Empresa`,
             document: formData.document,
             phone: formData.phone,
-          }
+          },
+          emailRedirectTo: `${window.location.origin}/app/dashboard`
         },
       });
 
-      if (authError) {
-        console.error('❌ Erro no signup auth:', authError);
-        throw authError;
-      }
 
-      if (authData?.user) {
-        console.log('✅ Usuário criado no auth:', authData.user.id);
-        
         toast({
-          title: '🎉 Cadastro realizado!',
-          description: 'Verifique seu email para confirmar a conta.',
+          title: '🎉 Cadastro realizado com sucesso!',
+          description: 'Sua empresa e perfil foram criados automaticamente. Redirecionando para o dashboard...',
         });
-        
-        return;
+
+        // Aguardar um pouco para dar tempo para o trigger executar
+        setTimeout(() => {
+          navigate('/app/dashboard');
+        }, 1000);
+
+        // 📊 Log de auditoria do signup
+        try {
+          await supabase.rpc('log_security_event', {
+            p_event_type: 'user_signup_success',
+            p_user_id: authData.user.id,
+            p_ip_address: null,
+            p_user_agent: navigator.userAgent,
+            p_event_data: {
+              email: formData.email,
+              has_company: !!formData.companyName,
+              signup_timestamp: new Date().toISOString()
+            },
+            p_risk_level: 'low'
+          });
+        } catch (logError) {
+          console.warn('Warning: Could not log signup event:', logError);
+        }
+      }
+    } catch (error: any) {
+      console.error('❌ Erro no cadastro:', error);
+      
+      // 🚨 Log de tentativa de signup com erro
+      try {
+        await supabase.rpc('log_security_event', {
+          p_event_type: 'user_signup_failure',
+          p_user_id: null,
+          p_ip_address: null,
+          p_user_agent: navigator.userAgent,
+          p_event_data: {
+            email: formData.email,
+            error_message: error.message,
+            error_code: error.status || 'unknown'
+          },
+          p_risk_level: 'medium'
+        });
+      } catch (logError) {
+        console.warn('Warning: Could not log signup failure:', logError);
       }
 
-    } catch (error: any) {
-      console.error('❌ Erro completo no cadastro:', error);
-      
       let errorMessage = 'Erro ao criar conta. Tente novamente.';
       
-      if (error.message?.includes('User already registered') || error.message?.includes('already_registered')) {
+      if (error.message?.includes('rate_limit')) {
+        errorMessage = 'Muitas tentativas de cadastro. Aguarde alguns minutos.';
+      } else if (error.message?.includes('already_registered')) {
         errorMessage = 'Este email já está cadastrado. Tente fazer login.';
-      } else if (error.message?.includes('invalid_email') || error.message?.includes('Invalid email')) {
+      } else if (error.message?.includes('invalid_email')) {
         errorMessage = 'Email inválido. Verifique e tente novamente.';
-      } else if (error.message?.includes('weak_password') || error.message?.includes('Password should be at least')) {
-        errorMessage = 'Senha muito fraca. Use pelo menos 6 caracteres.';
-      } else if (error.message?.includes('rate_limit')) {
-        errorMessage = 'Muitas tentativas. Aguarde alguns minutos e tente novamente.';
+      } else if (error.message?.includes('weak_password')) {
+        errorMessage = 'Senha muito fraca. Use pelo menos 8 caracteres com letras e números.';
       }
 
       toast({
