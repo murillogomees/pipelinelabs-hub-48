@@ -50,7 +50,7 @@ export const AuthForm: React.FC = () => {
       console.log('🔄 Iniciando processo de signup seguro...');
 
       // ✅ Signup melhorado - dados mais completos para o trigger automático
-      const { data, error } = await supabase.auth.signUp({
+      const { data: authData, error: authError } = await supabase.auth.signUp({
         email: formData.email,
         password: formData.password,
         options: {
@@ -64,6 +64,16 @@ export const AuthForm: React.FC = () => {
         },
       });
 
+      if (authError) {
+        console.error('❌ Erro no signup:', authError);
+        throw authError;
+      }
+
+      if (authData?.user) {
+        console.log('✅ Usuário criado com sucesso!', {
+          userId: authData.user.id,
+          email: authData.user.email
+        });
 
         toast({
           title: '🎉 Cadastro realizado com sucesso!',
