@@ -131,13 +131,11 @@ const addressSchema = z.object({
 export const userSchemas = {
   signUp: z.object({
     firstName: createStringSchema({ min: 2, max: 50 }),
-    lastName: createStringSchema({ min: 2, max: 50 }),
     email: emailSchema,
     password: passwordSchema,
     phone: phoneSchema,
     companyName: createStringSchema({ min: 2, max: 100 }),
-    document: documentSchema,
-    terms: z.boolean().refine(val => val === true, 'Você deve aceitar os termos de uso')
+    document: documentSchema
   }),
   
   signIn: z.object({
