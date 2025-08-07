@@ -64,15 +64,14 @@ export const AuthForm: React.FC = () => {
         },
       });
 
-      if (authError) {
-        console.error('❌ Erro no signup:', authError);
-        throw authError;
+      if (error) {
+        console.error('❌ Erro no signup:', error);
+        throw error;
       }
 
-      if (authData?.user) {
-        console.log('✅ Usuário criado com sucesso!', {
-          userId: authData.user.id,
-          email: authData.user.email
+      if (data?.display_name) {
+        console.log('✅ Usuário criado com sucesso!', {         
+          email: data.email
         });
 
         toast({
@@ -89,7 +88,6 @@ export const AuthForm: React.FC = () => {
         try {
           await supabase.rpc('log_security_event', {
             p_event_type: 'user_signup_success',
-            p_user_id: authData.user.id,
             p_ip_address: null,
             p_user_agent: navigator.userAgent,
             p_event_data: {
