@@ -29,7 +29,13 @@ export const AuthFormFields: React.FC<AuthFormFieldsProps> = ({
             <Input
               id="name"
               placeholder="Seu nome completo"
-              {...register('name', { required: 'Nome é obrigatório' })}
+              {...register('name', { 
+                required: 'Nome é obrigatório',
+                minLength: {
+                  value: 2,
+                  message: 'Nome deve ter pelo menos 2 caracteres'
+                }
+              })}
             />
             {errors.name && (
               <p className="text-sm text-destructive">{errors.name.message as string}</p>
@@ -41,7 +47,13 @@ export const AuthFormFields: React.FC<AuthFormFieldsProps> = ({
             <Input
               id="companyName"
               placeholder="Nome da sua empresa"
-              {...register('companyName', { required: 'Nome da empresa é obrigatório' })}
+              {...register('companyName', { 
+                required: 'Nome da empresa é obrigatório',
+                minLength: {
+                  value: 2,
+                  message: 'Nome da empresa deve ter pelo menos 2 caracteres'
+                }
+              })}
             />
             {errors.companyName && (
               <p className="text-sm text-destructive">{errors.companyName.message as string}</p>
@@ -53,7 +65,17 @@ export const AuthFormFields: React.FC<AuthFormFieldsProps> = ({
             <Input
               id="document"
               placeholder="00.000.000/0000-00"
-              {...register('document', { required: 'CNPJ é obrigatório' })}
+              {...register('document', { 
+                required: 'CNPJ é obrigatório',
+                pattern: {
+                  value: /^[\d.\-\/]+$/,
+                  message: 'CNPJ deve conter apenas números, pontos, traços e barras'
+                },
+                minLength: {
+                  value: 14,
+                  message: 'CNPJ deve ter pelo menos 14 caracteres'
+                }
+              })}
             />
             {errors.document && (
               <p className="text-sm text-destructive">{errors.document.message as string}</p>
@@ -65,7 +87,17 @@ export const AuthFormFields: React.FC<AuthFormFieldsProps> = ({
             <Input
               id="phone"
               placeholder="(11) 99999-9999"
-              {...register('phone', { required: 'Telefone é obrigatório' })}
+              {...register('phone', { 
+                required: 'Telefone é obrigatório',
+                pattern: {
+                  value: /^[\(\)\d\s\-]+$/,
+                  message: 'Telefone deve conter apenas números, parênteses, espaços e traços'
+                },
+                minLength: {
+                  value: 10,
+                  message: 'Telefone deve ter pelo menos 10 caracteres'
+                }
+              })}
             />
             {errors.phone && (
               <p className="text-sm text-destructive">{errors.phone.message as string}</p>

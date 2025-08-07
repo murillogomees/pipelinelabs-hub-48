@@ -46,28 +46,9 @@ export const AuthForm: React.FC = () => {
   const handleSignUp = async (formData: any) => {
     setIsLoading(true);
     try {
-      console.log('🔄 Iniciando processo de signup seguro...');
+      console.log('🔄 Iniciando processo de signup...');
 
-      // Primeiro, buscar ou criar o nível de acesso 'contratante'
-      let accessLevelId = null;
-      const { data: accessLevels, error: accessError } = await supabase
-        .from('access_levels')
-        .select('id')
-        .eq('name', 'contratante')
-        .limit(1);
-
-      if (accessError) {
-        console.error('Erro ao buscar access level:', accessError);
-        throw new Error('Erro interno: Configuração de acesso não encontrada');
-      }
-
-      accessLevelId = accessLevels?.[0]?.id;
-
-      if (!accessLevelId) {
-        throw new Error('Erro interno: Nível de acesso não configurado no sistema');
-      }
-
-      // Signup com dados mais completos
+      // Abordagem simplificada - deixar o trigger handle_new_user fazer o trabalho
       const { data: authData, error: authError } = await supabase.auth.signUp({
         email: formData.email,
         password: formData.password,
@@ -77,9 +58,9 @@ export const AuthForm: React.FC = () => {
             company_name: formData.companyName || `${formData.name} - Empresa`,
             document: formData.document,
             phone: formData.phone,
-            access_level_id: accessLevelId
           },
-          emailRedirectTo: `${window.location.origin}/app/dashboard`
+          // Removendo o redirect específico que pode estar causando problemas
+          emailRedirectTo: `${window.location.origin}/app`
         },
       });
 
@@ -96,67 +77,30 @@ export const AuthForm: React.FC = () => {
 
         toast({
           title: '🎉 Cadastro realizado com sucesso!',
-          description: 'Sua empresa e perfil foram criados automaticamente. Redirecionando para o dashboard...',
+          description: 'Verifique seu email para confirmar a conta e fazer login.',
         });
 
-        // Aguardar um pouco para dar tempo para o trigger executar
-        setTimeout(() => {
-          navigate('/app/dashboard');
-        }, 1000);
-
-        // Log de auditoria do signup
-        try {
-          await supabase.rpc('log_security_event', {
-            p_event_type: 'user_signup_success',
-            p_user_id: authData.user.id,
-            p_ip_address: null,
-            p_user_agent: navigator.userAgent,
-            p_event_data: {
-              email: formData.email,
-              has_company: !!formData.companyName,
-              signup_timestamp: new Date().toISOString()
-            },
-            p_risk_level: 'low'
-          });
-        } catch (logError) {
-          console.warn('Warning: Could not log signup event:', logError);
-        }
+        // Em vez de redirecionar automaticamente, mostrar mensagem para verificar email
+        return;
       }
     } catch (error: any) {
       console.error('❌ Erro no cadastro:', error);
       
-      // Log de tentativa de signup com erro
-      try {
-        await supabase.rpc('log_security_event', {
-          p_event_type: 'user_signup_failure',
-          p_user_id: null,
-          p_ip_address: null,
-          p_user_agent: navigator.userAgent,
-          p_event_data: {
-            email: formData.email,
-            error_message: error.message,
-            error_code: error.status || 'unknown'
-          },
-          p_risk_level: 'medium'
-        });
-      } catch (logError) {
-        console.warn('Warning: Could not log signup failure:', logError);
-      }
-
       let errorMessage = 'Erro ao criar conta. Tente novamente.';
       
+      // Tratamento mais específico dos erros
       if (error.message?.includes('rate_limit')) {
         errorMessage = 'Muitas tentativas de cadastro. Aguarde alguns minutos.';
-      } else if (error.message?.includes('already_registered')) {
+      } else if (error.message?.includes('User already registered') || error.message?.includes('already_registered')) {
         errorMessage = 'Este email já está cadastrado. Tente fazer login.';
       } else if (error.message?.includes('invalid_email')) {
         errorMessage = 'Email inválido. Verifique e tente novamente.';
       } else if (error.message?.includes('weak_password')) {
-        errorMessage = 'Senha muito fraca. Use pelo menos 8 caracteres com letras e números.';
-      } else if (error.message?.includes('Database error saving new user')) {
-        errorMessage = 'Erro interno do sistema. Tente novamente em alguns minutos.';
-      } else if (error.message?.includes('violates not-null constraint')) {
-        errorMessage = 'Erro de configuração do sistema. Contate o suporte.';
+        errorMessage = 'Senha muito fraca. Use pelo menos 6 caracteres.';
+      } else if (error.message?.includes('Database error') || error.message?.includes('schema') || error.message?.includes('constraint')) {
+        errorMessage = 'Erro interno do sistema. Nossa equipe foi notificada. Tente novamente em alguns minutos.';
+      } else if (error.message?.includes('signup_disabled')) {
+        errorMessage = 'Cadastros temporariamente desabilitados. Contate o suporte.';
       }
 
       toast({
