@@ -23,6 +23,10 @@ export const Header = () => {
     await supabase.auth.signOut();
   };
 
+  // Get display name with fallback
+  const displayName = profile?.display_name || profile?.email || 'Usuário';
+  const initials = displayName.charAt(0).toUpperCase();
+
   return (
     <header className="border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
       <div className="flex h-14 items-center px-4 lg:px-6">
@@ -55,9 +59,9 @@ export const Header = () => {
             <DropdownMenuTrigger asChild>
               <Button variant="ghost" className="relative h-8 w-8 rounded-full">
                 <Avatar className="h-8 w-8">
-                  <AvatarImage src={profile?.avatar_url} alt={profile?.full_name || 'User'} />
+                  <AvatarImage src={profile?.avatar_url} alt={displayName} />
                   <AvatarFallback>
-                    {profile?.full_name ? profile.full_name.charAt(0).toUpperCase() : 'U'}
+                    {initials}
                   </AvatarFallback>
                 </Avatar>
               </Button>
@@ -65,7 +69,7 @@ export const Header = () => {
             <DropdownMenuContent className="w-56" align="end" forceMount>
               <div className="flex items-center justify-start gap-2 p-2">
                 <div className="flex flex-col space-y-1 leading-none">
-                  <p className="font-medium">{profile?.full_name}</p>
+                  <p className="font-medium">{displayName}</p>
                   <p className="w-[200px] truncate text-sm text-muted-foreground">
                     {profile?.email}
                   </p>
