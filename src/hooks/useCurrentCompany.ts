@@ -20,7 +20,7 @@ export const useCurrentCompany = () => {
           .select(`
             company_id,
             role,
-            companies!inner (
+            companies (
               id,
               name,
               document
@@ -28,7 +28,7 @@ export const useCurrentCompany = () => {
           `)
           .eq('user_id', user.id)
           .eq('is_active', true)
-          .maybeSingle();
+          .single();
 
         if (userCompanyError) {
           console.error('Error fetching user company:', userCompanyError);
