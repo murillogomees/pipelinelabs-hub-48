@@ -85,19 +85,18 @@ export const AuthForm: React.FC = () => {
         }, 1000);
 
         // 📊 Log de auditoria do signup
-        try {
-          await supabase.rpc('log_security_event', {
-            p_event_type: 'user_signup_success',
-            p_ip_address: null,
-            p_user_agent: navigator.userAgent,
-            p_event_data: {
-              email: formData.email,
-              has_company: !!formData.companyName,
-              signup_timestamp: new Date().toISOString()
-            },
-            p_risk_level: 'low'
-          });
-        } catch (logError) {
+        const { error: logError } = await supabase.rpc('log_security_event', {
+          p_event_type: 'user_signup_success',
+          p_ip_address: null,
+          p_user_agent: navigator.userAgent,
+          p_event_data: {
+            email: formData.email,
+            has_company: !!formData.companyName,
+            signup_timestamp: new Date().toISOString(),
+          },
+          p_risk_level: 'low',
+        });
+        if (logError) {
           console.warn('Warning: Could not log signup event:', logError);
         }
       }
