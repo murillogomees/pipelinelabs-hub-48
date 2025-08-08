@@ -1,5 +1,5 @@
 
-import { Bell, Search, User, LogOut, Settings, Zap } from 'lucide-react';
+import { Bell, Search, User, LogOut, Settings, Zap, Menu } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import {
@@ -15,7 +15,12 @@ import { useProfile } from '@/hooks/useProfile';
 import { useCommandPalette } from '@/hooks/useCommandPalette';
 import { supabase } from '@/integrations/supabase/client';
 
-export const Header = () => {
+interface HeaderProps {
+  onMenuClick?: () => void;
+  sidebarOpen?: boolean;
+}
+
+export const Header = ({ onMenuClick, sidebarOpen }: HeaderProps) => {
   const { profile } = useProfile();
   const { openPalette } = useCommandPalette();
 
@@ -31,6 +36,19 @@ export const Header = () => {
     <header className="border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
       <div className="flex h-14 items-center px-4 lg:px-6">
         <div className="flex flex-1 items-center gap-4">
+          {/* Mobile menu button */}
+          {onMenuClick && (
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-8 w-8 lg:hidden"
+              onClick={onMenuClick}
+            >
+              <Menu className="h-4 w-4" />
+              <span className="sr-only">Toggle menu</span>
+            </Button>
+          )}
+
           <div className="w-full max-w-sm">
             <Button
               variant="outline"
