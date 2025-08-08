@@ -1,51 +1,100 @@
 
 import React from 'react';
-import { Wifi, WifiOff, Loader2 } from 'lucide-react';
+import { AlertCircle, Wifi, WifiOff } from 'lucide-react';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { Badge } from '@/components/ui/badge';
 import { useOfflineSupport } from '@/hooks/useOfflineSupport';
 
-export function NetworkStatus() {
-  const { isOnline, isSyncing, queueSize } = useOfflineSupport();
+interface NetworkStatusProps {
+  error?: any;
+  retryCount?: number;
+  maxRetries?: number;
+}
 
-  if (isOnline && !isSyncing && queueSize === 0) {
-    return null; // Não mostrar nada quando tudo está normal
+export function NetworkStatus({ error, retryCount = 0, maxRetries = 5 }: NetworkStatusProps) {
+  const { isOnline, queueSize, isSyncing } = useOfflineSupport();
+  
+  const isInfrastructureError = error?.code === 'PGRST002' || 
+                               error?.message?.includes('schema cache') ||
+                               error?.message?.includes('Service Unavailable');
+
+  // Don't show anything if everything is fine
+  if (!error && isOnline && queueSize === 0) {
+    return null;
   }
 
   return (
-    <div className="fixed top-4 right-4 z-50">
-      <div className={`
-        flex items-center space-x-2 px-3 py-2 rounded-lg shadow-lg text-sm font-medium
-        ${isOnline 
-          ? 'bg-green-500 text-white' 
-          : 'bg-orange-500 text-white'
-        }
-      `}>
-        {isSyncing ? (
-          <>
-            <Loader2 className="h-4 w-4 animate-spin" />
-            <span>Sincronizando...</span>
-          </>
-        ) : isOnline ? (
-          <>
-            <Wifi className="h-4 w-4" />
-            <span>Online</span>
-            {queueSize > 0 && (
-              <span className="bg-green-600 px-2 py-1 rounded-full text-xs">
-                {queueSize} pendente{queueSize > 1 ? 's' : ''}
-              </span>
+    <div className="fixed top-4 right-4 z-50 max-w-md">
+      <Alert className={`${isInfrastructureError ? 'border-orange-200 bg-orange-50' : 'border-red-200 bg-red-50'}`}>
+        <div className="flex items-center space-x-2">
+          {isInfrastructureError ? (
+            <WifiOff className="h-4 w-4 text-orange-500" />
+          ) : (
+            <AlertCircle className="h-4 w-4 text-red-500" />
+          )}
+          <AlertTitle className="text-sm font-medium">
+            {isInfrastructureError ? 'Serviços Temporariamente Indisponíveis' : 'Problema de Conectividade'}
+          </AlertTitle>
+        </div>
+        
+        <AlertDescription className="mt-2 text-xs space-y-2">
+          {isInfrastructureError ? (
+            <div>
+              <p>O Supabase está enfrentando problemas de infraestrutura temporários.</p>
+              <p className="text-orange-600">Código: PGRST002 - Schema cache indisponível</p>
+            </div>
+          ) : (
+            <p>Problemas de conectividade detectados.</p>
+          )}
+          
+          <div className="flex items-center space-x-4 mt-2">
+            <Badge variant={isOnline ? 'secondary' : 'destructive'} className="text-xs">
+              <Wifi className="h-3 w-3 mr-1" />
+              {isOnline ? 'Online' : 'Offline'}
+            </Badge>
+            
+            {retryCount > 0 && (
+              <Badge variant="outline" className="text-xs">
+                Tentativas: {retryCount}/{maxRetries}
+              </Badge>
             )}
-          </>
-        ) : (
-          <>
-            <WifiOff className="h-4 w-4" />
-            <span>Offline</span>
+            
             {queueSize > 0 && (
-              <span className="bg-orange-600 px-2 py-1 rounded-full text-xs">
-                {queueSize}
-              </span>
+              <Badge variant="secondary" className="text-xs">
+                Fila: {queueSize}
+              </Badge>
             )}
-          </>
-        )}
-      </div>
+            
+            {isSyncing && (
+              <Badge variant="default" className="text-xs animate-pulse">
+                Sincronizando...
+              </Badge>
+            )}
+          </div>
+          
+          <div className="text-xs text-muted-foreground mt-2 p-2 bg-white/50 rounded">
+            {isInfrastructureError ? (
+              <>
+                <p><strong>O que fazer:</strong></p>
+                <ul className="list-disc list-inside space-y-1 mt-1">
+                  <li>Aguarde alguns minutos - problemas de infraestrutura se resolvem automaticamente</li>
+                  <li>Este não é um problema do seu lado</li>
+                  <li>Suas configurações estão sendo salvas localmente</li>
+                </ul>
+              </>
+            ) : (
+              <>
+                <p><strong>Dicas:</strong></p>
+                <ul className="list-disc list-inside space-y-1 mt-1">
+                  <li>Verifique sua conexão com a internet</li>
+                  <li>Atualize a página se necessário</li>
+                  <li>Dados estão sendo salvos localmente</li>
+                </ul>
+              </>
+            )}
+          </div>
+        </AlertDescription>
+      </Alert>
     </div>
   );
 }
