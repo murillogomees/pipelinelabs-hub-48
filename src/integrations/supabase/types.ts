@@ -5446,6 +5446,10 @@ export type Database = {
         }
         Returns: string
       }
+      repair_user_provisioning: {
+        Args: { p_user_id: string }
+        Returns: Json
+      }
       requires_mfa: {
         Args: { user_id: string }
         Returns: boolean
