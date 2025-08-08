@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -9,8 +10,8 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
-import { Building2, Save, Eye, Lock, History } from 'lucide-react';
-import { useCompanyData } from '@/hooks/useCompanyData';
+import { Building2, Save, Eye, Lock, History, Settings } from 'lucide-react';
+import { useCompanyCompleteData, CompanyCompleteData } from '@/hooks/useCompanyCompleteData';
 import { toast } from 'sonner';
 import { CompanyAuditLog } from './CompanyAuditLog';
 
@@ -50,13 +51,21 @@ const companySchema = z.object({
   municipal_registration: z.string().optional(),
   tax_regime: z.enum(['simples_nacional', 'lucro_real', 'lucro_presumido']).optional(),
   legal_representative: z.string().optional(),
+  // Campos de configurações
+  nfe_environment: z.enum(['sandbox', 'production']).optional(),
+  nfe_api_token: z.string().optional(),
+  certificate_password: z.string().optional(),
+  stripe_publishable_key: z.string().optional(),
+  cdn_enabled: z.boolean().optional(),
+  cdn_url_base: z.string().optional(),
 });
 
 type CompanyFormData = z.infer<typeof companySchema>;
 
 export function CompanyForm() {
-  const { company, isLoading, isUpdating, canEdit, updateCompany } = useCompanyData();
+  const { companyData, isLoading, isUpdating, canEdit, updateCompanyData } = useCompanyCompleteData();
   const [isEditing, setIsEditing] = useState(false);
+  const [showAdvancedSettings, setShowAdvancedSettings] = useState(false);
 
   const form = useForm<CompanyFormData>({
     resolver: zodResolver(companySchema),
@@ -75,55 +84,94 @@ export function CompanyForm() {
       municipal_registration: '',
       tax_regime: 'simples_nacional',
       legal_representative: '',
+      nfe_environment: 'sandbox',
+      nfe_api_token: '',
+      certificate_password: '',
+      stripe_publishable_key: '',
+      cdn_enabled: true,
+      cdn_url_base: 'https://cdn.pipelinelabs.app',
     }
   });
 
   // Atualizar formulário quando dados da empresa carregarem
   useEffect(() => {
-    if (company) {
+    if (companyData) {
+      console.log('🔄 Preenchendo formulário com dados:', companyData);
+      
       form.reset({
-        name: company.name || '',
-        legal_name: company.legal_name || '',
-        trade_name: company.trade_name || '',
-        document: company.document || '',
-        email: company.email || '',
-        fiscal_email: company.fiscal_email || '',
-        phone: company.phone || '',
-        address: company.address || '',
-        city: company.city || '',
-        zipcode: company.zipcode || '',
-        state_registration: company.state_registration || '',
-        municipal_registration: company.municipal_registration || '',
-        tax_regime: (company.tax_regime as any) || 'simples_nacional',
-        legal_representative: company.legal_representative || '',
+        name: companyData.name || '',
+        legal_name: companyData.legal_name || '',
+        trade_name: companyData.trade_name || '',
+        document: companyData.document || '',
+        email: companyData.email || '',
+        fiscal_email: companyData.fiscal_email || '',
+        phone: companyData.phone || '',
+        address: companyData.address || '',
+        city: companyData.city || '',
+        zipcode: companyData.zipcode || '',
+        state_registration: companyData.state_registration || '',
+        municipal_registration: companyData.municipal_registration || '',
+        tax_regime: (companyData.tax_regime as any) || 'simples_nacional',
+        legal_representative: companyData.legal_representative || '',
+        // Configurações
+        nfe_environment: (companyData.settings?.nfe_environment as any) || 'sandbox',
+        nfe_api_token: companyData.settings?.nfe_api_token || '',
+        certificate_password: companyData.settings?.certificate_password || '',
+        stripe_publishable_key: companyData.settings?.stripe_publishable_key || '',
+        cdn_enabled: companyData.settings?.cdn_enabled ?? true,
+        cdn_url_base: companyData.settings?.cdn_url_base || 'https://cdn.pipelinelabs.app',
       });
+
+      console.log('✅ Formulário preenchido automaticamente');
     }
-  }, [company, form]);
+  }, [companyData, form]);
 
   const onSubmit = async (data: CompanyFormData) => {
-    const success = await updateCompany(data);
+    // Separar dados principais das configurações
+    const { nfe_environment, nfe_api_token, certificate_password, stripe_publishable_key, cdn_enabled, cdn_url_base, ...mainData } = data;
+    
+    const updatePayload: Partial<CompanyCompleteData> = {
+      ...mainData,
+      settings: {
+        nfe_environment,
+        nfe_api_token,
+        certificate_password,
+        stripe_publishable_key,
+        cdn_enabled,
+        cdn_url_base,
+      }
+    };
+
+    const success = await updateCompanyData(updatePayload);
     if (success) {
       setIsEditing(false);
     }
   };
 
   const handleCancel = () => {
-    if (company) {
+    if (companyData) {
       form.reset({
-        name: company.name || '',
-        legal_name: company.legal_name || '',
-        trade_name: company.trade_name || '',
-        document: company.document || '',
-        email: company.email || '',
-        fiscal_email: company.fiscal_email || '',
-        phone: company.phone || '',
-        address: company.address || '',
-        city: company.city || '',
-        zipcode: company.zipcode || '',
-        state_registration: company.state_registration || '',
-        municipal_registration: company.municipal_registration || '',
-        tax_regime: (company.tax_regime as any) || 'simples_nacional',
-        legal_representative: company.legal_representative || '',
+        name: companyData.name || '',
+        legal_name: companyData.legal_name || '',
+        trade_name: companyData.trade_name || '',
+        document: companyData.document || '',
+        email: companyData.email || '',
+        fiscal_email: companyData.fiscal_email || '',
+        phone: companyData.phone || '',
+        address: companyData.address || '',
+        city: companyData.city || '',
+        zipcode: companyData.zipcode || '',
+        state_registration: companyData.state_registration || '',
+        municipal_registration: companyData.municipal_registration || '',
+        tax_regime: (companyData.tax_regime as any) || 'simples_nacional',
+        legal_representative: companyData.legal_representative || '',
+        // Configurações
+        nfe_environment: (companyData.settings?.nfe_environment as any) || 'sandbox',
+        nfe_api_token: companyData.settings?.nfe_api_token || '',
+        certificate_password: companyData.settings?.certificate_password || '',
+        stripe_publishable_key: companyData.settings?.stripe_publishable_key || '',
+        cdn_enabled: companyData.settings?.cdn_enabled ?? true,
+        cdn_url_base: companyData.settings?.cdn_url_base || 'https://cdn.pipelinelabs.app',
       });
     }
     setIsEditing(false);
@@ -147,7 +195,7 @@ export function CompanyForm() {
     );
   }
 
-  if (!company) {
+  if (!companyData) {
     return (
       <Card>
         <CardHeader>
@@ -175,7 +223,7 @@ export function CompanyForm() {
             <div>
               <CardTitle>Empresa Contratante</CardTitle>
               <CardDescription>
-                Gerencie as informações corporativas da sua empresa
+                Gerencie as informações corporativas da sua empresa - Dados carregados automaticamente
               </CardDescription>
             </div>
           </div>
@@ -197,6 +245,15 @@ export function CompanyForm() {
       
       <CardContent>
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+          {/* Informações de Debug (apenas em desenvolvimento) */}
+          {process.env.NODE_ENV === 'development' && (
+            <div className="bg-muted p-4 rounded-lg">
+              <p className="text-sm text-muted-foreground">
+                <strong>Debug:</strong> Empresa ID: {companyData.id} | Role: {companyData.user_company_role} | Can Edit: {canEdit ? 'Sim' : 'Não'}
+              </p>
+            </div>
+          )}
+
           {/* Informações Básicas */}
           <div>
             <h3 className="text-lg font-semibold mb-4">Informações Básicas</h3>
@@ -391,6 +448,101 @@ export function CompanyForm() {
             </div>
           </div>
 
+          {/* Configurações Avançadas */}
+          {canEdit && (
+            <>
+              <Separator />
+              <div>
+                <div className="flex items-center justify-between mb-4">
+                  <h3 className="text-lg font-semibold">Configurações do Sistema</h3>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setShowAdvancedSettings(!showAdvancedSettings)}
+                  >
+                    <Settings className="h-4 w-4 mr-2" />
+                    {showAdvancedSettings ? 'Ocultar' : 'Mostrar'} Configurações
+                  </Button>
+                </div>
+
+                {showAdvancedSettings && (
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 p-4 bg-muted rounded-lg">
+                    <div className="space-y-2">
+                      <Label htmlFor="nfe_environment">Ambiente NFe</Label>
+                      <Select
+                        disabled={!canEdit || !isEditing}
+                        value={form.watch('nfe_environment')}
+                        onValueChange={(value) => form.setValue('nfe_environment', value as any)}
+                      >
+                        <SelectTrigger>
+                          <SelectValue placeholder="Selecione o ambiente" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="sandbox">Homologação</SelectItem>
+                          <SelectItem value="production">Produção</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor="nfe_api_token">Token API NFe</Label>
+                      <Input
+                        id="nfe_api_token"
+                        type="password"
+                        {...form.register('nfe_api_token')}
+                        disabled={!canEdit || !isEditing}
+                        placeholder="Token da API NFe"
+                      />
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor="certificate_password">Senha do Certificado Digital</Label>
+                      <Input
+                        id="certificate_password"
+                        type="password"
+                        {...form.register('certificate_password')}
+                        disabled={!canEdit || !isEditing}
+                        placeholder="Senha do certificado A1"
+                      />
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor="stripe_publishable_key">Chave Pública Stripe</Label>
+                      <Input
+                        id="stripe_publishable_key"
+                        {...form.register('stripe_publishable_key')}
+                        disabled={!canEdit || !isEditing}
+                        placeholder="pk_test_..."
+                      />
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor="cdn_url_base">URL Base do CDN</Label>
+                      <Input
+                        id="cdn_url_base"
+                        {...form.register('cdn_url_base')}
+                        disabled={!canEdit || !isEditing}
+                        placeholder="https://cdn.pipelinelabs.app"
+                      />
+                    </div>
+
+                    <div className="space-y-2 flex items-center space-x-2">
+                      <input
+                        type="checkbox"
+                        id="cdn_enabled"
+                        {...form.register('cdn_enabled')}
+                        disabled={!canEdit || !isEditing}
+                        className="rounded"
+                      />
+                      <Label htmlFor="cdn_enabled">CDN Habilitado</Label>
+                    </div>
+                  </div>
+                )}
+              </div>
+            </>
+          )}
+
           {/* Botões de Ação */}
           {canEdit && isEditing && (
             <div className="flex justify-end gap-2 pt-4">
@@ -425,7 +577,7 @@ export function CompanyForm() {
           {!canEdit && (
             <div className="flex items-center justify-center gap-2 p-4 bg-muted rounded-lg text-muted-foreground">
               <Lock className="h-4 w-4" />
-              Você não tem permissão para alterar esses dados. Fale com o administrador da plataforma.
+              Você não tem permissão para alterar esses dados. Entre em contato com o administrador da plataforma.
             </div>
           )}
         </form>
