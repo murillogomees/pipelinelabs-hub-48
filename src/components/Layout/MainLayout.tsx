@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { Header } from './Header';
+import { Header } from '../layout/Header';
 import { SidebarTrigger } from '@/components/ui/sidebar';
 import { EnvironmentBanner } from "@/components/Admin/VersionManagement/EnvironmentBanner";
 

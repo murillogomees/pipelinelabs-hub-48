@@ -1,6 +1,6 @@
 
 import React, { useState } from 'react';
-import { Header } from './Header';
+import { Header } from '../layout/Header';
 import { MobileSidebar } from './MobileSidebar';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { EnvironmentBanner } from "@/components/Admin/VersionManagement/EnvironmentBanner";
