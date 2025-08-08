@@ -7,16 +7,10 @@ import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Session } from "@supabase/supabase-js";
-
-// Import pages with correct default imports
-import Dashboard from "@/pages/Dashboard";
-import Products from "@/pages/Products";
-import Sales from "@/pages/Sales";
-import Reports from "@/pages/Reports";
-
-import { PromptGeneratorDashboard } from "@/components/Admin/PromptGenerator/PromptGeneratorDashboard";
+import { UserRoutes } from "@/routes/UserRoutes";
 import { CommandPalette } from "@/components/ui/command-palette";
 import { useCommandPalette } from "@/hooks/useCommandPalette";
+import { ErrorBoundary } from "@/components/ErrorBoundary/ErrorBoundary";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -72,26 +66,23 @@ function App() {
   }
 
   return (
-    <QueryClientProvider client={queryClient}>
-      <TooltipProvider>
-        <Toaster />
-        <Sonner />
-        <BrowserRouter>
-          <div className="min-h-screen">
+    <ErrorBoundary>
+      <QueryClientProvider client={queryClient}>
+        <TooltipProvider>
+          <Toaster />
+          <Sonner />
+          <BrowserRouter>
             <Routes>
-              <Route path="/" element={<Dashboard />} />
-              <Route path="/products" element={<Products />} />
-              <Route path="/sales" element={<Sales />} />
-              <Route path="/reports" element={<Reports />} />
-              <Route path="/admin/prompt-generator" element={<PromptGeneratorDashboard />} />
-              <Route path="/login" element={<Navigate to="/" replace />} />
-              <Route path="*" element={<Navigate to="/" replace />} />
+              <Route path="/app/*" element={<UserRoutes />} />
+              <Route path="/login" element={<Navigate to="/app/dashboard" replace />} />
+              <Route path="/" element={<Navigate to="/app/dashboard" replace />} />
+              <Route path="*" element={<Navigate to="/app/dashboard" replace />} />
             </Routes>
-          </div>
-          <CommandPalette open={open} onOpenChange={setOpen} />
-        </BrowserRouter>
-      </TooltipProvider>
-    </QueryClientProvider>
+            <CommandPalette open={open} onOpenChange={setOpen} />
+          </BrowserRouter>
+        </TooltipProvider>
+      </QueryClientProvider>
+    </ErrorBoundary>
   );
 }
 
