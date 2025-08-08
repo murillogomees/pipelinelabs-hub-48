@@ -1,5 +1,4 @@
 import React, { Suspense } from 'react';
-import { logger } from '@/utils/logger';
 
 interface SuspenseBoundaryProps {
   children: React.ReactNode;

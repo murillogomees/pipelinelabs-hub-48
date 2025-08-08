@@ -17,3 +17,6 @@ export function createLogger(name: string) {
     }
   };
 }
+
+// Export a default logger instance
+export const logger = createLogger('App');
