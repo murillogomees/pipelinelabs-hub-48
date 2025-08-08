@@ -69,6 +69,7 @@ export const BaseForm = <T extends FieldValues>({
 
   const renderField = (field: BaseFormField) => {
     const { name, label, type, placeholder, description, required, options, customComponent: CustomComponent, disabled } = field;
+    const fieldId = `field-${name}`;
 
     return (
       <FormField
@@ -83,6 +84,8 @@ export const BaseForm = <T extends FieldValues>({
             <FormControl>
               {type === 'text' || type === 'email' || type === 'password' || type === 'number' || type === 'tel' || type === 'url' ? (
                 <OptimizedInput
+                  id={fieldId}
+                  name={name}
                   type={type}
                   placeholder={placeholder}
                   disabled={disabled}
@@ -91,6 +94,8 @@ export const BaseForm = <T extends FieldValues>({
                 />
               ) : type === 'textarea' ? (
                 <OptimizedTextarea
+                  id={fieldId}
+                  name={name}
                   placeholder={placeholder}
                   disabled={disabled}
                   rows={4}
@@ -102,8 +107,9 @@ export const BaseForm = <T extends FieldValues>({
                   disabled={disabled}
                   value={formField.value}
                   onValueChange={formField.onChange}
+                  name={name}
                 >
-                  <SelectTrigger>
+                  <SelectTrigger id={fieldId}>
                     <SelectValue placeholder={placeholder} />
                   </SelectTrigger>
                   <SelectContent>
@@ -117,12 +123,13 @@ export const BaseForm = <T extends FieldValues>({
               ) : type === 'checkbox' ? (
                 <div className="flex items-center space-x-2">
                   <Checkbox
-                    id={name}
+                    id={fieldId}
+                    name={name}
                     checked={formField.value}
                     onCheckedChange={formField.onChange}
                     disabled={disabled}
                   />
-                  <label htmlFor={name} className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
+                  <label htmlFor={fieldId} className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
                     {placeholder}
                   </label>
                 </div>
@@ -131,11 +138,12 @@ export const BaseForm = <T extends FieldValues>({
                   value={formField.value}
                   onValueChange={formField.onChange}
                   disabled={disabled}
+                  name={name}
                 >
                   {options?.map(option => (
                     <div key={option.value} className="flex items-center space-x-2">
-                      <RadioGroupItem value={option.value} id={`${name}-${option.value}`} />
-                      <label htmlFor={`${name}-${option.value}`} className="text-sm font-medium leading-none">
+                      <RadioGroupItem value={option.value} id={`${fieldId}-${option.value}`} />
+                      <label htmlFor={`${fieldId}-${option.value}`} className="text-sm font-medium leading-none">
                         {option.label}
                       </label>
                     </div>
@@ -144,11 +152,13 @@ export const BaseForm = <T extends FieldValues>({
               ) : type === 'switch' ? (
                 <div className="flex items-center space-x-2">
                   <Switch
+                    id={fieldId}
+                    name={name}
                     checked={formField.value}
                     onCheckedChange={formField.onChange}
                     disabled={disabled}
                   />
-                  <label className="text-sm font-medium leading-none">
+                  <label htmlFor={fieldId} className="text-sm font-medium leading-none">
                     {placeholder}
                   </label>
                 </div>
@@ -156,6 +166,7 @@ export const BaseForm = <T extends FieldValues>({
                 <Popover>
                   <PopoverTrigger asChild>
                     <Button
+                      id={fieldId}
                       variant="outline"
                       className={cn(
                         'w-full justify-start text-left font-normal',
@@ -181,9 +192,19 @@ export const BaseForm = <T extends FieldValues>({
                       className="p-3 pointer-events-auto"
                     />
                   </PopoverContent>
+                  <input
+                    type="hidden"
+                    name={name}
+                    value={formField.value || ''}
+                  />
                 </Popover>
               ) : type === 'custom' && CustomComponent ? (
-                <CustomComponent {...formField} disabled={disabled} />
+                <CustomComponent 
+                  {...formField} 
+                  disabled={disabled}
+                  id={fieldId}
+                  name={name}
+                />
               ) : null}
             </FormControl>
             {description && (

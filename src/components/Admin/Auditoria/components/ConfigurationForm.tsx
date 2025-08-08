@@ -27,6 +27,7 @@ export function ConfigurationForm({ formData, setFormData }: ConfigurationFormPr
         </div>
         <Switch
           id="auditoria-ativa"
+          name="auditoria_ativa"
           checked={formData.auditoria_ativa}
           onCheckedChange={(value) => 
             setFormData((prev: any) => ({ ...prev, auditoria_ativa: value }))
@@ -38,6 +39,7 @@ export function ConfigurationForm({ formData, setFormData }: ConfigurationFormPr
         <Label htmlFor="frequencia">Frequência de Execução</Label>
         <select
           id="frequencia"
+          name="frequencia_cron"
           value={formData.frequencia_cron}
           onChange={(e) => 
             setFormData((prev: any) => ({ ...prev, frequencia_cron: e.target.value }))
