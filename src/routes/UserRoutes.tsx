@@ -4,9 +4,10 @@ import { Routes, Route, Navigate } from 'react-router-dom';
 import { LazyLoader } from '@/components/common/LazyLoader';
 import { ProtectedRoute } from '@/components/ProtectedRoute';
 import { SetupWaiting } from '@/components/Auth/SetupWaiting';
-import { SidebarProvider } from '@/components/ui/sidebar';
-import { Sidebar } from '@/components/Layout/Sidebar';
-import { MainLayout } from '@/components/Layout/MainLayout';
+import { SidebarProvider, SidebarInset } from '@/components/ui/sidebar';
+import { AppSidebar } from '@/components/Layout/AppSidebar';
+import { Header } from '@/components/layout/Header';
+import { EnvironmentBanner } from "@/components/Admin/VersionManagement/EnvironmentBanner";
 
 // Lazy load components
 const Dashboard = lazy(() => import('@/pages/Dashboard'));
@@ -37,39 +38,49 @@ export function UserRoutes() {
       <SetupWaiting>
         <SidebarProvider>
           <div className="min-h-screen flex w-full">
-            <Sidebar collapsed={false} onNavigate={() => {}} />
-            <main className="flex-1">
-              <MainLayout>
-              <LazyLoader>
-                <Routes>
-                  <Route path="dashboard" element={<Dashboard />} />
-                  <Route path="produtos/*" element={<Products />} />
-                  <Route path="vendas/*" element={<Sales />} />
-                  <Route path="clientes/*" element={<Customers />} />
-                  <Route path="pos/*" element={<Pos />} />
-                  <Route path="relatorios/*" element={<Reports />} />
-                  <Route path="analytics/*" element={<Analytics />} />
-                  <Route path="configuracoes/*" element={<Settings />} />
-                  <Route path="user/profile" element={<UserProfile />} />
-                  <Route path="user/settings" element={<UserSettings />} />
-                  <Route path="admin" element={<Admin />} />
-                  <Route path="admin/audit-logs" element={<AdminAuditLogs />} />
-                  <Route path="admin/usuarios" element={<AdminUsers />} />
-                  <Route path="admin/empresas" element={<AdminEmpresas />} />
-                  <Route path="admin/access-levels" element={<AdminAccessLevels />} />
-                  <Route path="admin/integracoes" element={<AdminIntegracoes />} />
-                  <Route path="admin/notificacoes" element={<AdminNotificacoes />} />
-                  <Route path="admin/backup" element={<AdminBackup />} />
-                  <Route path="admin/monitoramento" element={<AdminMonitoramento />} />
-                  <Route path="admin/code-analysis" element={<AdminCodeAnalysis />} />
-                  <Route path="admin/system-audit" element={<SystemAudit />} />
-                  <Route path="*" element={<Navigate to="/app/dashboard" replace />} />
-                </Routes>
-              </LazyLoader>
-            </MainLayout>
-          </main>
-        </div>
-      </SidebarProvider>
+            <AppSidebar />
+            <SidebarInset>
+              {/* Top Header */}
+              <header className="sticky top-0 z-50 flex h-16 items-center gap-4 border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 px-4 lg:px-6">
+                <Header />
+              </header>
+
+              <EnvironmentBanner />
+
+              {/* Main Content */}
+              <div className="flex-1 overflow-auto">
+                <div className="container mx-auto p-4 lg:p-6">
+                  <LazyLoader>
+                    <Routes>
+                      <Route path="dashboard" element={<Dashboard />} />
+                      <Route path="produtos/*" element={<Products />} />
+                      <Route path="vendas/*" element={<Sales />} />
+                      <Route path="clientes/*" element={<Customers />} />
+                      <Route path="pos/*" element={<Pos />} />
+                      <Route path="relatorios/*" element={<Reports />} />
+                      <Route path="analytics/*" element={<Analytics />} />
+                      <Route path="configuracoes/*" element={<Settings />} />
+                      <Route path="user/profile" element={<UserProfile />} />
+                      <Route path="user/settings" element={<UserSettings />} />
+                      <Route path="admin" element={<Admin />} />
+                      <Route path="admin/audit-logs" element={<AdminAuditLogs />} />
+                      <Route path="admin/usuarios" element={<AdminUsers />} />
+                      <Route path="admin/empresas" element={<AdminEmpresas />} />
+                      <Route path="admin/access-levels" element={<AdminAccessLevels />} />
+                      <Route path="admin/integracoes" element={<AdminIntegracoes />} />
+                      <Route path="admin/notificacoes" element={<AdminNotificacoes />} />
+                      <Route path="admin/backup" element={<AdminBackup />} />
+                      <Route path="admin/monitoramento" element={<AdminMonitoramento />} />
+                      <Route path="admin/code-analysis" element={<AdminCodeAnalysis />} />
+                      <Route path="admin/system-audit" element={<SystemAudit />} />
+                      <Route path="*" element={<Navigate to="/app/dashboard" replace />} />
+                    </Routes>
+                  </LazyLoader>
+                </div>
+              </div>
+            </SidebarInset>
+          </div>
+        </SidebarProvider>
       </SetupWaiting>
     </ProtectedRoute>
   );
