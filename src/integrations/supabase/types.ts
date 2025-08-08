@@ -3275,6 +3275,27 @@ export type Database = {
         }
         Relationships: []
       }
+      sensitive_data: {
+        Row: {
+          content: string
+          created_at: string
+          id: string
+          user_id: string
+        }
+        Insert: {
+          content: string
+          created_at?: string
+          id?: string
+          user_id: string
+        }
+        Update: {
+          content?: string
+          created_at?: string
+          id?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       service_orders: {
         Row: {
           assigned_to: string | null
@@ -4258,6 +4279,33 @@ export type Database = {
           updated_at?: string
           user_id?: string
           widgets?: Json
+        }
+        Relationships: []
+      }
+      user_mfa_status: {
+        Row: {
+          created_at: string
+          last_verified: string | null
+          mfa_enabled: boolean
+          mfa_enforced: boolean
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          last_verified?: string | null
+          mfa_enabled?: boolean
+          mfa_enforced?: boolean
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          last_verified?: string | null
+          mfa_enabled?: boolean
+          mfa_enforced?: boolean
+          updated_at?: string
+          user_id?: string
         }
         Relationships: []
       }
@@ -5397,6 +5445,10 @@ export type Database = {
           p_warehouse_to?: string
         }
         Returns: string
+      }
+      requires_mfa: {
+        Args: { user_id: string }
+        Returns: boolean
       }
       resolve_alert: {
         Args: { p_alert_id: string; p_resolution_notes?: string }
