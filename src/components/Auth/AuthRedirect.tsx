@@ -12,6 +12,10 @@ export const AuthRedirect: React.FC<AuthRedirectProps> = ({ children }) => {
   const { user, loading } = useAuth();
   const location = useLocation();
 
+  console.log('AuthRedirect - Current location:', location.pathname);
+  console.log('AuthRedirect - User:', user ? 'authenticated' : 'not authenticated');
+  console.log('AuthRedirect - Loading:', loading);
+
   // Se está carregando, mostrar spinner
   if (loading) {
     return (
@@ -22,7 +26,8 @@ export const AuthRedirect: React.FC<AuthRedirectProps> = ({ children }) => {
   }
 
   // Se usuário está autenticado e está na página de auth, redirecionar para dashboard
-  if (user && location.pathname.startsWith('/auth')) {
+  if (user && (location.pathname === '/auth' || location.pathname === '/login')) {
+    console.log('AuthRedirect - Redirecting authenticated user to dashboard');
     return <Navigate to="/app/dashboard" replace />;
   }
 

@@ -10,21 +10,25 @@ export function AuthCallback() {
   useEffect(() => {
     const handleAuthCallback = async () => {
       try {
+        console.log('AuthCallback - Processing auth callback...');
+        
         const { data, error } = await supabase.auth.getSession();
         
         if (error) {
-          console.error('Auth callback error:', error);
+          console.error('AuthCallback - Auth callback error:', error);
           navigate('/auth');
           return;
         }
 
         if (data.session) {
+          console.log('AuthCallback - Session found, redirecting to dashboard');
           navigate('/app/dashboard');
         } else {
+          console.log('AuthCallback - No session, redirecting to auth');
           navigate('/auth');
         }
       } catch (error) {
-        console.error('Auth callback error:', error);
+        console.error('AuthCallback - Auth callback error:', error);
         navigate('/auth');
       }
     };
@@ -34,7 +38,10 @@ export function AuthCallback() {
 
   return (
     <div className="flex items-center justify-center min-h-screen">
-      <LoadingSpinner size="lg" />
+      <div className="text-center">
+        <LoadingSpinner size="lg" />
+        <p className="mt-4 text-muted-foreground">Processando autenticação...</p>
+      </div>
     </div>
   );
 }

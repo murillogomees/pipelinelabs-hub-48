@@ -15,24 +15,28 @@ export const AuthForm: React.FC = () => {
   const handleSignIn = async (formData: any) => {
     setIsLoading(true);
     try {
+      console.log('AuthForm - Attempting sign in for:', formData.email);
+      
       const { data, error } = await supabase.auth.signInWithPassword({
         email: formData.email,
         password: formData.password,
       });
 
       if (error) {
+        console.error('AuthForm - Sign in error:', error);
         throw error;
       }
 
       if (data?.user) {
+        console.log('AuthForm - Sign in successful, user:', data.user.email);
         toast({
           title: 'Login realizado com sucesso!',
           description: 'Redirecionando para o dashboard...',
         });
-        navigate('/app/dashboard');
+        // O redirecionamento será feito automaticamente pelo AuthRedirect
       }
     } catch (error: any) {
-      console.error('Erro no login:', error);
+      console.error('AuthForm - Login error:', error);
       toast({
         title: 'Erro no login',
         description: error.message || 'Erro ao fazer login. Verifique suas credenciais.',
@@ -46,10 +50,8 @@ export const AuthForm: React.FC = () => {
   const handleSignUp = async (formData: any) => {
     setIsLoading(true);
     try {
-      // 🛡️ Validação de rate limiting (implementado via Edge Function)
-      console.log('🔄 Iniciando processo de signup seguro...');
+      console.log('AuthForm - Attempting sign up for:', formData.email);
 
-      // ✅ Signup melhorado - dados mais completos para o trigger automático
       const { data, error } = await supabase.auth.signUp({
         email: formData.email,
         password: formData.password,
@@ -60,67 +62,31 @@ export const AuthForm: React.FC = () => {
             document: formData.document,
             phone: formData.phone,
           },
-          emailRedirectTo: `${window.location.origin}/app/dashboard`
+          emailRedirectTo: `${window.location.origin}/auth/callback`
         },
       });
 
       if (error) {
-        console.error('❌ Erro no signup:', error);
+        console.error('AuthForm - Sign up error:', error);
         throw error;
       }
 
-      if (formData.email) {
-        console.log('✅ Usuário criado com sucesso!', {         
-          email: formData.email
-        });
+      if (data?.user) {
+        console.log('AuthForm - Sign up successful, user:', data.user.email);
 
         toast({
           title: '🎉 Cadastro realizado com sucesso!',
-          description: 'Sua empresa e perfil foram criados automaticamente. Redirecionando para o dashboard...',
+          description: 'Verifique seu email para confirmar a conta ou aguarde enquanto configuramos seu perfil.',
         });
 
-        // Aguardar um pouco para dar tempo para o trigger executar
-        setTimeout(() => {
-          navigate('/app/dashboard');
-        }, 1000);
-
-        // 📊 Log de auditoria do signup
-        const { error: logError } = await supabase.rpc('log_security_event', {
-          p_event_type: 'user_signup_success',
-          p_ip_address: null,
-          p_user_agent: navigator.userAgent,
-          p_event_data: {
-            email: formData.email,
-            has_company: !!formData.companyName,
-            signup_timestamp: new Date().toISOString(),
-          },
-          p_risk_level: 'low',
-        });
-        if (logError) {
-          console.warn('Warning: Could not log signup event:', logError);
+        // Se o usuário foi confirmado automaticamente, será redirecionado pelo AuthRedirect
+        if (data.user.email_confirmed_at) {
+          console.log('AuthForm - User confirmed, will be redirected automatically');
         }
       }
     } catch (error: any) {
-      console.error('❌ Erro no cadastro:', error);
+      console.error('AuthForm - Sign up error:', error);
       
-      // 🚨 Log de tentativa de signup com erro
-      try {
-        await supabase.rpc('log_security_event', {
-          p_event_type: 'user_signup_failure',
-          p_user_id: null,
-          p_ip_address: null,
-          p_user_agent: navigator.userAgent,
-          p_event_data: {
-            email: formData.email,
-            error_message: error.message,
-            error_code: error.status || 'unknown'
-          },
-          p_risk_level: 'medium'
-        });
-      } catch (logError) {
-        console.warn('Warning: Could not log signup failure:', logError);
-      }
-
       let errorMessage = 'Erro ao criar conta. Tente novamente.';
       
       if (error.message?.includes('rate_limit')) {
