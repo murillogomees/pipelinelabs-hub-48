@@ -1,151 +1,198 @@
 
 import { useState, useCallback } from 'react';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
-import { useProfile } from '@/hooks/useProfile';
 
-interface GPTPipelineResponse {
-  analysis: string;
-  suggestion: string;
-  code_changes: {
-    files: string[];
-    description: string;
-  };
-  considerations: string[];
-  ready_to_implement: boolean;
-}
-
-interface GPTConversation {
+interface Message {
   id: string;
-  user_id: string;
-  company_id?: string;
-  message: string;
-  response: GPTPipelineResponse;
-  gpt_model: string;
-  created_at: string;
-  approved?: boolean;
-  implemented?: boolean;
+  role: 'user' | 'assistant';
+  content: string;
+  timestamp: Date;
 }
 
-export const useGPTPipeline = () => {
-  const [isProcessing, setIsProcessing] = useState(false);
+interface Conversation {
+  id: string;
+  title: string;
+  messages: Message[];
+  created_at: string;
+  updated_at: string;
+}
+
+export function useGPTPipeline() {
+  const [conversations, setConversations] = useState<Conversation[]>([]);
+  const [currentConversation, setCurrentConversation] = useState<Conversation | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
+  const [isSending, setIsSending] = useState(false);
   const { toast } = useToast();
-  const queryClient = useQueryClient();
-  const { profile } = useProfile();
 
-  const companyId = profile?.company_id;
-
-  // Buscar histórico de conversas - usando any temporariamente até os tipos serem atualizados
-  const { data: conversations = [], isLoading: isLoadingHistory } = useQuery({
-    queryKey: ['gpt-pipeline-conversations', companyId],
-    queryFn: async () => {
-      if (!companyId) return [];
-
-      try {
-        // Usando query raw temporariamente para evitar erro de tipos
-        const { data, error } = await supabase
-          .rpc('get_gpt_conversations', { p_company_id: companyId });
-
-        if (error) {
-          console.error('Error fetching conversations:', error);
-          return [];
-        }
-        
-        return (data || []) as GPTConversation[];
-      } catch (err) {
-        console.error('Error in query:', err);
-        return [];
-      }
-    },
-    enabled: !!companyId,
-  });
-
-  // Função para enviar mensagem para GPT Pipeline
-  const sendMessage = useCallback(async (message: string, gptId: string = 'gpt-4o') => {
-    if (!companyId) {
+  // Buscar conversas do usuário (função simplificada por enquanto)
+  const loadConversations = useCallback(async () => {
+    setIsLoading(true);
+    try {
+      // Por enquanto, retornar array vazio até que a tabela seja reconhecida pelo tipo
+      setConversations([]);
+    } catch (error: any) {
+      console.error('Erro ao carregar conversas:', error);
       toast({
         title: 'Erro',
-        description: 'Empresa não identificada',
+        description: 'Erro ao carregar conversas',
+        variant: 'destructive',
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  }, [toast]);
+
+  // Criar nova conversa
+  const createConversation = useCallback(async (title: string): Promise<string | null> => {
+    try {
+      // Por enquanto, criar conversa local
+      const newConversation: Conversation = {
+        id: `conv_${Date.now()}`,
+        title,
+        messages: [],
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      };
+      
+      setConversations(prev => [newConversation, ...prev]);
+      setCurrentConversation(newConversation);
+      
+      return newConversation.id;
+    } catch (error: any) {
+      console.error('Erro ao criar conversa:', error);
+      toast({
+        title: 'Erro',
+        description: 'Erro ao criar nova conversa',
         variant: 'destructive',
       });
       return null;
     }
+  }, [toast]);
 
-    setIsProcessing(true);
+  // Enviar mensagem
+  const sendMessage = useCallback(async (content: string, conversationId?: string) => {
+    if (!content.trim()) return;
 
+    setIsSending(true);
+    
     try {
+      let targetConversationId = conversationId;
+      
+      // Se não há conversa atual, criar uma nova
+      if (!targetConversationId && !currentConversation) {
+        const title = content.length > 50 ? content.substring(0, 50) + '...' : content;
+        targetConversationId = await createConversation(title);
+        if (!targetConversationId) return;
+      }
+
+      const finalConversationId = targetConversationId || currentConversation?.id;
+      if (!finalConversationId) return;
+
+      // Adicionar mensagem do usuário
+      const userMessage: Message = {
+        id: `msg_${Date.now()}_user`,
+        role: 'user',
+        content,
+        timestamp: new Date(),
+      };
+
+      // Atualizar conversa atual com a mensagem do usuário
+      setCurrentConversation(prev => {
+        if (!prev || prev.id !== finalConversationId) return prev;
+        return {
+          ...prev,
+          messages: [...prev.messages, userMessage],
+        };
+      });
+
+      // Chamar a edge function
       const { data, error } = await supabase.functions.invoke('gpt-pipeline-chat', {
         body: {
-          message,
-          gpt_id: gptId,
-          company_id: companyId,
-          conversation_history: conversations.slice(0, 5).map(conv => [
-            { role: 'user', content: conv.message },
-            { role: 'assistant', content: JSON.stringify(conv.response) }
-          ]).flat()
+          message: content,
+          conversationId: finalConversationId,
         },
       });
 
-      if (error) throw error;
-
-      console.log('Response from GPT Pipeline:', data);
-      
-      if (data?.success && data?.response) {
-        // Invalidar cache do histórico
-        queryClient.invalidateQueries({ queryKey: ['gpt-pipeline-conversations', companyId] });
-
-        toast({
-          title: 'GPT Pipeline respondeu',
-          description: 'Sua solicitação foi analisada com sucesso!',
-        });
-
-        return data.response as GPTPipelineResponse;
-      } else {
-        throw new Error('Resposta inválida do GPT Pipeline');
+      if (error) {
+        throw error;
       }
+
+      // Adicionar resposta do assistente
+      const assistantMessage: Message = {
+        id: `msg_${Date.now()}_assistant`,
+        role: 'assistant',
+        content: data.response || 'Desculpe, não consegui processar sua mensagem.',
+        timestamp: new Date(),
+      };
+
+      // Atualizar conversa com a resposta
+      setCurrentConversation(prev => {
+        if (!prev || prev.id !== finalConversationId) return prev;
+        return {
+          ...prev,
+          messages: [...prev.messages, assistantMessage],
+        };
+      });
+
+      // Atualizar lista de conversas
+      setConversations(prev => 
+        prev.map(conv => 
+          conv.id === finalConversationId 
+            ? { ...conv, messages: [...conv.messages, userMessage, assistantMessage] }
+            : conv
+        )
+      );
+
     } catch (error: any) {
-      console.error('Erro ao comunicar com GPT Pipeline:', error);
+      console.error('Erro ao enviar mensagem:', error);
       toast({
         title: 'Erro',
-        description: error.message || 'Erro ao comunicar com GPT Pipeline',
+        description: 'Erro ao enviar mensagem. Tente novamente.',
         variant: 'destructive',
       });
-      return null;
     } finally {
-      setIsProcessing(false);
+      setIsSending(false);
     }
-  }, [companyId, toast, queryClient, conversations]);
+  }, [currentConversation, createConversation, toast]);
 
-  // Função para aprovar e implementar
-  const approveImplementation = useMutation({
-    mutationFn: async (conversationId: string) => {
-      // Simular implementação por enquanto
-      await new Promise(resolve => setTimeout(resolve, 2000));
-      return { success: true };
-    },
-    onSuccess: () => {
+  // Selecionar conversa
+  const selectConversation = useCallback((conversation: Conversation) => {
+    setCurrentConversation(conversation);
+  }, []);
+
+  // Deletar conversa
+  const deleteConversation = useCallback(async (conversationId: string) => {
+    try {
+      setConversations(prev => prev.filter(conv => conv.id !== conversationId));
+      
+      if (currentConversation?.id === conversationId) {
+        setCurrentConversation(null);
+      }
+
       toast({
-        title: 'Implementação aprovada',
-        description: 'As mudanças foram aplicadas com sucesso!',
+        title: 'Sucesso',
+        description: 'Conversa deletada com sucesso',
       });
-      queryClient.invalidateQueries({ queryKey: ['gpt-pipeline-conversations', companyId] });
-    },
-    onError: (error: any) => {
+    } catch (error: any) {
+      console.error('Erro ao deletar conversa:', error);
       toast({
-        title: 'Erro na implementação',
-        description: error.message || 'Erro ao aplicar as mudanças',
+        title: 'Erro',
+        description: 'Erro ao deletar conversa',
         variant: 'destructive',
       });
-    },
-  });
+    }
+  }, [currentConversation, toast]);
 
   return {
     conversations,
-    isLoadingHistory,
-    isProcessing,
+    currentConversation,
+    isLoading,
+    isSending,
+    loadConversations,
+    createConversation,
     sendMessage,
-    approveImplementation: approveImplementation.mutate,
-    isApproving: approveImplementation.isPending,
+    selectConversation,
+    deleteConversation,
   };
-};
+}

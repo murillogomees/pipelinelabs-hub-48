@@ -1,10 +1,12 @@
+
 import React, { useEffect, useState } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useCurrentCompany } from '@/hooks/useCurrentCompany';
 import { LoadingSpinner } from '@/components/ui/loading-spinner';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { AlertCircle, Building, CheckCircle } from 'lucide-react';
+import { AlertCircle, Building, CheckCircle, Settings } from 'lucide-react';
+import { SetupForm } from './SetupForm';
 
 interface SetupWaitingProps {
   children: React.ReactNode;
@@ -16,26 +18,35 @@ export function SetupWaiting({ children }: SetupWaitingProps) {
   const [waitTime, setWaitTime] = useState(0);
   const [maxRetries] = useState(10);
   const [retryCount, setRetryCount] = useState(0);
+  const [showManualSetup, setShowManualSetup] = useState(false);
 
   // Contador de tempo esperando
   useEffect(() => {
-    if (isLoading || companyData) return;
+    if (isLoading || companyData || showManualSetup) return;
     
     const timer = setInterval(() => {
       setWaitTime(prev => prev + 1);
     }, 1000);
 
     return () => clearInterval(timer);
-  }, [isLoading, companyData]);
+  }, [isLoading, companyData, showManualSetup]);
 
   // Auto-retry para casos onde o trigger demora
   useEffect(() => {
-    if (!isLoading && !companyData && retryCount < maxRetries && waitTime > 0 && waitTime % 3 === 0) {
+    if (!isLoading && !companyData && retryCount < maxRetries && waitTime > 0 && waitTime % 3 === 0 && !showManualSetup) {
       console.log(`🔄 Tentativa ${retryCount + 1}/${maxRetries} - Buscando empresa...`);
       setRetryCount(prev => prev + 1);
       refetch();
     }
-  }, [waitTime, isLoading, companyData, retryCount, maxRetries, refetch]);
+  }, [waitTime, isLoading, companyData, retryCount, maxRetries, refetch, showManualSetup]);
+
+  // Função chamada quando o setup manual for concluído
+  const handleSetupSuccess = () => {
+    setShowManualSetup(false);
+    setRetryCount(0);
+    setWaitTime(0);
+    refetch();
+  };
 
   // Enquanto está carregando pela primeira vez
   if (isLoading && retryCount === 0) {
@@ -61,6 +72,15 @@ export function SetupWaiting({ children }: SetupWaitingProps) {
     return <>{children}</>;
   }
 
+  // Se está mostrando o setup manual
+  if (showManualSetup) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background px-4 py-8">
+        <SetupForm onSuccess={handleSetupSuccess} />
+      </div>
+    );
+  }
+
   // Se há erro ou não conseguiu carregar após várias tentativas
   if (error || retryCount >= maxRetries) {
     return (
@@ -83,6 +103,15 @@ export function SetupWaiting({ children }: SetupWaitingProps) {
             
             <div className="space-y-2">
               <Button 
+                onClick={() => setShowManualSetup(true)}
+                className="w-full"
+              >
+                <Settings className="mr-2 h-4 w-4" />
+                Configurar Manualmente
+              </Button>
+              
+              <Button 
+                variant="outline"
                 onClick={() => {
                   setRetryCount(0);
                   setWaitTime(0);
@@ -134,7 +163,7 @@ export function SetupWaiting({ children }: SetupWaitingProps) {
           </div>
 
           {waitTime > 10 && (
-            <div className="pt-2">
+            <div className="pt-2 space-y-2">
               <Button 
                 variant="outline" 
                 size="sm" 
@@ -142,6 +171,16 @@ export function SetupWaiting({ children }: SetupWaitingProps) {
                 className="w-full"
               >
                 Verificar Novamente
+              </Button>
+              
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                onClick={() => setShowManualSetup(true)}
+                className="w-full"
+              >
+                <Settings className="mr-2 h-3 w-3" />
+                Configurar Manualmente
               </Button>
             </div>
           )}
