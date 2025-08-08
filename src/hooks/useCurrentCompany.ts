@@ -3,6 +3,9 @@ import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { retryWithBackoff, shouldRetryError } from '@/utils/networkRetry';
+import { createLogger } from '@/utils/logger';
+
+const logger = createLogger('CurrentCompany');
 
 export const useCurrentCompany = () => {
   const { user } = useAuth();
@@ -15,37 +18,80 @@ export const useCurrentCompany = () => {
       }
 
       return retryWithBackoff(async () => {
-        console.log('🔄 Buscando empresa do usuário:', user.id);
+        logger.info('🔄 Buscando empresa do usuário:', user.id);
         
-        // Search for user company through user_companies relation
+        // First, try to get user company through user_companies relation
         const { data: userCompany, error: userCompanyError } = await supabase
           .from('user_companies')
           .select(`
             company_id,
             role,
-            companies (
+            is_active,
+            companies!inner (
               id,
               name,
-              document
+              document,
+              email,
+              phone,
+              address
             )
           `)
           .eq('user_id', user.id)
           .eq('is_active', true)
-          .single();
+          .maybeSingle();
 
         if (userCompanyError) {
-          console.error('❌ Error fetching user company:', userCompanyError);
+          logger.error('❌ Error fetching user company:', userCompanyError);
           
-          // If it's a PGRST002 infrastructure error, throw for retry
+          // If it's infrastructure error, throw for retry
           if (userCompanyError.code === 'PGRST002' || shouldRetryError(userCompanyError)) {
             throw userCompanyError;
           }
           
+          // For other errors, try direct company lookup
+          logger.warn('Trying direct company lookup...');
+          
+          const { data: directCompany, error: directError } = await supabase
+            .from('companies')
+            .select('*')
+            .eq('user_id', user.id)
+            .maybeSingle();
+
+          if (directError) {
+            logger.error('❌ Error fetching direct company:', directError);
+            if (directError.code === 'PGRST002' || shouldRetryError(directError)) {
+              throw directError;
+            }
+            
+            // Return fallback data based on user metadata
+            return {
+              company_id: null,
+              company: {
+                id: `fallback_${user.id}`,
+                name: user.user_metadata?.company_name || `${user.user_metadata?.first_name || 'Usuário'} - Empresa`,
+                document: '',
+                email: user.email || '',
+                phone: user.user_metadata?.phone || '',
+                address: ''
+              },
+              role: 'contratante'
+            };
+          }
+
+          if (directCompany) {
+            return {
+              company_id: directCompany.id,
+              company: directCompany,
+              role: 'contratante'
+            };
+          }
+          
+          // No company found, return fallback
           return null;
         }
 
-        if (userCompany) {
-          console.log('✅ Empresa encontrada:', userCompany.companies?.name);
+        if (userCompany && userCompany.companies) {
+          logger.info('✅ Empresa encontrada:', userCompany.companies.name);
           return {
             company_id: userCompany.company_id,
             company: userCompany.companies,
@@ -53,30 +99,51 @@ export const useCurrentCompany = () => {
           };
         }
 
+        // No user company found, try direct lookup
+        const { data: directCompany, error: directError } = await supabase
+          .from('companies')
+          .select('*')
+          .eq('user_id', user.id)
+          .maybeSingle();
+
+        if (directError) {
+          if (directError.code === 'PGRST002' || shouldRetryError(directError)) {
+            throw directError;
+          }
+        }
+
+        if (directCompany) {
+          return {
+            company_id: directCompany.id,
+            company: directCompany,
+            role: 'contratante'
+          };
+        }
+
         return null;
       }, {
-        maxRetries: 3, // Reduced retries for faster fallback to manual setup
-        baseDelay: 2000,
-        maxDelay: 10000, // Reduced max delay
-        backoffMultiplier: 1.5 // Less aggressive backoff
+        maxRetries: 2,
+        baseDelay: 1000,
+        maxDelay: 5000,
+        backoffMultiplier: 1.5
       });
     },
     enabled: !!user?.id,
     retry: (failureCount, error: any) => {
       // For infrastructure errors, let the component handle fallback
       if (error?.code === 'PGRST002') {
-        return failureCount < 2; // Reduced retries for PGRST002
+        return failureCount < 1; // Reduced retries for PGRST002
       }
       
       if (shouldRetryError(error)) {
-        return failureCount < 3;
+        return failureCount < 2;
       }
       return false;
     },
-    retryDelay: (attemptIndex) => Math.min(2000 * 1.5 ** attemptIndex, 10000), // Faster retry delays
-    staleTime: 2 * 60 * 1000, // 2 minutes cache
-    gcTime: 5 * 60 * 1000, // 5 minutes garbage collection
-    refetchOnWindowFocus: false, // Prevent unnecessary refetches
+    retryDelay: (attemptIndex) => Math.min(1000 * 1.5 ** attemptIndex, 5000),
+    staleTime: 5 * 60 * 1000, // 5 minutes cache
+    gcTime: 10 * 60 * 1000, // 10 minutes garbage collection
+    refetchOnWindowFocus: false,
     refetchOnMount: true
   });
 };

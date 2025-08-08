@@ -1,238 +1,138 @@
 
-import { useState, useEffect, useCallback, useRef } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 
-interface CacheConfig<T> {
+interface CacheOptions<T> {
   key: string;
   fetcher: () => Promise<T>;
-  ttl?: number; // Time to live em milissegundos
-  staleTime?: number; // Tempo em que os dados são considerados frescos
+  ttl?: number; // Time to live in milliseconds
+  staleTime?: number; // Time before data is considered stale
   enabled?: boolean;
   fallbackData?: T;
 }
 
-interface CacheEntry<T> {
-  data: T;
-  timestamp: number;
+interface CacheState<T> {
+  data: T | undefined;
+  isLoading: boolean;
+  error: Error | null;
   isStale: boolean;
 }
 
-// Cache global para persistir dados entre componentes
-const globalCache = new Map<string, CacheEntry<any>>();
+export function useCache<T>({
+  key,
+  fetcher,
+  ttl = 300000, // 5 minutes default
+  staleTime = 60000, // 1 minute default
+  enabled = true,
+  fallbackData
+}: CacheOptions<T>) {
+  const [state, setState] = useState<CacheState<T>>({
+    data: fallbackData,
+    isLoading: enabled,
+    error: null,
+    isStale: false
+  });
 
-// Salvar cache no localStorage
-const saveToLocalStorage = (key: string, entry: CacheEntry<any>) => {
-  try {
-    localStorage.setItem(`cache_${key}`, JSON.stringify({
-      data: entry.data,
-      timestamp: entry.timestamp,
-      isStale: entry.isStale
-    }));
-  } catch (error) {
-    console.warn('Erro ao salvar cache no localStorage:', error);
-  }
-};
-
-// Carregar cache do localStorage
-const loadFromLocalStorage = <T>(key: string): CacheEntry<T> | null => {
-  try {
-    const stored = localStorage.getItem(`cache_${key}`);
-    if (stored) {
-      return JSON.parse(stored);
-    }
-  } catch (error) {
-    console.warn('Erro ao carregar cache do localStorage:', error);
-  }
-  return null;
-};
-
-export function useCache<T>(config: CacheConfig<T>) {
-  const { 
-    key, 
-    fetcher, 
-    ttl = 300000, // 5 minutos default
-    staleTime = 60000, // 1 minuto default
-    enabled = true,
-    fallbackData
-  } = config;
-
-  const [data, setData] = useState<T | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<Error | null>(null);
-  const [lastFetch, setLastFetch] = useState<number>(0);
-  const fetchInProgressRef = useRef(false);
-
-  // Verificar se os dados estão válidos
-  const isDataValid = useCallback((entry: CacheEntry<T>) => {
-    const now = Date.now();
-    return (now - entry.timestamp) < ttl;
-  }, [ttl]);
-
-  // Verificar se os dados estão frescos (não stale)
-  const isDataFresh = useCallback((entry: CacheEntry<T>) => {
-    const now = Date.now();
-    return (now - entry.timestamp) < staleTime;
-  }, [staleTime]);
-
-  // Carregar dados do cache
-  const loadFromCache = useCallback(() => {
-    // Primeiro tentar cache em memória
-    let cached = globalCache.get(key);
-    
-    // Se não encontrar em memória, tentar localStorage
-    if (!cached) {
-      cached = loadFromLocalStorage<T>(key);
-      if (cached) {
-        globalCache.set(key, cached);
-      }
-    }
-
-    if (cached && isDataValid(cached)) {
-      setData(cached.data);
-      setError(null);
-      setIsLoading(false);
-      setLastFetch(cached.timestamp);
-      return cached;
-    }
-
-    // Se tem fallbackData, usar enquanto carrega
-    if (fallbackData && !data) {
-      setData(fallbackData);
-    }
-
-    return null;
-  }, [key, isDataValid, fallbackData, data]);
-
-  // Buscar dados
-  const fetchData = useCallback(async (force = false) => {
+  const fetchData = useCallback(async () => {
     if (!enabled) return;
-    if (fetchInProgressRef.current && !force) return;
-
-    // Verificar se precisa buscar
-    if (!force) {
-      const cached = loadFromCache();
-      if (cached && isDataFresh(cached)) {
-        return cached.data;
-      }
-    }
-
-    fetchInProgressRef.current = true;
-    setIsLoading(true);
-    setError(null);
-
+    
+    setState(prev => ({ ...prev, isLoading: true, error: null }));
+    
     try {
-      console.log(`🔄 Fetching fresh data for cache key: ${key}`);
-      const result = await fetcher();
-      
-      const entry: CacheEntry<T> = {
-        data: result,
-        timestamp: Date.now(),
+      const data = await fetcher();
+      setState({
+        data,
+        isLoading: false,
+        error: null,
         isStale: false
-      };
-
-      // Salvar em ambos os caches
-      globalCache.set(key, entry);
-      saveToLocalStorage(key, entry);
-
-      setData(result);
-      setLastFetch(entry.timestamp);
-      setError(null);
-
-      console.log(`✅ Cache updated for key: ${key}`);
-      return result;
-    } catch (err: any) {
-      console.error(`❌ Cache fetch error for key ${key}:`, err);
-      setError(err);
-
-      // Em caso de erro, tentar usar dados em cache mesmo se stale
-      const staleData = globalCache.get(key) || loadFromLocalStorage<T>(key);
-      if (staleData && isDataValid(staleData)) {
-        console.log(`🔄 Using stale data for key: ${key}`);
-        setData(staleData.data);
-        setLastFetch(staleData.timestamp);
-        return staleData.data;
+      });
+      
+      // Store in localStorage with timestamp
+      localStorage.setItem(key, JSON.stringify({
+        data,
+        timestamp: Date.now(),
+        ttl
+      }));
+    } catch (error) {
+      console.error(`Cache fetch error for ${key}:`, error);
+      
+      // Try to get from localStorage as fallback
+      const cached = localStorage.getItem(key);
+      if (cached) {
+        try {
+          const { data: cachedData } = JSON.parse(cached);
+          setState({
+            data: cachedData,
+            isLoading: false,
+            error: error as Error,
+            isStale: true
+          });
+          return;
+        } catch {}
       }
-
-      // Se não tem cache e tem fallback, usar
-      if (fallbackData) {
-        setData(fallbackData);
-        return fallbackData;
-      }
-
-      throw err;
-    } finally {
-      setIsLoading(false);
-      fetchInProgressRef.current = false;
+      
+      setState(prev => ({
+        ...prev,
+        data: fallbackData || prev.data,
+        isLoading: false,
+        error: error as Error
+      }));
     }
-  }, [enabled, loadFromCache, isDataFresh, key, fetcher, fallbackData, isDataValid]);
+  }, [key, fetcher, enabled, ttl, fallbackData]);
 
-  // Invalidar cache
-  const invalidateCache = useCallback(() => {
-    console.log(`🗑️ Invalidating cache for key: ${key}`);
-    globalCache.delete(key);
-    localStorage.removeItem(`cache_${key}`);
-    setData(null);
-    setError(null);
-    setLastFetch(0);
-  }, [key]);
+  // Check cache on mount
+  useEffect(() => {
+    if (!enabled) return;
+    
+    const cached = localStorage.getItem(key);
+    if (cached) {
+      try {
+        const { data, timestamp, ttl: cachedTTL } = JSON.parse(cached);
+        const age = Date.now() - timestamp;
+        
+        if (age < (cachedTTL || ttl)) {
+          setState({
+            data,
+            isLoading: false,
+            error: null,
+            isStale: age > staleTime
+          });
+          
+          // If stale, fetch in background
+          if (age > staleTime) {
+            fetchData();
+          }
+          return;
+        }
+      } catch {}
+    }
+    
+    fetchData();
+  }, [key, enabled, ttl, staleTime, fetchData]);
 
-  // Atualizar cache manualmente
   const updateCache = useCallback((newData: T) => {
-    const entry: CacheEntry<T> = {
+    setState({
+      data: newData,
+      isLoading: false,
+      error: null,
+      isStale: false
+    });
+    
+    localStorage.setItem(key, JSON.stringify({
       data: newData,
       timestamp: Date.now(),
-      isStale: false
-    };
+      ttl
+    }));
+  }, [key, ttl]);
 
-    globalCache.set(key, entry);
-    saveToLocalStorage(key, entry);
-    setData(newData);
-    setLastFetch(entry.timestamp);
-    setError(null);
-    
-    console.log(`📝 Cache manually updated for key: ${key}`);
-  }, [key]);
-
-  // Revalidar (buscar dados frescos em background)
-  const revalidate = useCallback(() => {
-    return fetchData(true);
-  }, [fetchData]);
-
-  // Carregar dados iniciais
-  useEffect(() => {
-    if (enabled) {
-      // Primeiro carregar do cache
-      const cached = loadFromCache();
-      
-      // Se não tem cache ou está stale, buscar
-      if (!cached || !isDataFresh(cached)) {
-        fetchData();
-      }
-    }
-  }, [enabled, key, fetchData, loadFromCache, isDataFresh]);
-
-  // Auto-revalidação em intervalos
-  useEffect(() => {
-    if (!enabled || !data) return;
-
-    const interval = setInterval(() => {
-      const cached = globalCache.get(key);
-      if (!cached || !isDataFresh(cached)) {
-        fetchData();
-      }
-    }, staleTime);
-
-    return () => clearInterval(interval);
-  }, [enabled, data, key, fetchData, isDataFresh, staleTime]);
+  const invalidateCache = useCallback(() => {
+    localStorage.removeItem(key);
+    fetchData();
+  }, [key, fetchData]);
 
   return {
-    data,
-    isLoading,
-    error,
-    isStale: lastFetch > 0 && (Date.now() - lastFetch) > staleTime,
-    lastFetch: new Date(lastFetch),
-    invalidateCache,
+    ...state,
+    refetch: fetchData,
     updateCache,
-    revalidate,
-    refetch: () => fetchData(true)
+    invalidateCache
   };
 }
