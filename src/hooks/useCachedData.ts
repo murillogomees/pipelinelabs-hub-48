@@ -1,4 +1,5 @@
-import { useCompanyCache } from './useCache';
+
+import { useCache } from './useCache';
 import { CACHE_TTL } from '@/lib/cache/redis';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
@@ -8,10 +9,8 @@ export function useCachedDashboard() {
   const { user } = useAuth();
   const companyId = user?.user_metadata?.company_id;
   
-  return useCompanyCache({
-    companyId,
-    cacheType: 'dashboard',
-    ttl: CACHE_TTL.DASHBOARD,
+  return useCache({
+    key: `dashboard_${companyId}`,
     fetcher: async () => {
       const [salesData, productsData, customersData, financialData] = await Promise.all([
         // Resumo de vendas
@@ -52,6 +51,7 @@ export function useCachedDashboard() {
         pendingReceivables: financialData.data || []
       };
     },
+    ttl: CACHE_TTL?.DASHBOARD || 300000,
     enabled: !!companyId
   });
 }
@@ -61,10 +61,10 @@ export function useCachedProductsList(search?: string, category?: string) {
   const { user } = useAuth();
   const companyId = user?.user_metadata?.company_id;
   
-  return useCompanyCache({
-    companyId,
-    cacheType: 'products_list',
-    ttl: CACHE_TTL.PRODUCTS_LIST,
+  const cacheKey = `products_list_${companyId}_${search || ''}_${category || ''}`;
+  
+  return useCache({
+    key: cacheKey,
     fetcher: async () => {
       let query = supabase
         .from('products')
@@ -94,9 +94,8 @@ export function useCachedProductsList(search?: string, category?: string) {
       if (error) throw error;
       return data || [];
     },
-    enabled: !!companyId,
-    search,
-    category
+    ttl: CACHE_TTL?.PRODUCTS_LIST || 300000,
+    enabled: !!companyId
   });
 }
 
@@ -105,10 +104,8 @@ export function useCachedTopCustomers() {
   const { user } = useAuth();
   const companyId = user?.user_metadata?.company_id;
   
-  return useCompanyCache({
-    companyId,
-    cacheType: 'top_customers',
-    ttl: CACHE_TTL.REPORTS,
+  return useCache({
+    key: `top_customers_${companyId}`,
     fetcher: async () => {
       const { data, error } = await supabase
         .from('customers')
@@ -126,6 +123,7 @@ export function useCachedTopCustomers() {
       if (error) throw error;
       return data || [];
     },
+    ttl: CACHE_TTL?.REPORTS || 600000,
     enabled: !!companyId
   });
 }
@@ -135,10 +133,8 @@ export function useCachedTopProducts() {
   const { user } = useAuth();
   const companyId = user?.user_metadata?.company_id;
   
-  return useCompanyCache({
-    companyId,
-    cacheType: 'top_products',
-    ttl: CACHE_TTL.REPORTS,
+  return useCache({
+    key: `top_products_${companyId}`,
     fetcher: async () => {
       const { data, error } = await supabase
         .from('products')
@@ -155,6 +151,7 @@ export function useCachedTopProducts() {
       if (error) throw error;
       return data || [];
     },
+    ttl: CACHE_TTL?.REPORTS || 600000,
     enabled: !!companyId
   });
 }
@@ -164,10 +161,8 @@ export function useCachedFinancialSummary() {
   const { user } = useAuth();
   const companyId = user?.user_metadata?.company_id;
   
-  return useCompanyCache({
-    companyId,
-    cacheType: 'financial_summary',
-    ttl: CACHE_TTL.FINANCIAL,
+  return useCache({
+    key: `financial_summary_${companyId}`,
     fetcher: async () => {
       const [receivables, payables, sales] = await Promise.all([
         supabase
@@ -193,6 +188,7 @@ export function useCachedFinancialSummary() {
         recentSales: sales.data || []
       };
     },
+    ttl: CACHE_TTL?.FINANCIAL || 300000,
     enabled: !!companyId
   });
 }
@@ -207,10 +203,10 @@ export function useCachedReport(
   const { user } = useAuth();
   const companyId = user?.user_metadata?.company_id;
   
-  return useCompanyCache({
-    companyId,
-    cacheType: 'report',
-    ttl: CACHE_TTL.REPORTS,
+  const cacheKey = `report_${companyId}_${reportType}_${startDate}_${endDate}_${JSON.stringify(filters)}`;
+  
+  return useCache({
+    key: cacheKey,
     fetcher: async () => {
       // Implementar lógica específica baseada no tipo de relatório
       switch (reportType) {
@@ -254,20 +250,15 @@ export function useCachedReport(
           throw new Error(`Tipo de relatório não suportado: ${reportType}`);
       }
     },
-    enabled: !!companyId && !!reportType && !!startDate && !!endDate,
-    reportType,
-    startDate,
-    endDate,
-    filters: JSON.stringify(filters)
+    ttl: CACHE_TTL?.REPORTS || 600000,
+    enabled: !!companyId && !!reportType && !!startDate && !!endDate
   });
 }
 
 // Hook para cache de informações públicas (categorias, planos)
 export function useCachedPublicData(dataType: 'categories' | 'plans' | 'features') {
-  return useCompanyCache({
-    companyId: 'public', // Dados públicos
-    cacheType: `catalog_${dataType}`,
-    ttl: CACHE_TTL.CATALOG,
+  return useCache({
+    key: `catalog_${dataType}`,
     fetcher: async () => {
       switch (dataType) {
         case 'categories':
@@ -290,6 +281,7 @@ export function useCachedPublicData(dataType: 'categories' | 'plans' | 'features
         default:
           throw new Error(`Tipo de dados públicos não suportado: ${dataType}`);
       }
-    }
+    },
+    ttl: CACHE_TTL?.CATALOG || 3600000
   });
 }
