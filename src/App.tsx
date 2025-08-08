@@ -1,4 +1,5 @@
 
+import React from 'react';
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -8,8 +9,6 @@ import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Session } from "@supabase/supabase-js";
 import { UserRoutes } from "@/routes/UserRoutes";
-import { CommandPalette } from "@/components/ui/command-palette";
-import { useCommandPalette } from "@/hooks/useCommandPalette";
 import { ErrorBoundary } from "@/components/ErrorBoundary/ErrorBoundary";
 
 const queryClient = new QueryClient({
@@ -23,7 +22,6 @@ const queryClient = new QueryClient({
 function App() {
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
-  const { open, setOpen } = useCommandPalette();
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -78,7 +76,6 @@ function App() {
               <Route path="/" element={<Navigate to="/app/dashboard" replace />} />
               <Route path="*" element={<Navigate to="/app/dashboard" replace />} />
             </Routes>
-            <CommandPalette open={open} onOpenChange={setOpen} />
           </BrowserRouter>
         </TooltipProvider>
       </QueryClientProvider>
