@@ -2,6 +2,7 @@
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
+import { retryWithBackoff, shouldRetryError } from '@/utils/networkRetry';
 
 export const useCurrentCompany = () => {
   const { user } = useAuth();
@@ -13,7 +14,9 @@ export const useCurrentCompany = () => {
         throw new Error('Usuário não autenticado');
       }
 
-      try {
+      return retryWithBackoff(async () => {
+        console.log('🔄 Buscando empresa do usuário:', user.id);
+        
         // Buscar empresa do usuário através da relação user_companies
         const { data: userCompany, error: userCompanyError } = await supabase
           .from('user_companies')
@@ -31,11 +34,18 @@ export const useCurrentCompany = () => {
           .single();
 
         if (userCompanyError) {
-          console.error('Error fetching user company:', userCompanyError);
+          console.error('❌ Error fetching user company:', userCompanyError);
+          
+          // Se é um erro de infraestrutura do Supabase, throw para retry
+          if (userCompanyError.code === 'PGRST002' || shouldRetryError(userCompanyError)) {
+            throw userCompanyError;
+          }
+          
           return null;
         }
 
         if (userCompany) {
+          console.log('✅ Empresa encontrada:', userCompany.companies?.name);
           return {
             company_id: userCompany.company_id,
             company: userCompany.companies,
@@ -44,13 +54,23 @@ export const useCurrentCompany = () => {
         }
 
         return null;
-      } catch (error) {
-        console.error('Error in useCurrentCompany:', error);
-        return null;
-      }
+      }, {
+        maxRetries: 5,
+        baseDelay: 2000,
+        maxDelay: 30000,
+        backoffMultiplier: 2
+      });
     },
     enabled: !!user?.id,
-    retry: false,
-    staleTime: 2 * 60 * 1000 // 2 minutos de cache
+    retry: (failureCount, error: any) => {
+      // Retry até 3 vezes para erros de infraestrutura
+      if (error?.code === 'PGRST002' || shouldRetryError(error)) {
+        return failureCount < 3;
+      }
+      return false;
+    },
+    retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000),
+    staleTime: 2 * 60 * 1000, // 2 minutos de cache
+    gcTime: 5 * 60 * 1000 // 5 minutos de garbage collection
   });
 };

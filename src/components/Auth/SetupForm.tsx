@@ -9,6 +9,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { LoadingSpinner } from '@/components/ui/loading-spinner';
 import { Building, User, ArrowRight } from 'lucide-react';
+import { retryWithBackoff, shouldRetryError } from '@/utils/networkRetry';
 
 interface SetupFormProps {
   onSuccess: () => void;
@@ -20,12 +21,12 @@ export function SetupForm({ onSuccess }: SetupFormProps) {
   const [isLoading, setIsLoading] = useState(false);
   const [formData, setFormData] = useState({
     // Dados do perfil
-    displayName: user?.user_metadata?.display_name || '',
+    displayName: user?.user_metadata?.display_name || user?.user_metadata?.first_name + ' ' + user?.user_metadata?.last_name || '',
     phone: user?.user_metadata?.phone || '',
     document: user?.user_metadata?.document || '',
     
     // Dados da empresa
-    companyName: user?.user_metadata?.company_name || `${user?.user_metadata?.display_name || 'Minha'} - Empresa`,
+    companyName: user?.user_metadata?.company_name || `${user?.user_metadata?.display_name || user?.user_metadata?.first_name + ' ' + user?.user_metadata?.last_name || 'Minha'} - Empresa`,
     companyDocument: '',
     companyEmail: user?.email || '',
     companyPhone: user?.user_metadata?.phone || '',
@@ -53,64 +54,80 @@ export function SetupForm({ onSuccess }: SetupFormProps) {
     try {
       console.log('🔄 Iniciando setup manual para usuário:', user.id);
 
-      // 1. Criar a empresa primeiro
-      const { data: company, error: companyError } = await supabase
-        .from('companies')
-        .insert({
-          name: formData.companyName,
-          document: formData.companyDocument,
-          email: formData.companyEmail,
-          phone: formData.companyPhone,
-          user_id: user.id,
-        })
-        .select()
-        .single();
+      await retryWithBackoff(async () => {
+        // 1. Criar a empresa primeiro
+        const { data: company, error: companyError } = await supabase
+          .from('companies')
+          .insert({
+            name: formData.companyName,
+            document: formData.companyDocument,
+            email: formData.companyEmail,
+            phone: formData.companyPhone,
+            user_id: user.id,
+          })
+          .select()
+          .single();
 
-      if (companyError) {
-        console.error('❌ Erro ao criar empresa:', companyError);
-        throw companyError;
-      }
+        if (companyError) {
+          console.error('❌ Erro ao criar empresa:', companyError);
+          if (companyError.code === 'PGRST002' || shouldRetryError(companyError)) {
+            throw companyError;
+          }
+          throw new Error(`Erro ao criar empresa: ${companyError.message}`);
+        }
 
-      console.log('✅ Empresa criada:', company.id);
+        console.log('✅ Empresa criada:', company.id);
 
-      // 2. Criar o perfil do usuário
-      const { error: profileError } = await supabase
-        .from('profiles')
-        .upsert({
-          user_id: user.id,
-          email: user.email,
-          display_name: formData.displayName,
-          phone: formData.phone,
-          document: formData.document,
-          company_id: company.id,
-          access_level_id: 'contratante', // Definir como contratante por padrão
-          updated_at: new Date().toISOString(),
-        });
+        // 2. Criar o perfil do usuário
+        const { error: profileError } = await supabase
+          .from('profiles')
+          .upsert({
+            user_id: user.id,
+            email: user.email,
+            display_name: formData.displayName,
+            phone: formData.phone,
+            document: formData.document,
+            company_id: company.id,
+            access_level_id: 'contratante',
+            updated_at: new Date().toISOString(),
+          });
 
-      if (profileError) {
-        console.error('❌ Erro ao criar perfil:', profileError);
-        throw profileError;
-      }
+        if (profileError) {
+          console.error('❌ Erro ao criar perfil:', profileError);
+          if (profileError.code === 'PGRST002' || shouldRetryError(profileError)) {
+            throw profileError;
+          }
+          throw new Error(`Erro ao criar perfil: ${profileError.message}`);
+        }
 
-      console.log('✅ Perfil criado/atualizado');
+        console.log('✅ Perfil criado/atualizado');
 
-      // 3. Criar a relação user_companies
-      const { error: userCompanyError } = await supabase
-        .from('user_companies')
-        .upsert({
-          user_id: user.id,
-          company_id: company.id,
-          role: 'contratante',
-          is_active: true,
-          updated_at: new Date().toISOString(),
-        });
+        // 3. Criar a relação user_companies
+        const { error: userCompanyError } = await supabase
+          .from('user_companies')
+          .upsert({
+            user_id: user.id,
+            company_id: company.id,
+            role: 'contratante',
+            is_active: true,
+            updated_at: new Date().toISOString(),
+          });
 
-      if (userCompanyError) {
-        console.error('❌ Erro ao criar relação usuário-empresa:', userCompanyError);
-        throw userCompanyError;
-      }
+        if (userCompanyError) {
+          console.error('❌ Erro ao criar relação usuário-empresa:', userCompanyError);
+          if (userCompanyError.code === 'PGRST002' || shouldRetryError(userCompanyError)) {
+            throw userCompanyError;
+          }
+          throw new Error(`Erro ao criar relação usuário-empresa: ${userCompanyError.message}`);
+        }
 
-      console.log('✅ Relação usuário-empresa criada');
+        console.log('✅ Relação usuário-empresa criada');
+      }, {
+        maxRetries: 3,
+        baseDelay: 2000,
+        maxDelay: 15000,
+        backoffMultiplier: 2
+      });
 
       toast({
         title: '🎉 Configuração concluída!',
@@ -125,9 +142,17 @@ export function SetupForm({ onSuccess }: SetupFormProps) {
     } catch (error: any) {
       console.error('❌ Erro no setup manual:', error);
       
+      let errorMessage = 'Erro ao configurar sua conta. Tente novamente.';
+      
+      if (error.code === 'PGRST002') {
+        errorMessage = 'Serviço temporariamente indisponível. Tente novamente em alguns segundos.';
+      } else if (error.message) {
+        errorMessage = error.message;
+      }
+      
       toast({
         title: 'Erro na configuração',
-        description: error.message || 'Erro ao configurar sua conta. Tente novamente.',
+        description: errorMessage,
         variant: 'destructive',
       });
     } finally {
