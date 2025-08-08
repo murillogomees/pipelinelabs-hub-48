@@ -1,6 +1,5 @@
-
 import { useCache } from './useCache';
-import { CACHE_TTL } from '@/lib/cache/redis';
+import { CACHE_TTL } from '@/lib/cache/constants';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 
@@ -51,7 +50,7 @@ export function useCachedDashboard() {
         pendingReceivables: financialData.data || []
       };
     },
-    ttl: CACHE_TTL?.DASHBOARD || 300000,
+    ttl: CACHE_TTL.DASHBOARD,
     enabled: !!companyId
   });
 }
@@ -94,7 +93,7 @@ export function useCachedProductsList(search?: string, category?: string) {
       if (error) throw error;
       return data || [];
     },
-    ttl: CACHE_TTL?.PRODUCTS_LIST || 300000,
+    ttl: CACHE_TTL.PRODUCTS_LIST,
     enabled: !!companyId
   });
 }
@@ -123,7 +122,7 @@ export function useCachedTopCustomers() {
       if (error) throw error;
       return data || [];
     },
-    ttl: CACHE_TTL?.REPORTS || 600000,
+    ttl: CACHE_TTL.REPORTS,
     enabled: !!companyId
   });
 }
@@ -151,7 +150,7 @@ export function useCachedTopProducts() {
       if (error) throw error;
       return data || [];
     },
-    ttl: CACHE_TTL?.REPORTS || 600000,
+    ttl: CACHE_TTL.REPORTS,
     enabled: !!companyId
   });
 }
@@ -188,7 +187,7 @@ export function useCachedFinancialSummary() {
         recentSales: sales.data || []
       };
     },
-    ttl: CACHE_TTL?.FINANCIAL || 300000,
+    ttl: CACHE_TTL.FINANCIAL,
     enabled: !!companyId
   });
 }
@@ -250,7 +249,7 @@ export function useCachedReport(
           throw new Error(`Tipo de relatório não suportado: ${reportType}`);
       }
     },
-    ttl: CACHE_TTL?.REPORTS || 600000,
+    ttl: CACHE_TTL.REPORTS,
     enabled: !!companyId && !!reportType && !!startDate && !!endDate
   });
 }
@@ -282,6 +281,6 @@ export function useCachedPublicData(dataType: 'categories' | 'plans' | 'features
           throw new Error(`Tipo de dados públicos não suportado: ${dataType}`);
       }
     },
-    ttl: CACHE_TTL?.CATALOG || 3600000
+    ttl: CACHE_TTL.CATALOG
   });
 }
