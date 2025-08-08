@@ -12,6 +12,7 @@ interface QueuedOperation {
 export function useOfflineSupport() {
   const [isOnline, setIsOnline] = useState(navigator.onLine);
   const [queue, setQueue] = useState<QueuedOperation[]>([]);
+  const [isSyncing, setIsSyncing] = useState(false);
 
   useEffect(() => {
     const handleOnline = () => setIsOnline(true);
@@ -55,9 +56,23 @@ export function useOfflineSupport() {
     localStorage.removeItem('offline_queue');
   }, []);
 
+  // Sync queue when coming back online
+  useEffect(() => {
+    if (isOnline && queue.length > 0) {
+      setIsSyncing(true);
+      // Simulate sync process - in real implementation, you'd sync with your backend
+      setTimeout(() => {
+        setIsSyncing(false);
+        clearQueue();
+      }, 2000);
+    }
+  }, [isOnline, queue.length, clearQueue]);
+
   return {
     isOnline,
     queue,
+    queueSize: queue.length,
+    isSyncing,
     addToQueue,
     clearQueue
   };
