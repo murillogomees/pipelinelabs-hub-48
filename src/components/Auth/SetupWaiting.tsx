@@ -7,6 +7,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { AlertCircle, Building, CheckCircle, Settings, Wifi, WifiOff } from 'lucide-react';
 import { SetupForm } from './SetupForm';
+import { DatabaseOfflineHandler } from './DatabaseOfflineHandler';
+import { useServiceHealth } from '@/hooks/useServiceHealth';
 
 interface SetupWaitingProps {
   children: React.ReactNode;
@@ -15,45 +17,62 @@ interface SetupWaitingProps {
 export function SetupWaiting({ children }: SetupWaitingProps) {
   const { user } = useAuth();
   const { data: companyData, isLoading, error, refetch } = useCurrentCompany();
+  const { isHealthy, checkHealth, consecutiveFailures, error: healthError } = useServiceHealth();
   const [waitTime, setWaitTime] = useState(0);
-  const [maxRetries] = useState(6); // Reduzido para evitar spam
+  const [maxRetries] = useState(6);
   const [retryCount, setRetryCount] = useState(0);
   const [showManualSetup, setShowManualSetup] = useState(false);
   const [isInfrastructureError, setIsInfrastructureError] = useState(false);
 
-  // Verificar se é erro de infraestrutura
+  // Check for infrastructure errors
   useEffect(() => {
-    if (error && (error as any)?.code === 'PGRST002') {
-      setIsInfrastructureError(true);
+    const isInfraError = error && (
+      (error as any)?.code === 'PGRST002' ||
+      (error as any)?.message?.includes('schema cache') ||
+      (error as any)?.message?.includes('Service Unavailable')
+    );
+    
+    setIsInfrastructureError(!!isInfraError);
+    
+    if (isInfraError) {
+      console.log('🚨 Infrastructure error detected:', error);
+      checkHealth(); // Start health monitoring
     }
-  }, [error]);
+  }, [error, checkHealth]);
 
-  // Contador de tempo esperando
+  // Wait time counter
   useEffect(() => {
-    if (isLoading || companyData || showManualSetup) return;
+    if (isLoading || companyData || showManualSetup || !isHealthy) return;
     
     const timer = setInterval(() => {
       setWaitTime(prev => prev + 1);
     }, 1000);
 
     return () => clearInterval(timer);
-  }, [isLoading, companyData, showManualSetup]);
+  }, [isLoading, companyData, showManualSetup, isHealthy]);
 
-  // Auto-retry com backoff mais inteligente
+  // Auto-retry with intelligent backoff
   useEffect(() => {
-    if (!isLoading && !companyData && retryCount < maxRetries && waitTime > 0 && waitTime % 5 === 0 && !showManualSetup) {
-      // Se é erro de infraestrutura, aguardar mais tempo
-      const delayMultiplier = isInfrastructureError ? 2 : 1;
-      
-      if (waitTime >= 5 * delayMultiplier) {
-        console.log(`🔄 Tentativa ${retryCount + 1}/${maxRetries} - Buscando empresa... (aguardou ${waitTime}s)`);
-        setRetryCount(prev => prev + 1);
+    if (!isLoading && !companyData && retryCount < maxRetries && waitTime > 0 && waitTime % 10 === 0 && !showManualSetup && isHealthy) {
+      console.log(`🔄 Auto-retry ${retryCount + 1}/${maxRetries} after ${waitTime}s`);
+      setRetryCount(prev => prev + 1);
+      refetch();
+    }
+  }, [waitTime, isLoading, companyData, retryCount, maxRetries, refetch, showManualSetup, isHealthy]);
+
+  const handleManualRetry = () => {
+    console.log('🔄 Manual retry triggered');
+    setRetryCount(0);
+    setWaitTime(0);
+    setIsInfrastructureError(false);
+    checkHealth().then((healthy) => {
+      if (healthy) {
         refetch();
       }
-    }
-  }, [waitTime, isLoading, companyData, retryCount, maxRetries, refetch, showManualSetup, isInfrastructureError]);
+    });
+  };
 
-  // Função chamada quando o setup manual for concluído
+  // Function called when manual setup is completed
   const handleSetupSuccess = () => {
     setShowManualSetup(false);
     setRetryCount(0);
@@ -62,7 +81,20 @@ export function SetupWaiting({ children }: SetupWaitingProps) {
     refetch();
   };
 
-  // Enquanto está carregando pela primeira vez
+  // Show database offline handler for infrastructure issues
+  if (isInfrastructureError && !isHealthy && consecutiveFailures > 2) {
+    return (
+      <DatabaseOfflineHandler
+        onRetry={handleManualRetry}
+        retryCount={consecutiveFailures}
+        maxRetries={10}
+        isRetrying={isLoading}
+        error={error || healthError}
+      />
+    );
+  }
+
+  // First time loading
   if (isLoading && retryCount === 0) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
@@ -81,12 +113,12 @@ export function SetupWaiting({ children }: SetupWaitingProps) {
     );
   }
 
-  // Se há dados da empresa, mostrar conteúdo normal
+  // Show company data if available
   if (companyData) {
     return <>{children}</>;
   }
 
-  // Se está mostrando o setup manual
+  // Show manual setup form
   if (showManualSetup) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background px-4 py-8">
@@ -95,7 +127,7 @@ export function SetupWaiting({ children }: SetupWaitingProps) {
     );
   }
 
-  // Se há erro ou não conseguiu carregar após várias tentativas
+  // Error state or max retries reached
   if (error || retryCount >= maxRetries) {
     const isInfraError = (error as any)?.code === 'PGRST002';
     
@@ -113,20 +145,20 @@ export function SetupWaiting({ children }: SetupWaitingProps) {
             </CardTitle>
             <CardDescription>
               {isInfraError 
-                ? 'Os serviços estão temporariamente indisponíveis. Você pode configurar manualmente enquanto aguardamos a normalização.'
+                ? 'Os serviços estão temporariamente indisponíveis. Você pode configurar manualmente.'
                 : 'Não foi possível configurar sua conta automaticamente'
               }
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
-            <div className="text-sm text-muted-foreground space-y-2">
+            <div className="text-sm text-muted-foreground space-y-2 p-3 bg-muted rounded-lg">
               <p><strong>Usuário:</strong> {user?.email}</p>
               <p><strong>Tentativas:</strong> {retryCount}/{maxRetries}</p>
               <p><strong>Tempo:</strong> {waitTime}s</p>
               {isInfraError && (
                 <div className="flex items-center space-x-2 text-orange-600">
                   <WifiOff className="h-4 w-4" />
-                  <span>Problema de conectividade detectado</span>
+                  <span>Problema de infraestrutura detectado</span>
                 </div>
               )}
             </div>
@@ -142,23 +174,17 @@ export function SetupWaiting({ children }: SetupWaitingProps) {
               
               <Button 
                 variant="outline"
-                onClick={() => {
-                  setRetryCount(0);
-                  setWaitTime(0);
-                  setIsInfrastructureError(false);
-                  refetch();
-                }}
+                onClick={handleManualRetry}
                 className="w-full"
-                disabled={isInfraError && waitTime < 10} // Aguardar mais tempo se é erro de infra
+                disabled={isInfraError && !isHealthy}
               >
                 <Wifi className="mr-2 h-4 w-4" />
                 Tentar Novamente
-                {isInfraError && waitTime < 10 && <span className="ml-1">({10 - waitTime}s)</span>}
               </Button>
               
               <p className="text-xs text-muted-foreground text-center">
                 {isInfraError 
-                  ? 'Problema temporário nos serviços. Tente novamente em alguns minutos.'
+                  ? '💡 Problemas de infraestrutura geralmente se resolvem em 2-5 minutos.'
                   : 'Se o problema persistir, entre em contato com o suporte'
                 }
               </p>
@@ -169,7 +195,7 @@ export function SetupWaiting({ children }: SetupWaitingProps) {
     );
   }
 
-  // Aguardando criação automática
+  // Waiting for automatic creation
   return (
     <div className="min-h-screen flex items-center justify-center bg-background">
       <Card className="w-full max-w-md">
@@ -208,14 +234,13 @@ export function SetupWaiting({ children }: SetupWaitingProps) {
             </div>
           </div>
 
-          {waitTime > 8 && (
+          {waitTime > 15 && (
             <div className="pt-2 space-y-2">
               <Button 
                 variant="outline" 
                 size="sm" 
-                onClick={() => refetch()}
+                onClick={handleManualRetry}
                 className="w-full"
-                disabled={isInfrastructureError && waitTime < 15}
               >
                 <Wifi className="mr-2 h-3 w-3" />
                 Verificar Novamente

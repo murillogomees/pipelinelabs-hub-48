@@ -17,7 +17,7 @@ export const useCurrentCompany = () => {
       return retryWithBackoff(async () => {
         console.log('🔄 Buscando empresa do usuário:', user.id);
         
-        // Buscar empresa do usuário através da relação user_companies
+        // Search for user company through user_companies relation
         const { data: userCompany, error: userCompanyError } = await supabase
           .from('user_companies')
           .select(`
@@ -36,7 +36,7 @@ export const useCurrentCompany = () => {
         if (userCompanyError) {
           console.error('❌ Error fetching user company:', userCompanyError);
           
-          // Se é um erro de infraestrutura do Supabase, throw para retry
+          // If it's a PGRST002 infrastructure error, throw for retry
           if (userCompanyError.code === 'PGRST002' || shouldRetryError(userCompanyError)) {
             throw userCompanyError;
           }
@@ -55,22 +55,28 @@ export const useCurrentCompany = () => {
 
         return null;
       }, {
-        maxRetries: 5,
+        maxRetries: 3, // Reduced retries for faster fallback to manual setup
         baseDelay: 2000,
-        maxDelay: 30000,
-        backoffMultiplier: 2
+        maxDelay: 10000, // Reduced max delay
+        backoffMultiplier: 1.5 // Less aggressive backoff
       });
     },
     enabled: !!user?.id,
     retry: (failureCount, error: any) => {
-      // Retry até 3 vezes para erros de infraestrutura
-      if (error?.code === 'PGRST002' || shouldRetryError(error)) {
+      // For infrastructure errors, let the component handle fallback
+      if (error?.code === 'PGRST002') {
+        return failureCount < 2; // Reduced retries for PGRST002
+      }
+      
+      if (shouldRetryError(error)) {
         return failureCount < 3;
       }
       return false;
     },
-    retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000),
-    staleTime: 2 * 60 * 1000, // 2 minutos de cache
-    gcTime: 5 * 60 * 1000 // 5 minutos de garbage collection
+    retryDelay: (attemptIndex) => Math.min(2000 * 1.5 ** attemptIndex, 10000), // Faster retry delays
+    staleTime: 2 * 60 * 1000, // 2 minutes cache
+    gcTime: 5 * 60 * 1000, // 5 minutes garbage collection
+    refetchOnWindowFocus: false, // Prevent unnecessary refetches
+    refetchOnMount: true
   });
 };
