@@ -10,9 +10,10 @@ export function SecurityHeaders({ nonce, additionalCSP }: SecurityHeadersProps) 
   const defaultCSP = [
     "default-src 'self'",
     "script-src 'self' 'unsafe-inline' https://js.stripe.com https://checkout.stripe.com",
-    "style-src 'self' 'unsafe-inline' https://checkout.stripe.com",
+    "style-src 'self' 'unsafe-inline' https://checkout.stripe.com https://fonts.googleapis.com",
+    "style-src-elem 'self' https://fonts.googleapis.com https://checkout.stripe.com",
+    "font-src 'self' https://fonts.gstatic.com https://checkout.stripe.com",
     "img-src 'self' data: https: https://checkout.stripe.com",
-    "font-src 'self' https: https://checkout.stripe.com",
     "connect-src 'self' https://*.supabase.co wss://*.supabase.co https://api.stripe.com https://checkout.stripe.com",
     "frame-src https://js.stripe.com https://hooks.stripe.com https://checkout.stripe.com",
     "frame-ancestors 'none'",
@@ -44,6 +45,7 @@ export function SecurityHeaders({ nonce, additionalCSP }: SecurityHeadersProps) 
 
   return (
     <Helmet>
+      <meta httpEquiv="Content-Security-Policy" content={csp} />
       <meta httpEquiv="X-Content-Type-Options" content="nosniff" />
       <meta httpEquiv="Referrer-Policy" content="strict-origin-when-cross-origin" />
       <meta httpEquiv="Permissions-Policy" content={permissionsPolicy} />

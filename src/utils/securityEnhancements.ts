@@ -44,14 +44,15 @@ export class EnhancedRateLimiter {
 
 // Security headers management
 export const SecurityHeaders = {
-  // Content Security Policy
+  // Content Security Policy with Google Fonts support
   getCSPHeader(): string {
     return [
       "default-src 'self'",
       "script-src 'self' 'unsafe-inline' https://js.stripe.com",
-      "style-src 'self' 'unsafe-inline'",
+      "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
+      "style-src-elem 'self' https://fonts.googleapis.com",
+      "font-src 'self' https://fonts.gstatic.com",
       "img-src 'self' data: https:",
-      "font-src 'self' data:",
       "connect-src 'self' https://api.stripe.com https://*.supabase.co wss://*.supabase.co",
       "frame-src 'self' https://js.stripe.com",
       "object-src 'none'",
