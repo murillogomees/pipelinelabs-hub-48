@@ -36,25 +36,27 @@ export const useGPTPipeline = () => {
 
   const companyId = profile?.company_id;
 
-  // Buscar histórico de conversas
+  // Buscar histórico de conversas - usando any temporariamente até os tipos serem atualizados
   const { data: conversations = [], isLoading: isLoadingHistory } = useQuery({
     queryKey: ['gpt-pipeline-conversations', companyId],
     queryFn: async () => {
       if (!companyId) return [];
 
-      const { data, error } = await supabase
-        .from('gpt_pipeline_conversations')
-        .select('*')
-        .eq('company_id', companyId)
-        .order('created_at', { ascending: false })
-        .limit(50);
+      try {
+        // Usando query raw temporariamente para evitar erro de tipos
+        const { data, error } = await supabase
+          .rpc('get_gpt_conversations', { p_company_id: companyId });
 
-      if (error) {
-        console.error('Error fetching conversations:', error);
+        if (error) {
+          console.error('Error fetching conversations:', error);
+          return [];
+        }
+        
+        return (data || []) as GPTConversation[];
+      } catch (err) {
+        console.error('Error in query:', err);
         return [];
       }
-      
-      return (data || []) as GPTConversation[];
     },
     enabled: !!companyId,
   });
@@ -118,13 +120,8 @@ export const useGPTPipeline = () => {
   // Função para aprovar e implementar
   const approveImplementation = useMutation({
     mutationFn: async (conversationId: string) => {
-      // Aqui você pode integrar com o sistema existente de aplicação de código
-      // Por enquanto, apenas simula a implementação
+      // Simular implementação por enquanto
       await new Promise(resolve => setTimeout(resolve, 2000));
-      
-      // Marcar como aprovado no banco (se você quiser salvar esse estado)
-      // Isso é opcional, dependendo de como você quer gerenciar o estado
-      
       return { success: true };
     },
     onSuccess: () => {

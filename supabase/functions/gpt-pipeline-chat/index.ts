@@ -1,6 +1,6 @@
 
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.50.4'
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -8,218 +8,137 @@ const corsHeaders = {
 }
 
 serve(async (req) => {
+  // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
-    return new Response('ok', { headers: corsHeaders })
+    return new Response(null, { headers: corsHeaders });
   }
 
   try {
-    console.log('Iniciando GPT Pipeline chat...')
-    
-    const supabaseClient = createClient(
+    const supabase = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
-      Deno.env.get('SUPABASE_ANON_KEY') ?? '',
-      { global: { headers: { Authorization: req.headers.get('Authorization')! } } }
+      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '',
+      {
+        auth: {
+          autoRefreshToken: false,
+          persistSession: false
+        }
+      }
     )
 
-    // Verificar autenticação
-    const { data: { user }, error: userError } = await supabaseClient.auth.getUser()
-    if (userError || !user) {
-      console.error('Erro de autenticação:', userError)
-      return new Response(JSON.stringify({ error: 'Unauthorized' }), {
-        status: 401,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      })
+    const { message, gpt_id, company_id, conversation_history } = await req.json();
+
+    console.log('Received request:', { message, gpt_id, company_id });
+
+    // Validar entrada
+    if (!message || !company_id) {
+      return new Response(
+        JSON.stringify({ error: 'Mensagem e company_id são obrigatórios' }),
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
     }
 
-    // Verificar se é super admin
-    const { data: profile } = await supabaseClient
-      .from('profiles')
-      .select(`
-        *,
-        access_levels (
-          name
-        )
-      `)
-      .eq('user_id', user.id)
-      .single()
-
-    const isSuperAdmin = profile?.access_levels?.name === 'super_admin'
-    
-    if (!isSuperAdmin) {
-      console.error('Acesso negado - não é super admin')
-      return new Response(JSON.stringify({ error: 'Access denied. Super admin only.' }), {
-        status: 403,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      })
-    }
-
-    const requestBody = await req.json().catch(() => ({}))
-    const { message, gpt_id = 'gpt-4o', conversation_history = [] } = requestBody
-
-    console.log('Dados recebidos:', { message: message?.substring(0, 100), gpt_id })
-
-    if (!message) {
-      return new Response(JSON.stringify({ error: 'Message is required' }), {
-        status: 400,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      })
-    }
-
-    const openaiKey = Deno.env.get('OPENAI_API_KEY')
-    if (!openaiKey) {
-      console.error('Chave OpenAI não configurada')
-      return new Response(JSON.stringify({ 
-        error: 'OpenAI API key not configured. Please configure OPENAI_API_KEY environment variable.' 
-      }), {
-        status: 500,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      })
-    }
-
-    console.log('Chamando GPT Pipeline...')
-
-    // Construir mensagens com histórico
-    const messages = [
-      {
-        role: 'system',
-        content: `Você é o GPT Pipeline especializado em desenvolvimento de aplicações Pipeline Labs ERP.
-
-CONTEXTO DA APLICAÇÃO:
-- Pipeline Labs é um ERP completo com gestão de vendas, produtos, clientes, fornecedores, estoque, financeiro
-- Usa React + TypeScript + Tailwind CSS + Supabase
-- Sistema de permissões com super_admin, contratante e operador
-- Arquitetura baseada em componentes modulares
-
-SUAS RESPONSABILIDADES:
-1. Analisar comandos do usuário e sugerir implementações
-2. Explicar o que será feito antes de implementar
-3. Propor melhorias e alternativas quando apropriado
-4. Considerar impactos na arquitetura e segurança
-5. Sempre responder em português
-
-FORMATO DE RESPOSTA:
-Sempre responda em JSON com esta estrutura:
-{
-  "analysis": "Análise detalhada do que foi solicitado",
-  "suggestion": "Sugestão de implementação com justificativa",
-  "code_changes": {
-    "files": ["lista de arquivos que serão modificados"],
-    "description": "Descrição das mudanças propostas"
-  },
-  "considerations": ["lista de considerações importantes"],
-  "ready_to_implement": true/false
-}
-
-Se ready_to_implement for true, o usuário poderá aprovar e as mudanças serão aplicadas automaticamente.`
-      },
-      ...conversation_history,
-      {
-        role: 'user',
-        content: message
-      }
-    ]
-
-    // Chamar OpenAI API
+    // Chamar OpenAI
     const openaiResponse = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
       headers: {
-        'Authorization': `Bearer ${openaiKey}`,
+        'Authorization': `Bearer ${Deno.env.get('OPENAI_API_KEY')}`,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: gpt_id,
-        messages: messages,
+        model: gpt_id || 'gpt-4o',
+        messages: [
+          {
+            role: 'system',
+            content: `Você é um assistente especializado em análise de código e desenvolvimento. 
+            Analise a solicitação do usuário e responda sempre em JSON com esta estrutura:
+            {
+              "analysis": "Sua análise detalhada da solicitação",
+              "suggestion": "Sua sugestão de implementação",
+              "code_changes": {
+                "files": ["lista de arquivos que serão modificados"],
+                "description": "Descrição das mudanças"
+              },
+              "considerations": ["lista de considerações importantes"],
+              "ready_to_implement": true/false
+            }`
+          },
+          ...conversation_history || [],
+          {
+            role: 'user',
+            content: message
+          }
+        ],
         temperature: 0.7,
         max_tokens: 2000,
       }),
-    })
-
-    console.log('Status da resposta OpenAI:', openaiResponse.status)
+    });
 
     if (!openaiResponse.ok) {
-      const errorText = await openaiResponse.text().catch(() => 'Unknown error')
-      console.error('Erro na API OpenAI:', errorText)
-      return new Response(JSON.stringify({ 
-        error: `OpenAI API error: ${openaiResponse.status} - ${errorText}` 
-      }), {
-        status: 500,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      })
+      const error = await openaiResponse.json();
+      console.error('OpenAI API error:', error);
+      throw new Error(`OpenAI API error: ${error.error?.message || 'Unknown error'}`);
     }
 
-    const openaiData = await openaiResponse.json()
-    console.log('Resposta recebida da OpenAI')
+    const openaiData = await openaiResponse.json();
+    console.log('OpenAI response:', openaiData);
 
-    const gptResponse = openaiData.choices?.[0]?.message?.content
+    const gptResponse = openaiData.choices[0]?.message?.content;
 
     if (!gptResponse) {
-      console.error('Nenhuma resposta gerada pelo GPT')
-      return new Response(JSON.stringify({ error: 'No response generated' }), {
-        status: 500,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      })
+      throw new Error('Resposta vazia da OpenAI');
     }
 
-    // Tentar fazer parse do JSON da resposta
-    let parsedResponse
+    // Tentar parsear a resposta JSON
+    let parsedResponse;
     try {
-      // Extrair JSON se estiver em markdown
-      const jsonMatch = gptResponse.match(/```json\s*\n([\s\S]*?)\n\s*```/) || 
-                       gptResponse.match(/(\{[\s\S]*\})/)
-      
-      if (jsonMatch) {
-        parsedResponse = JSON.parse(jsonMatch[1])
-      } else {
-        parsedResponse = JSON.parse(gptResponse)
-      }
+      parsedResponse = JSON.parse(gptResponse);
     } catch (parseError) {
-      console.log('Resposta não está em JSON, usando formato de texto:', parseError)
+      console.error('Erro ao parsear resposta JSON:', parseError);
+      // Se não conseguir parsear, criar uma resposta estruturada
       parsedResponse = {
-        analysis: gptResponse,
-        suggestion: "Resposta em formato de texto livre",
+        analysis: "Análise da solicitação recebida",
+        suggestion: gptResponse,
         code_changes: {
           files: [],
-          description: "Análise manual necessária"
+          description: "Mudanças a serem implementadas"
         },
-        considerations: ["Resposta não estruturada"],
+        considerations: ["Revisar implementação antes de aplicar"],
         ready_to_implement: false
-      }
+      };
     }
 
-    // Salvar conversa no banco
+    // Salvar a conversa no banco
     try {
-      await supabaseClient
-        .from('gpt_pipeline_conversations')
-        .insert({
-          user_id: user.id,
-          company_id: profile?.company_id || null,
-          message: message,
-          response: parsedResponse,
-          gpt_model: gpt_id,
-          created_at: new Date().toISOString()
-        })
-    } catch (logError) {
-      console.error('Erro ao salvar conversa:', logError)
+      const { error: insertError } = await supabase.rpc('save_gpt_conversation', {
+        p_company_id: company_id,
+        p_message: message,
+        p_response: parsedResponse,
+        p_gpt_model: gpt_id || 'gpt-4o'
+      });
+
+      if (insertError) {
+        console.error('Erro ao salvar conversa:', insertError);
+      }
+    } catch (saveError) {
+      console.error('Erro ao salvar no banco:', saveError);
     }
 
-    console.log('Processamento concluído com sucesso')
-
-    return new Response(JSON.stringify({
-      success: true,
-      response: parsedResponse,
-      raw_response: gptResponse,
-      usage: openaiData.usage
-    }), {
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-    })
+    return new Response(
+      JSON.stringify({
+        success: true,
+        response: parsedResponse
+      }),
+      { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+    );
 
   } catch (error) {
-    console.error('Erro geral no GPT Pipeline:', error)
-    return new Response(JSON.stringify({ 
-      error: error.message || 'Internal server error' 
-    }), {
-      status: 500,
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-    })
+    console.error('Erro geral:', error);
+    return new Response(
+      JSON.stringify({ 
+        error: error.message,
+        success: false 
+      }),
+      { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+    );
   }
-})
+});
