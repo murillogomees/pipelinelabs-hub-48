@@ -21,11 +21,11 @@ export const AuthRedirect: React.FC<AuthRedirectProps> = ({ children }) => {
     );
   }
 
-  // Se usuário está autenticado e tentando acessar /auth, redirecionar para dashboard
-  if (user && location.pathname === '/auth') {
+  // Se usuário está autenticado e está na página de auth, redirecionar para dashboard
+  if (user && location.pathname.startsWith('/auth')) {
     return <Navigate to="/app/dashboard" replace />;
   }
 
-  // Se não está autenticado e não está em /auth, permitir acesso
+  // Se não está autenticado e não está em /auth, permitir acesso à página de auth
   return <>{children}</>;
 };
