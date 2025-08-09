@@ -32,7 +32,8 @@ export function useProductionOrders() {
           *,
           products:product_id (id, name, code)
         `)
-        .order('created_at', { ascending: false });
+        .order('created_at', { ascending: false })
+        .limit(100);
 
       if (error) throw error;
       setOrders(data || []);

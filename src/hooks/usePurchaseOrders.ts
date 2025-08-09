@@ -13,7 +13,8 @@ export function usePurchaseOrders() {
       const { data, error } = await supabase
         .from('purchase_orders')
         .select('*')
-        .order('created_at', { ascending: false });
+        .order('created_at', { ascending: false })
+        .limit(100);
 
       if (error) throw error;
       return (data as any[]).map(item => ({

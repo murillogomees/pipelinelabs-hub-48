@@ -23,7 +23,7 @@ export function useSLA() {
     queryFn: async (): Promise<SLAData | null> => {
       const { data, error } = await supabase
         .from('sla_agreements' as any)
-        .select('*')
+        .select('id, title, version, content, effective_date, is_active, created_at, updated_at')
         .eq('is_active', true)
         .order('effective_date', { ascending: false })
         .limit(1)
@@ -59,10 +59,11 @@ export function useSLA() {
       const { data, error } = await supabase
         .from('sla_acceptance' as any)
         .select(`
-          *,
+          id, sla_version, accepted_at,
           sla_agreements!inner(title, version)
         `)
-        .order('accepted_at', { ascending: false });
+        .order('accepted_at', { ascending: false })
+        .limit(100);
       
       if (error) throw error;
       return data;

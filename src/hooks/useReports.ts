@@ -27,7 +27,8 @@ export function useReports() {
         .from('reports')
         .select('*')
         .eq('is_active', true)
-        .order('created_at', { ascending: false });
+        .order('created_at', { ascending: false })
+        .limit(50);
 
       if (error) throw error;
       setReports(data || []);

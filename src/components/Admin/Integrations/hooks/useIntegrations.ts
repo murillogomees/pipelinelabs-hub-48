@@ -12,9 +12,9 @@ export const useIntegrations = () => {
     queryFn: async () => {
       const { data, error } = await supabase
         .from('integrations_available')
-        .select('*')
-        .select('*')
-        .order('created_at', { ascending: false });
+        .select('id, name, type, description, config_schema, created_at')
+        .order('created_at', { ascending: false })
+        .limit(100);
       
       if (error) throw error;
       return data;

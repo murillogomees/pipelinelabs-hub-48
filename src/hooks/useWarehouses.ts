@@ -31,8 +31,9 @@ export function useWarehouses() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from('warehouses' as any)
-        .select('*')
-        .order('name');
+        .select('id, name, is_active, is_default, description, address')
+        .order('name')
+        .limit(200);
 
       if (error) throw error;
       return data || [];

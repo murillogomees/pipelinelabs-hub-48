@@ -15,6 +15,8 @@ const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
       staleTime: 1000 * 60 * 5,
+      refetchOnWindowFocus: false,
+      refetchOnReconnect: false,
       retry: (failureCount: number, error: any) => {
         const msg = String(error?.message || '');
         const status = (error as any)?.status;
