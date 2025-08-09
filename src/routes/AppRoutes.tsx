@@ -11,7 +11,7 @@ const Products = lazy(() => import('@/pages/Products'));
 const Sales = lazy(() => import('@/pages/Sales'));
 const Customers = lazy(() => import('@/pages/Customers'));
 const Reports = lazy(() => import('@/pages/Reports'));
-const Settings = lazy(() => import('@/pages/Settings'));
+const Configuracoes = lazy(() => import('@/pages/Configuracoes'));
 const Pos = lazy(() => import('@/pages/Pos'));
 
 export function AppRoutes() {
@@ -26,7 +26,7 @@ export function AppRoutes() {
           <Route path="pos/*" element={<Pos />} />
           <Route path="relatorios/*" element={<Reports />} />
           <Route path="admin/*" element={<AdminRoutes />} />
-          <Route path="configuracoes/*" element={<Settings />} />
+          <Route path="configuracoes/*" element={<Configuracoes />} />
         </Routes>
       </LazyLoader>
     </ProtectedRoute>

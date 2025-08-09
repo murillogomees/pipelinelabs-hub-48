@@ -151,6 +151,13 @@ export function CompanyForm() {
     }
   }, [companyData, form]);
 
+  // Se ainda não existe empresa persistida, entrar em modo de edição automaticamente
+  useEffect(() => {
+    if (canEdit && !isEditing && companyData && !companyData.id) {
+      setIsEditing(true);
+    }
+  }, [canEdit, isEditing, companyData]);
+
   const onSubmit = async (data: CompanyFormData) => {
     // Separar dados pessoais, empresa e configurações
     const { 
