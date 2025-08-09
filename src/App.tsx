@@ -65,7 +65,7 @@ function App() {
     <ErrorBoundary>
       <QueryClientProvider client={queryClient}>
         <TooltipProvider>
-          {serviceDown && (
+          {serviceDown && false && (
             <div className="w-full border-b bg-destructive/10 text-destructive">
               <div className="mx-auto max-w-screen-2xl px-4 py-2 flex items-center justify-between">
                 <p className="text-sm">
