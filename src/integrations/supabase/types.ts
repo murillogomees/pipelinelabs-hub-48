@@ -10,7 +10,7 @@ export type Database = {
   // Allows to automatically instanciate createClient with right options
   // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
   __InternalSupabase: {
-    PostgrestVersion: "12.2.3 (519615d)"
+    PostgrestVersion: "13.0.4"
   }
   public: {
     Tables: {
@@ -1532,6 +1532,53 @@ export type Database = {
             columns: ["supplier_id"]
             isOneToOne: false
             referencedRelation: "suppliers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      gpt_pipeline_conversations: {
+        Row: {
+          approved: boolean | null
+          company_id: string | null
+          created_at: string
+          gpt_model: string | null
+          id: string
+          implemented: boolean | null
+          message: string
+          response: Json
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          approved?: boolean | null
+          company_id?: string | null
+          created_at?: string
+          gpt_model?: string | null
+          id?: string
+          implemented?: boolean | null
+          message: string
+          response: Json
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          approved?: boolean | null
+          company_id?: string | null
+          created_at?: string
+          gpt_model?: string | null
+          id?: string
+          implemented?: boolean | null
+          message?: string
+          response?: Json
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "gpt_pipeline_conversations_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
             referencedColumns: ["id"]
           },
         ]
@@ -4371,50 +4418,11 @@ export type Database = {
       }
     }
     Views: {
-      pg_all_foreign_keys: {
-        Row: {
-          fk_columns: unknown[] | null
-          fk_constraint_name: unknown | null
-          fk_schema_name: unknown | null
-          fk_table_name: unknown | null
-          fk_table_oid: unknown | null
-          is_deferrable: boolean | null
-          is_deferred: boolean | null
-          match_type: string | null
-          on_delete: string | null
-          on_update: string | null
-          pk_columns: unknown[] | null
-          pk_constraint_name: unknown | null
-          pk_index_name: unknown | null
-          pk_schema_name: unknown | null
-          pk_table_name: unknown | null
-          pk_table_oid: unknown | null
-        }
-        Relationships: []
-      }
       potential_duplicate_policies: {
         Row: {
           policyname: unknown | null
           roles: unknown[] | null
           schemaname: unknown | null
-        }
-        Relationships: []
-      }
-      tap_funky: {
-        Row: {
-          args: string | null
-          is_definer: boolean | null
-          is_strict: boolean | null
-          is_visible: boolean | null
-          kind: unknown | null
-          langoid: unknown | null
-          name: unknown | null
-          oid: unknown | null
-          owner: unknown | null
-          returns: string | null
-          returns_set: boolean | null
-          schema: unknown | null
-          volatility: string | null
         }
         Relationships: []
       }
@@ -4428,194 +4436,6 @@ export type Database = {
       }
     }
     Functions: {
-      _cleanup: {
-        Args: Record<PropertyKey, never>
-        Returns: boolean
-      }
-      _contract_on: {
-        Args: { "": string }
-        Returns: unknown
-      }
-      _currtest: {
-        Args: Record<PropertyKey, never>
-        Returns: number
-      }
-      _db_privs: {
-        Args: Record<PropertyKey, never>
-        Returns: unknown[]
-      }
-      _definer: {
-        Args: { "": unknown }
-        Returns: boolean
-      }
-      _dexists: {
-        Args: { "": unknown }
-        Returns: boolean
-      }
-      _expand_context: {
-        Args: { "": string }
-        Returns: string
-      }
-      _expand_on: {
-        Args: { "": string }
-        Returns: string
-      }
-      _expand_vol: {
-        Args: { "": string }
-        Returns: string
-      }
-      _ext_exists: {
-        Args: { "": unknown }
-        Returns: boolean
-      }
-      _extensions: {
-        Args: Record<PropertyKey, never> | { "": unknown }
-        Returns: unknown[]
-      }
-      _funkargs: {
-        Args: { "": unknown[] }
-        Returns: string
-      }
-      _get: {
-        Args: { "": string }
-        Returns: number
-      }
-      _get_db_owner: {
-        Args: { "": unknown }
-        Returns: unknown
-      }
-      _get_dtype: {
-        Args: { "": unknown }
-        Returns: string
-      }
-      _get_language_owner: {
-        Args: { "": unknown }
-        Returns: unknown
-      }
-      _get_latest: {
-        Args: { "": string }
-        Returns: number[]
-      }
-      _get_note: {
-        Args: { "": number } | { "": string }
-        Returns: string
-      }
-      _get_opclass_owner: {
-        Args: { "": unknown }
-        Returns: unknown
-      }
-      _get_rel_owner: {
-        Args: { "": unknown }
-        Returns: unknown
-      }
-      _get_schema_owner: {
-        Args: { "": unknown }
-        Returns: unknown
-      }
-      _get_tablespace_owner: {
-        Args: { "": unknown }
-        Returns: unknown
-      }
-      _get_type_owner: {
-        Args: { "": unknown }
-        Returns: unknown
-      }
-      _got_func: {
-        Args: { "": unknown }
-        Returns: boolean
-      }
-      _grolist: {
-        Args: { "": unknown }
-        Returns: unknown[]
-      }
-      _has_group: {
-        Args: { "": unknown }
-        Returns: boolean
-      }
-      _has_role: {
-        Args: { "": unknown }
-        Returns: boolean
-      }
-      _has_user: {
-        Args: { "": unknown }
-        Returns: boolean
-      }
-      _inherited: {
-        Args: { "": unknown }
-        Returns: boolean
-      }
-      _is_schema: {
-        Args: { "": unknown }
-        Returns: boolean
-      }
-      _is_super: {
-        Args: { "": unknown }
-        Returns: boolean
-      }
-      _is_trusted: {
-        Args: { "": unknown }
-        Returns: boolean
-      }
-      _is_verbose: {
-        Args: Record<PropertyKey, never>
-        Returns: boolean
-      }
-      _lang: {
-        Args: { "": unknown }
-        Returns: unknown
-      }
-      _opc_exists: {
-        Args: { "": unknown }
-        Returns: boolean
-      }
-      _parts: {
-        Args: { "": unknown }
-        Returns: unknown[]
-      }
-      _pg_sv_type_array: {
-        Args: { "": unknown[] }
-        Returns: unknown[]
-      }
-      _prokind: {
-        Args: { p_oid: unknown }
-        Returns: unknown
-      }
-      _query: {
-        Args: { "": string }
-        Returns: string
-      }
-      _refine_vol: {
-        Args: { "": string }
-        Returns: string
-      }
-      _relexists: {
-        Args: { "": unknown }
-        Returns: boolean
-      }
-      _returns: {
-        Args: { "": unknown }
-        Returns: string
-      }
-      _strict: {
-        Args: { "": unknown }
-        Returns: boolean
-      }
-      _table_privs: {
-        Args: Record<PropertyKey, never>
-        Returns: unknown[]
-      }
-      _temptypes: {
-        Args: { "": string }
-        Returns: string
-      }
-      _todo: {
-        Args: Record<PropertyKey, never>
-        Returns: string
-      }
-      _vol: {
-        Args: { "": unknown }
-        Returns: string
-      }
       agendar_proxima_auditoria: {
         Args: Record<PropertyKey, never>
         Returns: undefined
@@ -4633,10 +4453,6 @@ export type Database = {
         Args: Record<PropertyKey, never>
         Returns: undefined
       }
-      can: {
-        Args: { "": unknown[] }
-        Returns: string
-      }
       can_access_company_data: {
         Args: { company_uuid: string }
         Returns: boolean
@@ -4652,10 +4468,6 @@ export type Database = {
       can_manage_users: {
         Args: { target_company_id?: string }
         Returns: boolean
-      }
-      casts_are: {
-        Args: { "": string[] }
-        Returns: string
       }
       check_document_uniqueness: {
         Args: { doc: string }
@@ -4692,32 +4504,6 @@ export type Database = {
       cleanup_project_history: {
         Args: Record<PropertyKey, never>
         Returns: undefined
-      }
-      col_is_null: {
-        Args:
-          | {
-              schema_name: unknown
-              table_name: unknown
-              column_name: unknown
-              description?: string
-            }
-          | { table_name: unknown; column_name: unknown; description?: string }
-        Returns: string
-      }
-      col_not_null: {
-        Args:
-          | {
-              schema_name: unknown
-              table_name: unknown
-              column_name: unknown
-              description?: string
-            }
-          | { table_name: unknown; column_name: unknown; description?: string }
-        Returns: string
-      }
-      collect_tap: {
-        Args: Record<PropertyKey, never> | { "": string[] }
-        Returns: string
       }
       create_alert: {
         Args: {
@@ -4822,33 +4608,13 @@ export type Database = {
         }
         Returns: string
       }
-      diag: {
-        Args:
-          | Record<PropertyKey, never>
-          | Record<PropertyKey, never>
-          | { msg: string }
-          | { msg: unknown }
-        Returns: string
-      }
-      diag_test_name: {
-        Args: { "": string }
-        Returns: string
-      }
-      do_tap: {
-        Args: Record<PropertyKey, never> | { "": string } | { "": unknown }
-        Returns: string[]
-      }
-      domains_are: {
-        Args: { "": unknown[] }
-        Returns: string
-      }
       encrypt_sensitive_data: {
         Args: { data_to_encrypt: string; encryption_key: string }
         Returns: string
       }
-      enums_are: {
-        Args: { "": unknown[] }
-        Returns: string
+      example_function: {
+        Args: Record<PropertyKey, never>
+        Returns: undefined
       }
       executar_auditoria_automatica: {
         Args: { p_company_id: string }
@@ -4857,30 +4623,6 @@ export type Database = {
       export_user_data: {
         Args: { p_user_id?: string; p_company_id?: string }
         Returns: Json
-      }
-      extensions_are: {
-        Args: { "": unknown[] }
-        Returns: string
-      }
-      fail: {
-        Args: Record<PropertyKey, never> | { "": string }
-        Returns: string
-      }
-      findfuncs: {
-        Args: { "": string }
-        Returns: string[]
-      }
-      finish: {
-        Args: { exception_on_failure?: boolean }
-        Returns: string[]
-      }
-      foreign_tables_are: {
-        Args: { "": unknown[] }
-        Returns: string
-      }
-      functions_are: {
-        Args: { "": unknown[] }
-        Returns: string
       }
       generate_contract_number: {
         Args: Record<PropertyKey, never> | { company_uuid: string }
@@ -5000,6 +4742,16 @@ export type Database = {
         Args: Record<PropertyKey, never>
         Returns: number
       }
+      get_gpt_conversations: {
+        Args: { p_company_id: string }
+        Returns: {
+          id: string
+          title: string
+          messages: Json
+          created_at: string
+          updated_at: string
+        }[]
+      }
       get_production_config: {
         Args: { p_config_key: string }
         Returns: Json
@@ -5029,221 +4781,13 @@ export type Database = {
         Args: { user_uuid: string }
         Returns: Json
       }
-      groups_are: {
-        Args: { "": unknown[] }
-        Returns: string
-      }
-      has_check: {
-        Args: { "": unknown }
-        Returns: string
-      }
-      has_composite: {
-        Args: { "": unknown }
-        Returns: string
-      }
-      has_domain: {
-        Args: { "": unknown }
-        Returns: string
-      }
-      has_enum: {
-        Args: { "": unknown }
-        Returns: string
-      }
-      has_extension: {
-        Args: { "": unknown }
-        Returns: string
-      }
-      has_fk: {
-        Args: { "": unknown }
-        Returns: string
-      }
-      has_foreign_table: {
-        Args: { "": unknown }
-        Returns: string
-      }
-      has_function: {
-        Args: { "": unknown }
-        Returns: string
-      }
-      has_group: {
-        Args: { "": unknown }
-        Returns: string
-      }
-      has_inherited_tables: {
-        Args: { "": unknown }
-        Returns: string
-      }
-      has_language: {
-        Args: { "": unknown }
-        Returns: string
-      }
-      has_materialized_view: {
-        Args: { "": unknown }
-        Returns: string
-      }
-      has_opclass: {
-        Args: { "": unknown }
-        Returns: string
-      }
       has_permission: {
         Args: { permission_key: string }
         Returns: boolean
       }
-      has_pk: {
-        Args: { "": unknown }
-        Returns: string
-      }
-      has_relation: {
-        Args: { "": unknown }
-        Returns: string
-      }
-      has_role: {
-        Args: { "": unknown }
-        Returns: string
-      }
-      has_schema: {
-        Args: { "": unknown }
-        Returns: string
-      }
-      has_sequence: {
-        Args: { "": unknown }
-        Returns: string
-      }
       has_specific_permission: {
         Args: { permission_key: string; company_uuid?: string }
         Returns: boolean
-      }
-      has_table: {
-        Args: { "": unknown }
-        Returns: string
-      }
-      has_tablespace: {
-        Args: { "": unknown }
-        Returns: string
-      }
-      has_type: {
-        Args: { "": unknown }
-        Returns: string
-      }
-      has_unique: {
-        Args: { "": string }
-        Returns: string
-      }
-      has_user: {
-        Args: { "": unknown }
-        Returns: string
-      }
-      has_view: {
-        Args: { "": unknown }
-        Returns: string
-      }
-      hasnt_composite: {
-        Args: { "": unknown }
-        Returns: string
-      }
-      hasnt_domain: {
-        Args: { "": unknown }
-        Returns: string
-      }
-      hasnt_enum: {
-        Args: { "": unknown }
-        Returns: string
-      }
-      hasnt_extension: {
-        Args: { "": unknown }
-        Returns: string
-      }
-      hasnt_fk: {
-        Args: { "": unknown }
-        Returns: string
-      }
-      hasnt_foreign_table: {
-        Args: { "": unknown }
-        Returns: string
-      }
-      hasnt_function: {
-        Args: { "": unknown }
-        Returns: string
-      }
-      hasnt_group: {
-        Args: { "": unknown }
-        Returns: string
-      }
-      hasnt_inherited_tables: {
-        Args: { "": unknown }
-        Returns: string
-      }
-      hasnt_language: {
-        Args: { "": unknown }
-        Returns: string
-      }
-      hasnt_materialized_view: {
-        Args: { "": unknown }
-        Returns: string
-      }
-      hasnt_opclass: {
-        Args: { "": unknown }
-        Returns: string
-      }
-      hasnt_pk: {
-        Args: { "": unknown }
-        Returns: string
-      }
-      hasnt_relation: {
-        Args: { "": unknown }
-        Returns: string
-      }
-      hasnt_role: {
-        Args: { "": unknown }
-        Returns: string
-      }
-      hasnt_schema: {
-        Args: { "": unknown }
-        Returns: string
-      }
-      hasnt_sequence: {
-        Args: { "": unknown }
-        Returns: string
-      }
-      hasnt_table: {
-        Args: { "": unknown }
-        Returns: string
-      }
-      hasnt_tablespace: {
-        Args: { "": unknown }
-        Returns: string
-      }
-      hasnt_type: {
-        Args: { "": unknown }
-        Returns: string
-      }
-      hasnt_user: {
-        Args: { "": unknown }
-        Returns: string
-      }
-      hasnt_view: {
-        Args: { "": unknown }
-        Returns: string
-      }
-      in_todo: {
-        Args: Record<PropertyKey, never>
-        Returns: boolean
-      }
-      index_is_primary: {
-        Args: { "": unknown }
-        Returns: string
-      }
-      index_is_unique: {
-        Args: { "": unknown }
-        Returns: string
-      }
-      is_aggregate: {
-        Args: { "": unknown }
-        Returns: string
-      }
-      is_clustered: {
-        Args: { "": unknown }
-        Returns: string
       }
       is_company_contratante: {
         Args: { company_uuid: string }
@@ -5257,93 +4801,13 @@ export type Database = {
         Args: Record<PropertyKey, never>
         Returns: boolean
       }
-      is_definer: {
-        Args: { "": unknown }
-        Returns: string
-      }
-      is_empty: {
-        Args: { "": string }
-        Returns: string
-      }
-      is_normal_function: {
-        Args: { "": unknown }
-        Returns: string
-      }
       is_operador: {
         Args: { company_uuid?: string }
         Returns: boolean
       }
-      is_partitioned: {
-        Args: { "": unknown }
-        Returns: string
-      }
-      is_procedure: {
-        Args: { "": unknown }
-        Returns: string
-      }
-      is_strict: {
-        Args: { "": unknown }
-        Returns: string
-      }
       is_super_admin: {
         Args: Record<PropertyKey, never>
         Returns: boolean
-      }
-      is_superuser: {
-        Args: { "": unknown }
-        Returns: string
-      }
-      is_window: {
-        Args: { "": unknown }
-        Returns: string
-      }
-      isnt_aggregate: {
-        Args: { "": unknown }
-        Returns: string
-      }
-      isnt_definer: {
-        Args: { "": unknown }
-        Returns: string
-      }
-      isnt_empty: {
-        Args: { "": string }
-        Returns: string
-      }
-      isnt_normal_function: {
-        Args: { "": unknown }
-        Returns: string
-      }
-      isnt_partitioned: {
-        Args: { "": unknown }
-        Returns: string
-      }
-      isnt_procedure: {
-        Args: { "": unknown }
-        Returns: string
-      }
-      isnt_strict: {
-        Args: { "": unknown }
-        Returns: string
-      }
-      isnt_superuser: {
-        Args: { "": unknown }
-        Returns: string
-      }
-      isnt_window: {
-        Args: { "": unknown }
-        Returns: string
-      }
-      language_is_trusted: {
-        Args: { "": unknown }
-        Returns: string
-      }
-      languages_are: {
-        Args: { "": unknown[] }
-        Returns: string
-      }
-      lives_ok: {
-        Args: { "": string }
-        Returns: string
       }
       log_duplicate_document_attempt: {
         Args: {
@@ -5373,54 +4837,6 @@ export type Database = {
           p_event_data?: Json
           p_risk_level?: string
         }
-        Returns: string
-      }
-      materialized_views_are: {
-        Args: { "": unknown[] }
-        Returns: string
-      }
-      no_plan: {
-        Args: Record<PropertyKey, never>
-        Returns: boolean[]
-      }
-      num_failed: {
-        Args: Record<PropertyKey, never>
-        Returns: number
-      }
-      ok: {
-        Args: { "": boolean }
-        Returns: string
-      }
-      opclasses_are: {
-        Args: { "": unknown[] }
-        Returns: string
-      }
-      operators_are: {
-        Args: { "": string[] }
-        Returns: string
-      }
-      os_name: {
-        Args: Record<PropertyKey, never>
-        Returns: string
-      }
-      pass: {
-        Args: Record<PropertyKey, never> | { "": string }
-        Returns: string
-      }
-      pg_version: {
-        Args: Record<PropertyKey, never>
-        Returns: string
-      }
-      pg_version_num: {
-        Args: Record<PropertyKey, never>
-        Returns: number
-      }
-      pgtap_version: {
-        Args: Record<PropertyKey, never>
-        Returns: number
-      }
-      plan: {
-        Args: { "": number }
         Returns: string
       }
       record_performance_metric: {
@@ -5458,72 +4874,26 @@ export type Database = {
         Args: { p_alert_id: string; p_resolution_notes?: string }
         Returns: boolean
       }
-      roles_are: {
-        Args: { "": unknown[] }
-        Returns: string
-      }
-      runtests: {
-        Args: Record<PropertyKey, never> | { "": string } | { "": unknown }
-        Returns: string[]
-      }
-      schemas_are: {
-        Args: { "": unknown[] }
-        Returns: string
-      }
-      sequences_are: {
-        Args: { "": unknown[] }
-        Returns: string
+      save_gpt_conversation: {
+        Args: {
+          p_company_id: string
+          p_message: string
+          p_response: Json
+          p_gpt_model?: string
+        }
+        Returns: undefined
       }
       setup_initial_super_admin: {
         Args: { p_email: string }
-        Returns: string
-      }
-      skip: {
-        Args:
-          | { "": number }
-          | { "": string }
-          | { why: string; how_many: number }
-        Returns: string
-      }
-      tables_are: {
-        Args: { "": unknown[] }
-        Returns: string
-      }
-      tablespaces_are: {
-        Args: { "": unknown[] }
         Returns: string
       }
       test_user_creation_setup: {
         Args: Record<PropertyKey, never>
         Returns: string
       }
-      throws_ok: {
-        Args: { "": string }
-        Returns: string
-      }
-      todo: {
-        Args:
-          | { how_many: number }
-          | { how_many: number; why: string }
-          | { why: string }
-          | { why: string; how_many: number }
-        Returns: boolean[]
-      }
-      todo_end: {
-        Args: Record<PropertyKey, never>
-        Returns: boolean[]
-      }
-      todo_start: {
-        Args: Record<PropertyKey, never> | { "": string }
-        Returns: boolean[]
-      }
       trigger_manual_backup: {
         Args: Record<PropertyKey, never>
         Returns: Json
-      }
-      types_are: {
-        Args: { "": unknown[] }
-        Returns: string
       }
       update_security_config: {
         Args: {
@@ -5536,10 +4906,6 @@ export type Database = {
       user_has_accepted_current_terms: {
         Args: { p_user_id: string; p_company_id: string }
         Returns: boolean
-      }
-      users_are: {
-        Args: { "": unknown[] }
-        Returns: string
       }
       validate_admin_action: {
         Args: { p_action: string; p_user_id?: string }
@@ -5577,18 +4943,12 @@ export type Database = {
         }
         Returns: boolean
       }
-      views_are: {
-        Args: { "": unknown[] }
-        Returns: string
-      }
     }
     Enums: {
       user_type: "super_admin" | "contratante" | "operador"
     }
     CompositeTypes: {
-      _time_trial_type: {
-        a_time: number | null
-      }
+      [_ in never]: never
     }
   }
 }

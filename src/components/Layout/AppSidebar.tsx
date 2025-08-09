@@ -12,6 +12,7 @@ const menuItems = [
   { title: 'POS', url: '/app/pos', icon: Calculator },
   { title: 'Relatórios', url: '/app/relatorios', icon: BarChart3 },
   { title: 'Analytics', url: '/app/analytics', icon: BarChart3 },
+  { title: 'Administração', url: '/app/admin', icon: Settings },
   { title: 'Configurações', url: '/app/configuracoes', icon: Settings },
 ];
 
