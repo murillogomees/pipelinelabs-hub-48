@@ -2,21 +2,21 @@ import React, { lazy } from 'react';
 import { Routes, Route } from 'react-router-dom';
 import { ProtectedRoute } from '@/components/ProtectedRoute';
 
-// Admin dashboard (cards with links)
+// Admin Dashboard
 const AdminHome = lazy(() => import('@/pages/Admin'));
 
-// Placeholder pages for each admin section (replace with real ones when available)
-const AdminUsuarios = () => <div className="p-6">Gerenciar Usuários</div>;
-const AdminEmpresas = () => <div className="p-6">Gerenciar Empresas</div>;
-const AdminAccessLevels = () => <div className="p-6">Níveis de Acesso</div>;
-const AdminIntegracoes = () => <div className="p-6">Integrações</div>;
-const AdminNotificacoes = () => <div className="p-6">Notificações</div>;
-const AdminBackup = () => <div className="p-6">Backup e Restauração</div>;
-const AdminCache = () => <div className="p-6">Cache</div>;
-const AdminCompressao = () => <div className="p-6">Compressão</div>;
-const AdminMonitoramento = () => <div className="p-6">Monitoramento</div>;
-const AdminVersions = () => <div className="p-6">Versões</div>;
-const AdminLandingPage = () => <div className="p-6">Editor da Landing Page</div>;
+// Feature pages already implemented
+const AdminUsuarios = lazy(() => import('@/pages/AdminUsuarios'));
+const AdminEmpresas = lazy(() => import('@/pages/AdminEmpresas'));
+const AdminAccessLevels = lazy(() => import('@/pages/AdminAccessLevels'));
+const AdminIntegracoes = lazy(() => import('@/pages/AdminIntegracoes'));
+const AdminNotificacoes = lazy(() => import('@/pages/AdminNotificacoes'));
+const AdminBackup = lazy(() => import('@/pages/AdminBackup'));
+const AdminCache = lazy(() => import('@/pages/AdminCache'));
+const AdminCompressao = lazy(() => import('@/pages/AdminCompressao'));
+const AdminMonitoramento = lazy(() => import('@/pages/AdminMonitoramento'));
+const AdminVersions = lazy(() => import('@/pages/AdminVersions'));
+const AdminLandingPage = lazy(() => import('@/pages/AdminLandingPage'));
 
 export function AdminRoutes() {
   return (
@@ -25,7 +25,7 @@ export function AdminRoutes() {
         {/* Default admin dashboard */}
         <Route index element={<AdminHome />} />
 
-        {/* Match all links from Admin cards */}
+        {/* Mapped to existing feature pages */}
         <Route path="usuarios" element={<AdminUsuarios />} />
         <Route path="empresas" element={<AdminEmpresas />} />
         <Route path="access-levels" element={<AdminAccessLevels />} />
