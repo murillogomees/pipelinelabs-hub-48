@@ -3,6 +3,7 @@ import React, { lazy } from 'react';
 import { Routes, Route } from 'react-router-dom';
 import { LazyLoader } from '@/components/common/LazyLoader';
 import { ProtectedRoute } from '@/components/ProtectedRoute';
+import { AdminRoutes } from '@/routes/AdminRoutes';
 
 // Lazy load components
 const Dashboard = lazy(() => import('@/pages/Dashboard'));
@@ -12,7 +13,6 @@ const Customers = lazy(() => import('@/pages/Customers'));
 const Reports = lazy(() => import('@/pages/Reports'));
 const Settings = lazy(() => import('@/pages/Settings'));
 const Pos = lazy(() => import('@/pages/Pos'));
-const Admin = lazy(() => import('@/pages/Admin'));
 
 export function AppRoutes() {
   return (
@@ -25,7 +25,7 @@ export function AppRoutes() {
           <Route path="clientes/*" element={<Customers />} />
           <Route path="pos/*" element={<Pos />} />
           <Route path="relatorios/*" element={<Reports />} />
-          <Route path="admin/*" element={<Admin />} />
+          <Route path="admin/*" element={<AdminRoutes />} />
           <Route path="configuracoes/*" element={<Settings />} />
         </Routes>
       </LazyLoader>
