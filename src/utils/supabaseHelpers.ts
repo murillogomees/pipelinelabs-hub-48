@@ -20,7 +20,7 @@ export const createMissingRLSFunctions = async () => {
 // Fallback permission checks when RLS functions are not available
 export const fallbackPermissionChecks = {
   isSuperAdmin: () => false, // Default to false for security
-  canAccessCompanyData: () => true, // Allow access for now
+  canAccessCompanyData: () => false, // Default to false for security
   canManageCompanyData: () => false, // Restrict management by default
   hasSpecificPermission: () => false // Restrict specific permissions
 };

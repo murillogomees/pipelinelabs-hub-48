@@ -1,9 +1,17 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.39.3';
 
-const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+const getAllowedOrigin = (req: Request): string => {
+  const origin = req.headers.get('origin') || '';
+  const allowed = (Deno.env.get('ALLOWED_ORIGINS') || '').split(',').map(s => s.trim()).filter(Boolean);
+  if (allowed.length === 0) return '*';
+  return allowed.includes(origin) ? origin : 'null';
 };
+
+const corsHeaders = (req: Request) => ({
+  'Access-Control-Allow-Origin': getAllowedOrigin(req),
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+  'Access-Control-Allow-Methods': 'POST, OPTIONS',
+});
 
 interface SecurityRequest {
   action: 'check_rate_limit' | 'log_security_event' | 'validate_csrf';
@@ -18,14 +26,14 @@ interface SecurityRequest {
 Deno.serve(async (req) => {
   // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
-    return new Response(null, { headers: corsHeaders });
+    return new Response(null, { headers: corsHeaders(req) });
   }
 
   if (req.method !== 'POST') {
     return new Response(
       JSON.stringify({ error: 'Method not allowed' }),
       { 
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' }, 
+        headers: { ...corsHeaders(req), 'Content-Type': 'application/json' }, 
         status: 405 
       }
     );
@@ -49,7 +57,7 @@ Deno.serve(async (req) => {
           return new Response(
             JSON.stringify({ error: 'identifier is required for rate limit check' }),
             { 
-              headers: { ...corsHeaders, 'Content-Type': 'application/json' }, 
+              headers: { ...corsHeaders(req), 'Content-Type': 'application/json' }, 
               status: 400 
             }
           );
@@ -66,7 +74,7 @@ Deno.serve(async (req) => {
           return new Response(
             JSON.stringify({ error: 'Rate limit check failed' }),
             { 
-              headers: { ...corsHeaders, 'Content-Type': 'application/json' }, 
+              headers: { ...corsHeaders(req), 'Content-Type': 'application/json' }, 
               status: 500 
             }
           );
@@ -95,7 +103,7 @@ Deno.serve(async (req) => {
             identifier: body.identifier
           }),
           {
-            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+            headers: { ...corsHeaders(req), 'Content-Type': 'application/json' },
             status: allowed ? 200 : 429
           }
         );
@@ -106,7 +114,7 @@ Deno.serve(async (req) => {
           return new Response(
             JSON.stringify({ error: 'event_type is required' }),
             { 
-              headers: { ...corsHeaders, 'Content-Type': 'application/json' }, 
+              headers: { ...corsHeaders(req), 'Content-Type': 'application/json' }, 
               status: 400 
             }
           );
@@ -126,7 +134,7 @@ Deno.serve(async (req) => {
           return new Response(
             JSON.stringify({ error: 'Failed to log security event' }),
             { 
-              headers: { ...corsHeaders, 'Content-Type': 'application/json' }, 
+              headers: { ...corsHeaders(req), 'Content-Type': 'application/json' }, 
               status: 500 
             }
           );
@@ -139,7 +147,7 @@ Deno.serve(async (req) => {
             timestamp: new Date().toISOString()
           }),
           {
-            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+            headers: { ...corsHeaders(req), 'Content-Type': 'application/json' },
             status: 200
           }
         );
@@ -150,7 +158,7 @@ Deno.serve(async (req) => {
           return new Response(
             JSON.stringify({ error: 'token is required for CSRF validation' }),
             { 
-              headers: { ...corsHeaders, 'Content-Type': 'application/json' }, 
+              headers: { ...corsHeaders(req), 'Content-Type': 'application/json' }, 
               status: 400 
             }
           );
@@ -182,7 +190,7 @@ Deno.serve(async (req) => {
             timestamp: new Date().toISOString()
           }),
           {
-            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+            headers: { ...corsHeaders(req), 'Content-Type': 'application/json' },
             status: isValid ? 200 : 403
           }
         );
@@ -192,7 +200,7 @@ Deno.serve(async (req) => {
         return new Response(
           JSON.stringify({ error: 'Unknown action' }),
           { 
-            headers: { ...corsHeaders, 'Content-Type': 'application/json' }, 
+            headers: { ...corsHeaders(req), 'Content-Type': 'application/json' },
             status: 400 
           }
         );
@@ -204,7 +212,7 @@ Deno.serve(async (req) => {
     return new Response(
       JSON.stringify({ error: 'Internal server error', details: error.message }),
       {
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        headers: { ...corsHeaders(req), 'Content-Type': 'application/json' },
         status: 500
       }
     );

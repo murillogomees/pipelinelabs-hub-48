@@ -28,7 +28,7 @@ export function useAuditoriaProjeto(projetoId?: string) {
       if (!projetoId) return [];
       
       const { data, error } = await supabase
-        .from('auditorias_projeto')
+        .from('auditorias_projeto' as any)
         .select('*')
         .eq('projeto_id', projetoId)
         .order('created_at', { ascending: false });
@@ -38,7 +38,7 @@ export function useAuditoriaProjeto(projetoId?: string) {
         throw error;
       }
 
-      return data as AuditoriaProjeto[];
+      return (data ?? []) as unknown as AuditoriaProjeto[];
     },
     enabled: !!projetoId
   });
@@ -46,7 +46,7 @@ export function useAuditoriaProjeto(projetoId?: string) {
   const criarAuditoriaMutation = useMutation({
     mutationFn: async (novaAuditoria: Omit<AuditoriaProjeto, 'id' | 'created_at' | 'updated_at'>) => {
       const { data, error } = await supabase
-        .from('auditorias_projeto')
+        .from('auditorias_projeto' as any)
         .insert(novaAuditoria)
         .select()
         .single();
@@ -67,7 +67,7 @@ export function useAuditoriaProjeto(projetoId?: string) {
   const atualizarAuditoriaMutation = useMutation({
     mutationFn: async ({ id, dados }: { id: string; dados: Partial<AuditoriaProjeto> }) => {
       const { data, error } = await supabase
-        .from('auditorias_projeto')
+        .from('auditorias_projeto' as any)
         .update(dados)
         .eq('id', id)
         .select()

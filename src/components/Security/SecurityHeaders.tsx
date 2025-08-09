@@ -9,7 +9,7 @@ interface SecurityHeadersProps {
 export function SecurityHeaders({ nonce, additionalCSP }: SecurityHeadersProps) {
   const defaultCSP = [
     "default-src 'self'",
-    "script-src 'self' 'unsafe-inline' https://js.stripe.com https://checkout.stripe.com",
+    "script-src 'self' https://js.stripe.com https://checkout.stripe.com",
     "style-src 'self' 'unsafe-inline' https://checkout.stripe.com https://fonts.googleapis.com",
     "style-src-elem 'self' https://fonts.googleapis.com https://checkout.stripe.com",
     "font-src 'self' https://fonts.gstatic.com https://checkout.stripe.com",
