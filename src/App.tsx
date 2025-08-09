@@ -10,6 +10,7 @@ import { UserRoutes } from "@/routes/UserRoutes";
 import { ErrorBoundary } from "@/components/ErrorBoundary/ErrorBoundary";
 import Auth from "@/pages/Auth";
 import { AuthCallback } from "@/components/AuthCallback";
+import { useServiceHealth } from '@/hooks/useServiceHealth';
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -39,6 +40,7 @@ const queryClient = new QueryClient({
 
 function App() {
   const [serviceDown, setServiceDown] = useState(false);
+  const { isHealthy } = useServiceHealth();
   const handleRetry = () => {
     queryClient.invalidateQueries();
   };
@@ -61,15 +63,24 @@ function App() {
       window.removeEventListener('online', handleOnline);
     };
   }, []);
+  useEffect(() => {
+    if (isHealthy) {
+      setServiceDown(false);
+      queryClient.invalidateQueries();
+    } else {
+      setServiceDown(true);
+    }
+  }, [isHealthy]);
+
   return (
     <ErrorBoundary>
       <QueryClientProvider client={queryClient}>
         <TooltipProvider>
-          {serviceDown && false && (
+          {serviceDown && (
             <div className="w-full border-b bg-destructive/10 text-destructive">
               <div className="mx-auto max-w-screen-2xl px-4 py-2 flex items-center justify-between">
                 <p className="text-sm">
-                  Serviço temporariamente indisponível. Tente novamente em alguns minutos.
+                  Modo degradado: banco de dados indisponível (PGRST002). Tentaremos novamente automaticamente.
                 </p>
                 <button
                   onClick={handleRetry}

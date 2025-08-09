@@ -7,9 +7,9 @@ interface RetryConfig {
 }
 
 const defaultRetryConfig: RetryConfig = {
-  maxRetries: 3,
-  baseDelay: 1000,
-  maxDelay: 10000,
+  maxRetries: 2,
+  baseDelay: 1500,
+  maxDelay: 8000,
   backoffMultiplier: 2
 };
 
