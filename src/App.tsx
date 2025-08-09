@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -15,15 +15,69 @@ const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
       staleTime: 1000 * 60 * 5,
+      retry: (failureCount: number, error: any) => {
+        const msg = String(error?.message || '');
+        const status = (error as any)?.status;
+        if (status === 503 || msg.includes('PGRST002') || msg.includes('schema "net" does not exist')) return false;
+        return failureCount < 2;
+      },
+      retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 10000),
+    },
+    mutations: {
+      retry: (failureCount: number, error: any) => {
+        const msg = String(error?.message || '');
+        const status = (error as any)?.status;
+        if (status === 503 || msg.includes('PGRST002') || msg.includes('schema "net" does not exist')) return false;
+        return failureCount < 2;
+      },
+      retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 10000),
     },
   },
 });
 
 function App() {
+  const [serviceDown, setServiceDown] = useState(false);
+  const handleRetry = () => {
+    queryClient.invalidateQueries();
+  };
+  useEffect(() => {
+    const unsubscribe = queryClient.getQueryCache().subscribe((event: any) => {
+      const q = event?.query;
+      if (event?.type === 'updated' && q?.state?.status === 'error') {
+        const err: any = q.state.error;
+        const msg = String(err?.message || '');
+        const status = err?.status;
+        if (status === 503 || msg.includes('PGRST002') || msg.includes('schema "net" does not exist')) {
+          setServiceDown(true);
+        }
+      }
+    });
+    const handleOnline = () => setServiceDown(false);
+    window.addEventListener('online', handleOnline);
+    return () => {
+      unsubscribe();
+      window.removeEventListener('online', handleOnline);
+    };
+  }, []);
   return (
     <ErrorBoundary>
       <QueryClientProvider client={queryClient}>
         <TooltipProvider>
+          {serviceDown && (
+            <div className="w-full border-b bg-destructive/10 text-destructive">
+              <div className="mx-auto max-w-screen-2xl px-4 py-2 flex items-center justify-between">
+                <p className="text-sm">
+                  Serviço temporariamente indisponível. Tente novamente em alguns minutos.
+                </p>
+                <button
+                  onClick={handleRetry}
+                  className="inline-flex items-center rounded-md border border-destructive/30 px-3 py-1 text-sm hover:bg-destructive/10 transition"
+                >
+                  Tentar novamente
+                </button>
+              </div>
+            </div>
+          )}
           <Toaster />
           <Sonner />
           <AuthProvider>
