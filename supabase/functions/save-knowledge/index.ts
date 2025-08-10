@@ -39,68 +39,40 @@ serve(async (req) => {
       return new Response(JSON.stringify({ error: 'company_id é obrigatório' }), { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
     }
 
-    // Gerar embedding com fallback de modelos
-    let embedding: number[] | null = null;
-    const openAIKey = Deno.env.get('OPENAI_API_KEY');
-    if (!openAIKey) {
-      return new Response(
-        JSON.stringify({ error: 'OPENAI_API_KEY não configurada no projeto' }),
-        { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
+    // Embedding desabilitado por solicitação do usuário: não gerar embeddings
+    const embedding: number[] | null = null;
+    
+    // Em vez de salvar no vetor, vamos registrar em audit_logs para manter histórico
+    const newValues = {
+      namespace,
+      metadata,
+      content_preview: content.slice(0, 1000),
+      embedding_disabled: true,
+    };
+
+    const { data: auditId, error: auditErr } = await supabase.rpc('create_audit_log', {
+      p_company_id: company_id,
+      p_action: 'knowledge:save_no_embedding',
+      p_resource_type: 'knowledge',
+      p_resource_id: null,
+      p_old_values: null,
+      p_new_values: newValues,
+      p_ip_address: null,
+      p_user_agent: null,
+      p_severity: 'info',
+      p_status: 'success',
+      p_details: { note: 'Knowledge salvo sem embedding por configuração do usuário.' },
+    });
+
+    if (auditErr) {
+      console.error('Erro registrando audit log:', auditErr);
+      return new Response(JSON.stringify({ error: auditErr.message }), { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
     }
 
-    const candidates = ['text-embedding-3-small'];
-
-    let lastErrText: string | null = null;
-    for (const model of candidates) {
-      try {
-        const embRes = await fetch('https://api.openai.com/v1/embeddings', {
-          method: 'POST',
-          headers: {
-            'Authorization': `Bearer ${openAIKey}`,
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({ model, input: content }),
-        });
-
-        if (!embRes.ok) {
-          const errText = await embRes.text();
-          lastErrText = errText;
-          // Se modelo não encontrado, tenta próximo
-          if (errText.includes('model_not_found') || embRes.status === 404) {
-            console.warn(`Modelo de embedding não disponível (${model}), tentando próximo...`);
-            continue;
-          }
-          // Se problema de auth, para aqui com mensagem clara
-          if (embRes.status === 401 || embRes.status === 403) {
-            return new Response(
-              JSON.stringify({ error: 'Falha de autenticação com OpenAI. Verifique a OPENAI_API_KEY/Project access.' }),
-              { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-            );
-          }
-          throw new Error(`Embeddings API error: ${errText}`);
-        }
-
-        const embData = await embRes.json();
-        embedding = embData.data?.[0]?.embedding || null;
-        if (embedding) break;
-      } catch (e) {
-        console.error(`Erro tentando gerar embedding com ${model}:`, e);
-        lastErrText = e?.message ?? String(e);
-      }
-    }
-
-    if (!embedding) {
-      console.error('Erro gerando embedding - última causa:', lastErrText);
-      return new Response(
-        JSON.stringify({ error: 'Falha ao gerar embedding', detail: lastErrText }),
-        { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
-    }
-
-    if (!embedding) {
-      return new Response(JSON.stringify({ error: 'Embedding não gerado' }), { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
-    }
+    return new Response(
+      JSON.stringify({ success: true, mode: 'audit_only', audit_log_id: auditId }),
+      { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+    );
 
     // Inserir conhecimento via RPC para converter embedding -> vector
     const { data: insertId, error: insertError } = await supabase

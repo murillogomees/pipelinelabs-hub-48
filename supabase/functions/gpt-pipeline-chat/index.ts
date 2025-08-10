@@ -39,68 +39,9 @@ serve(async (req) => {
       );
     }
 
-    // Recuperar contexto da memória (pgvector)
+    // Embeddings desabilitados por solicitação do usuário
     let knowledgeContext = '';
-    let embedding: number[] | null = null;
-    try {
-      // Gerar embedding do texto do usuário obedecendo o modelo selecionado (com fallback)
-      const openAIKey = Deno.env.get('OPENAI_API_KEY');
-      if (!openAIKey) {
-        console.error('OPENAI_API_KEY não configurada');
-      } else {
-        const embeddingCandidates = ['text-embedding-3-small'];
-
-        for (const model of embeddingCandidates) {
-          try {
-            const embRes = await fetch('https://api.openai.com/v1/embeddings', {
-              method: 'POST',
-              headers: {
-                'Authorization': `Bearer ${openAIKey}`,
-                'Content-Type': 'application/json',
-              },
-              body: JSON.stringify({
-                model,
-                input: message,
-              }),
-            });
-            if (embRes.ok) {
-              const embData = await embRes.json();
-              embedding = embData.data?.[0]?.embedding || null;
-              if (embedding) break;
-            } else {
-              const errText = await embRes.text();
-              console.warn(`Embedding falhou com ${model}: ${errText}`);
-              if (embRes.status === 401 || embRes.status === 403) {
-                console.error('Falha de autenticação na OpenAI ao gerar embeddings.');
-                break;
-              }
-              // continua tentando próximos modelos
-            }
-          } catch (e) {
-            console.error(`Erro ao tentar gerar embedding (${model}):`, e);
-          }
-        }
-      }
-
-      if (embedding) {
-        const { data: matches, error: searchError } = await supabase.rpc('search_knowledge', {
-          company_uuid: company_id,
-          query_embedding: embedding,
-          match_threshold: 0.7,
-          match_count: 8,
-          namespace_filter: 'ai-engineer'
-        });
-        if (searchError) {
-          console.error('Erro no semantic search:', searchError);
-        } else if (matches?.length) {
-          knowledgeContext = matches
-            .map((m: any, i: number) => `#${i + 1} (score ${(m.similarity * 100).toFixed(1)}%): ${m.content}`)
-            .join('\n');
-        }
-      }
-    } catch (e) {
-      console.error('Falha ao recuperar contexto/embeddings:', e);
-    }
+    const embedding = null;
 
     // Integrar com OpenAI Assistants API (threads v2)
     const openAIKey = Deno.env.get('OPENAI_API_KEY');
@@ -252,10 +193,9 @@ serve(async (req) => {
     return new Response(
       JSON.stringify({
         success: true,
-        response: assistantText,
-        structured_response: parsedResponse,
+        response: parsedResponse,
+        assistant_text: assistantText,
         thread_id: activeThreadId,
-        // run_id pode ser útil para debugging no cliente
         run_id: typeof runId !== 'undefined' ? runId : null
       }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
