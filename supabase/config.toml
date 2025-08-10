@@ -46,7 +46,7 @@ port = 54329
 [functions.cache-manager]
 verify_jwt = true
 
-[functions.demo-rate-limit] 
+[functions.demo-rate-limit]
 verify_jwt = false
 
 [functions.executar-auditoria]
@@ -84,3 +84,10 @@ verify_jwt = false
 
 [functions.health-check]
 verify_jwt = false
+
+# New AI functions
+[functions.gpt-pipeline-chat]
+verify_jwt = false
+
+[functions.save-knowledge]
+verify_jwt = true

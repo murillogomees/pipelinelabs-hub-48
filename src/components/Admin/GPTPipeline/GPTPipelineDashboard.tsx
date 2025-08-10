@@ -52,10 +52,15 @@ export const GPTPipelineDashboard: React.FC = () => {
 
     setIsLoading(true);
     try {
+      // Obter company_id atual via RPC
+      const { data: companyIdData, error: companyErr } = await supabase.rpc('get_user_company_id');
+      if (companyErr) throw companyErr;
+
       const { data, error } = await supabase.functions.invoke('gpt-pipeline-chat', {
         body: {
           message: message.trim(),
-          gpt_id: 'gpt-4o', // Você pode mudar isso para o ID do seu GPT customizado
+          gpt_id: 'gpt-4o',
+          company_id: companyIdData,
           conversation_history: conversations.slice(-5).map(conv => [
             { role: 'user', content: conv.message },
             { role: 'assistant', content: JSON.stringify(conv.response) }
