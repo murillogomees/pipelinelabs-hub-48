@@ -13,19 +13,12 @@ serve(async (req) => {
 
   try {
     const supabaseUrl = Deno.env.get('SUPABASE_URL') ?? '';
-    const supabaseAnonKey = Deno.env.get('SUPABASE_ANON_KEY') ?? '';
+    const serviceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '';
 
-    const supabase = createClient(supabaseUrl, supabaseAnonKey, {
-      global: {
-        headers: { Authorization: req.headers.get('Authorization') ?? '' },
-      },
+    // Service role client (no JWT required, bypasses RLS via RPC)
+    const supabase = createClient(supabaseUrl, serviceKey, {
       auth: { persistSession: false, autoRefreshToken: false },
     });
-
-    const { data: authData, error: authError } = await supabase.auth.getUser();
-    if (authError || !authData?.user) {
-      return new Response(JSON.stringify({ error: 'Unauthorized' }), { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
-    }
 
     const body = await req.json();
     const {
@@ -40,26 +33,10 @@ serve(async (req) => {
       return new Response(JSON.stringify({ error: 'content é obrigatório' }), { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
     }
 
-    // Permissão: precisa ser super admin
-    const { data: canBypass, error: canErr } = await supabase.rpc('can_bypass_all_restrictions');
-    if (canErr) {
-      console.error('Erro checando permissão:', canErr);
-    }
-    if (!canBypass) {
-      return new Response(JSON.stringify({ error: 'Forbidden' }), { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
-    }
-
-    // Resolver company_id
-    let company_id = providedCompanyId;
+    // company_id deve ser enviado quando público
+    const company_id = providedCompanyId;
     if (!company_id) {
-      const { data: cData, error: cErr } = await supabase.rpc('get_user_company_id');
-      if (cErr) {
-        console.error('Erro buscando company_id:', cErr);
-      }
-      company_id = cData;
-    }
-    if (!company_id) {
-      return new Response(JSON.stringify({ error: 'company_id não encontrado' }), { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+      return new Response(JSON.stringify({ error: 'company_id é obrigatório' }), { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
     }
 
     // Gerar embedding
