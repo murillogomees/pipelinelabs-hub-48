@@ -1773,6 +1773,39 @@ export type Database = {
         }
         Relationships: []
       }
+      knowledge_entries: {
+        Row: {
+          company_id: string
+          content: string
+          created_at: string
+          embedding: string
+          id: string
+          metadata: Json
+          namespace: string
+          updated_at: string
+        }
+        Insert: {
+          company_id: string
+          content: string
+          created_at?: string
+          embedding: string
+          id?: string
+          metadata?: Json
+          namespace?: string
+          updated_at?: string
+        }
+        Update: {
+          company_id?: string
+          content?: string
+          created_at?: string
+          embedding?: string
+          id?: string
+          metadata?: Json
+          namespace?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       learning_sessions: {
         Row: {
           analysis: Json | null
@@ -4453,6 +4486,10 @@ export type Database = {
         Args: Record<PropertyKey, never>
         Returns: undefined
       }
+      binary_quantize: {
+        Args: { "": string } | { "": unknown }
+        Returns: unknown
+      }
       can_access_company_data: {
         Args: { company_uuid: string }
         Returns: boolean
@@ -4781,6 +4818,22 @@ export type Database = {
         Args: { user_uuid: string }
         Returns: Json
       }
+      halfvec_avg: {
+        Args: { "": number[] }
+        Returns: unknown
+      }
+      halfvec_out: {
+        Args: { "": unknown }
+        Returns: unknown
+      }
+      halfvec_send: {
+        Args: { "": unknown }
+        Returns: string
+      }
+      halfvec_typmod_in: {
+        Args: { "": unknown[] }
+        Returns: number
+      }
       has_permission: {
         Args: { permission_key: string }
         Returns: boolean
@@ -4788,6 +4841,22 @@ export type Database = {
       has_specific_permission: {
         Args: { permission_key: string; company_uuid?: string }
         Returns: boolean
+      }
+      hnsw_bit_support: {
+        Args: { "": unknown }
+        Returns: unknown
+      }
+      hnsw_halfvec_support: {
+        Args: { "": unknown }
+        Returns: unknown
+      }
+      hnsw_sparsevec_support: {
+        Args: { "": unknown }
+        Returns: unknown
+      }
+      hnswhandler: {
+        Args: { "": unknown }
+        Returns: unknown
       }
       is_company_contratante: {
         Args: { company_uuid: string }
@@ -4808,6 +4877,26 @@ export type Database = {
       is_super_admin: {
         Args: Record<PropertyKey, never>
         Returns: boolean
+      }
+      ivfflat_bit_support: {
+        Args: { "": unknown }
+        Returns: unknown
+      }
+      ivfflat_halfvec_support: {
+        Args: { "": unknown }
+        Returns: unknown
+      }
+      ivfflathandler: {
+        Args: { "": unknown }
+        Returns: unknown
+      }
+      l2_norm: {
+        Args: { "": unknown } | { "": unknown }
+        Returns: number
+      }
+      l2_normalize: {
+        Args: { "": string } | { "": unknown } | { "": unknown }
+        Returns: string
       }
       log_duplicate_document_attempt: {
         Args: {
@@ -4883,9 +4972,36 @@ export type Database = {
         }
         Returns: undefined
       }
+      search_knowledge: {
+        Args: {
+          company_uuid: string
+          query_embedding: string
+          match_threshold?: number
+          match_count?: number
+          namespace_filter?: string
+        }
+        Returns: {
+          id: string
+          content: string
+          metadata: Json
+          similarity: number
+        }[]
+      }
       setup_initial_super_admin: {
         Args: { p_email: string }
         Returns: string
+      }
+      sparsevec_out: {
+        Args: { "": unknown }
+        Returns: unknown
+      }
+      sparsevec_send: {
+        Args: { "": unknown }
+        Returns: string
+      }
+      sparsevec_typmod_in: {
+        Args: { "": unknown[] }
+        Returns: number
       }
       test_user_creation_setup: {
         Args: Record<PropertyKey, never>
@@ -4942,6 +5058,30 @@ export type Database = {
           p_resource_id?: string
         }
         Returns: boolean
+      }
+      vector_avg: {
+        Args: { "": number[] }
+        Returns: string
+      }
+      vector_dims: {
+        Args: { "": string } | { "": unknown }
+        Returns: number
+      }
+      vector_norm: {
+        Args: { "": string }
+        Returns: number
+      }
+      vector_out: {
+        Args: { "": string }
+        Returns: unknown
+      }
+      vector_send: {
+        Args: { "": string }
+        Returns: string
+      }
+      vector_typmod_in: {
+        Args: { "": unknown[] }
+        Returns: number
       }
     }
     Enums: {
