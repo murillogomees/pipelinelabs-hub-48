@@ -39,29 +39,68 @@ serve(async (req) => {
       return new Response(JSON.stringify({ error: 'company_id é obrigatório' }), { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
     }
 
-    // Gerar embedding
+    // Gerar embedding com fallback de modelos
     let embedding: number[] | null = null;
-    try {
-      const embRes = await fetch('https://api.openai.com/v1/embeddings', {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${Deno.env.get('OPENAI_API_KEY')}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          model: embedding_model,
-          input: content,
-        }),
-      });
-      if (!embRes.ok) {
-        const errText = await embRes.text();
-        throw new Error(`Embeddings API error: ${errText}`);
+    const openAIKey = Deno.env.get('OPENAI_API_KEY');
+    if (!openAIKey) {
+      return new Response(
+        JSON.stringify({ error: 'OPENAI_API_KEY não configurada no projeto' }),
+        { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    const candidates = Array.from(new Set([
+      embedding_model,
+      'text-embedding-3-small',
+      'text-embedding-3-large',
+      'text-embedding-ada-002'
+    ].filter(Boolean)));
+
+    let lastErrText: string | null = null;
+    for (const model of candidates) {
+      try {
+        const embRes = await fetch('https://api.openai.com/v1/embeddings', {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${openAIKey}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ model, input: content }),
+        });
+
+        if (!embRes.ok) {
+          const errText = await embRes.text();
+          lastErrText = errText;
+          // Se modelo não encontrado, tenta próximo
+          if (errText.includes('model_not_found') || embRes.status === 404) {
+            console.warn(`Modelo de embedding não disponível (${model}), tentando próximo...`);
+            continue;
+          }
+          // Se problema de auth, para aqui com mensagem clara
+          if (embRes.status === 401 || embRes.status === 403) {
+            return new Response(
+              JSON.stringify({ error: 'Falha de autenticação com OpenAI. Verifique a OPENAI_API_KEY/Project access.' }),
+              { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+            );
+          }
+          throw new Error(`Embeddings API error: ${errText}`);
+        }
+
+        const embData = await embRes.json();
+        embedding = embData.data?.[0]?.embedding || null;
+        if (embedding) break;
+      } catch (e) {
+        console.error(`Erro tentando gerar embedding com ${model}:`, e);
+        lastErrText = e?.message ?? String(e);
       }
-      const embData = await embRes.json();
-      embedding = embData.data?.[0]?.embedding || null;
-    } catch (e) {
-      console.error('Erro gerando embedding:', e);
-      return new Response(JSON.stringify({ error: 'Falha ao gerar embedding' }), { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+    }
+
+    if (!embedding) {
+      console.error('Erro gerando embedding - última causa:', lastErrText);
+      return new Response(
+        JSON.stringify({ error: 'Falha ao gerar embedding', detail: lastErrText }),
+        { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
     }
 
     if (!embedding) {
