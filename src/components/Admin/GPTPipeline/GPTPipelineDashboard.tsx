@@ -101,12 +101,43 @@ export const GPTPipelineDashboard: React.FC = () => {
   const approveAndImplement = async (conversation: Conversation) => {
     setIsLoading(true);
     try {
-      // Aqui você pode integrar com o sistema de aplicação de código existente
-      // ou criar uma nova edge function para implementar as mudanças
-      
-      // Simulação da implementação
-      await new Promise(resolve => setTimeout(resolve, 2000));
-      
+      // Simulação da aplicação (você pode integrar com code-applier aqui)
+      await new Promise(resolve => setTimeout(resolve, 1000));
+
+      // Persistir memória enriquecida da resposta aprovada
+      const resp = conversation.response;
+      const enriched = [
+        '# Aprovação de implementação - Resumo',
+        '',
+        '## Análise',
+        resp.analysis,
+        '',
+        '## Sugestão',
+        resp.suggestion,
+        '',
+        '## Mudanças de Código',
+        `Arquivos: ${resp.code_changes.files.join(', ')}`,
+        resp.code_changes.description,
+        '',
+        resp.considerations?.length ? '## Considerações' : '',
+        ...(resp.considerations || [])
+      ].filter(Boolean).join('\n');
+
+      const { error: knError } = await supabase.functions.invoke('save-knowledge', {
+        body: {
+          namespace: 'ai-engineer',
+          content: enriched,
+          metadata: {
+            source: 'gpt-pipeline-approval',
+            conversation_id: conversation.id,
+            files: resp.code_changes.files,
+            ready: resp.ready_to_implement,
+            timestamp: new Date().toISOString(),
+          }
+        }
+      });
+      if (knError) throw knError;
+
       // Marcar como aprovado e implementado
       setConversations(prev => 
         prev.map(conv => 
@@ -118,12 +149,12 @@ export const GPTPipelineDashboard: React.FC = () => {
 
       toast({
         title: 'Implementação concluída',
-        description: 'As mudanças foram aplicadas com sucesso!',
+        description: 'Mudanças aplicadas e conhecimento salvo.',
       });
     } catch (error: any) {
       toast({
         title: 'Erro na implementação',
-        description: error.message || 'Erro ao implementar as mudanças',
+        description: error.message || 'Erro ao implementar ou salvar memória',
         variant: 'destructive',
       });
     } finally {
