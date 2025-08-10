@@ -16,6 +16,7 @@ interface Conversation {
   messages: Message[];
   created_at: string;
   updated_at: string;
+  threadId?: string;
 }
 
 export function useGPTPipeline() {
@@ -111,6 +112,7 @@ export function useGPTPipeline() {
         body: {
           message: content,
           conversationId: finalConversationId,
+          threadId: currentConversation?.threadId,
         },
       });
 
@@ -131,6 +133,7 @@ export function useGPTPipeline() {
         if (!prev || prev.id !== finalConversationId) return prev;
         return {
           ...prev,
+          threadId: (data as any)?.thread_id || prev.threadId,
           messages: [...prev.messages, assistantMessage],
         };
       });
@@ -139,7 +142,7 @@ export function useGPTPipeline() {
       setConversations(prev => 
         prev.map(conv => 
           conv.id === finalConversationId 
-            ? { ...conv, messages: [...conv.messages, userMessage, assistantMessage] }
+            ? { ...conv, threadId: (data as any)?.thread_id || conv.threadId, messages: [...conv.messages, userMessage, assistantMessage] }
             : conv
         )
       );

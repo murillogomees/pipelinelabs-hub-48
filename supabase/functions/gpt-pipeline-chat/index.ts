@@ -25,15 +25,16 @@ serve(async (req) => {
       }
     )
 
-    const { message, gpt_id, company_id, conversation_history, embedding_model } = await req.json();
+    const { message, assistant_id, gpt_id, company_id, conversation_history, embedding_model, conversationId, threadId } = await req.json();
 
-    console.log('Received request:', { message, gpt_id, company_id });
-    const selectedChatModel = gpt_id || 'gpt-4o';
+    console.log('Received request:', { message, assistant_id, gpt_id, company_id, conversationId, threadId });
+    const DEFAULT_ASSISTANT_ID = 'asst_KW3FyuDgmdSNiCLiygZI2kq4';
+    const selectedAssistantId = assistant_id || DEFAULT_ASSISTANT_ID;
 
     // Validar entrada
-    if (!message || !company_id) {
+    if (!message) {
       return new Response(
-        JSON.stringify({ error: 'Mensagem e company_id são obrigatórios' }),
+        JSON.stringify({ error: 'Mensagem é obrigatória' }),
         { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
@@ -101,113 +102,148 @@ serve(async (req) => {
       console.error('Falha ao recuperar contexto/embeddings:', e);
     }
 
-    // Chamar OpenAI (com contexto da memória)
-    const openaiResponse = await fetch('https://api.openai.com/v1/chat/completions', {
+    // Integrar com OpenAI Assistants API (threads v2)
+    const openAIKey = Deno.env.get('OPENAI_API_KEY');
+    if (!openAIKey) {
+      throw new Error('OPENAI_API_KEY não configurada');
+    }
+
+    const oaHeaders = {
+      'Authorization': `Bearer ${openAIKey}`,
+      'Content-Type': 'application/json',
+      'OpenAI-Beta': 'assistants=v2'
+    };
+
+    // Criar thread se não fornecida
+    let activeThreadId = threadId as string | undefined;
+    if (!activeThreadId) {
+      const threadRes = await fetch('https://api.openai.com/v1/threads', {
+        method: 'POST',
+        headers: oaHeaders,
+        body: JSON.stringify({})
+      });
+      if (!threadRes.ok) {
+        const err = await threadRes.text();
+        console.error('Erro criando thread:', err);
+        throw new Error('Falha ao criar thread');
+      }
+      const threadData = await threadRes.json();
+      activeThreadId = threadData.id;
+    }
+
+    // Adicionar mensagem do usuário à thread
+    const msgRes = await fetch(`https://api.openai.com/v1/threads/${activeThreadId}/messages`, {
       method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${Deno.env.get('OPENAI_API_KEY')}`,
-        'Content-Type': 'application/json',
-      },
+      headers: oaHeaders,
       body: JSON.stringify({
-        model: selectedChatModel,
-        messages: [
-          {
-            role: 'system',
-            content: `Você é um assistente especializado em análise de código e desenvolvimento. 
-            Analise a solicitação do usuário e responda sempre em JSON com esta estrutura:
-            {
-              "analysis": "Sua análise detalhada da solicitação",
-              "suggestion": "Sua sugestão de implementação",
-              "code_changes": {
-                "files": ["lista de arquivos que serão modificados"],
-                "description": "Descrição das mudanças"
-              },
-              "considerations": ["lista de considerações importantes"],
-              "ready_to_implement": true/false
-            }`
-          },
-          {
-            role: 'system',
-            content: `Contexto do projeto recuperado da memória (máx 8):\n${knowledgeContext || 'Sem resultados relevantes'}`
-          },
-          ...conversation_history || [],
-          {
-            role: 'user',
-            content: message
-          }
-        ],
-        temperature: 0.7,
-        max_tokens: 2000,
-      }),
+        role: 'user',
+        content: message
+      })
     });
-
-    if (!openaiResponse.ok) {
-      const error = await openaiResponse.json();
-      console.error('OpenAI API error:', error);
-      throw new Error(`OpenAI API error: ${error.error?.message || 'Unknown error'}`);
+    if (!msgRes.ok) {
+      const err = await msgRes.text();
+      console.error('Erro adicionando mensagem à thread:', err);
+      throw new Error('Falha ao adicionar mensagem');
     }
 
-    const openaiData = await openaiResponse.json();
-    console.log('OpenAI response:', openaiData);
+    // Instruções da execução, incluindo o contexto recuperado
+    const instructions = `Você é um assistente especializado em análise de código e desenvolvimento.\nResponda SEMPRE em JSON com esta estrutura:\n{\n  \"analysis\": \"Sua análise detalhada da solicitação\",\n  \"suggestion\": \"Sua sugestão de implementação\",\n  \"code_changes\": {\n    \"files\": [\"lista de arquivos que serão modificados\"],\n    \"description\": \"Descrição das mudanças\"\n  },\n  \"considerations\": [\"lista de considerações importantes\"],\n  \"ready_to_implement\": true/false\n}\n\nContexto do projeto recuperado da memória (máx 8):\n${knowledgeContext || 'Sem resultados relevantes'}`;
 
-    const gptResponse = openaiData.choices[0]?.message?.content;
+    // Criar run
+    const runRes = await fetch(`https://api.openai.com/v1/threads/${activeThreadId}/runs`, {
+      method: 'POST',
+      headers: oaHeaders,
+      body: JSON.stringify({ assistant_id: selectedAssistantId, instructions })
+    });
+    if (!runRes.ok) {
+      const err = await runRes.text();
+      console.error('Erro criando run:', err);
+      throw new Error('Falha ao criar run');
+    }
+    const runData = await runRes.json();
+    const runId = runData.id as string;
 
-    if (!gptResponse) {
-      throw new Error('Resposta vazia da OpenAI');
+    // Aguardar conclusão do run (polling simples)
+    let status = runData.status as string;
+    const terminal = new Set(['completed', 'failed', 'cancelled', 'expired', 'requires_action']);
+    for (let i = 0; i < 30 && !terminal.has(status); i++) {
+      await new Promise((r) => setTimeout(r, 1000));
+      const check = await fetch(`https://api.openai.com/v1/threads/${activeThreadId}/runs/${runId}`, { headers: oaHeaders });
+      if (!check.ok) break;
+      const chk = await check.json();
+      status = chk.status;
+      if (terminal.has(status)) break;
     }
 
-    // Tentar parsear a resposta JSON
-    let parsedResponse;
+    // Buscar última mensagem do assistente
+    const histRes = await fetch(`https://api.openai.com/v1/threads/${activeThreadId}/messages?limit=10&order=desc`, { headers: oaHeaders });
+    if (!histRes.ok) {
+      const err = await histRes.text();
+      console.error('Erro buscando mensagens:', err);
+      throw new Error('Falha ao buscar mensagens');
+    }
+    const hist = await histRes.json();
+    let assistantText = '';
+    const assistantMsg = (hist.data || []).find((m: any) => m.role === 'assistant');
+    if (assistantMsg?.content?.length) {
+      for (const c of assistantMsg.content) {
+        if (c.type === 'text' && c.text?.value) assistantText += c.text.value + '\n';
+      }
+      assistantText = assistantText.trim();
+    }
+    if (!assistantText) assistantText = 'Sem resposta do assistente.';
+
+    // Tentar parsear JSON
+    let parsedResponse: any;
     try {
-      parsedResponse = JSON.parse(gptResponse);
-    } catch (parseError) {
-      console.error('Erro ao parsear resposta JSON:', parseError);
-      // Se não conseguir parsear, criar uma resposta estruturada
+      parsedResponse = JSON.parse(assistantText);
+    } catch (_) {
       parsedResponse = {
-        analysis: "Análise da solicitação recebida",
-        suggestion: gptResponse,
-        code_changes: {
-          files: [],
-          description: "Mudanças a serem implementadas"
-        },
-        considerations: ["Revisar implementação antes de aplicar"],
-        ready_to_implement: false
+        analysis: 'Análise da solicitação recebida',
+        suggestion: assistantText,
+        code_changes: { files: [], description: 'Mudanças a serem implementadas' },
+        considerations: ['Revisar implementação antes de aplicar'],
+        ready_to_implement: false,
       };
     }
 
-    // Salvar a conversa no banco
+    // Salvar a conversa no banco (opcional, se company_id informado)
     try {
-      const { error: insertError } = await supabase.rpc('save_gpt_conversation', {
-        p_company_id: company_id,
-        p_message: message,
-        p_response: parsedResponse,
-        p_gpt_model: selectedChatModel
-      });
+      if (company_id) {
+        const { error: insertError } = await supabase.rpc('save_gpt_conversation', {
+          p_company_id: company_id,
+          p_message: message,
+          p_response: parsedResponse,
+          p_gpt_model: `assistant:${selectedAssistantId}`
+        });
 
-      if (insertError) {
-        console.error('Erro ao salvar conversa:', insertError);
-      }
-
-      // Persistir memória: guardar a mensagem do usuário como knowledge entry
-      if (embedding) {
-        const { error: keError } = await supabase
-          .from('knowledge_entries')
-          .insert([
-            {
-              company_id,
-              namespace: 'ai-engineer',
-              content: message,
-              metadata: {
-                source: 'gpt-pipeline-chat',
-                gpt_model: selectedChatModel,
-                created_via: 'user_message'
-              },
-              embedding
-            }
-          ]);
-        if (keError) {
-          console.error('Erro ao salvar knowledge entry:', keError);
+        if (insertError) {
+          console.error('Erro ao salvar conversa:', insertError);
         }
+
+        // Persistir memória: guardar a mensagem do usuário como knowledge entry
+        if (embedding) {
+          const { error: keError } = await supabase
+            .from('knowledge_entries')
+            .insert([
+              {
+                company_id,
+                namespace: 'ai-engineer',
+                content: message,
+                metadata: {
+                  source: 'gpt-pipeline-chat',
+                  gpt_model: `assistant:${selectedAssistantId}`,
+                  created_via: 'user_message'
+                },
+                embedding
+              }
+            ]);
+          if (keError) {
+            console.error('Erro ao salvar knowledge entry:', keError);
+          }
+        }
+      } else {
+        console.log('company_id ausente - pulando persistência de conversa e knowledge.');
       }
     } catch (saveError) {
       console.error('Erro ao salvar no banco:', saveError);
@@ -216,7 +252,11 @@ serve(async (req) => {
     return new Response(
       JSON.stringify({
         success: true,
-        response: parsedResponse
+        response: assistantText,
+        structured_response: parsedResponse,
+        thread_id: activeThreadId,
+        // run_id pode ser útil para debugging no cliente
+        run_id: typeof runId !== 'undefined' ? runId : null
       }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
