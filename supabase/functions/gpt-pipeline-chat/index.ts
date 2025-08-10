@@ -25,9 +25,10 @@ serve(async (req) => {
       }
     )
 
-    const { message, gpt_id, company_id, conversation_history } = await req.json();
+    const { message, gpt_id, company_id, conversation_history, embedding_model } = await req.json();
 
     console.log('Received request:', { message, gpt_id, company_id });
+    const selectedChatModel = gpt_id || 'gpt-4o';
 
     // Validar entrada
     if (!message || !company_id) {
@@ -41,41 +42,71 @@ serve(async (req) => {
     let knowledgeContext = '';
     let embedding: number[] | null = null;
     try {
-      // Gerar embedding do texto do usuário
-      const embRes = await fetch('https://api.openai.com/v1/embeddings', {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${Deno.env.get('OPENAI_API_KEY')}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          model: 'text-embedding-3-small',
-          input: message,
-        }),
-      });
-      if (embRes.ok) {
-        const embData = await embRes.json();
-        embedding = embData.data?.[0]?.embedding || null;
+      // Gerar embedding do texto do usuário obedecendo o modelo selecionado (com fallback)
+      const openAIKey = Deno.env.get('OPENAI_API_KEY');
+      if (!openAIKey) {
+        console.error('OPENAI_API_KEY não configurada');
+      } else {
+        const resolveEmbeddingFromChat = (model: string): string => {
+          const m = (model || '').toLowerCase();
+          if (m.includes('4o') || m.includes('4.1') || m.includes('opus') || m.includes('sonnet')) return 'text-embedding-3-large';
+          return 'text-embedding-3-small';
+        };
+        const embeddingCandidates = Array.from(new Set([
+          embedding_model,
+          resolveEmbeddingFromChat(selectedChatModel),
+          'text-embedding-3-small',
+          'text-embedding-3-large',
+          'text-embedding-ada-002'
+        ].filter(Boolean)));
 
-        if (embedding) {
-          const { data: matches, error: searchError } = await supabase.rpc('search_knowledge', {
-            company_uuid: company_id,
-            query_embedding: embedding,
-            match_threshold: 0.7,
-            match_count: 8,
-            namespace_filter: 'ai-engineer'
-          });
-          if (searchError) {
-            console.error('Erro no semantic search:', searchError);
-          } else if (matches?.length) {
-            knowledgeContext = matches
-              .map((m: any, i: number) => `#${i + 1} (score ${(m.similarity * 100).toFixed(1)}%): ${m.content}`)
-              .join('\n');
+        for (const model of embeddingCandidates) {
+          try {
+            const embRes = await fetch('https://api.openai.com/v1/embeddings', {
+              method: 'POST',
+              headers: {
+                'Authorization': `Bearer ${openAIKey}`,
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify({
+                model,
+                input: message,
+              }),
+            });
+            if (embRes.ok) {
+              const embData = await embRes.json();
+              embedding = embData.data?.[0]?.embedding || null;
+              if (embedding) break;
+            } else {
+              const errText = await embRes.text();
+              console.warn(`Embedding falhou com ${model}: ${errText}`);
+              if (embRes.status === 401 || embRes.status === 403) {
+                console.error('Falha de autenticação na OpenAI ao gerar embeddings.');
+                break;
+              }
+              // continua tentando próximos modelos
+            }
+          } catch (e) {
+            console.error(`Erro ao tentar gerar embedding (${model}):`, e);
           }
         }
-      } else {
-        const embErr = await embRes.text();
-        console.error('Erro no embeddings API:', embErr);
+      }
+
+      if (embedding) {
+        const { data: matches, error: searchError } = await supabase.rpc('search_knowledge', {
+          company_uuid: company_id,
+          query_embedding: embedding,
+          match_threshold: 0.7,
+          match_count: 8,
+          namespace_filter: 'ai-engineer'
+        });
+        if (searchError) {
+          console.error('Erro no semantic search:', searchError);
+        } else if (matches?.length) {
+          knowledgeContext = matches
+            .map((m: any, i: number) => `#${i + 1} (score ${(m.similarity * 100).toFixed(1)}%): ${m.content}`)
+            .join('\n');
+        }
       }
     } catch (e) {
       console.error('Falha ao recuperar contexto/embeddings:', e);
@@ -89,7 +120,7 @@ serve(async (req) => {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: gpt_id || 'gpt-4o',
+        model: selectedChatModel,
         messages: [
           {
             role: 'system',
@@ -161,7 +192,7 @@ serve(async (req) => {
         p_company_id: company_id,
         p_message: message,
         p_response: parsedResponse,
-        p_gpt_model: gpt_id || 'gpt-4o'
+        p_gpt_model: selectedChatModel
       });
 
       if (insertError) {
@@ -179,7 +210,7 @@ serve(async (req) => {
               content: message,
               metadata: {
                 source: 'gpt-pipeline-chat',
-                gpt_model: gpt_id || 'gpt-4o',
+                gpt_model: selectedChatModel,
                 created_via: 'user_message'
               },
               embedding
