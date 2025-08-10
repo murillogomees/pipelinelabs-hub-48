@@ -21,6 +21,7 @@ import {
 } from 'lucide-react';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { useAuth } from '@/contexts/AuthContext';
 
 interface GPTPipelineResponse {
   analysis: string;
@@ -49,6 +50,7 @@ export const GPTPipelineDashboard: React.FC = () => {
   const [currentResponse, setCurrentResponse] = useState<GPTPipelineResponse | null>(null);
   const { toast } = useToast();
   const [selectedModel, setSelectedModel] = useState('gpt-4o');
+  const { user } = useAuth();
 
   const sendMessage = async () => {
     if (!message.trim()) return;
@@ -324,16 +326,21 @@ export const GPTPipelineDashboard: React.FC = () => {
               </Alert>
             )}
             
-            <div className="flex gap-2 pt-4">
+            <div className="flex gap-2 pt-4 items-center flex-wrap">
               {currentResponse.ready_to_implement && (
                 <Button 
                   onClick={() => approveAndImplement(conversations[conversations.length - 1])}
-                  disabled={isLoading}
+                  disabled={isLoading || !user}
                   className="flex items-center gap-2"
                 >
                   <ThumbsUp className="h-4 w-4" />
-                  Aprovar e Implementar
+                  {user ? 'Aprovar e Implementar' : 'Entrar para Aprovar'}
                 </Button>
+              )}
+              {!user && (
+                <span className="text-xs text-muted-foreground">
+                  Faça login para salvar a memória da aprovação.
+                </span>
               )}
               <Button 
                 variant="outline"
