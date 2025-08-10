@@ -34,31 +34,42 @@ export const useProfile = () => {
         throw new Error('Usuário não autenticado');
       }
 
-      // Buscar profile do usuário
-      const { data: profile, error } = await supabase
+      // Buscar profile do usuário (sem join para evitar 400 de relacionamento)
+      const { data: profile, error: profileErr } = await supabase
         .from('profiles')
+        .select('*')
+        .eq('user_id', user.id)
+        .maybeSingle();
+
+      if (profileErr && profileErr.code !== 'PGRST116') {
+        throw profileErr;
+      }
+
+      if (!profile) return null;
+
+      // Buscar vínculo ativo do usuário com empresa + dados da empresa
+      const { data: uc, error: ucErr } = await supabase
+        .from('user_companies')
         .select(`
-          *,
-          user_companies!inner (
-            company_id,
-            role,
-            is_active,
-            companies!inner (
-              id,
-              name,
-              document
-            )
+          company_id,
+          role,
+          is_active,
+          companies (
+            id,
+            name,
+            document
           )
         `)
         .eq('user_id', user.id)
-        .eq('user_companies.is_active', true)
+        .eq('is_active', true)
+        .limit(1)
         .maybeSingle();
 
-      if (error && error.code !== 'PGRST116') {
-        throw error;
+      if (ucErr && ucErr.code !== 'PGRST116') {
+        throw ucErr;
       }
 
-      return profile;
+      return { ...profile, user_companies: uc ? [uc] : [] } as unknown as UserProfile;
     },
     enabled: !!user?.id,
     retry: false
