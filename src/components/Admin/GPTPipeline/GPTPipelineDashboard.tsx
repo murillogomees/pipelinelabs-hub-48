@@ -123,6 +123,10 @@ export const GPTPipelineDashboard: React.FC = () => {
         return;
       }
 
+      // Obter company_id explicitamente
+      const { data: companyIdData, error: companyErr } = await supabase.rpc('get_user_company_id');
+      if (companyErr) throw companyErr;
+
       // Persistir memória enriquecida da resposta aprovada
       const resp = conversation.response;
       const enriched = [
@@ -144,6 +148,7 @@ export const GPTPipelineDashboard: React.FC = () => {
 
       const { error: knError } = await supabase.functions.invoke('save-knowledge', {
         body: {
+          company_id: companyIdData,
           namespace: 'ai-engineer',
           content: enriched,
           metadata: {

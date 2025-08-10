@@ -90,4 +90,4 @@ verify_jwt = false
 verify_jwt = false
 
 [functions.save-knowledge]
-verify_jwt = false
+verify_jwt = true
