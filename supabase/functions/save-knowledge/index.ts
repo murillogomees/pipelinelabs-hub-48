@@ -91,27 +91,22 @@ serve(async (req) => {
       return new Response(JSON.stringify({ error: 'Embedding não gerado' }), { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
     }
 
-    // Inserir conhecimento
-    const { data: insertData, error: insertError } = await supabase
-      .from('knowledge_entries')
-      .insert([
-        {
-          company_id,
-          namespace,
-          content,
-          metadata,
-          embedding,
-        }
-      ])
-      .select('id')
-      .maybeSingle();
+    // Inserir conhecimento via RPC para converter embedding -> vector
+    const { data: insertId, error: insertError } = await supabase
+      .rpc('insert_knowledge_entry', {
+        p_company_id: company_id,
+        p_namespace: namespace,
+        p_content: content,
+        p_metadata: metadata,
+        p_embedding: embedding
+      });
 
     if (insertError) {
-      console.error('Erro inserindo knowledge_entries:', insertError);
+      console.error('Erro inserindo knowledge_entries (RPC):', insertError);
       return new Response(JSON.stringify({ error: insertError.message }), { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
     }
 
-    return new Response(JSON.stringify({ success: true, id: insertData?.id }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+    return new Response(JSON.stringify({ success: true, id: insertId }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
   } catch (error: any) {
     console.error('Erro geral save-knowledge:', error);
     return new Response(JSON.stringify({ error: error.message || 'Erro inesperado' }), { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });

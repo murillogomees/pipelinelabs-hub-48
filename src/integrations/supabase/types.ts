@@ -4858,6 +4858,16 @@ export type Database = {
         Args: { "": unknown }
         Returns: unknown
       }
+      insert_knowledge_entry: {
+        Args: {
+          p_company_id: string
+          p_namespace: string
+          p_content: string
+          p_metadata: Json
+          p_embedding: number[]
+        }
+        Returns: string
+      }
       is_company_contratante: {
         Args: { company_uuid: string }
         Returns: boolean
