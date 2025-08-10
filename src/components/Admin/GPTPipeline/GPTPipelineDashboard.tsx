@@ -19,6 +19,8 @@ import {
   ThumbsUp,
   Code
 } from 'lucide-react';
+import { Label } from '@/components/ui/label';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 interface GPTPipelineResponse {
   analysis: string;
@@ -46,6 +48,7 @@ export const GPTPipelineDashboard: React.FC = () => {
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [currentResponse, setCurrentResponse] = useState<GPTPipelineResponse | null>(null);
   const { toast } = useToast();
+  const [selectedModel, setSelectedModel] = useState('gpt-4o');
 
   const sendMessage = async () => {
     if (!message.trim()) return;
@@ -59,7 +62,7 @@ export const GPTPipelineDashboard: React.FC = () => {
       const { data, error } = await supabase.functions.invoke('gpt-pipeline-chat', {
         body: {
           message: message.trim(),
-          gpt_id: 'gpt-4o',
+          gpt_id: selectedModel,
           company_id: companyIdData,
           conversation_history: conversations.slice(-5).map(conv => [
             { role: 'user', content: conv.message },
@@ -215,6 +218,23 @@ export const GPTPipelineDashboard: React.FC = () => {
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="space-y-3">
+            <div className="grid gap-3 md:grid-cols-3">
+              <div className="md:col-span-1">
+                <Label htmlFor="gpt-model">Modelo</Label>
+                <Select value={selectedModel} onValueChange={setSelectedModel}>
+                  <SelectTrigger id="gpt-model" className="w-full">
+                    <SelectValue placeholder="Selecione o modelo" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="gpt-4o">GPT-4o (equilíbrio)</SelectItem>
+                    <SelectItem value="gpt-4o-mini">GPT-4o mini (rápido)</SelectItem>
+                    <SelectItem value="gpt-4.1-2025-04-14">GPT‑4.1 (precisão)</SelectItem>
+                    <SelectItem value="o4-mini-2025-04-16">O4‑mini (razão rápida)</SelectItem>
+                  </SelectContent>
+                </Select>
+                <p className="text-xs text-muted-foreground mt-1">Escolha o modelo para análise/geração.</p>
+              </div>
+            </div>
             <Textarea
               placeholder="Descreva o que você gostaria de implementar ou modificar no sistema..."
               value={message}
