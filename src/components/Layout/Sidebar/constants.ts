@@ -296,6 +296,14 @@ export const menuItems: MenuItem[] = [
         order: 11,
         superAdminOnly: true,
       },
+      {
+        id: 'admin-funcao',
+        title: 'Engenheiro de IA',
+        path: '/app/admin/funcao',
+        href: '/app/admin/funcao',
+        order: 12,
+        superAdminOnly: true,
+      },
     ],
   },
 ];

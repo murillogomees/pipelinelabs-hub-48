@@ -10,7 +10,8 @@ import {
   Activity,
   Zap,
   FileText,
-  Globe
+  Globe,
+  Sparkles
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
@@ -85,6 +86,13 @@ export default function Admin() {
       icon: Settings,
       href: '/app/admin/versions',
       color: 'text-gray-600'
+    },
+    {
+      title: 'Engenheiro de IA',
+      description: 'Agente para análise e implementação assistida',
+      icon: Sparkles,
+      href: '/app/admin/funcao',
+      color: 'text-indigo-700'
     },
     {
       title: 'Landing Page',

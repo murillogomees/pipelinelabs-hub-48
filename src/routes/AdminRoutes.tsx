@@ -1,6 +1,7 @@
 import React, { lazy } from 'react';
 import { Routes, Route } from 'react-router-dom';
 import { ProtectedRoute } from '@/components/ProtectedRoute';
+import { SuperAdminOnly } from '@/components/ProtectedRoute/SuperAdminOnly';
 
 // Admin Dashboard
 const AdminHome = lazy(() => import('@/pages/Admin'));
@@ -17,6 +18,7 @@ const AdminCompressao = lazy(() => import('@/pages/AdminCompressao'));
 const AdminMonitoramento = lazy(() => import('@/pages/AdminMonitoramento'));
 const AdminVersions = lazy(() => import('@/pages/AdminVersions'));
 const AdminLandingPage = lazy(() => import('@/pages/AdminLandingPage'));
+const AdminFuncao = lazy(() => import('@/pages/Admin/GPTPipelinePage'));
 
 export function AdminRoutes() {
   return (
@@ -37,6 +39,7 @@ export function AdminRoutes() {
         <Route path="monitoramento" element={<AdminMonitoramento />} />
         <Route path="versions" element={<AdminVersions />} />
         <Route path="landing-page" element={<AdminLandingPage />} />
+        <Route path="funcao" element={<SuperAdminOnly><AdminFuncao /></SuperAdminOnly>} />
       </Routes>
     </ProtectedRoute>
   );
