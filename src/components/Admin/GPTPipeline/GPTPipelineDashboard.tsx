@@ -109,6 +109,20 @@ export const GPTPipelineDashboard: React.FC = () => {
       // Simulação da aplicação (você pode integrar com code-applier aqui)
       await new Promise(resolve => setTimeout(resolve, 1000));
 
+      // Verificar autenticação antes de salvar memória
+      const { data: userData } = await supabase.auth.getUser();
+      if (!userData?.user) {
+        // Marca como aprovado/implementado mesmo sem memória
+        setConversations(prev =>
+          prev.map(conv => (conv.id === conversation.id ? { ...conv, approved: true, implemented: true } : conv))
+        );
+        toast({
+          title: 'Implementado (sem salvar memória)',
+          description: 'Faça login para salvar o conhecimento da aprovação.',
+        });
+        return;
+      }
+
       // Persistir memória enriquecida da resposta aprovada
       const resp = conversation.response;
       const enriched = [
@@ -157,9 +171,12 @@ export const GPTPipelineDashboard: React.FC = () => {
         description: 'Mudanças aplicadas e conhecimento salvo.',
       });
     } catch (error: any) {
+      const isUnauthorized = error?.status === 401;
       toast({
-        title: 'Erro na implementação',
-        description: error.message || 'Erro ao implementar ou salvar memória',
+        title: isUnauthorized ? 'Login necessário' : 'Erro na implementação',
+        description: isUnauthorized
+          ? 'Entre na sua conta para salvar a memória da aprovação.'
+          : (error.message || 'Erro ao implementar ou salvar memória'),
         variant: 'destructive',
       });
     } finally {
