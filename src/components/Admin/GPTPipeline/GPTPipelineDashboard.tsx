@@ -52,6 +52,12 @@ export const GPTPipelineDashboard: React.FC = () => {
   const [selectedModel, setSelectedModel] = useState('gpt-4o');
   const { user } = useAuth();
 
+  const mapEmbeddingModel = (model: string): string => {
+    const m = (model || '').toLowerCase();
+    if (m.includes('4o') || m.includes('4.1') || m.includes('o4')) return 'text-embedding-3-large';
+    return 'text-embedding-3-small';
+  };
+
   const sendMessage = async () => {
     if (!message.trim()) return;
 
@@ -65,6 +71,7 @@ export const GPTPipelineDashboard: React.FC = () => {
         body: {
           message: message.trim(),
           gpt_id: selectedModel,
+          embedding_model: mapEmbeddingModel(selectedModel),
           company_id: companyIdData,
           conversation_history: conversations.slice(-5).map(conv => [
             { role: 'user', content: conv.message },
@@ -156,8 +163,10 @@ export const GPTPipelineDashboard: React.FC = () => {
           company_id: companyIdData,
           namespace: 'ai-engineer',
           content: enriched,
+          embedding_model: mapEmbeddingModel(selectedModel),
           metadata: {
             source: 'gpt-pipeline-approval',
+            gpt_model: selectedModel,
             conversation_id: conversation.id,
             files: resp.code_changes.files,
             ready: resp.ready_to_implement,
