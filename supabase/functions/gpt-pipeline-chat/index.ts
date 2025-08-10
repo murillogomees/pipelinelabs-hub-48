@@ -47,18 +47,7 @@ serve(async (req) => {
       if (!openAIKey) {
         console.error('OPENAI_API_KEY não configurada');
       } else {
-        const resolveEmbeddingFromChat = (model: string): string => {
-          const m = (model || '').toLowerCase();
-          if (m.includes('4o') || m.includes('4.1') || m.includes('opus') || m.includes('sonnet')) return 'text-embedding-3-large';
-          return 'text-embedding-3-small';
-        };
-        const embeddingCandidates = Array.from(new Set([
-          embedding_model,
-          resolveEmbeddingFromChat(selectedChatModel),
-          'text-embedding-3-small',
-          'text-embedding-3-large',
-          'text-embedding-ada-002'
-        ].filter(Boolean)));
+        const embeddingCandidates = ['text-embedding-3-small'];
 
         for (const model of embeddingCandidates) {
           try {

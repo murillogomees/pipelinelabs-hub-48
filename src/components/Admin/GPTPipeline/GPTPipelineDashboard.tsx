@@ -53,8 +53,7 @@ export const GPTPipelineDashboard: React.FC = () => {
   const { user } = useAuth();
 
   const mapEmbeddingModel = (model: string): string => {
-    const m = (model || '').toLowerCase();
-    if (m.includes('4o') || m.includes('4.1') || m.includes('o4')) return 'text-embedding-3-large';
+    // Forçar uso do modelo suportado no projeto
     return 'text-embedding-3-small';
   };
 

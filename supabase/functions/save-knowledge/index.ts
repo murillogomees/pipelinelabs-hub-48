@@ -49,12 +49,7 @@ serve(async (req) => {
       );
     }
 
-    const candidates = Array.from(new Set([
-      embedding_model,
-      'text-embedding-3-small',
-      'text-embedding-3-large',
-      'text-embedding-ada-002'
-    ].filter(Boolean)));
+    const candidates = ['text-embedding-3-small'];
 
     let lastErrText: string | null = null;
     for (const model of candidates) {
